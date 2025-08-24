@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - DefaultCanvas
   layers:
   - Default
   - TransparentFX
@@ -40,4 +41,16 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 3969226625
+    locked: 0
+  - name: Danmaku
+    uniqueID: 406419467
+    locked: 0
+  - name: Player
+    uniqueID: 1649359809
+    locked: 0
+  - name: DebugUI
+    uniqueID: 1825930719
     locked: 0
