@@ -1,0 +1,30 @@
+using UnityEditor;
+using UnityEngine;
+
+[CustomEditor(typeof(CharacterPrefabTool))]
+public class CharacterConfigToolEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
+        GUILayout.BeginHorizontal();
+
+        if (GUILayout.Button("读取角色配置文件", GUILayout.Height(30)))
+        {
+            CharacterPrefabTool editor = (CharacterPrefabTool)target;
+            editor.LoadCharacterConfig();
+        }
+
+        if (GUILayout.Button("应用并保存当前配置", GUILayout.Height(30)))
+        {
+            CharacterPrefabTool editor = (CharacterPrefabTool)target;
+            editor.SaveCharacterConfig();
+        }
+
+        GUILayout.EndHorizontal();
+    }
+}

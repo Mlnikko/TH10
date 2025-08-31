@@ -12,12 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3972ac5ebeade5849989dc9bc80b2557, type: 3}
   m_Name: MarisaConfig
   m_EditorClassIdentifier: 
-  Name: "\u96FE\u96E8\u9B54\u7406\u6C99"
-  CharacterName: 0
+  CharacterName: 2
   Description: "\u723D\u6717\u7684\u9B54\u6CD5\u4F7F\n\u901F\u5EA6\u53CA\u987A\u624B\u7275\u7F8A\u65B9\u9762\n\u96BE\u6709\u4EBA\u53EF\u51FA\u5176\u53F3"
   Speed: 3.8
   SlowSpeed: 1.8
   MoveBoxSize: {x: 0.3, y: 0.5}
   MoveBoxOffset: {x: 0, y: 0.08}
-  HitRadius: 0.1
-  GrazeRadius: 1
+  HitRadius: 0.05
+  GrazeRadius: 0.25

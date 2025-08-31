@@ -7,7 +7,7 @@ public enum E_CharacterName
     Rin
 }
 
-[CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Custom/CharacterConfig")]
+[CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Custom/characterConfig")]
 public class CharacterConfig : ScriptableObject
 {
     [Header("–≈œ¢≈‰÷√")]

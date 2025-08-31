@@ -46,6 +46,7 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 3d1fd84c2d63e7e4e9fa0190feebc9fe, type: 2}
   - {fileID: 11400000, guid: 75025a754a16004478cfaafab1401221, type: 2}
+  - {fileID: 11400000, guid: f3a846ce6e3357c44a240b02d984b450, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -87,6 +88,7 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - Panel
+    - Audio
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1fe5883215191c048a9b6facc24c6f8d, type: 2}

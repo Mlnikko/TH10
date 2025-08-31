@@ -17,7 +17,7 @@ public enum E_Panel
 public class UIManager : Singleton<UIManager>
 {
     const string panelPrefabLable = "Panel";
-    Dictionary<E_Panel, UnityEngine.GameObject> panelPrefabDict = new();
+    Dictionary<E_Panel, GameObject> panelPrefabDict = new();
     Dictionary<E_Panel, BasePanel> panelCachesDict = new();
 
     public void LoadPrefabRefrence()
@@ -33,7 +33,7 @@ public class UIManager : Singleton<UIManager>
         foreach (var location in locations)
         {
             // 根据资源类型加载
-            if (location.ResourceType == typeof(UnityEngine.GameObject))
+            if (location.ResourceType == typeof(GameObject))
             {
                 LoadGameObjectSync(location);
             }
@@ -48,7 +48,7 @@ public class UIManager : Singleton<UIManager>
     void LoadGameObjectSync(IResourceLocation location)
     {
         // 同步加载 Entity
-        var handle = Addressables.LoadAssetAsync<UnityEngine.GameObject>(location);
+        var handle = Addressables.LoadAssetAsync<GameObject>(location);
         handle.WaitForCompletion();
 
         if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
@@ -73,16 +73,16 @@ public class UIManager : Singleton<UIManager>
             panel.EnablePanel(isEnable);
             return panel;
         }
-        else if (panelPrefabDict.TryGetValue(panelName, out UnityEngine.GameObject panelPrefab))
+        else if (panelPrefabDict.TryGetValue(panelName, out GameObject panelPrefab))
         {
-            UnityEngine.GameObject panelObj = null;
+            GameObject panelObj = null;
             if (parent != null)
             {
-                panelObj = UnityEngine.GameObject.Instantiate(panelPrefab, parent);
+                panelObj = GameObject.Instantiate(panelPrefab, parent);
             }
             else
             {
-                panelObj = UnityEngine.GameObject.Instantiate(panelPrefab, UnityEngine.GameObject.FindGameObjectWithTag("DefaultCanvas").transform);
+                panelObj = GameObject.Instantiate(panelPrefab, GameObject.FindGameObjectWithTag("DefaultCanvas").transform);
             }
 
             BasePanel basePanel = panelObj.GetComponent<BasePanel>();

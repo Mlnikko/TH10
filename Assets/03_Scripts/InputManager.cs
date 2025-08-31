@@ -68,7 +68,6 @@ public class InputManager : SingletonMono<InputManager>
 
     protected override void OnSingletonInit()
     {
-        base.OnSingletonInit();
         ReleaseInput();
     }
 

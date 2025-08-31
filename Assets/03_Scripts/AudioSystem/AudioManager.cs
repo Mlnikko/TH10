@@ -1,9 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.AddressableAssets;
 
 //音频管理器
 public class AudioManager : SingletonMono<AudioManager>
@@ -14,13 +13,16 @@ public class AudioManager : SingletonMono<AudioManager>
     [SerializeField] AudioMixer audioMixer;
     [SerializeField] AudioConfig audioConfigs;
 
-    UnityEngine.GameObject defaultAudioSourcesRoot;
+    GameObject defaultAudioSourcesRoot;
 
     Dictionary<E_AudioName, AudioSource> audiosDict;
 
     protected override void OnSingletonInit()
     {
         audiosDict = new();
+        // Addressable方式加载
+        if (audioConfigs == null) audioConfigs = Addressables.LoadAssetAsync<AudioConfig>("AudioConfig").WaitForCompletion();
+        if(audioMixer == null) audioMixer = Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
         InitAudioManager();
     }  
 
@@ -70,7 +72,7 @@ public class AudioManager : SingletonMono<AudioManager>
             return;
         }
         audiosDict[name].Stop();
-        Debug.Log("已暂停播放音频" + name);
+        //Debug.Log("已暂停播放音频" + name);
     }
 
     /// <summary>

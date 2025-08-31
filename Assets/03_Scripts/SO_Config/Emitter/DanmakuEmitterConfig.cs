@@ -28,6 +28,12 @@ public class DanmakuEmitterConfig : ScriptableObject
     [Header("发射器类型")]
     public E_EmitterType EmitterType;
 
+    [Header("弹幕所属阵营")]
+    public E_DanmakuCamp DanmakuCamp;
+
+    [Header("音效设置")]
+    public E_AudioName Audio_Fire;
+
     public DanmakuEmitterConfig()
     {
         MinSize = 20;
@@ -39,5 +45,6 @@ public class DanmakuEmitterConfig : ScriptableObject
         LaunchInterval = 0.5f;
         LaunchSpeed = 2f;
         EmitterType = E_EmitterType.None;
+        DanmakuCamp = E_DanmakuCamp.None;
     }
 }

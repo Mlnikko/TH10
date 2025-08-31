@@ -10,8 +10,12 @@ public class PlayerEmitters : MonoBehaviour
     {
         foreach (var emitter in emitters)
         {
-            emitter.SetEmitterFireable(fireable);
+            emitter.SetFireable(fireable);
         }
-        GameLogger.Debug("½ÇÉ«µ¯Ä»·¢ÉäÆ÷ÆôÓÃ×´Ì¬" + fireable);
+    }
+
+    public void EnableEmitter()
+    {
+
     }
 }

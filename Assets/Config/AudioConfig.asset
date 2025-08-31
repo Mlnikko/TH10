@@ -17,7 +17,7 @@ MonoBehaviour:
     audioGroup: 0
     audioDatas:
     - displayName: "\u6807\u9898"
-      audioName: 5
+      audioName: 6
       clip: {fileID: 8300000, guid: 6ab2c36844556e24ebfd11c48d872c14, type: 3}
       outPutGroup: {fileID: 8971764941772193280, guid: 269049e98b2231743908d6d6012b26f5, type: 2}
       isMute: 0
@@ -25,14 +25,14 @@ MonoBehaviour:
       isPlayOnAwake: 0
       isLoop: 1
     - displayName: "\u573A\u666F1-\u9053\u4E2D"
-      audioName: 6
+      audioName: 7
       clip: {fileID: 8300000, guid: 70b2e636be7864f4fa29c795447e336d, type: 3}
       outPutGroup: {fileID: 8971764941772193280, guid: 269049e98b2231743908d6d6012b26f5, type: 2}
       isMute: 0
       volume: 1
       isPlayOnAwake: 0
       isLoop: 1
-  - displayName: SFX
+  - displayName: "UI\u97F3\u6548"
     audioGroup: 1
     audioDatas:
     - displayName: "\u53D6\u6D88"
@@ -67,3 +67,14 @@ MonoBehaviour:
       volume: 1
       isPlayOnAwake: 0
       isLoop: 0
+  - displayName: "\u5F39\u5E55\u97F3\u6548"
+    audioGroup: 1
+    audioDatas:
+    - displayName: "\u73A9\u5BB6\u5F39\u5E55\u53D1\u5C04"
+      audioName: 5
+      clip: {fileID: 8300000, guid: 3e36fa5963c37924e9cfc8bd86ad4120, type: 3}
+      outPutGroup: {fileID: 8656924028232967131, guid: 269049e98b2231743908d6d6012b26f5, type: 2}
+      isMute: 0
+      volume: 1
+      isPlayOnAwake: 0
+      isLoop: 1

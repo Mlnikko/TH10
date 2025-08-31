@@ -14,13 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MinSize: 20
   MaxSize: 500
-  Fireable: 0
-  EmitterType: 1
+  Fireable: 1
   PositionOffset: {x: 0, y: 0}
   StartRotation: {x: 0, y: 0, z: 0}
-  StartVelocity: {x: 0, y: -1}
+  StartVelocity: {x: 0, y: 0}
   LaunchInterval: 0.5
-  Count: 8
+  LaunchSpeed: 1
+  EmitterType: 2
+  DanmakuCamp: 2
+  DirectionCount: 8
   StartAngle: 0
   EndAngle: 360
   UseRelativeAngle: 1

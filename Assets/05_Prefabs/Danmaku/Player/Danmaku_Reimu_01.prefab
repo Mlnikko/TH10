@@ -10,7 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5427631356574396342}
   - component: {fileID: 4959689819910237749}
-  - component: {fileID: 7214475789817768908}
+  - component: {fileID: 7306249496267896843}
+  - component: {fileID: 6286785517888204499}
   m_Layer: 0
   m_Name: Danmaku_Reimu_01
   m_TagString: Untagged
@@ -85,7 +86,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7214475789817768908
+--- !u!114 &7306249496267896843
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,13 +95,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 8642103312033731798}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 318ac2dd4ddf51249a3b3871e4534550, type: 3}
+  m_Script: {fileID: 11500000, guid: 001934633fad7554f8810b481f79b61e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
+--- !u!114 &6286785517888204499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8642103312033731798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfec499f5255ec9498fcb3c288a6e3a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
   localScale: {x: 1, y: 1, z: 1}
   sprite: {fileID: -1146824268, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
-  collisionOffset: {x: 0, y: 0.23}
-  collisionType: 0
-  size: {x: 0.1, y: 0.16}
+  colliderOffset: {x: 0, y: 0.23}
+  colliderType: 1
+  size: {x: 0.1, y: 0.15}
+  radius: 0.5
+  danmakuType: 0

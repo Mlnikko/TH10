@@ -1,5 +1,4 @@
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -11,6 +10,8 @@ public enum E_AudioName
     Confirm,
     Select,
     Pause,
+
+    Danmaku_Shoot,
 
     // BGM
     Title,

@@ -15,7 +15,6 @@ public class BattleManager : SingletonMono<BattleManager>
 
     protected override void OnSingletonInit()
     {
-        base.OnSingletonInit();
         EventManager.Instance.RegistEvent(E_Event.BattleStart, StartBattle);
     }
 

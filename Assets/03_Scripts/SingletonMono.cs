@@ -78,10 +78,7 @@ public abstract class SingletonMono<T> : MonoBehaviour where T : SingletonMono<T
         }
     }
 
-    protected virtual void OnSingletonInit()
-    {
-        // 子类可重写此方法进行初始化
-    }
+    protected abstract void OnSingletonInit();
 
     protected virtual void OnDestroy()
     {
