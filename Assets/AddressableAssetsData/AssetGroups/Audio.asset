@@ -18,13 +18,13 @@ MonoBehaviour:
   m_GUID: 55755ccbe93014e4f9f793a09f4ec759
   m_SerializeEntries:
   - m_GUID: 269049e98b2231743908d6d6012b26f5
-    m_Address: Assets/03_Scripts/AudioSystem/AudioMixer.mixer
+    m_Address: AudioMixer
     m_ReadOnly: 0
     m_SerializedLabels:
     - Audio
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b332f7aa42eaffc4e9bb82de4920c13b
-    m_Address: Assets/Config/AudioConfig.asset
+    m_Address: AudioConfig
     m_ReadOnly: 0
     m_SerializedLabels:
     - Audio

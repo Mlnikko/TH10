@@ -30,7 +30,7 @@ public enum E_EnemyAnim
 public class CharacterAnim
 {
     public string displayName;
-    public E_CharacterName character;
+    public E_Character character;
     public E_CharacterAnim leftMoveStartAnim;
     public E_CharacterAnim rightMoveStartAnim;
     public E_CharacterAnim idleAnim;

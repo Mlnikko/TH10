@@ -1,32 +1,25 @@
-using System;
 using UnityEngine;
 
-public enum E_EnemyType
+public enum EnemyType
 {
-    None,
-    Minion,
-    Elite,
-    Boss
+    None = 0,
+    Minion = 1,
+    Elite = 2,
+    Boss = 3
 }
-
-public enum E_EnemyName
-{
-    None,
-    ZUN
-}
-
 
 [CreateAssetMenu(fileName = "NewEnemyConfig", menuName = "Custom/EnemyConfig")]
 public class EnemyConfig : ScriptableObject
 {
-    public E_EnemyType EnemyType;
-    public E_EnemyName EnemyName;
+    public EnemyType EnemyType;
     public Vector2 ColliderSize;
+
+    public float MaxHealth;
 
     public EnemyConfig() 
     { 
-        EnemyType = E_EnemyType.None;
-        EnemyName = E_EnemyName.None;
+        EnemyType = EnemyType.None;
         ColliderSize = new Vector2(1, 1);
+        MaxHealth = 10f;
     }
 }

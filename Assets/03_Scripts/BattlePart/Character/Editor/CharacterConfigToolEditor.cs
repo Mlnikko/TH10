@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(CharacterPrefabTool))]
+[CustomEditor(typeof(CharacterConfiger))]
 public class CharacterConfigToolEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -15,13 +15,13 @@ public class CharacterConfigToolEditor : Editor
 
         if (GUILayout.Button("读取角色配置文件", GUILayout.Height(30)))
         {
-            CharacterPrefabTool editor = (CharacterPrefabTool)target;
+            CharacterConfiger editor = (CharacterConfiger)target;
             editor.LoadCharacterConfig();
         }
 
         if (GUILayout.Button("应用并保存当前配置", GUILayout.Height(30)))
         {
-            CharacterPrefabTool editor = (CharacterPrefabTool)target;
+            CharacterConfiger editor = (CharacterConfiger)target;
             editor.SaveCharacterConfig();
         }
 

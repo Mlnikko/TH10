@@ -22,34 +22,34 @@ public class WeaponSelectPanel : BasePanel
 
     public void SelectWeapon(int id)
     {
-        E_CharacterName character = BattleManager.battleConfig.character;
+        E_Character character = BattleManager.Instance.battleSession.character;
         switch (character) 
         {
-            case E_CharacterName.Reimu:
+            case E_Character.Reimu:
                 switch (id)
                 {
                     case 0:
-                        BattleManager.battleConfig.weapon = E_Weapon.Weapon_Reimu_0;
+                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Reimu_0;
                         break;
                     case 1:
-                        BattleManager.battleConfig.weapon = E_Weapon.Weapon_Reimu_1;
+                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Reimu_1;
                         break;
                     case 2:
-                        BattleManager.battleConfig.weapon = E_Weapon.Weapon_Reimu_2;
+                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Reimu_2;
                         break;
                 }
             break;
-            case E_CharacterName.Marisa:
+            case E_Character.Marisa:
                 switch (id)
                 {
                     case 0:
-                        BattleManager.battleConfig.weapon = E_Weapon.Weapon_Marisa_0;
+                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Marisa_0;
                         break;
                     case 1:
-                        BattleManager.battleConfig.weapon = E_Weapon.Weapon_Marisa_1;
+                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Marisa_1;
                         break;
                     case 2:
-                        BattleManager.battleConfig.weapon = E_Weapon.Weapon_Marisa_2;
+                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Marisa_2;
                         break;
                 }
                 break;
@@ -58,12 +58,12 @@ public class WeaponSelectPanel : BasePanel
 
     void UpdateWeaponCharacter()
     {
-        switch (BattleManager.battleConfig.character)
+        switch (BattleManager.Instance.battleSession.character)
         {
-            case E_CharacterName.Reimu:
+            case E_Character.Reimu:
                 character.sprite = characterSprites[0];
                 break;
-            case E_CharacterName.Marisa:
+            case E_Character.Marisa:
                 character.sprite = characterSprites[1];
                 break;           
         }
@@ -72,7 +72,7 @@ public class WeaponSelectPanel : BasePanel
     {
         EnablePanel(false);
         characterSelectPanel.EnablePanel(true);
-        AudioManager.Instance.PlayAudio(E_AudioName.Cancel);
+        AudioManager.Instance.PlayAudio(AudioName.Cancel);
     }
 
     void OnDisable()

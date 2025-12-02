@@ -19,11 +19,11 @@ public class CharacterSelectPanel : BasePanel
     {
         EnablePanel(false);
         rankSelectPanel.EnablePanel(true);
-        AudioManager.Instance.PlayAudio(E_AudioName.Cancel);     
+        AudioManager.Instance.PlayAudio(AudioName.Cancel);     
     }
     public void SelectCharacterWeapon(int character)
     {
-        BattleManager.battleConfig.character = (E_CharacterName)character;
+        BattleManager.Instance.battleSession.character = (E_Character)character;
         EnterWeaponSelect();
     }
 

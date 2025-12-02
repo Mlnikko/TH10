@@ -38,7 +38,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -63,7 +63,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
   m_PositionCurves: []
   m_ScaleCurves: []
   m_FloatCurves: []
@@ -76,7 +76,7 @@ AnimationClip:
   m_ClipBindingConstant:
     genericBindings:
     - serializedVersion: 2
-      path: 2724428060
+      path: 1484973205
       attribute: 4
       script: {fileID: 0}
       typeID: 4
@@ -85,7 +85,7 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     - serializedVersion: 2
-      path: 3580119434
+      path: 797299715
       attribute: 4
       script: {fileID: 0}
       typeID: 4
@@ -141,10 +141,10 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.x
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
     classID: 4
     script: {fileID: 0}
-    flags: 16
+    flags: 0
   - serializedVersion: 2
     curve:
       serializedVersion: 2
@@ -171,10 +171,10 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.y
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
     classID: 4
     script: {fileID: 0}
-    flags: 16
+    flags: 0
   - serializedVersion: 2
     curve:
       serializedVersion: 2
@@ -201,10 +201,10 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.z
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
     classID: 4
     script: {fileID: 0}
-    flags: 16
+    flags: 0
   - serializedVersion: 2
     curve:
       serializedVersion: 2
@@ -231,10 +231,10 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.x
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
     classID: 4
     script: {fileID: 0}
-    flags: 16
+    flags: 0
   - serializedVersion: 2
     curve:
       serializedVersion: 2
@@ -261,10 +261,10 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.y
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
     classID: 4
     script: {fileID: 0}
-    flags: 16
+    flags: 0
   - serializedVersion: 2
     curve:
       serializedVersion: 2
@@ -291,10 +291,10 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: localEulerAnglesRaw.z
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
     classID: 4
     script: {fileID: 0}
-    flags: 16
+    flags: 0
   m_EulerEditorCurves:
   - serializedVersion: 2
     curve:
@@ -304,7 +304,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -316,7 +316,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -328,7 +328,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: Slow/Slow_0
+    path: Body/Slow/Slow_0
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -340,7 +340,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.x
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -352,7 +352,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.y
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
     classID: 4
     script: {fileID: 0}
     flags: 0
@@ -364,7 +364,7 @@ AnimationClip:
       m_PostInfinity: 2
       m_RotationOrder: 4
     attribute: m_LocalEulerAngles.z
-    path: Slow/Slow_1
+    path: Body/Slow/Slow_1
     classID: 4
     script: {fileID: 0}
     flags: 0

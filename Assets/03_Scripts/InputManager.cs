@@ -1,6 +1,35 @@
 using System;
 using UnityEngine;
 
+public struct FrameInput
+{
+    public float moveX;   // -1.0 ~ 1.0
+    public float moveY;   // -1.0 ~ 1.0
+    public bool shoot;    // 是否按下射击
+    // 可扩展：bomb, focus, skill 等
+}
+
+// ====== 帧输入容器 ======
+public class FrameInputBuffer
+{
+    private readonly FrameInput[] _inputs;
+    public int MaxPlayers { get; }
+
+    public FrameInputBuffer(int maxPlayers = 4)
+    {
+        MaxPlayers = maxPlayers;
+        _inputs = new FrameInput[maxPlayers];
+    }
+
+    public void SetInput(int playerId, FrameInput input)
+    {
+        if (playerId < MaxPlayers) _inputs[playerId] = input;
+    }
+
+    public ref FrameInput GetInputRef(int playerId) => ref _inputs[playerId];
+    public Span<FrameInput> GetInputsSpan() => _inputs.AsSpan();
+}
+
 public class InputManager : SingletonMono<InputManager>
 {
     #region 输入阻塞控制

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(DanmakuPrefabTool), true)]
+[CustomEditor(typeof(DanmakuConfiger), true)]
 public class DanmakuConfigToolEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -15,20 +15,20 @@ public class DanmakuConfigToolEditor : Editor
 
         if (GUILayout.Button("º”‘ÿµØƒª≈‰÷√", GUILayout.Height(30)))
         {
-            DanmakuPrefabTool editor = (DanmakuPrefabTool)target;
+            DanmakuConfiger editor = (DanmakuConfiger)target;
             editor.LoadDanmakuConfig();
         }
 
         if (GUILayout.Button("‘§¿¿µØƒª±Ìœ÷", GUILayout.Height(30)))
         {
-            DanmakuPrefabTool editor = (DanmakuPrefabTool)target;
+            DanmakuConfiger editor = (DanmakuConfiger)target;
             editor.PreviewDanmaku();
         }
 
         // 3. ÃÌº”±£¥Ê∞¥≈•
         if (GUILayout.Button("±£¥ÊµØƒª≈‰÷√", GUILayout.Height(30)))
         {
-            DanmakuPrefabTool editor = (DanmakuPrefabTool)target;
+            DanmakuConfiger editor = (DanmakuConfiger)target;
             editor.SaveDanmakuConfig();
         }
 

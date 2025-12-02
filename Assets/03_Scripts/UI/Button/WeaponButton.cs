@@ -45,17 +45,17 @@ public class WeaponButton : CustomButton
     }
     void UpdateWeaponSprites()
     {
-        switch (BattleManager.battleConfig.character)
-        {
-            case E_CharacterName.Reimu:
-                weaponName.sprite = weaponNameSprites[0];
-                weaponDetails.sprite = weaponDetailsSprites[0];
-                break;
-            case E_CharacterName.Marisa:
-                weaponName.sprite = weaponNameSprites[1];
-                weaponDetails.sprite = weaponDetailsSprites[1];
-                break;
-        }
+        //switch (BattleManager.battleConfig.character)
+        //{
+        //    case E_Character.Reimu:
+        //        weaponName.sprite = weaponNameSprites[0];
+        //        weaponDetails.sprite = weaponDetailsSprites[0];
+        //        break;
+        //    case E_Character.Marisa:
+        //        weaponName.sprite = weaponNameSprites[1];
+        //        weaponDetails.sprite = weaponDetailsSprites[1];
+        //        break;
+        //}
     }
 
     protected override void OnButtonSelected()

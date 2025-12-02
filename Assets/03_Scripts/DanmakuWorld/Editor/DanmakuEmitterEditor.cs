@@ -22,13 +22,13 @@ public class DanmakuEmitterEditor : Editor
         if (GUILayout.Button("预览发射效果", GUILayout.Height(30)))
         {
             DanmakuEmitter editor = (DanmakuEmitter)target;
-            editor.PreviewEmitterEffect();
+            //editor.PreviewEmitterEffect();
         }
 
         if (GUILayout.Button("应用并保存当前配置", GUILayout.Height(30)))
         {
             DanmakuEmitter editor = (DanmakuEmitter)target;
-            editor.SaveEmitterConfig();
+            //editor.SaveEmitterConfig();
         }
 
         GUILayout.EndHorizontal();

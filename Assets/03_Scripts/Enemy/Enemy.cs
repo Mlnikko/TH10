@@ -3,16 +3,19 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public abstract class Enemy : MonoBehaviour
 {
-    //public DanmakuSystem danmakuSystem;
+    [SerializeField] protected EnemyConfig enemyConfig;  
 
-    [SerializeField] protected EnemyConfig enemyConfig;
-
-    [SerializeField] protected E_EnemyType enemyType;
-    [SerializeField] protected E_EnemyName enemyName;
-
+    [Header("碰撞体设置")]
     [SerializeField] protected Vector2 colliderSize;
 
-    public ICollider Collider;
+    [Header("敌人属性设置")]
+    [SerializeField] protected EnemyType enemyType;
+    [SerializeField] protected float maxHealth;
+
+    [Header("音频资源设置")]
+    [SerializeField] protected AudioName dieAudioName;
+
+    //protected ColliderComponent Collider;
 
     public Vector3 Postion
     {
@@ -20,10 +23,17 @@ public abstract class Enemy : MonoBehaviour
         set { transform.position = value; }
     }
 
-    void Start()
+    void Awake()
     {
-        Collider = new RectCollider(E_ColliderLayer.Enemy, transform.position, colliderSize);
-        //danmakuSystem.AddEnemyCollider(Collider);
+        LoadEnemyConfig();
+        InitCollider();
+    }
+
+    void InitCollider()
+    {
+        //Collider = new RectCollider(this, E_ColliderLayer.Enemy, transform.position, colliderSize);
+        //Collider.OnCollide += OnHitted;
+        //CollisionSystem.AddCollider(Collider);
     }
 
     public void LoadEnemyConfig()
@@ -31,38 +41,29 @@ public abstract class Enemy : MonoBehaviour
         if (enemyConfig == null) return;
 
         enemyType = enemyConfig.EnemyType;
-        enemyName = enemyConfig.EnemyName;
         colliderSize = enemyConfig.ColliderSize;
 
-        OnEnemyConfigLoad();
+        GameLogger.Debug("已加载敌人配置：" + enemyConfig.name);
+        
     }
 
-    protected virtual void OnEnemyConfigLoad()
+    //public virtual void OnHitted(ColliderComponent other)
+    //{
+    //    DanmakuConfiger danmaku = other.Owner as DanmakuConfiger;
+    //    if (danmaku != null)
+    //    {
+    //        maxHealth -= danmaku.Damage;
+    //        if (maxHealth <= 0)
+    //        {
+    //            Die();
+    //        }
+    //    }
+    //}
+
+    public virtual void Die()
     {
-
-    }
-
-    public void SaveEnemyConfig()
-    {
-        if (enemyConfig == null) return;
-
-        enemyConfig.EnemyType = enemyType;
-        enemyConfig.EnemyName = enemyName;
-        enemyConfig.ColliderSize = colliderSize;
-
-        OnEnemyConfigSave();
-
-        UnityEditor.EditorUtility.SetDirty(enemyConfig);
-        UnityEditor.AssetDatabase.SaveAssets();
-    }
-
-    protected virtual void OnEnemyConfigSave()
-    {
-
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.DrawWireCube(transform.position, colliderSize);
+        AudioManager.Instance.PlayAudio(dieAudioName);
+        //CollisionSystem.RemoveCollider(Collider);
+        EnemyManager.Instance.RemoveEnemy(this);        
     }
 }

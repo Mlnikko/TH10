@@ -1,0 +1,61 @@
+using System.Diagnostics;
+
+/// <summary>
+/// 所有 ECS 系统的基类，提供统一生命周期和更新控制。
+/// </summary>
+public abstract class BaseSystem
+{
+    protected EntityManager EntityManager { get; private set; }
+
+    /// <summary>
+    /// 系统是否启用（可动态开关）
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// 初始化系统（由 World 调用）
+    /// </summary>
+    public void Initialize(EntityManager entityManager)
+    {
+        EntityManager = entityManager;
+        OnCreate();
+    }
+
+    /// <summary>
+    /// 销毁系统（清理资源）
+    /// </summary>
+    public void Destroy()
+    {
+        OnDestroy();
+        EntityManager = null;
+    }
+
+    // ------------------ 可选生命周期钩子 ------------------
+
+    /// <summary>
+    /// 系统创建时调用（替代构造函数）
+    /// </summary>
+    protected virtual void OnCreate() { }
+
+    /// <summary>
+    /// 系统销毁前调用
+    /// </summary>
+    protected virtual void OnDestroy() { }
+
+    // ------------------ 更新接口 ------------------
+
+    /// <summary>
+    /// 每帧更新（用于输入、UI等）
+    /// </summary>
+    public virtual void OnUpdate(float deltaTime) { }
+
+    /// <summary>
+    /// 固定时间步长更新（用于物理、逻辑）
+    /// </summary>
+    public virtual void OnFixedUpdate(float fixedDeltaTime) { }
+
+    /// <summary>
+    /// 每帧更新（用于渲染、UI等）
+    /// </summary>
+    public virtual void OnLateUpdate(float deltaTime) { }
+}

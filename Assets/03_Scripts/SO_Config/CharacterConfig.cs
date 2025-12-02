@@ -1,17 +1,16 @@
 using UnityEngine;
-public enum E_CharacterName
+public enum E_Character
 {
-    None,
-    Reimu,
-    Marisa,
-    Rin
+    None = 0,
+    Reimu = 1,
+    Marisa = 2,
 }
 
 [CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Custom/characterConfig")]
 public class CharacterConfig : ScriptableObject
 {
     [Header("–≈œ¢≈‰÷√")]
-    public E_CharacterName CharacterName;
+    public E_Character CharacterName;
     [TextArea(1, 5)]
     public string Description;
 
@@ -31,7 +30,7 @@ public class CharacterConfig : ScriptableObject
 
     public CharacterConfig() 
     {
-        CharacterName = E_CharacterName.None;
+        CharacterName = E_Character.None;
         Description = "«Î ‰»ÎΩ«…´√Ë ˆ";
 
         MoveBoxSize = new(0.3f, 0.5f);

@@ -15,14 +15,15 @@ public class AudioManager : SingletonMono<AudioManager>
 
     GameObject defaultAudioSourcesRoot;
 
-    Dictionary<E_AudioName, AudioSource> audiosDict;
+    Dictionary<AudioName, AudioSource> audiosDict;
 
     protected override void OnSingletonInit()
     {
         audiosDict = new();
-        // Addressable方式加载
+
         if (audioConfigs == null) audioConfigs = Addressables.LoadAssetAsync<AudioConfig>("AudioConfig").WaitForCompletion();
         if(audioMixer == null) audioMixer = Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
+
         InitAudioManager();
     }  
 
@@ -36,9 +37,9 @@ public class AudioManager : SingletonMono<AudioManager>
     /// </summary>
     /// <param name="name">音频名称</param>
     /// <param name="isWait">是否强制重新播放</param>
-    public void PlayAudio(E_AudioName name, bool isWait = false)
+    public void PlayAudio(AudioName name, bool isWait = false)
     {
-        if (name == E_AudioName.NULL) return;
+        if (name == AudioName.None) return;
 
         if (!audiosDict.ContainsKey(name))
         {
@@ -63,9 +64,9 @@ public class AudioManager : SingletonMono<AudioManager>
     /// 立即停止播放音频
     /// </summary>
     /// <param name="name">音频名称</param>
-    public void StopAudio(E_AudioName name)
+    public void StopAudio(AudioName name)
     {
-        if (name == E_AudioName.NULL) return;
+        if (name == AudioName.None) return;
         if (!audiosDict.ContainsKey(name))
         {
             Debug.LogWarning("不存在音频" + name);
@@ -80,7 +81,7 @@ public class AudioManager : SingletonMono<AudioManager>
     /// </summary>
     /// <param name="name">音频名称</param>
     /// <param name="fadeDuration">淡出持续时间</param>
-    public void StopAudio(E_AudioName name, float fadeDuration = 1f)
+    public void StopAudio(AudioName name, float fadeDuration = 1f)
     {
         if (!audiosDict.ContainsKey(name))
         {
@@ -94,7 +95,7 @@ public class AudioManager : SingletonMono<AudioManager>
     /// 暂停播放音频
     /// </summary>
     /// <param name="name">音频名称</param>
-    public void PauseAudio(E_AudioName name)
+    public void PauseAudio(AudioName name)
     {
         if (!audiosDict.ContainsKey(name))
         {
@@ -112,7 +113,7 @@ public class AudioManager : SingletonMono<AudioManager>
         }
     }
 
-    public void JustPlayOneAudio(E_AudioName name)
+    public void JustPlayOneAudio(AudioName name)
     {
         StopAllAudio();
         PlayAudio(name);
@@ -130,7 +131,7 @@ public class AudioManager : SingletonMono<AudioManager>
     /// 继续播放音频
     /// </summary>
     /// <param name="name">音频名称</param>
-    public void UnPauseAudio(E_AudioName name)
+    public void UnPauseAudio(AudioName name)
     {
         if (!audiosDict.ContainsKey(name))
         {

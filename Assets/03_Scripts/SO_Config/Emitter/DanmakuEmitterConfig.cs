@@ -1,5 +1,6 @@
 using UnityEngine;
-public enum E_EmitterType
+
+public enum EmitterType
 { 
     None,
     Line,
@@ -12,8 +13,8 @@ public class DanmakuEmitterConfig : ScriptableObject
     public int MinSize;
     public int MaxSize;
 
-    [Header("发射控制")]
-    public bool Fireable;
+    //[Header("发射控制")]
+    //public bool Fireable;
 
     public Vector2 PositionOffset;
     public Vector3 StartRotation;
@@ -25,26 +26,23 @@ public class DanmakuEmitterConfig : ScriptableObject
     [Header("发射速度")]
     public float LaunchSpeed;
 
-    [Header("发射器类型")]
-    public E_EmitterType EmitterType;
-
-    [Header("弹幕所属阵营")]
-    public E_DanmakuCamp DanmakuCamp;
-
     [Header("音效设置")]
-    public E_AudioName Audio_Fire;
+    public AudioName Audio_Fire;
+
+    [Header("发射器阵营")]
+    public EmitterCamp EmitterCamp;
 
     public DanmakuEmitterConfig()
     {
         MinSize = 20;
         MaxSize = 500;
-        Fireable = false;
+        //Fireable = false;
         PositionOffset = Vector2.zero;
         StartRotation = Vector3.zero;
         StartVelocity = Vector2.zero;
         LaunchInterval = 0.5f;
         LaunchSpeed = 2f;
-        EmitterType = E_EmitterType.None;
-        DanmakuCamp = E_DanmakuCamp.None;
+        Audio_Fire = AudioName.None;
+        EmitterCamp = EmitterCamp.None;
     }
 }

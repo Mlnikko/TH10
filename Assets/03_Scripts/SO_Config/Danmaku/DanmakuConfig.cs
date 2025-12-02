@@ -1,25 +1,26 @@
 using UnityEngine;
 
-public class DanmakuConfig : ScriptableObject , IConfig
+public class DanmakuConfig : ScriptableObject
 {
     [Header("µ¯Ä»Ëõ·Å")]
-    public Vector3 LocalScale;
+    public Vector2 LocalScale;
 
     [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
     public Sprite Sprite;
     public Color Color;
 
     [Header("µ¯Ä»Åö×²Æ÷ÉèÖÃ")]
-    public Vector2 ColliderOffset;
     public E_ColliderType ColliderType;
+    public E_ColliderLayer ColliderLayer;
+    public Vector2 ColliderOffset; 
     public Vector2 Size;
     public float Radius;
 
-    [Header("µ¯Ä»ÕóÓª")]
-    public E_DanmakuCamp DanmakuCamp;
-
     [Header("µ¯Ä»ÀàÐÍ")]
-    public E_DanmakuType DanmakuType;
+    public DanmakuType DanmakuType;
+
+    [Header("µ¯Ä»ÉËº¦")]
+    public float Damage;
 
     public DanmakuConfig()
     {
@@ -28,19 +29,9 @@ public class DanmakuConfig : ScriptableObject , IConfig
         Color = Color.white;
         ColliderOffset = Vector2.zero;
         ColliderType = E_ColliderType.None;
-        Size = Vector2.one;
-        Radius = 0.5f;
-        DanmakuCamp = E_DanmakuCamp.None;
-        DanmakuType = E_DanmakuType.Normal;
-    }
-
-    public ScriptableObject Load()
-    {
-        return this;
-    }
-
-    public bool Save(ScriptableObject SO)
-    {
-        throw new System.NotImplementedException();
+        Size = Vector2.zero;
+        Radius = 0;
+        DanmakuType = DanmakuType.Normal;
+        Damage = 1f;
     }
 }

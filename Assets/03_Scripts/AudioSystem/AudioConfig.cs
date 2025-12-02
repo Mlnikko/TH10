@@ -2,16 +2,21 @@ using System;
 using UnityEngine;
 using UnityEngine.Audio;
 
-public enum E_AudioName
+public enum AudioName
 {
-    NULL,
+    None = 0,
     // SFX
-    Cancel,
-    Confirm,
-    Select,
-    Pause,
+    Cancel = 1,
+    Confirm = 2,
+    Select = 3,
+    Pause = 4,
 
     Danmaku_Shoot,
+
+
+    Player_Die,
+    Enemy_Die_0,
+    Enemy_Die_1,
 
     // BGM
     Title,
@@ -43,7 +48,7 @@ public class AudioData
     string displayName;
 
     [Header("“Ù∆µ√˚≥∆")]
-    public E_AudioName audioName;
+    public AudioName audioName;
 
     [Header("“Ù∆µºÙº≠")]
     public AudioClip clip;

@@ -18,5 +18,5 @@ MonoBehaviour:
   SlowSpeed: 1.8
   MoveBoxSize: {x: 0.3, y: 0.5}
   MoveBoxOffset: {x: 0, y: 0.08}
-  HitRadius: 0.05
+  HitRadius: 0.04
   GrazeRadius: 0.25

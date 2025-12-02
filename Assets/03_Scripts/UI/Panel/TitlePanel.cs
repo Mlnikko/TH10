@@ -26,7 +26,7 @@ public class TitlePanel : BasePanel
     {
         if (!isTipsShown) return;
         isTipsShown = false;
-        AudioManager.Instance.PlayAudio(E_AudioName.Pause);
+        AudioManager.Instance.PlayAudio(AudioName.Pause);
         InputManager.Instance.OnKeyInput_Any -= GameFirstEnterHandler;
         StartCoroutine(ShowSelections());
     }

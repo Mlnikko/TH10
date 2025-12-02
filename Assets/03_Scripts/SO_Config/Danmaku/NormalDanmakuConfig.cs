@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewNormalDanmakuConfig", menuName = "Danmaku/NormalDanmakuConfig")]
+[CreateAssetMenu(fileName = "NewNormalDanmakuConfig", menuName = "DanmakuConfiger/NormalDanmakuConfig")]
 public class NormalDanmakuConfig : DanmakuConfig
 {
    

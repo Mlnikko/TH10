@@ -11,7 +11,6 @@ public class ArcEmitterConfig : DanmakuEmitterConfig
 
     public ArcEmitterConfig() : base()
     {
-        EmitterType = E_EmitterType.Arc;
         DirectionCount = 8;
         StartAngle = 0.0f;
         EndAngle = 360.0f;

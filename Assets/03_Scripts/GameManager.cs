@@ -78,7 +78,7 @@ public class GameManager : SingletonMono<GameManager>
     {
         BasePanel loadingPanel = UIManager.Instance.OpenPanel(E_Panel.Loading);
         yield return new WaitForSeconds(3);
-        AudioManager.Instance.PlayAudio(E_AudioName.Title);
+        AudioManager.Instance.PlayAudio(AudioName.Title);
         loadingPanel.PanelFadeOut(1);
         yield return new WaitForSeconds(1);
         UIManager.Instance.OpenPanel(E_Panel.Title);

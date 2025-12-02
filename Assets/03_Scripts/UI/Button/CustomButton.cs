@@ -24,11 +24,11 @@ public class CustomButton : MonoBehaviour, IPointerEnterHandler, IPointerClickHa
     [SerializeField] float scaleAnimDuration = 0.2f;
 
     [Header("∞¥≈•“Ù–ß")]
-    [SerializeField] E_AudioName hoverSound;
-    [SerializeField] E_AudioName unHoverSound;
-    [SerializeField] E_AudioName selectSound;
-    [SerializeField] E_AudioName unSelectSound;
-    [SerializeField] E_AudioName confirmSound;
+    [SerializeField] AudioName hoverSound;
+    [SerializeField] AudioName unHoverSound;
+    [SerializeField] AudioName selectSound;
+    [SerializeField] AudioName unSelectSound;
+    [SerializeField] AudioName confirmSound;
 
     public Button button
     {

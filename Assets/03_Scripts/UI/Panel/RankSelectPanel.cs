@@ -20,13 +20,13 @@ public class RankSelectPanel : BasePanel
     void ExitRankSelect()
     {
         PanelFadeOut();
-        AudioManager.Instance.PlayAudio(E_AudioName.Cancel);
+        AudioManager.Instance.PlayAudio(AudioName.Cancel);
         titlePanel.EnableBtnGroupNavigation(true);
     }
 
     public void SelectRank(int rank)
     {
-        BattleManager.battleConfig.rank = (E_Rank)rank;
+        BattleManager.Instance.battleSession.rank = (E_Rank)rank;
         EnterCharacterSelect();
     }
 

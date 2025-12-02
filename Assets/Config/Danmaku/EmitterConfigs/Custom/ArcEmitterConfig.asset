@@ -20,8 +20,8 @@ MonoBehaviour:
   StartVelocity: {x: 0, y: 0}
   LaunchInterval: 0.5
   LaunchSpeed: 1
-  EmitterType: 2
-  DanmakuCamp: 2
+  Audio_Fire: 5
+  EmitterCamp: 2
   DirectionCount: 8
   StartAngle: 0
   EndAngle: 360

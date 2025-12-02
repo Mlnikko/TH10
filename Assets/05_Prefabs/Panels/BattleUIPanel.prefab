@@ -659,9 +659,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6562273382634141740}
   - component: {fileID: 5813492613574799788}
-  - component: {fileID: 8496547854665460884}
   m_Layer: 5
-  m_Name: BattleArea
+  m_Name: BattleZone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -694,21 +693,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4056999280866677131}
   m_CullTransparentMesh: 1
---- !u!114 &8496547854665460884
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4056999280866677131}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 712537e2746b3b74fa20f8b532832789, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  padding: 0
-  showDebugGizmos: 1
-  debugColor: {r: 1, g: 0, b: 0, a: 0.3}
 --- !u!1 &4932523906627849149
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,16 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyManager
+public class EnemyManager : SingletonMono<EnemyManager>
 {
-    public Enemy CreateEnemy(EnemyConfig enemyConfig)
+    ObjectPool<Enemy> enemyPool;
+    protected override void OnSingletonInit()
     {
-        return null;
+        
+    }
+
+    public void SpawnEnemy()
+    {
+
     }
 
     public void RemoveEnemy(Enemy enemy)
     {
-        CollisionSystem.RemoveCollider(enemy.Collider);
+        enemy.gameObject.SetActive(false);
     }
 }

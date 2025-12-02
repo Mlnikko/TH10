@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6221921395316810844}
   - component: {fileID: 9040115342852333779}
-  - component: {fileID: 2749584298524219459}
+  - component: {fileID: 9099869492153147752}
   m_Layer: 0
   m_Name: Danmaku_Star_0
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &2749584298524219459
+--- !u!114 &9099869492153147752
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,12 +94,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 3665478407799394565}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b4c61e200d8f1145ae2db4fe7b83f07, type: 3}
+  m_Script: {fileID: 11500000, guid: 88bb0e1c3c6b88c48a2eca993b5e461b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 002873001e15c764785b6acad369ab1e, type: 2}
-  sprite: {fileID: -1349712159, guid: 984f553d7043b73418103409ec53f2b7, type: 3}
-  color: {r: 1, g: 1, b: 1, a: 1}
-  offset: {x: 0, y: 0}
-  collisionType: 0
-  radius: 0.1
+  localScale: {x: 0, y: 0, z: 0}
+  sprite: {fileID: 0}
+  color: {r: 0, g: 0, b: 0, a: 0}
+  colliderOffset: {x: 0, y: 0}
+  colliderType: 0
+  size: {x: 0, y: 0}
+  radius: 0
+  danmakuType: 0
+  damage: 0

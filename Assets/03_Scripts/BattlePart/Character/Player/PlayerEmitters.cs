@@ -4,13 +4,20 @@ using UnityEngine;
 
 public class PlayerEmitters : MonoBehaviour
 {
-    public List<DanmakuEmitter> emitters;
+    List<DanmakuEmitter> allEmitters = new();
+
+    void Awake()
+    {
+        // 获取所有子物体发射器组件
+        allEmitters.Clear();
+        allEmitters.AddRange(GetComponentsInChildren<DanmakuEmitter>());
+    }
 
     public void EnableAllEmitters(bool fireable)
     {
-        foreach (var emitter in emitters)
+        foreach (var emitter in allEmitters)
         {
-            emitter.SetFireable(fireable);
+            //emitter.SetFireable(fireable);
         }
     }
 
