@@ -78,14 +78,18 @@ public abstract class SingletonMono<T> : MonoBehaviour where T : SingletonMono<T
         }
     }
 
-    protected abstract void OnSingletonInit();
-
-    protected virtual void OnDestroy()
+    protected virtual void OnSingletonInit() { }
+    protected virtual void OnSingletonDestroy()
     {
         if (_instance == this)
         {
             _instance = null;
         }
+    }
+
+    protected virtual void OnDestroy()
+    {
+        OnSingletonDestroy();
     }
 
     void OnApplicationQuit()

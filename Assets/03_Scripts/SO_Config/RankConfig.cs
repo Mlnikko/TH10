@@ -19,7 +19,7 @@ public class Rank
 }
 
 [CreateAssetMenu(fileName = "NewRankConfig", menuName = "Custom/RankConfig")]
-public class RankConfig : ScriptableObject
+public class RankConfig : GameConfig
 {
     public Rank[] ranks;
 }

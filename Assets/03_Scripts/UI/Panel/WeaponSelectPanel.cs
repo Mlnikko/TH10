@@ -15,58 +15,58 @@ public class WeaponSelectPanel : BasePanel
 
     void OnEnable()
     {
-        InputManager.Instance.OnKeyInput_X += ExitWeaponSelect;
+        //InputManager.Instance.OnKeyInput_X += ExitWeaponSelect;
         UpdateWeaponCharacter();
         animator.Play("ShowWeaponPanel");
     }
 
     public void SelectWeapon(int id)
     {
-        E_Character character = BattleManager.Instance.battleSession.character;
-        switch (character) 
-        {
-            case E_Character.Reimu:
-                switch (id)
-                {
-                    case 0:
-                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Reimu_0;
-                        break;
-                    case 1:
-                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Reimu_1;
-                        break;
-                    case 2:
-                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Reimu_2;
-                        break;
-                }
-            break;
-            case E_Character.Marisa:
-                switch (id)
-                {
-                    case 0:
-                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Marisa_0;
-                        break;
-                    case 1:
-                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Marisa_1;
-                        break;
-                    case 2:
-                        BattleManager.Instance.battleSession.weapon = E_Weapon.Weapon_Marisa_2;
-                        break;
-                }
-                break;
-        }
+        //E_Character characterId = BattleManager.Instance.battleSession.characterId;
+        //switch (characterId) 
+        //{
+        //    case E_Character.Reimu:
+        //        switch (id)
+        //        {
+        //            case 0:
+        //                BattleManager.Instance.battleSession.WeaponID = E_Weapon.Weapon_Reimu_0;
+        //                break;
+        //            case 1:
+        //                BattleManager.Instance.battleSession.WeaponID = E_Weapon.Weapon_Reimu_1;
+        //                break;
+        //            case 2:
+        //                BattleManager.Instance.battleSession.WeaponID = E_Weapon.Weapon_Reimu_2;
+        //                break;
+        //        }
+        //    break;
+        //    case E_Character.Marisa:
+        //        switch (id)
+        //        {
+        //            case 0:
+        //                BattleManager.Instance.battleSession.WeaponID = E_Weapon.Weapon_Marisa_0;
+        //                break;
+        //            case 1:
+        //                BattleManager.Instance.battleSession.WeaponID = E_Weapon.Weapon_Marisa_1;
+        //                break;
+        //            case 2:
+        //                BattleManager.Instance.battleSession.WeaponID = E_Weapon.Weapon_Marisa_2;
+        //                break;
+        //        }
+        //        break;
+        //}
     }
 
     void UpdateWeaponCharacter()
     {
-        switch (BattleManager.Instance.battleSession.character)
-        {
-            case E_Character.Reimu:
-                character.sprite = characterSprites[0];
-                break;
-            case E_Character.Marisa:
-                character.sprite = characterSprites[1];
-                break;           
-        }
+        //switch (BattleManager.Instance.battleSession.characterId)
+        //{
+        //    case E_Character.Reimu:
+        //        characterId.sprite = characterSprites[0];
+        //        break;
+        //    case E_Character.Marisa:
+        //        characterId.sprite = characterSprites[1];
+        //        break;           
+        //}
     }
     void ExitWeaponSelect()
     {
@@ -77,6 +77,6 @@ public class WeaponSelectPanel : BasePanel
 
     void OnDisable()
     {
-        InputManager.Instance.OnKeyInput_X -= ExitWeaponSelect;
+        //InputManager.Instance.OnKeyInput_X -= ExitWeaponSelect;
     }
 }

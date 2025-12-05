@@ -3,7 +3,7 @@ using UnityEngine;
 public class BattleArea : MonoBehaviour
 {
     [Header("运行时生成的配置（只读）")]
-    [SerializeField] private BattleAreaConfig config = new();
+    [SerializeField] BattleAreaData battleAreaData = new();
 
     [Header("编辑器参数")]
     [Tooltip("弹幕回收外扩距离（世界单位，建议 50~200）")]
@@ -15,31 +15,23 @@ public class BattleArea : MonoBehaviour
     [Header("可视化")]
     [SerializeField] private bool showGrid = true;
 
-    private void Awake()
-    {
-        InitBattleArea();
-    }
-
     /// <summary>
-    /// 从当前 Transform 自动生成 BattleAreaConfig
-    /// 调用后 config 即可用于其他系统
+    /// 从当前 Transform 自动生成 BattleAreaData
+    /// 调用后 battleAreaData 即可用于其他系统
     /// </summary>
-    public void InitBattleArea()
+    public BattleAreaData InitBattleArea()
     {
         Vector3 size = transform.localScale;
         Vector3 center = transform.position;
 
-        config.Width = size.x;
-        config.Height = size.y;
-        config.Center = new Vector2(center.x, center.y);
-        config.DanmakuRecycleMargin = danmakuRecycleBounds;
-        config.GridCellSize = gridCellSize;
-    }
+        battleAreaData.Width = size.x;
+        battleAreaData.Height = size.y;
+        battleAreaData.Center = new Vector2(center.x, center.y);
+        battleAreaData.DanmakuRecycleMargin = danmakuRecycleBounds;
+        battleAreaData.GridCellSize = gridCellSize;
 
-    /// <summary>
-    /// 获取战斗配置（供 CollisionSystem 等使用）
-    /// </summary>
-    public BattleAreaConfig GetConfig() => config;
+        return battleAreaData;
+    }
 
     void OnDrawGizmos()
     {

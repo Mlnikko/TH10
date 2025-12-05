@@ -7,16 +7,16 @@ public enum E_Character
 }
 
 [CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Custom/characterConfig")]
-public class CharacterConfig : ScriptableObject
+public class CharacterConfig : GameConfig
 {
     [Header("信息配置")]
-    public E_Character CharacterName;
+    public E_Character CharacterID;
     [TextArea(1, 5)]
     public string Description;
 
     [Header("移速配置")]
-    public float Speed;
-    public float SlowSpeed;
+    public float MoveSpeed;
+    public float MoveSlowSpeed;
 
     [Header("移动碰撞体设置")]
     public Vector2 MoveBoxSize;
@@ -30,7 +30,7 @@ public class CharacterConfig : ScriptableObject
 
     public CharacterConfig() 
     {
-        CharacterName = E_Character.None;
+        CharacterID = E_Character.None;
         Description = "请输入角色描述";
 
         MoveBoxSize = new(0.3f, 0.5f);

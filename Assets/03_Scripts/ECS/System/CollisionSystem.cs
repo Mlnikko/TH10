@@ -10,7 +10,7 @@ public class DeterministicGrid
     private readonly int _gridWidth, _gridHeight;
     private readonly List<int>[] _cells;
 
-    public DeterministicGrid(BattleAreaConfig config)
+    public DeterministicGrid(BattleAreaData config)
     {
         _cellSize = config.GridCellSize; // 来自配置
 
@@ -115,7 +115,7 @@ public class DeterministicGrid
 
 public class CollisionSystem : BaseSystem
 {
-    private BattleAreaConfig _battleConfig; // ← 类型变更
+    private BattleAreaData _battleConfig; // ← 类型变更
     private DeterministicGrid _grid;
 
     // 缓冲区（避免 GC）
@@ -123,10 +123,10 @@ public class CollisionSystem : BaseSystem
     private readonly int[] _queryResults = new int[EntityManager.MAX_ENTITIES];
     private readonly BitSet _tempBitSet = new BitSet(EntityManager.MAX_ENTITIES);
 
-    public void Initialize(BattleAreaConfig config)
+    public void Initialize(BattleAreaData config)
     {
         _battleConfig = config;
-        _grid = new DeterministicGrid(config); // ← 传入新配置
+        _grid = new DeterministicGrid(config);
     }
 
     public override void OnFixedUpdate(float fixedDeltaTime)

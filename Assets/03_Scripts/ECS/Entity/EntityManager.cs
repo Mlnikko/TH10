@@ -91,9 +91,17 @@ public class BitSet
 /// <typeparam name="T"></typeparam>
 internal static class ComponentStorage<T> where T : struct, IComponent
 {
-    public static readonly T[] Array = new T[EntityManager.MAX_ENTITIES];
+    public static readonly T[] Components = new T[EntityManager.MAX_ENTITIES];
     public static readonly BitSet HasComponent = new BitSet(EntityManager.MAX_ENTITIES);
-    public static readonly BitSet ActiveComponent = new BitSet(EntityManager.MAX_ENTITIES);
+}
+
+/// <summary>
+/// 预分配缓冲区：预分配常用的索引数组，避免每帧分配与过大数组导致的 GC 压力。
+/// </summary>
+public static class TempBuffers
+{
+    public static readonly int[] BulletIndices = new int[16384]; // 64KB
+    public static readonly int[] EnemyIndices = new int[4096];   // 16KB  
 }
 
 public class EntityManager
@@ -156,7 +164,7 @@ public class EntityManager
                _versions[index] == entity.Version;
     }
 
-    // 根据索引获取实体（用于系统内部）
+    // 根据索引获取实体
     public Entity GetEntityByIndex(int index)
     {
         if (index < 0 || index >= MAX_ENTITIES || !_activeEntities[index])
@@ -170,10 +178,8 @@ public class EntityManager
         if (!IsValid(entity)) return;
         int i = entity.Index;
 
-        ComponentStorage<T>.Array[i] = component;
+        ComponentStorage<T>.Components[i] = component;
         ComponentStorage<T>.HasComponent.Set(i, true);
-
-        // 如果 T 有 Active 字段，可特殊处理（见下文）
     }
 
     // 泛型移除组件
@@ -181,43 +187,24 @@ public class EntityManager
     {
         if (!IsValid(entity)) return;
         int i = entity.Index;
-        ComponentStorage<T>.Array[i] = default;
+        ComponentStorage<T>.Components[i] = default;
         ComponentStorage<T>.HasComponent.Set(i, false);
     }
 
-    /// <summary>
-    /// 泛型获取组件（引用，可读写）
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="entity"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentException"></exception>
     public ref T GetComponent<T>(Entity entity) where T : struct, IComponent
     {
         if (!IsValid(entity))
             throw new ArgumentException("Invalid entity");
-        return ref ComponentStorage<T>.Array[entity.Index];
+        return ref ComponentStorage<T>.Components[entity.Index];
     }
 
-    /// <summary>
-    /// 获取整个组件数组的 Span（用于系统遍历）
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
     public Span<T> GetComponentSpan<T>() where T : struct, IComponent
     {
-        return ComponentStorage<T>.Array.AsSpan();
+        return ComponentStorage<T>.Components.AsSpan();
     }
 
-    /// <summary>
-    /// 获取活跃组件索引（通用）
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="output"></param>
-    /// <returns></returns>
-    public int GetActiveEntities<T>(Span<int> output) where T : struct, IComponent
+    public int GetEntities<T>(Span<int> output) where T : struct, IComponent
     {
-        // 默认：只要存在就算活跃
         return ComponentStorage<T>.HasComponent.GetSetBits(output);
     }
 }

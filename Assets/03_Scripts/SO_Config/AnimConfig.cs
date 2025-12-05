@@ -43,7 +43,7 @@ public class EnemyAnim
 }
 
 [CreateAssetMenu(fileName = "NewAnimConfig", menuName = "Custom/AnimConfig")]
-public class AnimConfig : ScriptableObject
+public class AnimConfig : GameConfig
 {
     public CharacterAnim[] characterAnims;
     public EnemyAnim[] enemyAnims;

@@ -5,6 +5,12 @@
 
 public interface IComponent { }
 
+// 所有需要同步到 GameObject 的实体都带这个组件
+public struct CPresentationLink : IComponent
+{
+    public int presentationId; // 全局唯一表现 ID
+}
+
 public struct CPosition : IComponent
 {
     public float x, y;
@@ -84,10 +90,18 @@ public struct CCollider : IComponent
 #region PlayerComponent
 public struct CPlayer : IComponent
 {
-    public byte playerId;      // 玩家ID（用于多人游戏）
-    public CharacterConfig characterConfig; // 玩家角色配置数据
-    public float speed;           // 移动速度
-    public float slowSpeed;       // 慢速移动速度
+    public int gameObjectId; // 关联的游戏对象ID
+    public byte playerIndex;   // 玩家ID（用于多人游戏）
+
+    public byte characterId;   // 角色ID, 与角色配置表对应
+    public byte weaponId;      // 武器ID, 与武器配置表对应
+}
+
+public struct CPlayerRunTime : IComponent
+{
+    public byte playerIndex;
+    public float moveSpeed;           // 移动速度
+    public float moveSlowSpeed;       // 慢速移动速度
     public float hitRadius;       // 受击判定半径
     public float grazeRadius;     // 擦弹判定半径
     public bool isSlowMode;       // 是否处于慢速模式

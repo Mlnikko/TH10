@@ -1,4 +1,3 @@
-// World.cs
 using System.Collections.Generic;
 
 /// <summary>
@@ -7,34 +6,54 @@ using System.Collections.Generic;
 /// </summary>
 public class World
 {
-    private readonly List<BaseSystem> _systems = new();
-    private readonly EntityManager _entityManager = new();
+    private readonly List<BaseSystem> _systems;
+    private readonly EntityManager _entityManager;
 
     public EntityManager EntityManager => _entityManager;
 
+    public World()
+    {
+        _systems = new List<BaseSystem>();
+        _entityManager = new EntityManager();
+    }
+
+    #region 添加系统
     public T AddSystem<T>() where T : BaseSystem, new()
     {
         var system = new T();
-        system.Initialize(_entityManager);
-        _systems.Add(system);
+        AddSystemInternal(system);
         return system;
     }
-    
-    /// <summary>
-    /// 获取已注册的系统
-    /// </summary>
-    public T GetSystem<T>() where T : BaseSystem
+
+    public void AddSystem(BaseSystem system)
     {
-        foreach (var sys in _systems)
-        {
-            if (sys is T result)
-            {
-                return result;
-            }
-        }
-        return null;
+        AddSystemInternal(system);
     }
 
+    void AddSystemInternal(BaseSystem system)
+    {
+        system.Initialize(this);
+        _systems.Add(system);
+    }
+    #endregion
+
+    #region 移除系统
+    public void RemoveSystem<T>() where T : BaseSystem
+    {
+        _systems.RemoveAll(sys =>
+        {
+            if (sys is T)
+            {
+                sys.Destroy();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    #endregion
+
+    #region 更新系统
     /// <summary>
     /// 固定时间步长更新（用于帧同步）
     /// 所有游戏逻辑系统（移动、碰撞、生命周期等）应在此方法中更新
@@ -80,7 +99,10 @@ public class World
                 sys.OnLateUpdate(deltaTime);
             }
         }
+        PresentationBridge.UpdateAllPresentations(EntityManager); // ← 关键！
     }
+
+    #endregion
 
     public void Dispose()
     {

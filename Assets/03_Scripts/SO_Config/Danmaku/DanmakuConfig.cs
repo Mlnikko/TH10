@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class DanmakuConfig : ScriptableObject
+public class DanmakuConfig : GameConfig
 {
     [Header("µ¯Ä»Ëõ·Å")]
     public Vector2 LocalScale;

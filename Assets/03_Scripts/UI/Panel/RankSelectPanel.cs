@@ -14,7 +14,7 @@ public class RankSelectPanel : BasePanel
     }
     void OnEnable()
     {
-        InputManager.Instance.OnKeyInput_X += ExitRankSelect;
+        //InputManager.Instance.OnKeyInput_X += ExitRankSelect;
         animator.Play("ShowRankSelectPanel");
     }
     void ExitRankSelect()
@@ -26,7 +26,7 @@ public class RankSelectPanel : BasePanel
 
     public void SelectRank(int rank)
     {
-        BattleManager.Instance.battleSession.rank = (E_Rank)rank;
+        //BattleManager.Instance.battleSession.rank = (E_Rank)rank;
         EnterCharacterSelect();
     }
 
@@ -38,6 +38,6 @@ public class RankSelectPanel : BasePanel
 
     void OnDisable()
     {
-        InputManager.Instance.OnKeyInput_X -= ExitRankSelect;
+        //InputManager.Instance.OnKeyInput_X -= ExitRankSelect;
     }
 }

@@ -1,159 +1,224 @@
-using System;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public struct FrameInput
 {
-    public float moveX;   // -1.0 ~ 1.0
-    public float moveY;   // -1.0 ~ 1.0
-    public bool shoot;    // �Ƿ������
-    // ����չ��bomb, focus, skill ��
-}
+    public ushort frame;
+    public byte playerIndex;
 
-// ====== ֡�������� ======
-public class FrameInputBuffer
-{
-    private readonly FrameInput[] _inputs;
-    public int MaxPlayers { get; }
+    public sbyte moveHorizontal; // -1, 0, +1
+    public sbyte moveVertical;   // -1, 0, +1
+    public bool shoot;           // Z
+    public bool bomb;            // X
+    public bool slowMode;        // LeftShift
+    public bool anyKey;
 
-    public FrameInputBuffer(int maxPlayers = 4)
-    {
-        MaxPlayers = maxPlayers;
-        _inputs = new FrameInput[maxPlayers];
-    }
-
-    public void SetInput(int playerId, FrameInput input)
-    {
-        if (playerId < MaxPlayers) _inputs[playerId] = input;
-    }
-
-    public ref FrameInput GetInputRef(int playerId) => ref _inputs[playerId];
-    public Span<FrameInput> GetInputsSpan() => _inputs.AsSpan();
+    public static FrameInput Default => new() { frame = 0, playerIndex = 0 };
 }
 
 public class InputManager : SingletonMono<InputManager>
 {
-    #region ������������
-    public static bool IsInputBlocked { get; private set; }
-    public static void BlockInput() => IsInputBlocked = true;
-    public static void ReleaseInput() => IsInputBlocked = false;
-    #endregion
+    private const int MAX_PLAYERS = 4;
 
-    #region ���뻺��
-    bool esc_KeyInputDown;
-
-    bool leftShift_KeyInputDown;
-    bool leftShift_KeyInputUp;
-
-    bool z_KeyInputDown;
-    bool z_KeyInputUp;
-
-    bool x_KeyInputDown;
-
-    bool up_KeyInputDown;
-    bool up_KeyInputUp;
-
-    bool down_KeyInputDown;
-    bool down_KeyInputUp;
-
-    bool right_KeyInputDown;
-    bool right_KeyInputUp;
-
-    bool left_KeyInputDown;
-    bool left_KeyInputUp;
-    bool any_KeyInput
-    {
-        get
-        {
-            return esc_KeyInputDown | leftShift_KeyInputDown | z_KeyInputDown | x_KeyInputDown | up_KeyInputDown | down_KeyInputDown | left_KeyInputDown | right_KeyInputDown;
-        }
-    }
-    #endregion
-
-    public event Action<bool> OnKeyInput_LS;
-    public event Action<bool> OnKeyInput_Z;
-    public event Action OnKeyInput_X;
-
-    public event Action<bool> OnKeyInput_Up;
-    public event Action<bool> OnKeyInput_Down;
-    public event Action<bool> OnKeyInput_Left;
-    public event Action<bool> OnKeyInput_Right;
-
-    public event Action OnKeyInput_Esc;
-    public event Action OnKeyInput_Any;
-    public float HorizontalAxisRaw
-    {
-        get
-        {
-            return Input.GetAxisRaw("Horizontal");
-        }
-    }
-    public float VerticalAxisRaw
-    {
-        get
-        {
-            return Input.GetAxisRaw("Vertical");
-        }
-    }
+    private Dictionary<ushort, FrameInput>[] _inputFrames;
+    private FrameInput[] _currentConsumedInputs;
+    private bool _isInitialized = false;
 
     protected override void OnSingletonInit()
     {
-        ReleaseInput();
+        base.OnSingletonInit();
+        InitializeForGame();
     }
 
-    void Update()
+    // ========================
+    // 初始化与清理
+    // ========================
+
+    public void InitializeForGame()
     {
-        GetInput();
-        HandleInput();
+        _inputFrames = new Dictionary<ushort, FrameInput>[MAX_PLAYERS];
+        _currentConsumedInputs = new FrameInput[MAX_PLAYERS];
+
+        for (int i = 0; i < MAX_PLAYERS; i++)
+        {
+            _inputFrames[i] = new Dictionary<ushort, FrameInput>();
+            _currentConsumedInputs[i] = FrameInput.Default;
+        }
+
+        _isInitialized = true;
     }
-    void GetInput()
+
+    public void ClearAllInputs()
     {
-        if (IsInputBlocked) return;
+        if (!_isInitialized) return;
 
-        esc_KeyInputDown = Input.GetKeyDown(KeyCode.Escape);
-
-        leftShift_KeyInputDown = Input.GetKeyDown(KeyCode.LeftShift);
-        leftShift_KeyInputUp = Input.GetKeyUp(KeyCode.LeftShift);
-
-        z_KeyInputDown = Input.GetKeyDown(KeyCode.Z);
-        z_KeyInputUp = Input.GetKeyUp(KeyCode.Z);
-
-        x_KeyInputDown = Input.GetKeyDown(KeyCode.X);
-
-        up_KeyInputDown = Input.GetKeyDown(KeyCode.UpArrow);
-        up_KeyInputUp = Input.GetKeyUp(KeyCode.UpArrow);
-
-        down_KeyInputDown = Input.GetKeyDown(KeyCode.DownArrow);
-        down_KeyInputUp = Input.GetKeyUp(KeyCode.DownArrow);
-
-        left_KeyInputDown = Input.GetKeyDown(KeyCode.LeftArrow);
-        left_KeyInputUp = Input.GetKeyUp(KeyCode.LeftArrow);
-
-        right_KeyInputDown = Input.GetKeyDown(KeyCode.RightArrow);
-        right_KeyInputUp = Input.GetKeyUp(KeyCode.RightArrow);
+        for (int i = 0; i < MAX_PLAYERS; i++)
+        {
+            _inputFrames[i]?.Clear();
+            _currentConsumedInputs[i] = FrameInput.Default;
+        }
     }
-    void HandleInput()
+
+    protected override void OnSingletonDestroy()
     {
-        if (leftShift_KeyInputDown) OnKeyInput_LS?.Invoke(true);
-        if (leftShift_KeyInputUp) OnKeyInput_LS?.Invoke(false);
-
-        if (z_KeyInputDown) OnKeyInput_Z?.Invoke(true);
-        if (z_KeyInputUp) OnKeyInput_Z?.Invoke(false);
-
-        if (x_KeyInputDown) OnKeyInput_X?.Invoke();
-
-        if (up_KeyInputDown) OnKeyInput_Up?.Invoke(true);
-        if (up_KeyInputUp) OnKeyInput_Up?.Invoke(false);
-
-        if (down_KeyInputDown) OnKeyInput_Down?.Invoke(true);
-        if (down_KeyInputUp) OnKeyInput_Down?.Invoke(false);
-
-        if (left_KeyInputDown) OnKeyInput_Left?.Invoke(true);
-        if (left_KeyInputUp) OnKeyInput_Left?.Invoke(false);
-
-        if (right_KeyInputDown) OnKeyInput_Right?.Invoke(true);
-        if (right_KeyInputUp) OnKeyInput_Right?.Invoke(false);
-
-        if (esc_KeyInputDown) OnKeyInput_Esc?.Invoke();
-        if (any_KeyInput) OnKeyInput_Any?.Invoke();
+        base.OnSingletonDestroy();
+        ClearAllInputs();
+        _isInitialized = false;
     }
+
+    // ========================
+    // 输入记录（本地）
+    // ========================
+
+    public void RecordLocalInput(byte playerId, ushort logicFrame)
+    {
+        if (!_isInitialized || playerId >= MAX_PLAYERS) return;
+
+        // 防止重复写入同一帧（安全防护）
+        if (_inputFrames[playerId].ContainsKey(logicFrame))
+        {
+            Debug.LogWarning($"Input for P{playerId} at frame {logicFrame} already recorded!");
+            return;
+        }
+
+        var input = new FrameInput
+        {
+            frame = logicFrame,
+            playerIndex = playerId,
+            moveHorizontal = (sbyte)(Input.GetKey(KeyCode.D) ? 1 : Input.GetKey(KeyCode.A) ? -1 : 0),
+            moveVertical = (sbyte)(Input.GetKey(KeyCode.W) ? 1 : Input.GetKey(KeyCode.S) ? -1 : 0),
+            shoot = Input.GetKey(KeyCode.Z),
+            bomb = Input.GetKey(KeyCode.X),
+            slowMode = Input.GetKey(KeyCode.LeftShift),
+            anyKey = Input.anyKey
+        };
+
+        _inputFrames[playerId][logicFrame] = input;
+
+        // TODO: NetworkManager?.SendInput(input);
+    }
+
+    // ========================
+    // 输入注入（远程）
+    // ========================
+
+    public void AddRemoteInput(in FrameInput input)
+    {
+        if (!_isInitialized || input.playerIndex >= MAX_PLAYERS) return;
+
+        // 同样防止覆盖（可选：允许覆盖用于重传）
+        if (_inputFrames[input.playerIndex].ContainsKey(input.frame))
+        {
+            // 可选：验证是否相同，不同则报错（防作弊/desync）
+            // Debug.LogWarning($"Remote input for P{input.playerIndex} F{input.frame} already exists!");
+            return;
+        }
+
+        _inputFrames[input.playerIndex][input.frame] = input;
+    }
+
+    // ========================
+    // 输入就绪检查
+    // ========================
+
+    public bool AreAllInputsReady(ushort logicFrame, BitArray activePlayers)
+    {
+        if (!_isInitialized || activePlayers == null || activePlayers.Length != MAX_PLAYERS)
+            return false;
+
+        for (int i = 0; i < MAX_PLAYERS; i++)
+        {
+            if (activePlayers[i])
+            {
+                if (!_inputFrames[i].ContainsKey(logicFrame))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    // ========================
+    // 逻辑帧输入获取（供 PlayerControlSystem 使用）
+    // ========================
+
+    public bool TryGetInputForFrame(byte playerId, ushort logicFrame, out FrameInput input)
+    {
+        if (!_isInitialized || playerId >= MAX_PLAYERS)
+        {
+            input = FrameInput.Default;
+            return false;
+        }
+
+        if (_inputFrames[playerId].TryGetValue(logicFrame, out input))
+        {
+            _currentConsumedInputs[playerId] = input; // ✅ 用于调试
+            return true;
+        }
+
+        input = FrameInput.Default;
+        _currentConsumedInputs[playerId] = input;
+        return false;
+    }
+
+    // ========================
+    // 调试支持
+    // ========================
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    public FrameInput GetDebugInput(byte playerId)
+    {
+        if (!_isInitialized || playerId >= MAX_PLAYERS)
+            return FrameInput.Default;
+
+        return _currentConsumedInputs[playerId];
+    }
+
+    private bool _showDebugInput = true;
+    private GUIStyle _debugStyle;
+
+    private GUIStyle DebugStyle
+    {
+        get
+        {
+            if (_debugStyle == null)
+            {
+                _debugStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 14,
+                    normal = { textColor = Color.white },
+                    alignment = TextAnchor.UpperLeft
+                };
+            }
+            return _debugStyle;
+        }
+    }
+
+    private void OnGUI()
+    {
+        if (!_showDebugInput || !_isInitialized) return;
+
+        GUILayout.BeginArea(new Rect(10, 10, 350, 200));
+        GUILayout.Label($"Logic Frame: {GameTimeManager.CurrentLogicFrame}", DebugStyle);
+        GUILayout.Space(8);
+
+        for (int i = 0; i < MAX_PLAYERS; i++)
+        {
+            var inp = GetDebugInput((byte)i);
+            string status = $"P{i} (F{inp.frame}): ";
+            status += $"H:{inp.moveHorizontal} V:{inp.moveVertical} ";
+            status += inp.shoot ? "Z " : "· ";
+            status += inp.bomb ? "X " : "· ";
+            status += inp.slowMode ? "SLOW" : "FAST";
+
+            GUI.color = (i == 0) ? Color.cyan : Color.yellow;
+            GUILayout.Label(status, DebugStyle);
+        }
+
+        GUI.color = Color.white;
+        GUILayout.EndArea();
+    }
+#endif
 }

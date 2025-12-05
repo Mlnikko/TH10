@@ -40,10 +40,10 @@ public class CharacterConfiger : MonoBehaviour
 
     public void LoadCharacterConfig()
     {
-        characterName = characterConfig.CharacterName;
+        characterName = characterConfig.CharacterID;
         description = characterConfig.Description;
-        speed = characterConfig.Speed;
-        slowSpeed = characterConfig.SlowSpeed;
+        speed = characterConfig.MoveSpeed;
+        slowSpeed = characterConfig.MoveSlowSpeed;
         moveBoxSize = characterConfig.MoveBoxSize;
         moveBoxOffset = characterConfig.MoveBoxOffset;
         //hitRadius = characterConfig.HitRadius;
@@ -58,10 +58,10 @@ public class CharacterConfiger : MonoBehaviour
     {
         if (characterConfig == null) return;
 
-        characterConfig.CharacterName = characterName;
+        characterConfig.CharacterID = characterName;
         characterConfig.Description = description;
-        characterConfig.Speed = speed;
-        characterConfig.SlowSpeed = slowSpeed;
+        characterConfig.MoveSpeed = speed;
+        characterConfig.MoveSlowSpeed = slowSpeed;
         characterConfig.MoveBoxSize = moveBoxSize;
         characterConfig.MoveBoxOffset = moveBoxOffset;
         //characterConfig.HitRadius = hitRadius;

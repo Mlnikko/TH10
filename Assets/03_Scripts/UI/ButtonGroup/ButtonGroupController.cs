@@ -32,15 +32,10 @@ public class ButtonGroupController : MonoBehaviour
     }
     void AddInputListener()
     {
-        InputManager.Instance.OnKeyInput_Up += HandleUpNavigation;
-        InputManager.Instance.OnKeyInput_Left += HandleUpNavigation;
-        InputManager.Instance.OnKeyInput_Down += HandleDownNavigation;
-        InputManager.Instance.OnKeyInput_Right += HandleDownNavigation;
+        //InputManager.Instance.OnKeyInput_Z += HandleBtnGroupComfirm;
 
-        InputManager.Instance.OnKeyInput_Z += HandleBtnGroupComfirm;
-
-        InputManager.Instance.OnKeyInput_Esc += HandleGroupCancel;
-        InputManager.Instance.OnKeyInput_X += HandleGroupCancel;
+        //InputManager.Instance.OnKeyInput_Esc += HandleGroupCancel;
+        //InputManager.Instance.OnKeyInput_X += HandleGroupCancel;
     }
 
     public void EnableNavigation(bool enable)
@@ -173,14 +168,9 @@ public class ButtonGroupController : MonoBehaviour
     {
         if (InputManager.Instance != null)
         {
-            InputManager.Instance.OnKeyInput_Up -= HandleUpNavigation;
-            InputManager.Instance.OnKeyInput_Left -= HandleUpNavigation;
-            InputManager.Instance.OnKeyInput_Down -= HandleDownNavigation;
-            InputManager.Instance.OnKeyInput_Right -= HandleDownNavigation;
-
-            InputManager.Instance.OnKeyInput_Z -= HandleBtnGroupComfirm;
-            InputManager.Instance.OnKeyInput_Esc -= HandleGroupCancel;
-            InputManager.Instance.OnKeyInput_X -= HandleGroupCancel;
+            //InputManager.Instance.OnKeyInput_Z -= HandleBtnGroupComfirm;
+            //InputManager.Instance.OnKeyInput_Esc -= HandleGroupCancel;
+            //InputManager.Instance.OnKeyInput_X -= HandleGroupCancel;
         }
     }
 }

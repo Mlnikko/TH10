@@ -13,7 +13,7 @@ public class TitlePanel : BasePanel
     void Awake()
     {
         isTipsShown = true;       
-        InputManager.Instance.OnKeyInput_Any += GameFirstEnterHandler;
+        //InputManager.Instance.OnKeyInput_Any += GameFirstEnterHandler;
     }
     void Start()
     {
@@ -27,7 +27,7 @@ public class TitlePanel : BasePanel
         if (!isTipsShown) return;
         isTipsShown = false;
         AudioManager.Instance.PlayAudio(AudioName.Pause);
-        InputManager.Instance.OnKeyInput_Any -= GameFirstEnterHandler;
+        //InputManager.Instance.OnKeyInput_Any -= GameFirstEnterHandler;
         StartCoroutine(ShowSelections());
     }
     IEnumerator ShowSelections()

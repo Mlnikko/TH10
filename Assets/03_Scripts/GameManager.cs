@@ -4,9 +4,16 @@ using UnityEngine;
 
 public enum E_FPSMode
 {
+    NoLimit,
     Default,
     PC60,
     PC120
+}
+
+public static class GameTimeManager
+{
+    public static ushort CurrentLogicFrame { get; private set; }
+    public static void AdvanceLogicFrame() => CurrentLogicFrame++;
 }
 
 public class GameManager : SingletonMono<GameManager>
@@ -37,19 +44,19 @@ public class GameManager : SingletonMono<GameManager>
 
     protected override void OnSingletonInit()
     {
+        base.OnSingletonDestroy();
         GameLogger.AddHandler(new ConsoleHandler());
-        LoadResource();      
-        SetApplicationFPS(E_FPSMode.Default);     
-    }
-
-    void Start()
-    {
-        EnterTitle(true);
+        LoadResource();
+        SetApplicationFPS(E_FPSMode.NoLimit, false);
+       
     }
 
     void LoadResource()
     {
         UIManager.Instance.LoadPrefabRefrence();
+        ConfigManager.PreloadAll<CharacterConfig>();
+        //ConfigManager.PreloadAll<DanmakuConfig>();
+        //ConfigManager.PreloadAll<WeaponConfig>();
     }
 
     void Update()
@@ -57,11 +64,14 @@ public class GameManager : SingletonMono<GameManager>
         UpdateDebugInfo();
     }
 
-    public void SetApplicationFPS(E_FPSMode fPSMode)
+    public void SetApplicationFPS(E_FPSMode fPSMode, bool vsync)
     {
-        QualitySettings.vSyncCount = 0; // 关闭垂直同步
+        QualitySettings.vSyncCount = vsync ? 1 : 0; // 关闭垂直同步
         switch (fPSMode)
         {
+            case E_FPSMode.NoLimit:
+                Application.targetFrameRate = -1;
+                break;
             case E_FPSMode.Default:
                 Application.targetFrameRate = 60;
                 break;
@@ -74,25 +84,5 @@ public class GameManager : SingletonMono<GameManager>
         }  
     }
 
-    IEnumerator FirstEnterTitle()
-    {
-        BasePanel loadingPanel = UIManager.Instance.OpenPanel(E_Panel.Loading);
-        yield return new WaitForSeconds(3);
-        AudioManager.Instance.PlayAudio(AudioName.Title);
-        loadingPanel.PanelFadeOut(1);
-        yield return new WaitForSeconds(1);
-        UIManager.Instance.OpenPanel(E_Panel.Title);
-    }
 
-    void EnterTitle(bool isFirst)
-    {
-        if (isFirst)
-        {
-            StartCoroutine(FirstEnterTitle());
-        }
-        else
-        {
-
-        }
-    }
 }

@@ -11,7 +11,7 @@ public class CharacterSelectPanel : BasePanel
     }
     void OnEnable()
     {
-        InputManager.Instance.OnKeyInput_X += ExitCharacterSelect;
+        //InputManager.Instance.OnKeyInput_X += ExitCharacterSelect;
         animator.Play("ShowCharacterPanel");
     }
 
@@ -23,7 +23,7 @@ public class CharacterSelectPanel : BasePanel
     }
     public void SelectCharacterWeapon(int character)
     {
-        BattleManager.Instance.battleSession.character = (E_Character)character;
+        //BattleManager.Instance.battleSession.characterId = (E_Character)characterId;
         EnterWeaponSelect();
     }
 
@@ -35,6 +35,6 @@ public class CharacterSelectPanel : BasePanel
 
     void OnDisable()
     {
-        InputManager.Instance.OnKeyInput_X -= ExitCharacterSelect;
+        //InputManager.Instance.OnKeyInput_X -= ExitCharacterSelect;
     }
 }

@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System;
+using System.Collections;
 
 /// <summary>
-/// 战斗区域配置（纯数据，用于帧同步）
-/// 所有字段必须是确定性类型（int/float/Vector2 等），且初始化方式一致
+/// 战斗区域配置
 /// </summary>
 [Serializable]
-public struct BattleAreaConfig : IEquatable<BattleAreaConfig>
+public struct BattleAreaData : IEquatable<BattleAreaData>
 {
     // === 战斗区域 ===
     public float Width;          // 战斗区域宽度（单位：Unity 世界单位）
@@ -49,8 +49,7 @@ public struct BattleAreaConfig : IEquatable<BattleAreaConfig>
     public int GridColumns => Mathf.CeilToInt(TotalWidth / GridCellSize);
     public int GridRows => Mathf.CeilToInt(TotalHeight / GridCellSize);
 
-    // 构造函数（方便代码创建）
-    public BattleAreaConfig(float width, float height, Vector2 center, int cellSize = 64, Vector2 recycleMargin = default)
+    public BattleAreaData(float width, float height, Vector2 center, int cellSize = 64, Vector2 recycleMargin = default)
     {
         Width = width;
         Height = height;
@@ -60,10 +59,10 @@ public struct BattleAreaConfig : IEquatable<BattleAreaConfig>
     }
 
     // 默认构造（避免未初始化）
-    public static BattleAreaConfig Default => new BattleAreaConfig(1280, 720, Vector2.zero, 64, new Vector2(100, 100));
+    public static BattleAreaData Default => new BattleAreaData(1280, 720, Vector2.zero, 64, new Vector2(100, 100));
 
     // 用于帧同步一致性校验
-    public bool Equals(BattleAreaConfig other)
+    public bool Equals(BattleAreaData other)
     {
         return Width == other.Width &&
                Height == other.Height &&
@@ -72,42 +71,61 @@ public struct BattleAreaConfig : IEquatable<BattleAreaConfig>
                DanmakuRecycleMargin.Equals(other.DanmakuRecycleMargin);
     }
 
-    public override bool Equals(object obj) => obj is BattleAreaConfig other && Equals(other);
+    public override bool Equals(object obj) => obj is BattleAreaData other && Equals(other);
     public override int GetHashCode() => HashCode.Combine(Width, Height, Center, GridCellSize, DanmakuRecycleMargin);
 }
 
-public class BattleSession
+/// <summary>
+/// 全局战斗数据
+/// </summary>
+public struct GlobalBattleData
 {
     public E_Rank rank;
-    public E_Character character;
-    public E_Weapon weapon;
+    public PlayerBattleData[] playerBattleDatas;
+}
 
-    public CharacterConfig characterConfig;
-    public WeaponConfig weaponConfig;
+public struct PlayerBattleData
+{
+    public byte playerIndex;
+    public E_Character characterId;
+    public E_Weapon weaponId;
+
     public int playerEntityId; // ECS 中的实体 ID
     public int score;
     public int life;
     public int bomb;
+
+    public override string ToString()
+    {
+        return $"Player ID: {playerIndex}, Character: {characterId}, Weapon: {weaponId}, Score: {score}, Life: {life}, Bomb: {bomb}";
+    }
 }
 
 public class BattleManager : SingletonMono<BattleManager>
 {
-    World danmakuWorld;
+    [SerializeField] GameObject playerPrefab;
+
+    public GlobalBattleData globalBattleData = new();
+    BattleAreaData battleAreaData = new();
+
+    World battleWorld;
 
     [SerializeField] Transform playerRoot;
     [SerializeField] BattleArea battleArea;
 
-    public static BattleAreaConfig battleConfig;
-    public BattleSession battleSession;
-    
-    public World DanmakuWorld => danmakuWorld;
-    public EntityManager EntityManager => danmakuWorld?.EntityManager;
-
     protected override void OnSingletonInit()
     {
         EventManager.Instance.RegistEvent(E_Event.BattleStart, StartBattle);
-        battleArea.InitBattleArea();
-        InitDanmakuWorld();
+
+        battleAreaData = battleArea.InitBattleArea();
+        InitBattleWorld(globalBattleData);
+
+        ConfigManager.PreloadAll<CharacterConfig>();
+        //ConfigManager.PreloadAll<WeaponConfig>();
+
+        var testPlayer = new PlayerBattleData() { playerIndex = 0 , characterId = E_Character.Reimu};
+        Debug.Log("Creating Test Player: " + testPlayer);
+        CreatePlayer(testPlayer);
     }
 
     public void StartBattle()
@@ -117,36 +135,109 @@ public class BattleManager : SingletonMono<BattleManager>
         SceneManager.UnloadSceneAsync("TitleScene");
     }
 
-    public void CreatePlayer()
+    public void CreatePlayer(PlayerBattleData playerData)
     {
+        var playerGO = Instantiate(playerPrefab, playerRoot);
 
+        var em = battleWorld.EntityManager;
+
+        var playerEntity = em.CreateEntity();
+
+
+        // 创建玩家时（如你之前代码）
+        var updater = new PlayerPresentationUpdater(playerGO);
+        int presentationId = PresentationBridge.Register(playerGO, updater);
+
+        em.AddComponent(playerEntity, new CPresentationLink
+        {
+            presentationId = presentationId
+        });
+
+        em.AddComponent(playerEntity, new CPosition
+        {
+            x = playerRoot.position.x,
+            y = playerRoot.position.y
+        });
+
+        em.AddComponent(playerEntity, new CVelocity
+        {
+            vx = 0,
+            vy = 0
+        });
+
+        em.AddComponent(playerEntity, new CPlayer
+        {
+            playerIndex = playerData.playerIndex,
+            characterId = (byte)playerData.characterId,
+            weaponId = (byte)playerData.weaponId,
+        });
+
+        CharacterConfig characterConfig = ConfigManager.Get<CharacterConfig>(playerData.characterId.ToString());
+
+        em.AddComponent(playerEntity, new CPlayerRunTime
+        {
+            playerIndex = playerData.playerIndex,
+
+            grazeRadius = characterConfig.GrazeRadius,
+            hitRadius = characterConfig.HitRadius,
+            
+            moveSlowSpeed = characterConfig.MoveSlowSpeed,
+            moveSpeed = characterConfig.MoveSpeed,
+
+            isSlowMode = false,
+        });
     }
 
-    void InitDanmakuWorld()
+    void InitBattleWorld(GlobalBattleData globalBattleData)
     {
-        danmakuWorld = new World();
+        battleWorld = new World();
         
-        var movementSys = danmakuWorld.AddSystem<MovementSystem>();
-        var collisionSys = danmakuWorld.AddSystem<CollisionSystem>();
-        collisionSys.Initialize(battleConfig);
-        var lifetimeSys = danmakuWorld.AddSystem<LifetimeSystem>();
+        var movementSys = battleWorld.AddSystem<MovementSystem>();
+        
+        var lifetimeSys = battleWorld.AddSystem<LifetimeSystem>();
+
+        var collisionSys = battleWorld.AddSystem<CollisionSystem>();
+        collisionSys.Initialize(battleAreaData);
+
+        var playerControlSys = battleWorld.AddSystem<PlayerControlSystem>();
     }
+
+    BitArray _activePlayers = new BitArray(4) { [0] = true }; // 单人测试
 
     #region 核心更新循环（帧同步）
     void FixedUpdate()
     {
-        // 使用固定时间步长，确保帧同步
-        danmakuWorld?.FixedUpdate(Time.fixedDeltaTime);
+        //if (!_isBattleRunning) return;
+
+        ushort currentFrame = GameTimeManager.CurrentLogicFrame;
+
+        // 1. 本地玩家采样（假设只有 P0 是本地）
+        if (_activePlayers[0])
+        {
+            InputManager.Instance.RecordLocalInput(0, currentFrame);
+        }
+
+        // 2. 等待所有活跃玩家输入就绪
+        if (!InputManager.Instance.AreAllInputsReady(currentFrame, _activePlayers))
+        {
+            return; // 等待下一帧（或加超时处理）
+        }
+
+        // 3. 推进 ECS 逻辑
+        battleWorld?.FixedUpdate(Time.fixedDeltaTime);
+
+        // 4. 帧递增
+        GameTimeManager.AdvanceLogicFrame();
     }
 
     void Update()
     {
-        danmakuWorld?.Update(Time.deltaTime);
+        battleWorld?.Update(Time.deltaTime);
     }
 
     void LateUpdate()
     {
-        danmakuWorld?.LateUpdate(Time.deltaTime);
+        battleWorld?.LateUpdate(Time.deltaTime);
     }
     #endregion
 

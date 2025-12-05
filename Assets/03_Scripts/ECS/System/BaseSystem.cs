@@ -1,12 +1,19 @@
-using System.Diagnostics;
 
 /// <summary>
 /// 所有 ECS 系统的基类，提供统一生命周期和更新控制。
 /// </summary>
 public abstract class BaseSystem
 {
-    protected EntityManager EntityManager { get; private set; }
+    protected World World { get; private set; }
+    protected EntityManager EntityManager
+    {
+        get
+        {
+            if (World == null) throw new System.InvalidOperationException("World is not initialized.");
 
+            return World.EntityManager;
+        }
+    }
     /// <summary>
     /// 系统是否启用（可动态开关）
     /// </summary>
@@ -15,9 +22,9 @@ public abstract class BaseSystem
     /// <summary>
     /// 初始化系统（由 World 调用）
     /// </summary>
-    public void Initialize(EntityManager entityManager)
+    public void Initialize(World world)
     {
-        EntityManager = entityManager;
+        World = world;
         OnCreate();
     }
 
@@ -27,7 +34,7 @@ public abstract class BaseSystem
     public void Destroy()
     {
         OnDestroy();
-        EntityManager = null;
+        World = null;
     }
 
     // ------------------ 可选生命周期钩子 ------------------

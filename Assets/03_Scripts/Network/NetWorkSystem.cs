@@ -12,7 +12,7 @@ public enum E_NetRole
 public enum E_NetMessage
 {
     HandshakeRequest,   // 客户端请求加入
-    HandshakeResponse,  // 主机分配 playerId
+    HandshakeResponse,  // 主机分配 playerIndex
     InputFrame,         // 帧输入数据
     Disconnect          // 断开通知
 }

@@ -45,18 +45,6 @@ public class PlayerController : MonoBehaviour
         characterConfig = GetComponent<CharacterConfiger>().CharacterConfig;
         animator = GetComponent<Animator>();
     }
-
-    void OnEnable()
-    {
-        InputManager.Instance.OnKeyInput_Down += HandleDownInput;
-        InputManager.Instance.OnKeyInput_Left += HandleLeftInput;
-        InputManager.Instance.OnKeyInput_Right += HandleRightInput;
-        InputManager.Instance.OnKeyInput_Up += HandleUpInput;
-        InputManager.Instance.OnKeyInput_LS += HandleLSInput;
-        InputManager.Instance.OnKeyInput_Z += HandleZInput;
-        InputManager.Instance.OnKeyInput_X += HandleXInput;
-    }
-
     void Start()
     {
         InitPlayer();
@@ -72,7 +60,7 @@ public class PlayerController : MonoBehaviour
     {
         if (characterConfig == null) return;
 
-        switch (characterConfig.CharacterName)
+        switch (characterConfig.CharacterID)
         {
             case E_Character.Reimu:
                 characterAnim = new ReimuAnim();
@@ -82,8 +70,8 @@ public class PlayerController : MonoBehaviour
                 break;
         }
 
-        speed = characterConfig.Speed;
-        slowSpeed = characterConfig.SlowSpeed;
+        speed = characterConfig.MoveSpeed;
+        slowSpeed = characterConfig.MoveSlowSpeed;
     }
     void HandleLSInput(bool isShift)
     {
@@ -128,7 +116,7 @@ public class PlayerController : MonoBehaviour
     }
     void HandleXInput()
     {
-        ReleaseBoom();
+       
     }
 
     void UpdatePlayerMove()
@@ -173,36 +161,6 @@ public class PlayerController : MonoBehaviour
         else
         {
             animator.Play(characterAnim.GetIdleAnimName());
-        }
-    }
-
-    void ReleaseBoom()
-    {
-
-    }
-
-    void OnDisable()
-    {
-        if(InputManager.Instance == null) return;
-        InputManager.Instance.OnKeyInput_Down -= HandleDownInput;
-        InputManager.Instance.OnKeyInput_Left -= HandleLeftInput;
-        InputManager.Instance.OnKeyInput_Right -= HandleRightInput;
-        InputManager.Instance.OnKeyInput_Up -= HandleUpInput;
-        InputManager.Instance.OnKeyInput_LS -= HandleLSInput;
-        InputManager.Instance.OnKeyInput_Z -= HandleZInput;
-        InputManager.Instance.OnKeyInput_X -= HandleXInput;
-    }
-    
-    void OnDestroy()
-    {
-        // 清理 ECS 实体
-        if (BattleManager.Instance?.EntityManager != null)
-        {
-            var entityManager = BattleManager.Instance.EntityManager;
-            
-            if (!playerEntity.IsNull) entityManager.DestroyEntity(playerEntity);
-            if (!bodyColliderEntity.IsNull) entityManager.DestroyEntity(bodyColliderEntity);
-            if (!grazeColliderEntity.IsNull) entityManager.DestroyEntity(grazeColliderEntity);
         }
     }
 }

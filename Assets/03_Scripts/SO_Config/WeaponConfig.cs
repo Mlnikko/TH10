@@ -16,13 +16,13 @@ public enum E_Weapon
 public class Weapon
 {
     public string Name;
-    public E_Weapon weapon;
+    public E_Weapon WeaponID;
     [TextArea(1, 5)]
     public string Description;
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Custom/WeaponConfig")]
-public class WeaponConfig : ScriptableObject
+public class WeaponConfig : GameConfig
 {
     public Weapon[] weapons;
 }
