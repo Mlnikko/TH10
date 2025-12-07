@@ -45,7 +45,7 @@ public class DanmakuConfiger : MonoBehaviour
         danmakuType = danmakuConfig.DanmakuType;
         damage = danmakuConfig.Damage;
 
-        GameLogger.Debug($"弹幕配置文件加载完成: {danmakuConfig.name}");
+        Logger.Debug($"弹幕配置文件加载完成: {danmakuConfig.name}");
     }
 
     public virtual void SaveDanmakuConfig()
@@ -65,10 +65,7 @@ public class DanmakuConfiger : MonoBehaviour
         danmakuConfig.DanmakuType = danmakuType;
         danmakuConfig.Damage = damage;
 
-        UnityEditor.EditorUtility.SetDirty(danmakuConfig);
-        UnityEditor.AssetDatabase.SaveAssets();
-
-        GameLogger.Debug($"弹幕配置文件保存完成: {danmakuConfig.name}");
+        Logger.Debug($"弹幕配置文件保存完成: {danmakuConfig.name}");
     }
 
     public void PreviewDanmaku()

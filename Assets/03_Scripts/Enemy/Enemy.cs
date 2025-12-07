@@ -43,7 +43,7 @@ public abstract class Enemy : MonoBehaviour
         enemyType = enemyConfig.EnemyType;
         colliderSize = enemyConfig.ColliderSize;
 
-        GameLogger.Debug("已加载敌人配置：" + enemyConfig.name);
+        Logger.Debug("已加载敌人配置：" + enemyConfig.name);
         
     }
 

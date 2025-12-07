@@ -9,8 +9,9 @@ public class PlayerControlSystem : BaseSystem
     public override void OnFixedUpdate(float fixedDeltaTime)
     {
         var currentFrame = GameTimeManager.CurrentLogicFrame;
+
         Span<int> playerIndices = stackalloc int[4];
-        int count = EntityManager.GetEntities<CPlayerRunTime>(playerIndices);
+        int count = EntityManager.GetEntities<CPlayer>(playerIndices);
 
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var runtimes = EntityManager.GetComponentSpan<CPlayerRunTime>();
@@ -20,21 +21,20 @@ public class PlayerControlSystem : BaseSystem
             int entityIndex = playerIndices[i];
             byte playerIndex = runtimes[entityIndex].playerIndex;
 
-            // 从 InputManager 获取“当前逻辑帧”的输入
             if (!InputManager.Instance.TryGetInputForFrame(playerIndex, currentFrame, out var input))
             {
                 input = FrameInput.Default;
-                GameLogger.Debug($"Missing input for P{playerIndex} at frame {currentFrame}");
             }
 
             ref var runtime = ref runtimes[entityIndex];
             ref var pos = ref positions[entityIndex];
 
-            runtime.isSlowMode = input.slowMode;
-            float speed = input.slowMode ? runtime.moveSlowSpeed : runtime.moveSpeed;
+            // 根据输入更新位置
+            runtime.isSlowMode = input.SlowMode;
+            float speed = input.SlowMode ? runtime.moveSlowSpeed : runtime.moveSpeed;
 
-            pos.x += input.moveHorizontal * speed * fixedDeltaTime;
-            pos.y += input.moveVertical * speed * fixedDeltaTime;
+            pos.x += input.MoveHorizontal * speed * fixedDeltaTime;
+            pos.y += input.MoveVertical * speed * fixedDeltaTime;
 
             // TODO: 触发射击系统（可发事件或写入 CShootRequest）
         }

@@ -63,6 +63,6 @@ public class DanmakuEmitter : MonoBehaviour
         audio_Fire = emitterConfig.Audio_Fire;
         emitterCamp = emitterConfig.EmitterCamp;
 
-        GameLogger.Debug("已加载发射器配置" + emitterConfig.name);
+        Logger.Debug("已加载发射器配置" + emitterConfig.name);
     }
 }

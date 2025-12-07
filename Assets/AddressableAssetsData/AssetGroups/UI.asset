@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UI
+  m_EditorClassIdentifier: 
+  m_GroupName: UI
+  m_Data:
+    m_SerializedData: []
+  m_GUID: cb855bf0dd08a2a4384afe9d1811d2e4
+  m_SerializeEntries:
+  - m_GUID: b3bfafeab385b6a419cc1d70e2974ef7
+    m_Address: Assets/05_Prefabs/Panels/BattlePanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Panel
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 571c0244f1e87fd46845423903b0436c
+    m_Address: Assets/05_Prefabs/Panels/TitlePanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Panel
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa2a29d1a0093974fbc785e8a39ed5ae
+    m_Address: Assets/05_Prefabs/Panels/LoadingPanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Panel
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b033378e3f9aca428df749900de259d
+    m_Address: Assets/05_Prefabs/Player/Reimu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4ead09567355304b9f658d4941a41a0
+    m_Address: Assets/05_Prefabs/UI/UI_Panel/RoomPanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2fe27a8efcd67e04ab4ad36b16ba66f3
+    m_Address: Assets/05_Prefabs/UI/UI_Panel/MenuPanel.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: bd11330accc092c41b0429724d54b4b3, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3243d1f53bbc7a74ba3650d8a8ae46b4, type: 2}
+    - {fileID: 11400000, guid: ae67a2cf774ef1c419de7ae5985bfc66, type: 2}

@@ -1,36 +1,99 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 [Serializable]
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct FrameInput
 {
-    public ushort frame;
+    public uint frame;
     public byte playerIndex;
+    public byte directionPacked; // [H:2bits][V:2bits][--:4bits]
+    public byte buttons;         // [shoot][bomb][slow][any][----]
 
-    public sbyte moveHorizontal; // -1, 0, +1
-    public sbyte moveVertical;   // -1, 0, +1
-    public bool shoot;           // Z
-    public bool bomb;            // X
-    public bool slowMode;        // LeftShift
-    public bool anyKey;
+    // --- 解包属性 ---
+    public readonly sbyte MoveHorizontal => (sbyte)((directionPacked & 0x3) - 1);
+    public readonly sbyte MoveVertical => (sbyte)(((directionPacked >> 2) & 0x3) - 1);
+    public readonly bool Shoot => (buttons & 0x01) != 0;
+    public readonly bool Bomb => (buttons & 0x02) != 0;
+    public readonly bool SlowMode => (buttons & 0x04) != 0;
+    public readonly bool AnyKey => (buttons & 0x08) != 0;
 
-    public static FrameInput Default => new() { frame = 0, playerIndex = 0 };
+    // --- 构造 ---
+    public static FrameInput Create(
+        uint frame, byte playerIndex,
+        sbyte h, sbyte v,
+        bool shoot, bool bomb, bool slow, bool anyKey)
+    {
+        // Clamp to [-1, 1] just in case
+        h = (sbyte)Mathf.Clamp(h, -1, 1);
+        v = (sbyte)Mathf.Clamp(v, -1, 1);
+
+        byte dir = (byte)((((v + 1) << 2) | (h + 1)) & 0xF);
+        byte btn = (byte)(
+            (shoot ? 1 : 0) |
+            (bomb ? 2 : 0) |
+            (slow ? 4 : 0) |
+            (anyKey ? 8 : 0)
+        );
+
+        return new FrameInput
+        {
+            frame = frame,
+            playerIndex = playerIndex,
+            directionPacked = dir,
+            buttons = btn
+        };
+    }
+
+    public static FrameInput Default => Create(0, 0, 0, 0, false, false, false, false);
+}
+
+[Serializable]
+public struct PlayerInputConfig
+{
+    public KeyCode moveLeft;
+    public KeyCode moveRight;
+    public KeyCode moveUp;
+    public KeyCode moveDown;
+    public KeyCode shoot;
+    public KeyCode bomb;
+    public KeyCode slow;
+
+    // 默认构造（东方风格）
+    public static PlayerInputConfig Default => new()
+    {
+        moveLeft = KeyCode.LeftArrow,
+        moveRight = KeyCode.RightArrow,
+        moveUp = KeyCode.UpArrow,
+        moveDown = KeyCode.DownArrow,
+        shoot = KeyCode.Z,
+        bomb = KeyCode.X,
+        slow = KeyCode.LeftShift
+    };
 }
 
 public class InputManager : SingletonMono<InputManager>
 {
-    private const int MAX_PLAYERS = 4;
+    public PlayerInputConfig InputConfig => PlayerInputConfig.Default;
+    const int MAX_PLAYERS = 4;
 
-    private Dictionary<ushort, FrameInput>[] _inputFrames;
-    private FrameInput[] _currentConsumedInputs;
-    private bool _isInitialized = false;
+    Dictionary<uint, FrameInput>[] _inputFrames;
+    FrameInput[] _currentConsumedInputs;
+    bool _isInitialized = false;
 
     protected override void OnSingletonInit()
     {
         base.OnSingletonInit();
         InitializeForGame();
+
+        // 注册 InputMSG 处理器（所有端都要注册！）
+        NetworkManager.Instance.RegisterHandler<InputMSG>((msg) =>
+        {
+            AddRemoteInput(msg.input);
+        });
     }
 
     // ========================
@@ -39,12 +102,12 @@ public class InputManager : SingletonMono<InputManager>
 
     public void InitializeForGame()
     {
-        _inputFrames = new Dictionary<ushort, FrameInput>[MAX_PLAYERS];
+        _inputFrames = new Dictionary<uint, FrameInput>[MAX_PLAYERS];
         _currentConsumedInputs = new FrameInput[MAX_PLAYERS];
 
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
-            _inputFrames[i] = new Dictionary<ushort, FrameInput>();
+            _inputFrames[i] = new Dictionary<uint, FrameInput>();
             _currentConsumedInputs[i] = FrameInput.Default;
         }
 
@@ -70,133 +133,158 @@ public class InputManager : SingletonMono<InputManager>
     }
 
     // ========================
-    // 输入记录（本地）
+    // 本地输入记录
     // ========================
 
-    public void RecordLocalInput(byte playerId, ushort logicFrame)
+    public void RecordLocalInput(byte playerIndex, uint logicFrame)
     {
-        if (!_isInitialized || playerId >= MAX_PLAYERS) return;
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS) return;
 
-        // 防止重复写入同一帧（安全防护）
-        if (_inputFrames[playerId].ContainsKey(logicFrame))
+        // 防止重复写入同一帧
+        if (_inputFrames[playerIndex].ContainsKey(logicFrame))
         {
-            Debug.LogWarning($"Input for P{playerId} at frame {logicFrame} already recorded!");
+            Logger.Warn($"Input for P{playerIndex} at frame {logicFrame} already recorded!", LogTag.Input);
             return;
         }
 
-        var input = new FrameInput
-        {
-            frame = logicFrame,
-            playerIndex = playerId,
-            moveHorizontal = (sbyte)(Input.GetKey(KeyCode.D) ? 1 : Input.GetKey(KeyCode.A) ? -1 : 0),
-            moveVertical = (sbyte)(Input.GetKey(KeyCode.W) ? 1 : Input.GetKey(KeyCode.S) ? -1 : 0),
-            shoot = Input.GetKey(KeyCode.Z),
-            bomb = Input.GetKey(KeyCode.X),
-            slowMode = Input.GetKey(KeyCode.LeftShift),
-            anyKey = Input.anyKey
-        };
+        var input = FrameInput.Create(
+            logicFrame,
+            playerIndex,
+            (sbyte)(Input.GetKey(InputConfig.moveRight) ? 1 : Input.GetKey(InputConfig.moveLeft) ? -1 : 0),
+            (sbyte)(Input.GetKey(InputConfig.moveUp) ? 1 : Input.GetKey(InputConfig.moveDown) ? -1 : 0),
+            Input.GetKey(InputConfig.shoot),
+            Input.GetKey(InputConfig.bomb),
+            Input.GetKey(InputConfig.slow),
+            Input.anyKey
+        );
 
-        _inputFrames[playerId][logicFrame] = input;
-
-        // TODO: NetworkManager?.SendInput(input);
+        _inputFrames[playerIndex][logicFrame] = input;
     }
 
     // ========================
-    // 输入注入（远程）
+    // 远程输入注入
     // ========================
 
-    public void AddRemoteInput(in FrameInput input)
+    public void AddRemoteInput(FrameInput input)
     {
         if (!_isInitialized || input.playerIndex >= MAX_PLAYERS) return;
 
-        // 同样防止覆盖（可选：允许覆盖用于重传）
-        if (_inputFrames[input.playerIndex].ContainsKey(input.frame))
+        // 允许覆盖（用于重传），但可选地验证一致性
+        if (_inputFrames[input.playerIndex].TryGetValue(input.frame, out var existing))
         {
-            // 可选：验证是否相同，不同则报错（防作弊/desync）
-            // Debug.LogWarning($"Remote input for P{input.playerIndex} F{input.frame} already exists!");
-            return;
+            // 可选：如果不同，记录 desync（开发期）
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (!StructEquals(existing, input))
+            {
+                Debug.LogWarning($"[Input] P{input.playerIndex} F{input.frame} conflict! Existing vs New");
+            }
+#endif
         }
 
         _inputFrames[input.playerIndex][input.frame] = input;
+    }
+
+    // 辅助方法：比较两个 FrameInput 是否相等（避免装箱）
+    static bool StructEquals(in FrameInput a, in FrameInput b)
+    {
+        return a.frame == b.frame &&
+               a.playerIndex == b.playerIndex &&
+               a.directionPacked == b.directionPacked &&
+               a.buttons == b.buttons;
     }
 
     // ========================
     // 输入就绪检查
     // ========================
 
-    public bool AreAllInputsReady(ushort logicFrame, BitArray activePlayers)
+    public bool AreAllInputsReady(uint logicFrame, bool[] activePlayers)
     {
-        if (!_isInitialized || activePlayers == null || activePlayers.Length != MAX_PLAYERS)
-            return false;
+        if (!_isInitialized || activePlayers == null) return false;
 
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
             if (activePlayers[i])
             {
-                if (!_inputFrames[i].ContainsKey(logicFrame))
-                    return false;
+                if (!_inputFrames[i].ContainsKey(logicFrame)) return false;
             }
         }
         return true;
     }
 
     // ========================
-    // 逻辑帧输入获取（供 PlayerControlSystem 使用）
+    // 逻辑帧输入获取
     // ========================
 
-    public bool TryGetInputForFrame(byte playerId, ushort logicFrame, out FrameInput input)
+    public bool TryGetInputForFrame(byte playerIndex, uint logicFrame, out FrameInput input)
     {
-        if (!_isInitialized || playerId >= MAX_PLAYERS)
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS)
         {
             input = FrameInput.Default;
             return false;
         }
 
-        if (_inputFrames[playerId].TryGetValue(logicFrame, out input))
+        if (_inputFrames[playerIndex].TryGetValue(logicFrame, out input))
         {
-            _currentConsumedInputs[playerId] = input; // ✅ 用于调试
+            _currentConsumedInputs[playerIndex] = input;
             return true;
         }
 
         input = FrameInput.Default;
-        _currentConsumedInputs[playerId] = input;
+        _currentConsumedInputs[playerIndex] = input;
         return false;
     }
 
-    // ========================
-    // 调试支持
-    // ========================
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-    public FrameInput GetDebugInput(byte playerId)
+    public void CleanupOldFrames(uint currentFrame, int keepWindow = 10)
     {
-        if (!_isInitialized || playerId >= MAX_PLAYERS)
-            return FrameInput.Default;
+        uint minFrame = (currentFrame > (uint)keepWindow) ? currentFrame - (uint)keepWindow : 0;
 
-        return _currentConsumedInputs[playerId];
+        for (int p = 0; p < MAX_PLAYERS; p++)
+        {
+            var frames = _inputFrames[p];
+            var keysToRemove = new List<uint>();
+
+            foreach (var frame in frames.Keys)
+            {
+                if (frame < minFrame)
+                    keysToRemove.Add(frame);
+            }
+
+            foreach (var frame in keysToRemove)
+            {
+                frames.Remove(frame);
+            }
+        }
     }
 
-    private bool _showDebugInput = true;
-    private GUIStyle _debugStyle;
+    #region 调试显示
 
-    private GUIStyle DebugStyle
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    public FrameInput GetDebugInput(byte playerIndex)
+    {
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS)
+            return FrameInput.Default;
+
+        return _currentConsumedInputs[playerIndex];
+    }
+
+    [SerializeField] bool _showDebugInput = true;
+    GUIStyle _debugStyle;
+
+    GUIStyle DebugStyle
     {
         get
         {
-            if (_debugStyle == null)
-            {
-                _debugStyle = new GUIStyle(GUI.skin.label)
+            _debugStyle ??= new GUIStyle(GUI.skin.label)
                 {
                     fontSize = 14,
                     normal = { textColor = Color.white },
                     alignment = TextAnchor.UpperLeft
                 };
-            }
             return _debugStyle;
         }
     }
 
-    private void OnGUI()
+    void OnGUI()
     {
         if (!_showDebugInput || !_isInitialized) return;
 
@@ -208,10 +296,10 @@ public class InputManager : SingletonMono<InputManager>
         {
             var inp = GetDebugInput((byte)i);
             string status = $"P{i} (F{inp.frame}): ";
-            status += $"H:{inp.moveHorizontal} V:{inp.moveVertical} ";
-            status += inp.shoot ? "Z " : "· ";
-            status += inp.bomb ? "X " : "· ";
-            status += inp.slowMode ? "SLOW" : "FAST";
+            status += $"H:{inp.MoveHorizontal} V:{inp.MoveVertical} ";
+            status += inp.Shoot ? "Z " : "· ";
+            status += inp.Bomb ? "X " : "· ";
+            status += inp.SlowMode ? "SLOW" : "FAST";
 
             GUI.color = (i == 0) ? Color.cyan : Color.yellow;
             GUILayout.Label(status, DebugStyle);
@@ -221,4 +309,6 @@ public class InputManager : SingletonMono<InputManager>
         GUILayout.EndArea();
     }
 #endif
+
+    #endregion
 }

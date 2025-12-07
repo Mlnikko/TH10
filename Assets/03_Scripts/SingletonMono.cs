@@ -21,7 +21,6 @@ public abstract class SingletonMono<T> : MonoBehaviour where T : SingletonMono<T
         {
             if (_isApplicationQuitting)
             {
-                Debug.LogWarning($"[Singleton] {typeof(T)} 实例已被销毁，因为应用已退出。返回空值。");
                 return null;
             }
 
@@ -40,8 +39,6 @@ public abstract class SingletonMono<T> : MonoBehaviour where T : SingletonMono<T
 
                         // 初始化单例
                         _instance.InitializeSingleton();
-
-                        Debug.Log($"[Singleton] 创建 {typeof(T)} 单例实例");
                     }
                     else
                     {
@@ -79,16 +76,14 @@ public abstract class SingletonMono<T> : MonoBehaviour where T : SingletonMono<T
     }
 
     protected virtual void OnSingletonInit() { }
-    protected virtual void OnSingletonDestroy()
+    protected virtual void OnSingletonDestroy() { }
+
+    protected virtual void OnDestroy()
     {
         if (_instance == this)
         {
             _instance = null;
         }
-    }
-
-    protected virtual void OnDestroy()
-    {
         OnSingletonDestroy();
     }
 

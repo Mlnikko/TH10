@@ -128,18 +128,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97b11ef27f2431445b3214524c434f4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fireable: 1
   emitterConfig: {fileID: 11400000, guid: 35a834f408d757a468c1938fb9a1d7aa, type: 2}
   danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
   poolMinSize: 20
   poolMaxSize: 500
-  fireable: 1
   positionOffset: {x: 0, y: 0}
   startRotation: {x: 0, y: 0, z: 0}
   startVelocity: {x: 0, y: 1}
   audio_Fire: 5
+  emitterCamp: 1
   launchInterval: 0.1
   launchSpeed: 15
-  emitterCamp: 1
 --- !u!1 &4121693430955986105
 GameObject:
   m_ObjectHideFlags: 0
@@ -397,7 +397,6 @@ GameObject:
   - component: {fileID: 2148496877824739000}
   - component: {fileID: 7596389326491880879}
   - component: {fileID: 5701818006714011742}
-  - component: {fileID: 1373104453371416759}
   - component: {fileID: 4341075082805412775}
   m_Layer: 0
   m_Name: Reimu
@@ -496,20 +495,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &1373104453371416759
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8529128840648147672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9ae87c5af8ce824fb55845a13b27342, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerEmitters: {fileID: 7904876781101845708}
-  checkPoint: {fileID: 4121693430955986105}
 --- !u!114 &4341075082805412775
 MonoBehaviour:
   m_ObjectHideFlags: 0

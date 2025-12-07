@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEditor;
+
 public class CharacterConfiger : MonoBehaviour
 {
     public CharacterConfig CharacterConfig
@@ -66,9 +68,6 @@ public class CharacterConfiger : MonoBehaviour
         characterConfig.MoveBoxOffset = moveBoxOffset;
         //characterConfig.HitRadius = hitRadius;
         //characterConfig.GrazeRadius = grazeRadius;
-
-        UnityEditor.EditorUtility.SetDirty(characterConfig);
-        UnityEditor.AssetDatabase.SaveAssets();
     }
 
     void OnDrawGizmosSelected()

@@ -11,8 +11,6 @@ GameObject:
   - component: {fileID: 5734727350752357153}
   - component: {fileID: 4351186149182974702}
   - component: {fileID: 2599454971203792774}
-  - component: {fileID: 3483137674768267900}
-  - component: {fileID: 411936195825158649}
   m_Layer: 0
   m_Name: Marisa
   m_TagString: Untagged
@@ -109,41 +107,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &3483137674768267900
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1075929028107132105}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 060b0d06694bee741b8fd17a17019763, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerEmitters: {fileID: 0}
-  checkPoint: {fileID: 0}
---- !u!114 &411936195825158649
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1075929028107132105}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8b69a7ffa83b234ba2f9d4e140aeb14, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CharacterConfig: {fileID: 11400000, guid: 8081d63c8f9fdfa41ab47d36b3980340, type: 2}
-  characterName: 2
-  description: "\u723D\u6717\u7684\u9B54\u6CD5\u4F7F\n\u901F\u5EA6\u53CA\u987A\u624B\u7275\u7F8A\u65B9\u9762\n\u96BE\u6709\u4EBA\u53EF\u51FA\u5176\u53F3"
-  speed: 3.8
-  slowSpeed: 1.8
-  moveBoxSize: {x: 0.3, y: 0.5}
-  moveBoxOffset: {x: 0, y: 0.08}
-  hitRadius: 0.05
-  grazeRadius: 0.25
 --- !u!1 &8938637964496125510
 GameObject:
   m_ObjectHideFlags: 0

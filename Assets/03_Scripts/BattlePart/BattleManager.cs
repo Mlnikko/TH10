@@ -76,37 +76,28 @@ public struct BattleAreaData : IEquatable<BattleAreaData>
 }
 
 /// <summary>
-/// 全局战斗数据
+/// 战斗数据
 /// </summary>
-public struct GlobalBattleData
+public struct BattleData
 {
     public E_Rank rank;
-    public PlayerBattleData[] playerBattleDatas;
+    public PlayerData[] playerBattleDatas;
 }
 
-public struct PlayerBattleData
+public struct PlayerData
 {
     public byte playerIndex;
     public E_Character characterId;
     public E_Weapon weaponId;
-
-    public int playerEntityId; // ECS 中的实体 ID
-    public int score;
-    public int life;
-    public int bomb;
-
-    public override string ToString()
-    {
-        return $"Player ID: {playerIndex}, Character: {characterId}, Weapon: {weaponId}, Score: {score}, Life: {life}, Bomb: {bomb}";
-    }
 }
 
 public class BattleManager : SingletonMono<BattleManager>
 {
     [SerializeField] GameObject playerPrefab;
 
-    public GlobalBattleData globalBattleData = new();
-    BattleAreaData battleAreaData = new();
+    public BattleData battleData = new();
+
+    bool[] _activePlayers = new bool[4];
 
     World battleWorld;
 
@@ -115,17 +106,16 @@ public class BattleManager : SingletonMono<BattleManager>
 
     protected override void OnSingletonInit()
     {
-        EventManager.Instance.RegistEvent(E_Event.BattleStart, StartBattle);
+        InitBattleWorld();
 
-        battleAreaData = battleArea.InitBattleArea();
-        InitBattleWorld(globalBattleData);
+        var testPlayer0 = new PlayerData() { playerIndex = 0 , characterId = E_Character.Reimu};
+        var testPlayer1 = new PlayerData() { playerIndex = 1 , characterId = E_Character.Marisa};
 
-        ConfigManager.PreloadAll<CharacterConfig>();
-        //ConfigManager.PreloadAll<WeaponConfig>();
+        CreatePlayer(testPlayer0);
+        CreatePlayer(testPlayer1);
 
-        var testPlayer = new PlayerBattleData() { playerIndex = 0 , characterId = E_Character.Reimu};
-        Debug.Log("Creating Test Player: " + testPlayer);
-        CreatePlayer(testPlayer);
+        AddPlayer(testPlayer0.playerIndex);
+        AddPlayer(testPlayer1.playerIndex);
     }
 
     public void StartBattle()
@@ -135,7 +125,21 @@ public class BattleManager : SingletonMono<BattleManager>
         SceneManager.UnloadSceneAsync("TitleScene");
     }
 
-    public void CreatePlayer(PlayerBattleData playerData)
+    void InitBattleWorld()
+    {
+        battleWorld = new World();
+        
+        var movementSys = battleWorld.AddSystem<MovementSystem>();
+        
+        var lifetimeSys = battleWorld.AddSystem<LifetimeSystem>();
+
+        var collisionSys = battleWorld.AddSystem<CollisionSystem>();
+        collisionSys.Initialize(battleArea.InitBattleArea());
+
+        var playerControlSys = battleWorld.AddSystem<PlayerControlSystem>();
+    }
+
+    public void CreatePlayer(PlayerData playerData)
     {
         var playerGO = Instantiate(playerPrefab, playerRoot);
 
@@ -143,10 +147,9 @@ public class BattleManager : SingletonMono<BattleManager>
 
         var playerEntity = em.CreateEntity();
 
+        int presentationId = PresentationBridge.Register(playerGO, new PlayerPresentationUpdater(playerGO));
 
-        // 创建玩家时（如你之前代码）
-        var updater = new PlayerPresentationUpdater(playerGO);
-        int presentationId = PresentationBridge.Register(playerGO, updater);
+        var characterConfig = ConfigManager.Get<CharacterConfig>(playerData.characterId.ToString());
 
         em.AddComponent(playerEntity, new CPresentationLink
         {
@@ -172,15 +175,13 @@ public class BattleManager : SingletonMono<BattleManager>
             weaponId = (byte)playerData.weaponId,
         });
 
-        CharacterConfig characterConfig = ConfigManager.Get<CharacterConfig>(playerData.characterId.ToString());
-
         em.AddComponent(playerEntity, new CPlayerRunTime
         {
             playerIndex = playerData.playerIndex,
 
             grazeRadius = characterConfig.GrazeRadius,
             hitRadius = characterConfig.HitRadius,
-            
+
             moveSlowSpeed = characterConfig.MoveSlowSpeed,
             moveSpeed = characterConfig.MoveSpeed,
 
@@ -188,46 +189,45 @@ public class BattleManager : SingletonMono<BattleManager>
         });
     }
 
-    void InitBattleWorld(GlobalBattleData globalBattleData)
+    bool IsLocalPlayer(int playerIndex)
     {
-        battleWorld = new World();
-        
-        var movementSys = battleWorld.AddSystem<MovementSystem>();
-        
-        var lifetimeSys = battleWorld.AddSystem<LifetimeSystem>();
+        // Host 控制 P0，Client 控制 P1/P2/P3
+        if (NetworkManager.Instance.netRole == NetworkRole.Host)
+            return playerIndex == 0; // Host 是 P0
 
-        var collisionSys = battleWorld.AddSystem<CollisionSystem>();
-        collisionSys.Initialize(battleAreaData);
+        if (NetworkManager.Instance.netRole == NetworkRole.Client)
+            return playerIndex == NetworkManager.Instance.LocalPlayerIndex; // Client 控制自己的角色
 
-        var playerControlSys = battleWorld.AddSystem<PlayerControlSystem>();
+        return false;
     }
 
-    BitArray _activePlayers = new BitArray(4) { [0] = true }; // 单人测试
+    public void AddPlayer(byte playerIndex)
+    {
+        if (playerIndex < 4)
+            _activePlayers[playerIndex] = true;
+    }
 
-    #region 核心更新循环（帧同步）
+    #region 核心更新循环
     void FixedUpdate()
     {
-        //if (!_isBattleRunning) return;
+        uint currentFrame = GameTimeManager.CurrentLogicFrame;
 
-        ushort currentFrame = GameTimeManager.CurrentLogicFrame;
+        InputManager.Instance.RecordLocalInput(0, currentFrame);
 
-        // 1. 本地玩家采样（假设只有 P0 是本地）
-        if (_activePlayers[0])
-        {
-            InputManager.Instance.RecordLocalInput(0, currentFrame);
-        }
+        // 2. 接收网络事件（包括 InputMSG、断线等）
+        NetworkManager.Instance.PollNetwork();
 
-        // 2. 等待所有活跃玩家输入就绪
-        if (!InputManager.Instance.AreAllInputsReady(currentFrame, _activePlayers))
-        {
-            return; // 等待下一帧（或加超时处理）
-        }
+        // 3. 检查是否所有输入就绪
+        if (!InputManager.Instance.AreAllInputsReady(currentFrame, _activePlayers)) return;
 
-        // 3. 推进 ECS 逻辑
+        // 4. 推进 ECS 逻辑（使用 currentFrame 的输入）
         battleWorld?.FixedUpdate(Time.fixedDeltaTime);
 
-        // 4. 帧递增
+        // 6. 帧递增（进入下一逻辑帧）
         GameTimeManager.AdvanceLogicFrame();
+
+        // 7. 清理旧帧
+        InputManager.Instance.CleanupOldFrames(GameTimeManager.CurrentLogicFrame);
     }
 
     void Update()
@@ -240,10 +240,4 @@ public class BattleManager : SingletonMono<BattleManager>
         battleWorld?.LateUpdate(Time.deltaTime);
     }
     #endregion
-
-    protected override void OnDestroy()
-    {
-        base.OnDestroy();
-        EventManager.Instance.UnRegistEvent(E_Event.BattleStart, StartBattle);     
-    }
 }

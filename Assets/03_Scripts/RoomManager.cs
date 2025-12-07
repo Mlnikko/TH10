@@ -1,159 +1,159 @@
 using System;
-using System.Collections.Generic;
+using Unity.Networking.Transport;
 using UnityEngine;
 
 [Serializable]
 public struct RoomInfo
 {
     public int RoomId;
-    public string HostName;     // 主机名（用于显示）
+    public string HostName;
     public int PlayerCount;
     public int MaxPlayers;
-    public string IpAddress;    // 主机 IP（用于直连）
+    public string IpAddress;
+    public int Port;
 
     public bool IsFull => PlayerCount >= MaxPlayers;
 
     public override string ToString()
     {
-        return $"Room {RoomId} ({PlayerCount}/{MaxPlayers}) on {HostName} ({IpAddress})";
+        return $"[{RoomId}] {HostName} ({PlayerCount}/{MaxPlayers}) @ {IpAddress}:{Port}";
     }
 }
 
 public class RoomManager : SingletonMono<RoomManager>
 {
-    [Header("房间配置")]
-    public int MaxPlayers = 4; // 房间最大人数
+    // ====== 事件（UI 用）======
+    public event Action OnRoomCreated;
+    public event Action OnJoinedRoom;
+    public event Action OnLeftRoom;
+    public event Action<int> OnPlayerCountChanged; // 玩家数变化（来自网络）
 
-    private int _currentRoomId = 0;
-    private readonly HashSet<int> _playerIds = new(); // 当前房间中的玩家 ID 集合
+    // ====== 状态 ======
+    public RoomInfo? CurrentRoom { get; private set; }
+    public bool IsInRoom => CurrentRoom.HasValue;
+    public bool IsHost => NetworkManager.Instance.netRole == NetworkRole.Host;
 
-    public int CurrentRoomId => _currentRoomId;
-    public HashSet<int> PlayerIds => _playerIds;
-    public int PlayerCount => _playerIds.Count;
-    public bool IsFull => PlayerCount >= MaxPlayers;
-    public bool InRoom => _currentRoomId > 0;
-
+    // ====== 初始化 ======
     protected override void OnSingletonInit()
     {
-        // 初始化时不在任何房间
-        _currentRoomId = 0;
-        _playerIds.Clear();
+        base.OnSingletonInit();
+
+        // 监听网络断开（自动退出房间）
+        NetworkManager.Instance.OnClientDisconnected += OnNetworkDisconnected;
+
+        UIManager.Instance.ShowPanel<RoomPanel>();
     }
 
-    /// <summary>
-    /// 创建新房间（主机）
-    /// </summary>
-    public bool CreateRoom(out int roomId)
+    protected override void OnSingletonDestroy()
     {
-        if (InRoom)
-        {
-            Debug.LogWarning("Already in a room!");
-            roomId = _currentRoomId;
-            return false;
-        }
-
-        _currentRoomId = UnityEngine.Random.Range(1000, 9999); // 简易随机房间号
-        _playerIds.Clear();
-
-        // 主机自动加入
-        AddPlayerToLocalRoom(0); // 假设主机 ID 为 0
-
-        roomId = _currentRoomId;
-        Debug.Log($"Created Room {roomId} as Host (Player 0)");
-        return true;
+        NetworkManager.Instance.OnClientDisconnected -= OnNetworkDisconnected;
+        base.OnSingletonDestroy();
     }
 
-    /// <summary>
-    /// 加入指定房间（客户端）
-    /// </summary>
-    public bool JoinRoom(int roomId, int playerId)
+    // ====== 房间操作 ======
+
+    public void CreateRoom(string hostName, int maxPlayers = 4)
     {
-        if (InRoom)
+        if (IsInRoom) LeaveRoom();
+
+        // 获取本机局域网 IP（需实现 GetLocalIP()）
+        string localIP = GetLocalIPAddress();
+        int port = 7777;
+
+        var room = new RoomInfo
         {
-            Debug.LogWarning("Already in a room!");
-            return false;
-        }
+            RoomId = UnityEngine.Random.Range(10000, 99999),
+            HostName = hostName,
+            PlayerCount = 1,
+            MaxPlayers = maxPlayers,
+            IpAddress = localIP,
+            Port = port
+        };
 
-        if (playerId < 0 || playerId >= MaxPlayers)
-        {
-            Debug.LogError($"Player ID must be between 0 and {MaxPlayers - 1}");
-            return false;
-        }
+        CurrentRoom = room;
 
-        _currentRoomId = roomId;
-        _playerIds.Clear();
+        // 启动主机
+        NetworkManager.Instance.StartHost(localPlayerIndex: 0);
 
-        // 模拟：加入房间后，本地只知道自己的 ID
-        // 实际多人游戏中，应从服务器获取完整玩家列表
-        AddPlayerToLocalRoom(playerId);
+        // 广播房间信息（可选：用于 LAN 发现）
+        BroadcastRoomInfo(room);
 
-        Debug.Log($"Joined Room {roomId} as Player {playerId}");
-        return true;
+        OnRoomCreated?.Invoke();
+        Logger.Info($"[ROOM] Created: {room}");
     }
 
-    /// <summary>
-    /// 本地添加一个玩家到房间（用于模拟）
-    /// </summary>
-    public bool AddPlayerToLocalRoom(int playerId)
+    public void JoinRoom(RoomInfo room)
     {
-        if (!InRoom)
-        {
-            Debug.LogWarning("Cannot add player: not in a room");
-            return false;
-        }
+        if (IsInRoom) LeaveRoom();
 
-        if (_playerIds.Contains(playerId))
-        {
-            Debug.LogWarning($"Player {playerId} already in room");
-            return false;
-        }
+        CurrentRoom = room;
 
-        if (_playerIds.Count >= MaxPlayers)
-        {
-            Debug.LogWarning("Room is full!");
-            return false;
-        }
+        // 连接主机
+        NetworkManager.Instance.StartClient(
+            ip: room.IpAddress,
+            remotePort: (ushort)room.Port,
+            localPlayerIndex: 1 // 客户端默认索引（实际应由主机分配）
+        );
 
-        _playerIds.Add(playerId);
-        Debug.Log($"Player {playerId} joined room {_currentRoomId}. Total: {_playerIds.Count}/{MaxPlayers}");
-        return true;
+        OnJoinedRoom?.Invoke();
+        Logger.Info($"[ROOM] Joined: {room}");
     }
 
-    /// <summary>
-    /// 移除玩家（模拟断开）
-    /// </summary>
-    public void RemovePlayer(int playerId)
+    public void LeaveRoom()
     {
-        if (_playerIds.Remove(playerId))
+        if (!IsInRoom) return;
+
+        NetworkManager.Instance.Shutdown(); // 断开所有连接
+        CurrentRoom = null;
+
+        OnLeftRoom?.Invoke();
+        Logger.Info("[ROOM] Left room");
+    }
+
+    // ====== 网络回调 ======
+
+    void OnNetworkDisconnected(NetworkConnection conn)
+    {
+        // 任何网络断开都视为离开房间
+        if (IsInRoom)
         {
-            Debug.Log($"Player {playerId} left room {_currentRoomId}");
+            CurrentRoom = null;
+            OnLeftRoom?.Invoke();
+            Logger.Warn("[ROOM] Disconnected from host");
         }
     }
 
-    /// <summary>
-    /// 退出当前房间
-    /// </summary>
-    public void LeaveCurrentRoom()
-    {
-        if (!InRoom) return;
+    // ====== 工具方法 ======
 
-        Debug.Log($"Left Room {_currentRoomId}");
-        _currentRoomId = 0;
-        _playerIds.Clear();
+    string GetLocalIPAddress()
+    {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+        foreach (var ip in host.AddressList)
+        {
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                return ip.ToString();
+        }
+        return "127.0.0.1";
+#else
+        return "127.0.0.1"; // 移动端需另处理
+#endif
     }
 
-    /// <summary>
-    /// 检查玩家是否在当前房间
-    /// </summary>
-    public bool HasPlayer(int playerId) => _playerIds.Contains(playerId);
-
-    /// <summary>
-    /// 获取所有玩家 ID（排序后）
-    /// </summary>
-    public List<int> GetSortedPlayerIds()
+    // 可选：广播房间信息（用于 LAN 自动发现）
+    void BroadcastRoomInfo(RoomInfo room)
     {
-        var list = new List<int>(_playerIds);
-        list.Sort();
-        return list;
+        // TODO: 发送 UDP 广播包（后续可扩展）
+        // 例如：向 255.255.255.255:7778 发送 JSON 化的 room
+    }
+
+    // ====== 外部调用：更新玩家数（由网络消息触发）=====
+    internal void UpdatePlayerCount(int newCount)
+    {
+        if (!CurrentRoom.HasValue) return;
+        var updated = CurrentRoom.Value;
+        updated.PlayerCount = newCount;
+        CurrentRoom = updated;
+        OnPlayerCountChanged?.Invoke(newCount);
     }
 }
