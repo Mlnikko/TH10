@@ -7,8 +7,8 @@ public struct RoomInfo
 {
     public int RoomId;
     public string HostName;
-    public int PlayerCount;
-    public int MaxPlayers;
+    public byte PlayerCount;
+    public byte MaxPlayers;
     public string IpAddress;
     public int Port;
 
@@ -31,7 +31,9 @@ public class RoomManager : SingletonMono<RoomManager>
     // ====== 状态 ======
     public RoomInfo? CurrentRoom { get; private set; }
     public bool IsInRoom => CurrentRoom.HasValue;
-    public bool IsHost => NetworkManager.Instance.netRole == NetworkRole.Host;
+    //public bool IsHost => NetworkManager.Instance.netRole == NetworkRole.Host;
+
+    public byte playerIndex;
 
     // ====== 初始化 ======
     protected override void OnSingletonInit()
@@ -39,20 +41,18 @@ public class RoomManager : SingletonMono<RoomManager>
         base.OnSingletonInit();
 
         // 监听网络断开（自动退出房间）
-        NetworkManager.Instance.OnClientDisconnected += OnNetworkDisconnected;
-
-        UIManager.Instance.ShowPanel<RoomPanel>();
+        //NetworkManager.Instance.OnClientDisconnected += OnNetworkDisconnected;
     }
 
     protected override void OnSingletonDestroy()
     {
-        NetworkManager.Instance.OnClientDisconnected -= OnNetworkDisconnected;
+        //NetworkManager.Instance.OnClientDisconnected -= OnNetworkDisconnected;
         base.OnSingletonDestroy();
     }
 
     // ====== 房间操作 ======
 
-    public void CreateRoom(string hostName, int maxPlayers = 4)
+    public void CreateRoom(string hostName, byte maxPlayers = 4)
     {
         if (IsInRoom) LeaveRoom();
 
@@ -73,37 +73,28 @@ public class RoomManager : SingletonMono<RoomManager>
         CurrentRoom = room;
 
         // 启动主机
-        NetworkManager.Instance.StartHost(localPlayerIndex: 0);
-
-        // 广播房间信息（可选：用于 LAN 发现）
-        BroadcastRoomInfo(room);
+        //NetworkManager.Instance.StartHost();
 
         OnRoomCreated?.Invoke();
         Logger.Info($"[ROOM] Created: {room}");
     }
 
-    public void JoinRoom(RoomInfo room)
+    public void JoinRoom(string ip, ushort port)
     {
         if (IsInRoom) LeaveRoom();
 
-        CurrentRoom = room;
-
-        // 连接主机
-        NetworkManager.Instance.StartClient(
-            ip: room.IpAddress,
-            remotePort: (ushort)room.Port,
-            localPlayerIndex: 1 // 客户端默认索引（实际应由主机分配）
-        );
+        //NetworkManager.Instance.StartClient(ip, port);
 
         OnJoinedRoom?.Invoke();
-        Logger.Info($"[ROOM] Joined: {room}");
+
+        Logger.Debug("尝试加入房间");
     }
 
     public void LeaveRoom()
     {
         if (!IsInRoom) return;
 
-        NetworkManager.Instance.Shutdown(); // 断开所有连接
+        //NetworkManager.Instance.Shutdown(); // 断开所有连接
         CurrentRoom = null;
 
         OnLeftRoom?.Invoke();
@@ -140,15 +131,9 @@ public class RoomManager : SingletonMono<RoomManager>
 #endif
     }
 
-    // 可选：广播房间信息（用于 LAN 自动发现）
-    void BroadcastRoomInfo(RoomInfo room)
-    {
-        // TODO: 发送 UDP 广播包（后续可扩展）
-        // 例如：向 255.255.255.255:7778 发送 JSON 化的 room
-    }
 
     // ====== 外部调用：更新玩家数（由网络消息触发）=====
-    internal void UpdatePlayerCount(int newCount)
+    internal void UpdatePlayerCount(byte newCount)
     {
         if (!CurrentRoom.HasValue) return;
         var updated = CurrentRoom.Value;

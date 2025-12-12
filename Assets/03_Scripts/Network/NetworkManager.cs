@@ -2,299 +2,197 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Networking.Transport;
-
-public enum NetworkRole
-{
-    None = 0,
-    Host = 1,
-    Client = 2
-}
-
-public enum NetworkStatus
-{
-    Disconnected = 0,
-    Connected = 2
-}
+using UnityEngine;
 
 public class NetworkManager : SingletonMono<NetworkManager>
 {
-    public NetworkRole netRole = NetworkRole.None;
-    public NetworkStatus netStatus = NetworkStatus.Disconnected;
+    NetworkDriver m_Driver;
+    NativeList<NetworkConnection> m_Connections;
+    NetworkConnection m_ClientConnection;
 
-    public string ipAddress = "127.0.0.1";
-    public ushort port = 7777;
+    bool m_IsServer = false;
+    Dictionary<MessageId, Delegate> m_MessageHandlers = new();
 
-    // ====== 内部状态 ======
-    NetworkDriver _driver;
-    NetworkPipeline _pipeline;
+    const int MAX_CONNECTIONS = 4;
 
-    NetworkConnection _connection;
-    readonly List<NetworkConnection> _clients = new();
-
-    public byte LocalPlayerIndex => _localPlayerIndex;
-    byte _localPlayerIndex;
-
-    // ====== 消息系统 ======
-    private readonly Dictionary<byte, Action<DataStreamReader>> _handlers = new();
-    private static readonly Dictionary<Type, byte> MessageTypeMap = new();
-
-    protected override void OnSingletonInit()
+    public void StartServer(ushort port = 7777)
     {
-        base.OnSingletonInit();
- 
-        RegisterMessageType<InputMSG>(1);
-    }
+        if (m_Driver.IsCreated) m_Driver.Dispose();
+        m_Driver = NetworkDriver.Create();
+        m_Connections = new NativeList<NetworkConnection>(MAX_CONNECTIONS, Allocator.Persistent);
 
-    // 注册消息类型（必须在运行前调用，建议在 Awake 或静态初始化）
-    public static void RegisterMessageType<T>(byte id) where T : INetworkMessage, new()
-    {
-        MessageTypeMap[typeof(T)] = id;
-    }
-
-    // 注册处理器（运行时）
-    public void RegisterHandler<T>(Action<T> handler) where T : INetworkMessage, new()
-    {
-        if (!MessageTypeMap.TryGetValue(typeof(T), out byte id))
-            throw new ArgumentException($"Message type {typeof(T)} not registered!");
-
-        _handlers[id] = (reader) =>
+        var endpoint = NetworkEndpoint.AnyIpv4.WithPort(port);
+        if (m_Driver.Bind(endpoint) != 0)
         {
-            var msg = new T();
-            msg.Deserialize(reader);
-            handler?.Invoke(msg);
-        };
-    }
-
-    // ====== 初始化（保持你的逻辑，加 Shutdown）=====
-    public void StartHost(byte localPlayerIndex = 0)
-    {
-        Shutdown();
-
-        _localPlayerIndex = localPlayerIndex;
-        netRole = NetworkRole.Host;
-        netStatus = NetworkStatus.Connected;
-
-        _driver = NetworkDriver.Create();
-        _pipeline = NetworkPipeline.Null;
-        _driver.Bind(NetworkEndpoint.AnyIpv4.WithPort(port));
-        _driver.Listen();
-
-        Logger.Debug($"Host started on port {port}", LogTag.Network);
-    }
-
-    public void StartClient(string ip, ushort remotePort, byte localPlayerIndex = 1)
-    {
-        Shutdown();
-
-        _localPlayerIndex = localPlayerIndex;
-        netRole = NetworkRole.Client;
-
-        ipAddress = ip;
-        port = remotePort;
-
-        _driver = NetworkDriver.Create();
-        _pipeline = NetworkPipeline.Null;
-
-        if (!NetworkEndpoint.TryParse(ip, remotePort, out var endpoint))
-        {
-            Logger.Error($"Invalid endpoint: {ip}:{remotePort}", LogTag.Network);
+            Debug.LogError($"Failed to bind server to port {port}");
             return;
         }
-
-        _connection = _driver.Connect(endpoint);
-        Logger.Debug($"Connecting to {endpoint}", LogTag.Network);
+        m_Driver.Listen();
+        m_IsServer = true;
+        Debug.Log("Server started.");
     }
 
-    // ====== 通用发送方法 ======
-    public void SendToServer<T>(in T message) where T : INetworkMessage
+    public void StartClient(string ip, ushort port = 7777)
     {
-        if (netRole != NetworkRole.Client || netStatus != NetworkStatus.Connected) return;
-        if (!_connection.IsCreated) return;
+        if (m_Driver.IsCreated) m_Driver.Dispose();
+        m_Driver = NetworkDriver.Create();
 
-        SendInternal(_connection, message);
+        var endpoint = NetworkEndpoint.Parse(ip, port);
+        m_ClientConnection = m_Driver.Connect(endpoint);
+        m_IsServer = false;
+        Debug.Log($"Client connecting to {ip}:{port}");
     }
 
-    public void SendToAllClients<T>(in T message) where T : INetworkMessage
+    public void RegisterHandler<T>(MessageId id, Action<NetworkConnection, T> handler) where T : INetworkMessage, new()
     {
-        if (netRole != NetworkRole.Host) return;
-        for (int i = _clients.Count - 1; i >= 0; i--)
+        m_MessageHandlers[id] = handler;
+    }
+
+    public void SendToServer<T>(MessageId id, T message) where T : INetworkMessage
+    {
+        if (!m_ClientConnection.IsCreated) return;
+        SendInternal(m_ClientConnection, id, message);
+    }
+
+    public void SendToClient<T>(NetworkConnection conn, MessageId id, T message) where T : INetworkMessage
+    {
+        if (!conn.IsCreated || !m_Driver.IsCreated) return;
+        SendInternal(conn, id, message);
+    }
+
+    public void Broadcast<T>(MessageId id, T message) where T : INetworkMessage
+    {
+        if (!m_IsServer) return;
+        for (int i = 0; i < m_Connections.Length; i++)
         {
-            var conn = _clients[i];
-            if (conn.IsCreated && _driver.GetConnectionState(conn) == NetworkConnection.State.Connected)
-            {
-                SendInternal(conn, message);
-            }
-            else
-            {
-                // 客户端已断开，清理
-                OnRemoteDisconnected(conn);
-                _clients.RemoveAt(i);
-            }
+            if (m_Connections[i].IsCreated)
+                SendInternal(m_Connections[i], id, message);
         }
     }
 
-    public void SendToClient<T>(NetworkConnection conn, in T message) where T : INetworkMessage
+    void SendInternal<T>(NetworkConnection conn, MessageId id, T message) where T : INetworkMessage
     {
-        if (netRole != NetworkRole.Host) return;
-        if (conn.IsCreated && _driver.GetConnectionState(conn) == NetworkConnection.State.Connected)
-        {
-            SendInternal(conn, message);
-        }
+        if (!m_Driver.IsCreated || !conn.IsCreated) return;
+
+        m_Driver.BeginSend(NetworkPipeline.Null, conn, out var writer);
+        writer.WriteByte((byte)id);
+        message.Serialize(ref writer);
+        m_Driver.EndSend(writer);
     }
 
-    void SendInternal<T>(NetworkConnection conn, in T message) where T : INetworkMessage
+    void Update()
     {
-        if (!_driver.IsCreated || !MessageTypeMap.TryGetValue(typeof(T), out byte id)) return;
+        if (!m_Driver.IsCreated) return;
+        m_Driver.ScheduleUpdate().Complete();
 
-        if (_driver.BeginSend(_pipeline, conn, out DataStreamWriter writer) >= 0)
+        if (m_IsServer)
         {
-            writer.WriteByte(id);
-            message.Serialize(ref writer);
-            _driver.EndSend(writer);
-        }
-    }
-
-    // ====== 网络轮询 =====
-    public void PollNetwork()
-    {
-        if (netRole == NetworkRole.None || !_driver.IsCreated) return;
-
-        _driver.ScheduleUpdate().Complete();
-
-        // Host: 接受新连接
-        if (netRole == NetworkRole.Host)
-        {
+            // Accept new connections
             NetworkConnection c;
-            while ((c = _driver.Accept()) != default)
+            while ((c = m_Driver.Accept()) != default)
             {
-                if (_clients.Count < 3)
+                if (m_Connections.Length < MAX_CONNECTIONS)
                 {
-                    _clients.Add(c);
-                    Logger.Debug($"Client connected. Total: {_clients.Count + 1}", LogTag.Network);
+                    m_Connections.Add(c);
+                    Debug.Log("New client connected.");
                 }
                 else
                 {
-                    _driver.Disconnect(c);
+                    c.Disconnect(m_Driver); // Reject if full
                 }
             }
-        }
 
-        // 处理所有连接
-        ProcessConnections();
-
-        // Client 连接确认
-        if (netRole == NetworkRole.Client && netStatus != NetworkStatus.Disconnected)
-        {
-            if (_connection.IsCreated &&
-                _driver.GetConnectionState(_connection) == NetworkConnection.State.Connected)
+            // Clean dead connections
+            for (int i = 0; i < m_Connections.Length; i++)
             {
-                netStatus = NetworkStatus.Connected;
-                Logger.Debug($"Connected to host!", LogTag.Network);
-            }
-        }
-    }
-
-    void ProcessConnections()
-    {
-        var connections = netRole == NetworkRole.Host ? _clients : new List<NetworkConnection> { _connection };
-
-        for (int i = connections.Count - 1; i >= 0; i--)
-        {
-            var conn = connections[i];
-            if (!conn.IsCreated) continue;
-
-            NetworkEvent.Type eventType;
-            while ((eventType = _driver.PopEventForConnection(conn, out DataStreamReader stream)) != NetworkEvent.Type.Empty)
-            {
-                switch (eventType)
+                if (!m_Connections[i].IsCreated)
                 {
-                    case NetworkEvent.Type.Data:
-                        HandleMessage(stream);
-                        break;
-
-                    case NetworkEvent.Type.Disconnect:
-                        OnRemoteDisconnected(conn);
-                        if (netRole == NetworkRole.Host)
-                        {
-                            _clients.Remove(conn); // 安全移除
-                        }
-                        break;
-
-                    case NetworkEvent.Type.Connect:
-                        // UDP 下通常不触发，可忽略
-                        break;
+                    m_Connections.RemoveAtSwapBack(i);
+                    i--;
                 }
             }
-        }
-    }
 
-    void HandleMessage(DataStreamReader stream)
-    {
-        if (stream.Length < 1) return;
-
-        byte msgId = stream.ReadByte();
-        if (_handlers.TryGetValue(msgId, out var handler))
-        {
-            handler(stream);
+            // Process messages from all clients
+            for (int i = 0; i < m_Connections.Length; i++)
+            {
+                ProcessIncoming(m_Connections[i]);
+            }
         }
         else
         {
-            Logger.Warn($"Unhandled message ID: {msgId}", LogTag.Network);
+            // Client: only one connection
+            ProcessIncoming(m_ClientConnection);
         }
     }
 
-    // ====== 断开处理（统一入口）=====
-    void OnRemoteDisconnected(NetworkConnection conn)
+    void ProcessIncoming(NetworkConnection conn)
     {
-        Logger.Debug("Remote disconnected", LogTag.Network);
+        if (!conn.IsCreated) return;
 
-        // 触发全局事件（可选）
-        OnClientDisconnected?.Invoke(conn);
-
-        if (netRole == NetworkRole.Client)
+        DataStreamReader stream;
+        NetworkEvent.Type eventType;
+        while ((eventType = m_Driver.PopEventForConnection(conn, out stream)) != NetworkEvent.Type.Empty)
         {
-            netStatus = NetworkStatus.Disconnected;
-            _connection = default;
+            switch (eventType)
+            {
+                case NetworkEvent.Type.Connect:
+                    Debug.Log("Connected to server.");
+                    break;
+
+                case NetworkEvent.Type.Data:
+                    HandleMessage(conn, ref stream);
+                    break;
+
+                case NetworkEvent.Type.Disconnect:
+                    Debug.Log("Disconnected.");
+                    if (m_IsServer)
+                    {
+                        // In server, mark as dead (will be cleaned next frame)
+                    }
+                    else
+                    {
+                        m_ClientConnection = default;
+                    }
+                    break;
+            }
         }
     }
 
-    // ====== 事件（供外部监听）=====
-    public Action<NetworkConnection> OnClientDisconnected;
-
-    // ====== 清理 ======
-    public void Shutdown()
+    void HandleMessage(NetworkConnection conn, ref DataStreamReader stream)
     {
-        if (_driver.IsCreated)
+        byte msgIdByte = stream.ReadByte();
+        if (!Enum.IsDefined(typeof(MessageId), msgIdByte))
         {
-            if (netRole == NetworkRole.Host)
-            {
-                foreach (var c in _clients)
-                {
-                    if (c.IsCreated) _driver.Disconnect(c);
-                }
-            }
-            else if (netRole == NetworkRole.Client && _connection.IsCreated)
-            {
-                _driver.Disconnect(_connection);
-            }
-            _driver.Dispose();
+            Debug.LogWarning($"Unknown message ID: {msgIdByte}");
+            return;
         }
 
-        _clients.Clear();
-        _connection = default;
-        netRole = NetworkRole.None;
-        netStatus = NetworkStatus.Disconnected;
-        _handlers.Clear();
+        MessageId msgId = (MessageId)msgIdByte;
+
+        if (m_MessageHandlers.TryGetValue(msgId, out var handler))
+        {
+            // Create message instance and deserialize
+            var msgType = handler.Method.GetParameters()[1].ParameterType;
+            var message = (INetworkMessage)Activator.CreateInstance(msgType);
+            message.Deserialize(in stream);
+
+            // Invoke handler via dynamic dispatch
+            handler.DynamicInvoke(conn, message);
+        }
+        else
+        {
+            Debug.LogWarning($"No handler registered for message: {msgId}");
+        }
     }
 
     protected override void OnSingletonDestroy()
     {
         base.OnSingletonDestroy();
-        Shutdown();
-    }
-
-    void OnApplicationQuit()
-    {
-        Shutdown();
+        if (m_Driver.IsCreated)
+        {
+            m_Driver.Dispose();
+            if (m_Connections.IsCreated)
+                m_Connections.Dispose();
+        }
     }
 }

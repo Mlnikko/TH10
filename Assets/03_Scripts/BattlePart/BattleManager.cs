@@ -1,128 +1,91 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using System;
-using System.Collections;
-
-/// <summary>
-/// 战斗区域配置
-/// </summary>
-[Serializable]
-public struct BattleAreaData : IEquatable<BattleAreaData>
-{
-    // === 战斗区域 ===
-    public float Width;          // 战斗区域宽度（单位：Unity 世界单位）
-    public float Height;         // 战斗区域高度
-    public Vector2 Center;       // 战斗区域中心点（通常为 (0,0)）
-
-    // === 网格加速参数 ===
-    public int GridCellSize;     // 网格单元格尺寸（建议 64 或 128，正方形）
-
-    // === 弹幕回收边界（外扩区域）===
-    public Vector2 DanmakuRecycleMargin; // 超出战斗区域多少距离后回收弹幕
-
-    // === 辅助属性（只读，计算得来）===
-
-    public float Left => Center.x - Width * 0.5f;
-    public float Right => Center.x + Width * 0.5f;
-    public float Bottom => Center.y - Height * 0.5f;
-    public float Top => Center.y + Height * 0.5f;
-
-    public Rect BattleRect => new Rect(Left, Bottom, Width, Height);
-
-    // 回收区域边界（用于销毁远距离弹幕）
-    public float RecycleLeft => Left - DanmakuRecycleMargin.x;
-    public float RecycleRight => Right + DanmakuRecycleMargin.x;
-    public float RecycleBottom => Bottom - DanmakuRecycleMargin.y;
-    public float RecycleTop => Top + DanmakuRecycleMargin.y;
-
-    // 用于 DeterministicGrid 的世界原点（左下角 - 边距）
-    public Vector2 GridWorldOrigin => new Vector2(
-        RecycleLeft - 50f,   // 额外安全边距
-        RecycleBottom - 50f
-    );
-
-    // 总覆盖宽度/高度（用于计算网格大小）
-    public float TotalWidth => Width + DanmakuRecycleMargin.x * 2f + 100f;
-    public float TotalHeight => Height + DanmakuRecycleMargin.y * 2f + 100f;
-
-    // 网格维度（向上取整）
-    public int GridColumns => Mathf.CeilToInt(TotalWidth / GridCellSize);
-    public int GridRows => Mathf.CeilToInt(TotalHeight / GridCellSize);
-
-    public BattleAreaData(float width, float height, Vector2 center, int cellSize = 64, Vector2 recycleMargin = default)
-    {
-        Width = width;
-        Height = height;
-        Center = center;
-        GridCellSize = cellSize;
-        DanmakuRecycleMargin = recycleMargin == default ? new Vector2(100, 100) : recycleMargin;
-    }
-
-    // 默认构造（避免未初始化）
-    public static BattleAreaData Default => new BattleAreaData(1280, 720, Vector2.zero, 64, new Vector2(100, 100));
-
-    // 用于帧同步一致性校验
-    public bool Equals(BattleAreaData other)
-    {
-        return Width == other.Width &&
-               Height == other.Height &&
-               Center.Equals(other.Center) &&
-               GridCellSize == other.GridCellSize &&
-               DanmakuRecycleMargin.Equals(other.DanmakuRecycleMargin);
-    }
-
-    public override bool Equals(object obj) => obj is BattleAreaData other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(Width, Height, Center, GridCellSize, DanmakuRecycleMargin);
-}
-
-/// <summary>
-/// 战斗数据
-/// </summary>
-public struct BattleData
-{
-    public E_Rank rank;
-    public PlayerData[] playerBattleDatas;
-}
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using UnityEngine;
 
 public struct PlayerData
 {
     public byte playerIndex;
     public E_Character characterId;
     public E_Weapon weaponId;
+
+    public PlayerData(byte index, E_Character character, E_Weapon weapon)
+    {
+        playerIndex = index;
+        characterId = character;
+        weaponId = weapon;
+    }
+}
+
+public enum BattleStatus
+{
+    Prepare,
+    InBattle
 }
 
 public class BattleManager : SingletonMono<BattleManager>
 {
-    [SerializeField] GameObject playerPrefab;
-
-    public BattleData battleData = new();
+    public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
+    List<PlayerData> playerDatas = new List<PlayerData>();
 
     bool[] _activePlayers = new bool[4];
 
     World battleWorld;
+    
 
     [SerializeField] Transform playerRoot;
     [SerializeField] BattleArea battleArea;
 
+
     protected override void OnSingletonInit()
     {
-        InitBattleWorld();
-
-        var testPlayer0 = new PlayerData() { playerIndex = 0 , characterId = E_Character.Reimu};
-        var testPlayer1 = new PlayerData() { playerIndex = 1 , characterId = E_Character.Marisa};
-
-        CreatePlayer(testPlayer0);
-        CreatePlayer(testPlayer1);
-
-        AddPlayer(testPlayer0.playerIndex);
-        AddPlayer(testPlayer1.playerIndex);
+        BattleInit().Forget();
     }
+
+    async Task BattleInit()
+    {
+        try
+        {
+  
+            await ConfigManager.PreloadConfigsAsync<CharacterConfig>(ConfigHelper.allCharCfgIds);
+
+            await ConfigManager.PreloadConfigsAsync<WeaponConfig>(ConfigHelper.allWeapCfgIds);
+
+            //await SpriteManager
+
+            await UIManager.Instance.ShowPanelAsync<BattlePreparePanel>();
+
+            CurrentStatus = BattleStatus.Prepare;
+        }
+        catch (Exception ex)
+        {
+            Logger.Exception(ex);
+        }
+    }
+
 
     public void StartBattle()
     {
-        Debug.Log("Battle Start!");
-        SceneManager.LoadScene("BattleScene");
-        SceneManager.UnloadSceneAsync("TitleScene");
+        if (playerDatas.Count == 0)
+        {
+            Logger.Error("Cannot start battle: No players added.");
+            return;
+        }
+
+        // 初始化战斗世界
+        InitBattleWorld();
+
+        // 创建玩家实体
+        CreatePlayer(); // 或 CreatePlayersAsync() 如果使用异步版本
+
+        // 可以在这里添加战斗开始逻辑
+        Logger.Info($"Battle started with {playerDatas.Count} players");
+    }
+
+    public void AddPlayer(PlayerData playerData)
+    {
+        playerDatas.Add(playerData);
     }
 
     void InitBattleWorld()
@@ -139,17 +102,64 @@ public class BattleManager : SingletonMono<BattleManager>
         var playerControlSys = battleWorld.AddSystem<PlayerControlSystem>();
     }
 
-    public void CreatePlayer(PlayerData playerData)
+    public void CreatePlayer()
+    {
+        //if (playerDatas == null || playerDatas.Count == 0)
+        //{
+        //    Logger.Error("No player data available to create players.");
+        //    return;
+        //}
+
+        //foreach (var playerData in playerDatas)
+        //{
+        //    string characterPrefabPath = ResourceKeys.CharacterPrefabPath + playerData.characterId.ToString();
+
+        //    // 异步加载角色预制体
+        //    ResManager.LoadAssetAsync<GameObject>(characterPrefabPath, (playerPrefab) =>
+        //    {
+        //        if (playerPrefab == null)
+        //        {
+        //            Logger.Error($"Failed to load prefab for character: {playerData.characterId}");
+        //            return;
+        //        }
+
+        //        // 在回调中完成初始化
+        //        InitializePlayerEntity(playerData, playerPrefab);
+        //    });
+        //}
+    }
+
+    Vector2 GetStartPosition(byte playerIndex)
+    {
+        // 根据玩家索引设置不同的初始位置
+        return playerIndex switch
+        {
+            0 => new Vector2(-3, 0),  // 左下
+            1 => new Vector2(3, 0),   // 右下
+            2 => new Vector2(-3, 3),  // 左上
+            3 => new Vector2(3, 3),   // 右上
+            _ => Vector2.zero
+        };
+    }
+
+    void InitializePlayerEntity(PlayerData playerData, GameObject playerPrefab)
     {
         var playerGO = Instantiate(playerPrefab, playerRoot);
 
         var em = battleWorld.EntityManager;
-
         var playerEntity = em.CreateEntity();
 
         int presentationId = PresentationBridge.Register(playerGO, new PlayerPresentationUpdater(playerGO));
+        var characterConfig = ConfigManager.GetConfig<CharacterConfig>(playerData.characterId.ToString());
+        if (characterConfig == null)
+        {
+            Logger.Error($"CharacterConfig not found for ID: {playerData.characterId}");
+            // 可选：销毁已实例化的 GameObject
+            GameObject.Destroy(playerGO);
+            return;
+        }
 
-        var characterConfig = ConfigManager.Get<CharacterConfig>(playerData.characterId.ToString());
+        #region 添加组件
 
         em.AddComponent(playerEntity, new CPresentationLink
         {
@@ -178,44 +188,26 @@ public class BattleManager : SingletonMono<BattleManager>
         em.AddComponent(playerEntity, new CPlayerRunTime
         {
             playerIndex = playerData.playerIndex,
-
             grazeRadius = characterConfig.GrazeRadius,
             hitRadius = characterConfig.HitRadius,
-
             moveSlowSpeed = characterConfig.MoveSlowSpeed,
             moveSpeed = characterConfig.MoveSpeed,
-
             isSlowMode = false,
         });
+
+        #endregion
+
+        Logger.Info($"Player {playerData.playerIndex} ({playerData.characterId}) initialized successfully.");
     }
 
-    bool IsLocalPlayer(int playerIndex)
-    {
-        // Host 控制 P0，Client 控制 P1/P2/P3
-        if (NetworkManager.Instance.netRole == NetworkRole.Host)
-            return playerIndex == 0; // Host 是 P0
-
-        if (NetworkManager.Instance.netRole == NetworkRole.Client)
-            return playerIndex == NetworkManager.Instance.LocalPlayerIndex; // Client 控制自己的角色
-
-        return false;
-    }
-
-    public void AddPlayer(byte playerIndex)
-    {
-        if (playerIndex < 4)
-            _activePlayers[playerIndex] = true;
-    }
-
-    #region 核心更新循环
     void FixedUpdate()
     {
+        // 只有在战斗中才执行逻辑帧更新
+        if (CurrentStatus != BattleStatus.InBattle || battleWorld == null) return;
+
         uint currentFrame = GameTimeManager.CurrentLogicFrame;
 
         InputManager.Instance.RecordLocalInput(0, currentFrame);
-
-        // 2. 接收网络事件（包括 InputMSG、断线等）
-        NetworkManager.Instance.PollNetwork();
 
         // 3. 检查是否所有输入就绪
         if (!InputManager.Instance.AreAllInputsReady(currentFrame, _activePlayers)) return;
@@ -230,6 +222,7 @@ public class BattleManager : SingletonMono<BattleManager>
         InputManager.Instance.CleanupOldFrames(GameTimeManager.CurrentLogicFrame);
     }
 
+    // Update 和 LateUpdate 主要用于处理非核心逻辑（如渲染等）
     void Update()
     {
         battleWorld?.Update(Time.deltaTime);
@@ -239,5 +232,4 @@ public class BattleManager : SingletonMono<BattleManager>
     {
         battleWorld?.LateUpdate(Time.deltaTime);
     }
-    #endregion
 }

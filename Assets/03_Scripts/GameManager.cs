@@ -18,14 +18,7 @@ public class GameManager : SingletonMono<GameManager>
     protected override void OnSingletonInit()
     {
         base.OnSingletonInit();
-        Logger.Init();
-        LoadResource();
         SetApplicationFPS(E_FPSMode.NoLimit, false);
-    }
-
-    void LoadResource()
-    {
-        ConfigManager.PreloadAll<CharacterConfig>();
     }
 
     public void SetApplicationFPS(E_FPSMode fPSMode, bool vsync)

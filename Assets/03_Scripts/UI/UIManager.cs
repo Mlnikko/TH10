@@ -1,109 +1,108 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class UIManager : SingletonMono<UIManager>
 {
-    private IUIResourceLoader resourceLoader;
-    private Dictionary<string, GameObject> prefabCache = new();
-    private Stack<UIPanel> panelStack = new();
-    private Dictionary<string, UIPanel> activePanels = new();
+    private const string PANEL_KEY_PREFIX = "UI/Panels/";
 
-    // ¿ÉÍâ²¿×¢Èë£¨ÈÈ¸üÏµÍ³³õÊ¼»¯Ê±µ÷ÓÃ£©
-    public void Initialize(IUIResourceLoader loader)
+    public Canvas Canvas
     {
-        this.resourceLoader = loader ?? throw new ArgumentNullException(nameof(loader));
-    }
-
-    protected override void OnSingletonInit()
-    {
-        // Ä¬ÈÏÊ¹ÓÃ Resources£¨½ö¿ª·¢£©
-        if (resourceLoader == null)
+        get
         {
-#if UNITY_EDITOR
-            Logger.Warn("UIManager using DefaultUIResourceLoader (Resources). Replace for hot update!", LogTag.UI);
-#endif
-            resourceLoader = new DefaultUIResourceLoader();
+            if (canvas == null)
+            {
+                var canvasObj = new GameObject("UICanvas");
+                canvasObj.SetActive(false);
+                canvasObj.transform.SetParent(transform, false);
+
+                canvas = canvasObj.AddComponent<Canvas>();
+                var scaler = canvasObj.AddComponent<CanvasScaler>();
+                var raycaster = canvasObj.AddComponent<GraphicRaycaster>();
+
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = 0;
+
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920, 1080);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+
+                if (FindObjectOfType<EventSystem>() == null)
+                {
+                    var esObj = new GameObject("EventSystem");
+                    esObj.transform.SetParent(transform, false);
+                    esObj.AddComponent<EventSystem>();
+                    esObj.AddComponent<StandaloneInputModule>();
+                }
+
+                canvasObj.SetActive(true);
+            }
+            return canvas;
         }
     }
+    Canvas canvas;
 
-    // ¡¾Í¬²½°æ±¾¡¿½öµ± prefab ÒÑ¼ÓÔØÊ±¿ÉÓÃ£¨ÊÊºÏÒÑÔ¤¼ÓÔØµÄÃæ°å£©
+
+    Stack<UIPanel> panelStack = new();
+    Dictionary<string, UIPanel> activePanels = new();
+
+    // ã€åŒæ­¥ç‰ˆæœ¬ã€‘ä»…å½“ prefab å·²åŠ è½½æ—¶å¯ç”¨
     public T ShowPanel<T>(object data = null) where T : UIPanel
     {
-        string name = typeof(T).Name;
-        if (resourceLoader.IsLoaded(name))
+        string assetKey = PANEL_KEY_PREFIX + typeof(T).Name;
+        if (ResManager.IsLoaded(assetKey))
         {
-            var prefab = resourceLoader.GetPrefab(name);
+            var prefab = ResManager.Get<GameObject>(assetKey);
             return InternalShowPanel<T>(prefab, data);
         }
         else
         {
-            Logger.Error($"Panel {name} not loaded! Use ShowPanelAsync.", LogTag.UI);
+            Logger.Error($"Panel {assetKey} not loaded! Use ShowPanelAsync.", LogTag.UI);
             return null;
         }
     }
 
     /// <summary>
-    /// Òş²ØÖ¸¶¨ÀàĞÍµÄÃæ°å£¨²»´ÓÕ»ÖĞÒÆ³ı£¬½ö½ûÓÃ GameObject£©
+    /// å¼‚æ­¥æ˜¾ç¤ºé¢æ¿ï¼ˆè¿”å› Taskï¼Œæ”¯æŒ awaitï¼‰
     /// </summary>
-    public void HidePanel<T>() where T : UIPanel
+    public async Task<T> ShowPanelAsync<T>(object data = null) where T : UIPanel
     {
-        string name = typeof(T).Name;
-        if (activePanels.TryGetValue(name, out var panel) && panel != null)
+        string panelName = typeof(T).Name;
+        string assetKey = PANEL_KEY_PREFIX + panelName;
+
+        // å¦‚æœå·²æ¿€æ´»ï¼Œç›´æ¥è¿”å›ï¼ˆä¸é‡æ–°å®ä¾‹åŒ–ï¼‰
+        if (activePanels.TryGetValue(panelName, out var existing) && existing != null && existing.gameObject.activeSelf)
         {
-            // Ö»ÓĞ¼¤»î×´Ì¬²ÅĞèÒªÒş²Ø
-            if (panel.gameObject.activeSelf)
-            {
-                panel.gameObject.SetActive(false);
-                panel.OnHide();
-            }
-
-            // ×¢Òâ£º²»´Ó panelStack ÖĞÒÆ³ı£¡
-            // ÕâÑù GoBack() ÈÔÄÜÕıÈ··µ»Ø
-        }
-    }
-
-    // ¡¾ÍÆ¼ö¡¿Òì²½ÏÔÊ¾Ãæ°å£¨Ö§³ÖÈÈ¸ü£©
-    public void ShowPanelAsync<T>(object data = null, Action<T> onShown = null) where T : UIPanel
-    {
-        string name = typeof(T).Name;
-
-        // Èç¹ûÒÑ¼¤»î£¬Ö±½Ó»Øµ÷
-        if (activePanels.TryGetValue(name, out var existing) && existing != null && existing.gameObject.activeSelf)
-        {
-            onShown?.Invoke((T)existing);
-            return;
+            return (T)existing;
         }
 
-        // Èç¹û prefab ÒÑ»º´æ£¬Ö±½ÓÏÔÊ¾
-        if (prefabCache.TryGetValue(name, out var cachedPrefab))
-        {
-            var panel = InternalShowPanel<T>(cachedPrefab, data);
-            onShown?.Invoke(panel);
-            return;
-        }
+        // å°è¯•ä» ResManager è·å–ï¼ˆå·²åŠ è½½ï¼‰
+        GameObject prefab = ResManager.Get<GameObject>(assetKey);
 
-        // ·ñÔòÒì²½¼ÓÔØ
-        resourceLoader.LoadPrefabAsync(name, (prefab) =>
+        // å¦‚æœæœªåŠ è½½ï¼Œå¼‚æ­¥åŠ è½½
+        if (prefab == null)
         {
+            prefab = await ResManager.LoadAsync<GameObject>(assetKey);
             if (prefab == null)
             {
-                Logger.Error($"Failed to load panel: {name}", LogTag.UI);
-                onShown?.Invoke(null);
-                return;
+                Logger.Error($"Failed to load panel: {assetKey}", LogTag.UI);
+                return null;
             }
+        }
 
-            prefabCache[name] = prefab;
-            var panel = InternalShowPanel<T>(prefab, data);
-            onShown?.Invoke(panel);
-        });
+        // æ˜¾ç¤ºé¢æ¿
+        var panel = InternalShowPanel<T>(prefab, data);
+        return panel;
     }
 
-    private T InternalShowPanel<T>(GameObject prefab, object data) where T : UIPanel
+    T InternalShowPanel<T>(GameObject prefab, object data) where T : UIPanel
     {
         string name = typeof(T).Name;
 
-        // ¸´ÓÃÒÑ´æÔÚµ«Î´¼¤»îµÄÊµÀı
+        // å¤ç”¨å·²å­˜åœ¨ä½†è¢«éšè—çš„é¢æ¿
         if (activePanels.TryGetValue(name, out var existing) && existing != null)
         {
             existing.gameObject.SetActive(true);
@@ -112,22 +111,32 @@ public class UIManager : SingletonMono<UIManager>
             return (T)existing;
         }
 
-        // ÊµÀı»¯ĞÂÃæ°å
-        GameObject go = Instantiate(prefab, transform);
-        UIPanel panel = go.GetComponent<UIPanel>() ?? go.AddComponent<T>();
+        // åˆ›å»ºæ–°å®ä¾‹
+        GameObject go = Instantiate(prefab, Canvas.transform);
+        T panel = go.GetComponent<T>() ?? go.AddComponent<T>();
 
         panel.Initialize();
         panel.OnShow(data);
         activePanels[name] = panel;
         PushToStack(panel);
 
-        return (T)panel;
+        return panel;
     }
 
-    private void PushToStack(UIPanel panel)
+    void PushToStack(UIPanel panel)
     {
         if (panelStack.Count > 0 && panelStack.Peek() == panel) return;
         panelStack.Push(panel);
+    }
+
+    public void HidePanel<T>() where T : UIPanel
+    {
+        string name = typeof(T).Name;
+        if (activePanels.TryGetValue(name, out var panel) && panel != null && panel.gameObject.activeSelf)
+        {
+            panel.gameObject.SetActive(false);
+            panel.OnHide();
+        }
     }
 
     public void GoBack()
@@ -142,7 +151,7 @@ public class UIManager : SingletonMono<UIManager>
         if (previous != null)
         {
             previous.gameObject.SetActive(true);
-            previous.OnShow(); // ¿ÉÑ¡£ºÊÇ·ñĞèÒª´«»ØÍËÊı¾İ£¿
+            previous.OnShow(); // å¯æ‰©å±•ï¼šä¼ å›é€€æ•°æ®
         }
     }
 
@@ -154,6 +163,5 @@ public class UIManager : SingletonMono<UIManager>
         }
         activePanels.Clear();
         panelStack.Clear();
-        prefabCache.Clear(); // »òÑ¡Ôñ²»Çå£¬±£Áô prefab ÒıÓÃ
     }
 }

@@ -1,28 +1,25 @@
-using System;
 using UnityEngine;
 
 public enum E_Weapon
 {
-    Weapon_Reimu_0,
-    Weapon_Reimu_1,
-    Weapon_Reimu_2,
+    None = 0,
 
-    Weapon_Marisa_0,
-    Weapon_Marisa_1,
-    Weapon_Marisa_2
-}
+    Weapon_Reimu_0 = 1000,
+    Weapon_Reimu_1 = 1001,
+    Weapon_Reimu_2 = 1002,
 
-[Serializable]
-public class Weapon
-{
-    public string Name;
-    public E_Weapon WeaponID;
-    [TextArea(1, 5)]
-    public string Description;
+    Weapon_Marisa_0 = 1010,
+    Weapon_Marisa_1 = 1011,
+    Weapon_Marisa_2 = 1012,
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Custom/WeaponConfig")]
 public class WeaponConfig : GameConfig
 {
-    public Weapon[] weapons;
+    public string Name;
+    public E_Weapon WeaponID;
+    [TextArea(1, 5)]
+    public string Description;
+
+    public override string ConfigId => WeaponID.ToString();
 }

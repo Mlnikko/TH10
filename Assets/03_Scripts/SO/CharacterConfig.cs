@@ -11,6 +11,7 @@ public class CharacterConfig : GameConfig
 {
     [Header("ÐÅÏ¢ÅäÖÃ")]
     public E_Character CharacterID;
+    public E_Weapon[] AvailableWeapons;
     [TextArea(1, 5)]
     public string Description;
 
@@ -38,4 +39,6 @@ public class CharacterConfig : GameConfig
         HitRadius = 0.1f;
         GrazeRadius = 0.5f;
     }
+
+    public override string ConfigId => CharacterID.ToString();
 }

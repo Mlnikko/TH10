@@ -62,7 +62,6 @@ public struct PlayerInputConfig
     public KeyCode bomb;
     public KeyCode slow;
 
-    // 默认构造（东方风格）
     public static PlayerInputConfig Default => new()
     {
         moveLeft = KeyCode.LeftArrow,
@@ -89,16 +88,14 @@ public class InputManager : SingletonMono<InputManager>
         base.OnSingletonInit();
         InitializeForGame();
 
-        // 注册 InputMSG 处理器（所有端都要注册！）
-        NetworkManager.Instance.RegisterHandler<InputMSG>((msg) =>
-        {
-            AddRemoteInput(msg.input);
-        });
+        //// 注册 InputMSG 处理器（所有端都要注册！）
+        //NetworkManager.Instance.RegisterHandler<InputMSG>((msg) =>
+        //{
+        //    AddRemoteInput(msg.input);
+        //});
     }
 
-    // ========================
     // 初始化与清理
-    // ========================
 
     public void InitializeForGame()
     {
@@ -132,9 +129,7 @@ public class InputManager : SingletonMono<InputManager>
         _isInitialized = false;
     }
 
-    // ========================
     // 本地输入记录
-    // ========================
 
     public void RecordLocalInput(byte playerIndex, uint logicFrame)
     {
@@ -161,9 +156,7 @@ public class InputManager : SingletonMono<InputManager>
         _inputFrames[playerIndex][logicFrame] = input;
     }
 
-    // ========================
     // 远程输入注入
-    // ========================
 
     public void AddRemoteInput(FrameInput input)
     {

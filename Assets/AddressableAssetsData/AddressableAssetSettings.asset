@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: cb855bf0dd08a2a4384afe9d1811d2e4
   m_currentHash:
     serializedVersion: 2
-    Hash: a56a16b50161d9476fd3a261473c1285
+    Hash: 9a6f50b28db0619fa64785ef42dda08d
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -47,6 +47,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3d1fd84c2d63e7e4e9fa0190feebc9fe, type: 2}
   - {fileID: 11400000, guid: 75025a754a16004478cfaafab1401221, type: 2}
   - {fileID: 11400000, guid: f3a846ce6e3357c44a240b02d984b450, type: 2}
+  - {fileID: 11400000, guid: b9edfc8f1585f4d44a161550aeaf2f19, type: 2}
+  - {fileID: 11400000, guid: d9e4de5e1d564df43a21c49856989751, type: 2}
+  - {fileID: 11400000, guid: 9a97e9a6b90bd97409710d2d2063edd1, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -87,8 +90,9 @@ MonoBehaviour:
     m_ProfileVersion: 1
   m_LabelTable:
     m_LabelNames:
-    - Panel
     - Audio
+    - CharacterConfig
+    - WeaponConfig
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1fe5883215191c048a9b6facc24c6f8d, type: 2}

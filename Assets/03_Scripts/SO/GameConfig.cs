@@ -1,5 +1,6 @@
 using UnityEngine;
-public class GameConfig : ScriptableObject
+public abstract class GameConfig : ScriptableObject
 {
-    public string ConfigId => name; // 默认用 asset 名作为 ID
+    [SerializeField] protected string configId = string.Empty;
+    public virtual string ConfigId => configId;
 }

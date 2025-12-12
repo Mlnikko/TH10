@@ -17,36 +17,48 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: cb855bf0dd08a2a4384afe9d1811d2e4
   m_SerializeEntries:
-  - m_GUID: b3bfafeab385b6a419cc1d70e2974ef7
-    m_Address: Assets/05_Prefabs/Panels/BattlePanel.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Panel
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 571c0244f1e87fd46845423903b0436c
-    m_Address: Assets/05_Prefabs/Panels/TitlePanel.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Panel
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fa2a29d1a0093974fbc785e8a39ed5ae
-    m_Address: Assets/05_Prefabs/Panels/LoadingPanel.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Panel
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6b033378e3f9aca428df749900de259d
-    m_Address: Assets/05_Prefabs/Player/Reimu.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e4ead09567355304b9f658d4941a41a0
-    m_Address: Assets/05_Prefabs/UI/UI_Panel/RoomPanel.prefab
+    m_Address: UI/Panels/RoomPanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2fe27a8efcd67e04ab4ad36b16ba66f3
-    m_Address: Assets/05_Prefabs/UI/UI_Panel/MenuPanel.prefab
+    m_Address: UI/Panels/MenuPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac2ecef0e79282c48bd8aa6594775cd1
+    m_Address: UI/Panels/OnlineModePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c4cfa5c6a049bb45a456c1bb439f400
+    m_Address: UI/Panels/JoinRoomInputPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67117722a812a2e46ab8cb8eafbf5f5e
+    m_Address: UI/Panels/DebugConsolePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c598cca04b048e4e91b3bb0f0a79391
+    m_Address: UI/Panels/SettingsPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3109c7fb72eaaa4e90c8c80dad09a40
+    m_Address: UI/Panels/BattlePreparePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48dfbad5ea739de458a6fdd67753b864
+    m_Address: Sprites/Weapon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87d415b641b8e6d4ba18da60fc2f1043
+    m_Address: Assets/Configs/RankConfig.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

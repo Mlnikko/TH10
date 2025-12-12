@@ -10,10 +10,10 @@ public class RoomPanel : UIPanel
     public Button startBattleBtn;
     public Button leaveRoomBtn;
 
-    public GameObject playerInfoPrefab; // 挂 PlayerInfoItem 脚本
+    public GameObject playerInfoPrefab;
     public Transform playerInfoRoot;
 
-    private List<PlayerInfoItem> _playerItems = new();
+    List<PlayerInfoItem> _playerItems = new();
 
     public override void Initialize()
     {
@@ -74,7 +74,7 @@ public class RoomPanel : UIPanel
         UpdatePlayerList(room.PlayerCount, room.MaxPlayers, room.HostName);
 
         // 只有房主且至少2人才能开始
-        startBattleBtn.interactable = rm.IsHost && room.PlayerCount >= 2;
+        //startBattleBtn.interactable = rm.IsHost && room.PlayerCount >= 2;
         leaveRoomBtn.interactable = true;
     }
 
@@ -141,17 +141,16 @@ public class RoomPanel : UIPanel
         // TODO: 触发网络消息 StartGameMessage
         var room = RoomManager.Instance.CurrentRoom.Value;
         var msg = new StartGameMSG { RoomId = room.RoomId };
-        NetworkManager.Instance.SendToAllClients(msg);
+        //NetworkManager.Instance.SendToAllClients(msg);
 
-        //// 加载战斗场景（帧同步初始化在此场景中进行）
-        //SceneLoader.LoadScene("Battle");
+        SceneLoader.LoadScene("BattleScene");
         //GameState.SetCurrentRoom(room); // 供 ECS 初始化使用
     }
 
     private void OnLeaveRoomClicked()
     {
         RoomManager.Instance.LeaveRoom();
-        UIManager.Instance.GoBack(); // 返回 RoomListPanel 或 Lobby
+        UIManager.Instance.GoBack();
     }
 
     // ====== 事件响应 ======

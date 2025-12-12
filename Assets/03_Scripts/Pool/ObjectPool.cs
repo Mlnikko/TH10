@@ -1,95 +1,182 @@
+// ObjectPool.cs
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-public class ObjectPool<T> where T : class
+
+/// <summary>
+/// 泛型对象池，适用于 GameObject 或 Component
+/// </summary>
+public class ObjectPool<T> where T : Component
 {
-    int maxSize;
+    readonly string assetKey; // Addressable Key
+    readonly Transform poolRoot;
+    readonly Queue<T> inactiveObjects = new();
+    readonly List<T> activeObjects = new(); // 用于调试或强制回收
 
-    readonly Stack<T> freeObjects = new();
-    readonly HashSet<T> allObjects = new();
+    private T prefab;
+    private readonly int initialSize;
+    private readonly int maxSize;
+    private readonly bool autoRelease; // 是否自动回收（如特效）
+    private readonly float autoReleaseDelay; // 自动回收延迟（秒）
 
-    public int FreeCount => freeObjects.Count;
-    public int TotalCount => allObjects.Count;
+    public int ActiveCount => activeObjects.Count;
+    public int InactiveCount => inactiveObjects.Count;
 
-    // 委托方法
-    public delegate T FactoryMethod();
-    public delegate void ObjectHandler(T obj);
-
-    FactoryMethod createMethod;
-    public ObjectHandler OnGet { get; set; }
-    public ObjectHandler OnRelease { get; set; }
-
-    public void InitPool(FactoryMethod createMethod, int initialSize = 10, int maxSize = 1000)
+    public ObjectPool(
+        string assetKey,
+        Transform parent = null,
+        int initialSize = 5,
+        int maxSize = 20,
+        bool autoRelease = false,
+        float autoReleaseDelay = 3f)
     {
-        if (maxSize <= 0) throw new System.ArgumentOutOfRangeException(nameof(maxSize));
-
-        this.createMethod = createMethod;
+        this.assetKey = assetKey;
+        this.initialSize = initialSize;
         this.maxSize = maxSize;
-        Preload(initialSize);
+        this.autoRelease = autoRelease;
+        this.autoReleaseDelay = autoReleaseDelay;
+
+        poolRoot = new GameObject($"Pool_{typeof(T).Name}_{assetKey}").transform;
+        poolRoot.SetParent(parent ?? ObjectPoolManager.Instance.transform, false);
+        poolRoot.gameObject.SetActive(false); // 根节点隐藏，子对象按需激活
     }
 
-    void Preload(int count)
+    /// <summary>
+    /// 异步预热池（加载 Prefab 并初始化对象）
+    /// </summary>
+    public void WarmupAsync(Action onComplete = null)
     {
-        for (int i = 0; i < count && allObjects.Count < maxSize; i++)
+        if (prefab != null)
         {
-            T obj = CreateNew();
-            freeObjects.Push(obj);
+            Preallocate(initialSize);
+            onComplete?.Invoke();
+            return;
+        }
+
+        //ResManager.LoadAsync(assetKey, go =>
+        //{
+        //    if (go == null)
+        //    {
+        //        Debug.LogError($"[ObjectPool] Failed to load prefab: {assetKey}");
+        //        onComplete?.Invoke();
+        //        return;
+        //    }
+
+        //    prefab = go.GetComponent<T>();
+        //    if (prefab == null)
+        //    {
+        //        Debug.LogError($"[ObjectPool] Prefab missing component {typeof(T)}: {assetKey}");
+        //        onComplete?.Invoke();
+        //        return;
+        //    }
+
+        //    Preallocate(initialSize);
+        //    onComplete?.Invoke();
+        //});
+    }
+
+    void Preallocate(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            var obj = CreateInstance();
+            Return(obj);
         }
     }
 
-    T CreateNew()
+    T CreateInstance()
     {
-        T obj = createMethod();
-        allObjects.Add(obj);
-        return obj;
+        var go = GameObject.Instantiate(prefab.gameObject, poolRoot);
+        var comp = go.GetComponent<T>() ?? go.AddComponent<T>();
+        go.SetActive(false);
+        return comp;
     }
 
-    public T Get()
+    /// <summary>
+    /// 从池中获取对象
+    /// </summary>
+    public T Get(Vector3 position, Quaternion rotation, Transform parent = null)
     {
-        if (freeObjects.Count == 0 && allObjects.Count >= maxSize)
+        if (prefab == null)
         {
-            Debug.LogWarning($"{typeof(T)}池容量已达上限 {maxSize}");
+            Debug.LogError($"[ObjectPool] Prefab not loaded yet! Call WarmupAsync first. Key: {assetKey}");
             return null;
         }
 
-        T obj = freeObjects.Count > 0 ? freeObjects.Pop() : CreateNew();
-        OnGet?.Invoke(obj);
-        return obj;
-    }
-
-    public void Release(T obj)
-    {
-        if (obj == null) throw new System.ArgumentNullException();
-
-        if (!allObjects.Contains(obj))
-            throw new System.InvalidOperationException($"{obj}不属于{typeof(T)}对象池");
-
-        if (freeObjects.Contains(obj))
-            throw new System.InvalidOperationException($"已回收{obj}");
-
-        OnRelease?.Invoke(obj);
-
-        if (freeObjects.Count < maxSize)
-            freeObjects.Push(obj);
+        T instance;
+        if (inactiveObjects.Count > 0)
+        {
+            instance = inactiveObjects.Dequeue();
+        }
+        else if (activeObjects.Count < maxSize)
+        {
+            instance = CreateInstance();
+        }
         else
-            DestroyObject(obj);
+        {
+            Debug.LogWarning($"[ObjectPool] Max size reached ({maxSize}) for {typeof(T)}:{assetKey}. Reusing oldest.");
+            instance = activeObjects[0];
+            Return(instance);
+            instance = Get(position, rotation, parent); // 递归一次
+            return instance;
+        }
+
+        // 设置位置/旋转/父节点
+        instance.transform.SetPositionAndRotation(position, rotation);
+        if (parent != null)
+            instance.transform.SetParent(parent, true);
+
+        instance.gameObject.SetActive(true);
+
+        // 回调
+        if (instance is IRecyclable recyclable)
+            recyclable.OnSpawn();
+
+        activeObjects.Add(instance);
+
+        // 自动回收
+        if (autoRelease && autoReleaseDelay > 0)
+        {
+            ObjectPoolManager.Instance.StartCoroutine(
+                ObjectPoolManager.Instance.AutoDespawnRoutine(instance, autoReleaseDelay, this)
+            );
+        }
+
+        return instance;
     }
 
-    public void DestroyObject(T obj)
+    /// <summary>
+    /// 手动回收对象
+    /// </summary>
+    public void Return(T instance)
     {
-        allObjects.Remove(obj);
+        if (instance == null || !activeObjects.Contains(instance)) return;
 
-        if (obj is Component comp)
-            Object.Destroy(comp.gameObject);
-        else if (obj is GameObject go)
-            Object.Destroy(go);
+        activeObjects.Remove(instance);
+
+        if (instance is IRecyclable recyclable)
+            recyclable.OnDespawn();
+
+        instance.gameObject.SetActive(false);
+        instance.transform.SetParent(poolRoot, false);
+
+        if (inactiveObjects.Count < maxSize)
+            inactiveObjects.Enqueue(instance);
+        else
+            GameObject.Destroy(instance.gameObject); // 超出最大缓存，直接销毁
     }
 
+    /// <summary>
+    /// 清空池（卸载所有对象）
+    /// </summary>
     public void Clear()
     {
-        foreach (var obj in allObjects)
-            DestroyObject(obj);
+        foreach (var obj in activeObjects)
+            GameObject.Destroy(obj.gameObject);
+        foreach (var obj in inactiveObjects)
+            GameObject.Destroy(obj.gameObject);
 
-        freeObjects.Clear();
-        allObjects.Clear();
+        activeObjects.Clear();
+        inactiveObjects.Clear();
     }
 }

@@ -10,8 +10,9 @@ public class MenuPanel : UIPanel
     public Button replayBtn;
     public Button quitGameBtn;
 
-    public override void Initialize()
+    public override void OnShow(object data = null)
     {
+        base.OnShow(data);
         localModeBtn.onClick.AddListener(OnLocalModeClicked);
         onlineModeBtn.onClick.AddListener(OnOnlineModeClicked);
         settingBtn.onClick.AddListener(OnSettingClicked);
@@ -19,35 +20,46 @@ public class MenuPanel : UIPanel
         quitGameBtn.onClick.AddListener(OnQuitGameClicked);
     }
 
-    private void OnLocalModeClicked()
+
+    void OnLocalModeClicked()
     {
         // TODO: 单人模式
         SceneLoader.LoadScene("BattleScene");
         //GameState.SetIsLocalMode(true);
     }
 
-    private void OnOnlineModeClicked()
+    void OnOnlineModeClicked()
     {
         // 弹出二级选择窗口
-        UIManager.Instance.ShowPanel<OnlineModePopup>();
+        _ = UIManager.Instance.ShowPanelAsync<OnlineModePanel>();
     }
 
-    private void OnSettingClicked()
+    void OnSettingClicked()
     {
-        UIManager.Instance.ShowPanel<SettingPanel>();
+       _ = UIManager.Instance.ShowPanelAsync<SettingsPanel>();
     }
 
-    private void OnReplayClicked()
+    void OnReplayClicked()
     {
         // TODO: 回放系统
     }
 
-    private void OnQuitGameClicked()
+    void OnQuitGameClicked()
     {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
+    }
+
+    public override void OnHide()
+    {
+        base.OnHide();
+        localModeBtn.onClick.RemoveListener(OnLocalModeClicked);
+        onlineModeBtn.onClick.RemoveListener(OnOnlineModeClicked);
+        settingBtn.onClick.RemoveListener(OnSettingClicked);
+        replayBtn.onClick.RemoveListener(OnReplayClicked);
+        quitGameBtn.onClick.RemoveListener(OnQuitGameClicked);
     }
 }

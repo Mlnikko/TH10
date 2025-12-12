@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class UIPanel : MonoBehaviour
 {
-    public string panelName => GetType().Name;
+    public string PanelName => GetType().Name;
 
     // 初始化（首次激活时调用）
     public virtual void Initialize() { }

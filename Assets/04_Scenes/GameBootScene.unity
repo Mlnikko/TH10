@@ -166,6 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2188f0f9df681841a787bbffc10661f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IngameDebugPanel: {fileID: 132536, guid: 67117722a812a2e46ab8cb8eafbf5f5e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
