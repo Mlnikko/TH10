@@ -61,7 +61,7 @@ public class JoinRoomInputPanel : UIPanel
 
         try
         {
-            RoomManager.Instance.JoinRoom(ip, (ushort)port);
+            RoomManager.Instance.TryJoinRoom(ip, (ushort)port);
         }
         catch (Exception ex)
         {

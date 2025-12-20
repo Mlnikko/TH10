@@ -1,17 +1,23 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BattlePreparePanel : UIPanel
 {
     [Header("References")]
-    public Transform characterListContent;
-    public Transform weaponListContent;
-    public GameObject characterItemPrefab;
-    public GameObject weaponItemPrefab;
-    public Button confirmBtn;
+    [SerializeField] Transform characterListContent;
+    [SerializeField] Transform weaponListContent;
+    [SerializeField] GameObject characterItemPrefab;
+    [SerializeField] GameObject weaponItemPrefab;
+    [SerializeField] Button confirmBtn;
+    [SerializeField] TMP_Text countdownText;
+
+    float countdownDuration = 10f;
+    const string COUNTDOWN_KEY = "BattlePrepare_Countdown";
 
     // 数据缓存
     CharacterConfig[] characterConfigs;
@@ -21,8 +27,8 @@ public class BattlePreparePanel : UIPanel
     string selectedWeaponId;
 
     // 当前 UI Item 缓存（用于高亮管理）
-    List<CharacterItemUI> characterItems = new();
-    List<WeaponItemUI> weaponItems = new();
+    List<CharacterSelectionUI> characterItems = new();
+    List<WeaponSelectionUI> weaponItems = new();
 
     public override void Initialize()
     {
@@ -66,6 +72,9 @@ public class BattlePreparePanel : UIPanel
         base.OnShow(data);
         confirmBtn.onClick.AddListener(OnConfirmed);
         RefreshCharacterList();
+
+        // 启动倒计时
+        StartCountdown();
     }
 
     public override void OnHide()
@@ -73,6 +82,38 @@ public class BattlePreparePanel : UIPanel
         base.OnHide();
         confirmBtn.onClick.RemoveListener(OnConfirmed);
         ClearSelection(); // 可选：隐藏时清空选择
+    }
+
+    void StartCountdown()
+    {
+        CoroutineManager.Instance.StopCoroutineByKey(COUNTDOWN_KEY); // 安全兜底
+        CoroutineManager.Instance.StartUniqueCoroutine(COUNTDOWN_KEY, CountdownRoutine());
+    }
+
+    void StopCountdown()
+    {
+        CoroutineManager.Instance.StopCoroutineByKey(COUNTDOWN_KEY);
+    }
+
+    IEnumerator CountdownRoutine()
+    {
+        float elapsed = 0f;
+        while (elapsed < countdownDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            // 更新 UI（可选）
+            if (countdownText != null)
+            {
+                int remaining = Mathf.CeilToInt(countdownDuration - elapsed);
+                countdownText.text = $"自动开始: {remaining}s";
+            }
+
+            yield return null;
+        }
+
+        // 超时，自动确认
+        OnConfirmed();
     }
 
     void RefreshCharacterList()
@@ -87,10 +128,10 @@ public class BattlePreparePanel : UIPanel
             if (config == null) continue;
 
             var go = Instantiate(characterItemPrefab, characterListContent);
-            var item = go.GetComponent<CharacterItemUI>();
+            var item = go.GetComponent<CharacterSelectionUI>();
             if (item == null)
             {
-                Logger.Error($"CharacterItemUI component missing on prefab: {characterItemPrefab.name}");
+                Logger.Error($"CharacterSelectionUI component missing on prefab: {characterItemPrefab.name}");
                 Destroy(go);
                 continue;
             }
@@ -127,10 +168,10 @@ public class BattlePreparePanel : UIPanel
         foreach (var wcfg in weapons)
         {
             var go = Instantiate(weaponItemPrefab, weaponListContent);
-            var item = go.GetComponent<WeaponItemUI>();
+            var item = go.GetComponent<WeaponSelectionUI>();
             if (item == null)
             {
-                Logger.Error($"WeaponItemUI component missing on prefab: {weaponItemPrefab.name}");
+                Logger.Error($"WeaponSelectionUI component missing on prefab: {weaponItemPrefab.name}");
                 Destroy(go);
                 continue;
             }
@@ -158,7 +199,7 @@ public class BattlePreparePanel : UIPanel
         selectedCharacterId = null;
         selectedWeaponId = null;
 
-        // 取消所有高亮（假设 CharacterItemUI/WeaponItemUI 有 SetSelected(bool) 方法）
+        // 取消所有高亮（假设 CharacterSelectionUI/WeaponSelectionUI 有 SetSelected(bool) 方法）
         foreach (var item in characterItems)
             item.SetSelected(false);
         foreach (var item in weaponItems)
@@ -198,8 +239,25 @@ public class BattlePreparePanel : UIPanel
 
     void OnConfirmed()
     {
-        //var playerData = new PlayerData(,char);
-        //BattleManager.Instance.AddPlayer(playerData);
+        var playerBattleData = new PlayerBattleData
+        (
+            RoomManager.Instance.selfPlayerIndex,
+            Enum.TryParse<E_Character>(selectedCharacterId, out var charId) ? charId : E_Character.None,
+            Enum.TryParse<E_Weapon>(selectedWeaponId, out var weapId) ? weapId : E_Weapon.None
+        );
+
+        if (RoomManager.Instance.IsHost)
+        {
+            BattleManager.Instance.AddPlayer(playerBattleData);
+        }
+        else
+        {
+            NetworkManager.Instance.SendToHost(new PlayerBattleDataConfirmedMSG
+            {
+                playerBattleData = playerBattleData,
+            });
+        }
+
         UIManager.Instance.HidePanel<BattlePreparePanel>();
     }
 }

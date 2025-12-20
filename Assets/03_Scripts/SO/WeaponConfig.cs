@@ -1,16 +1,16 @@
 using UnityEngine;
 
-public enum E_Weapon
+public enum E_Weapon : byte
 {
     None = 0,
 
-    Weapon_Reimu_0 = 1000,
-    Weapon_Reimu_1 = 1001,
-    Weapon_Reimu_2 = 1002,
+    Weapon_Reimu_0 = 10,
+    Weapon_Reimu_1 = 11,
+    Weapon_Reimu_2 = 12,
 
-    Weapon_Marisa_0 = 1010,
-    Weapon_Marisa_1 = 1011,
-    Weapon_Marisa_2 = 1012,
+    Weapon_Marisa_0 = 20,
+    Weapon_Marisa_1 = 21,
+    Weapon_Marisa_2 = 22,
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Custom/WeaponConfig")]

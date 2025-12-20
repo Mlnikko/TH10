@@ -13,6 +13,7 @@ public class RoomPanel : UIPanel
     public GameObject playerInfoPrefab;
     public Transform playerInfoRoot;
 
+
     List<PlayerInfoItem> _playerItems = new();
 
     public override void Initialize()
@@ -26,6 +27,10 @@ public class RoomPanel : UIPanel
 
     public override void OnShow(object data = null)
     {
+        if(!RoomManager.Instance.IsHost)
+        {
+            startBattleBtn.gameObject.SetActive(false);
+        }
         RefreshUI();
         SetupEventListeners();
     }
@@ -35,22 +40,20 @@ public class RoomPanel : UIPanel
         RemoveEventListeners();
     }
 
-    private void SetupEventListeners()
+    void SetupEventListeners()
     {
-        var rm = RoomManager.Instance;
-        rm.OnLeftRoom += OnLocalLeaveRoom;
-        rm.OnPlayerCountChanged += OnPlayerCountChanged;
+        var rm = RoomManager.Instance;     
+        rm.OnRoomInfoUpdated += OnRoomInfoChanged;
     }
 
-    private void RemoveEventListeners()
+    void RemoveEventListeners()
     {
         var rm = RoomManager.Instance;
         if (rm == null) return;
-        rm.OnLeftRoom -= OnLocalLeaveRoom;
-        rm.OnPlayerCountChanged -= OnPlayerCountChanged;
+        rm.OnRoomInfoUpdated -= OnRoomInfoChanged;
     }
 
-    private void RefreshUI()
+    void RefreshUI()
     {
         var rm = RoomManager.Instance;
 
@@ -63,22 +66,22 @@ public class RoomPanel : UIPanel
             return;
         }
 
-        var room = rm.CurrentRoom.Value;
+        var roomInfo = rm.CurrentRoom.Value;
         roomInfoText.text =
-            $"房间 ID: {room.RoomId}\n" +
-            $"主机: {room.HostName}\n" +
-            $"人数: {room.PlayerCount}/{room.MaxPlayers}\n" +
-            $"IP: {room.IpAddress}";
+            $"房间 ID: {roomInfo.RoomId}\n" +
+            $"主机: {roomInfo.HostName}\n" +
+            $"人数: {roomInfo.PlayerCount}/{roomInfo.MaxPlayers}\n" +
+            $"IP: {roomInfo.IpAddress}";
 
         // 刷新玩家列表
-        UpdatePlayerList(room.PlayerCount, room.MaxPlayers, room.HostName);
+        UpdatePlayerList(roomInfo.PlayerCount, roomInfo.MaxPlayers, roomInfo.HostName);
 
         // 只有房主且至少2人才能开始
-        //startBattleBtn.interactable = rm.IsHost && room.PlayerCount >= 2;
+        startBattleBtn.interactable = rm.IsHost && roomInfo.PlayerCount >= 2;
         leaveRoomBtn.interactable = true;
     }
 
-    private void UpdatePlayerList(int playerCount, int maxPlayers, string hostName)
+    void UpdatePlayerList(int playerCount, int maxPlayers, string hostName)
     {
         // 确保预制体数量匹配 maxPlayers
         while (_playerItems.Count < maxPlayers)
@@ -124,7 +127,7 @@ public class RoomPanel : UIPanel
         }
     }
 
-    private void ClearPlayerList()
+    void ClearPlayerList()
     {
         foreach (var item in _playerItems)
         {
@@ -134,32 +137,25 @@ public class RoomPanel : UIPanel
     }
 
     // ====== 按钮回调 ======
-    private void OnStartBattleClicked()
+    void OnStartBattleClicked()
     {
-        if (!RoomManager.Instance.IsInRoom) return;
-
-        // TODO: 触发网络消息 StartGameMessage
-        var room = RoomManager.Instance.CurrentRoom.Value;
-        var msg = new StartGameMSG { RoomId = room.RoomId };
-        //NetworkManager.Instance.SendToAllClients(msg);
-
-        SceneLoader.LoadScene("BattleScene");
-        //GameState.SetCurrentRoom(room); // 供 ECS 初始化使用
+        RoomManager.Instance.EnterBattleScene();
+        UIManager.Instance.HidePanel<RoomPanel>();
     }
 
-    private void OnLeaveRoomClicked()
+    void OnLeaveRoomClicked()
     {
         RoomManager.Instance.LeaveRoom();
         UIManager.Instance.GoBack();
     }
 
     // ====== 事件响应 ======
-    private void OnLocalLeaveRoom()
+    void OnLocalLeaveRoom()
     {
         UIManager.Instance.GoBack();
     }
 
-    private void OnPlayerCountChanged(int newCount)
+    void OnRoomInfoChanged(RoomInfo roomInfo)
     {
         RefreshUI();
     }

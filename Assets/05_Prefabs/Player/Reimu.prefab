@@ -508,12 +508,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterConfig: {fileID: 11400000, guid: b5faa925c8b9ea64cbd65c2684362cf7, type: 2}
-  characterName: 0
-  description: 
-  speed: 0
-  slowSpeed: 0
-  moveBoxSize: {x: 0, y: 0}
-  moveBoxOffset: {x: 0, y: 0}
+  characterName: 1
+  description: "\u60A0\u95F2\u7684\u5DEB\u5973\n\u76F8\u5F53\u64C5\u957F\n\u5927\u8303\u56F4\u7684\u653B\u51FB"
+  speed: 2
+  slowSpeed: 1
+  moveBoxSize: {x: 0.3, y: 0.5}
+  moveBoxOffset: {x: 0, y: 0.08}
+  hitRadius: 0.04
+  grazeRadius: 0.25
 --- !u!1 &8978273608409045429
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1624a18d887774459c5d78881f0331f, type: 3}
   m_Name: Weapon_Marisa_1
   m_EditorClassIdentifier: 
+  configId: 
   Name: 
-  WeaponID: 1011
+  WeaponID: 21
   Description: 

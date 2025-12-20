@@ -16,6 +16,7 @@ public enum LogTag
     Misc,
     UI,
     Net,
+    Room,
     Audio,
     Resource,
     Input,

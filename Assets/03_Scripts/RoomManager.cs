@@ -1,20 +1,18 @@
 using System;
 using Unity.Networking.Transport;
-using UnityEngine;
 
 [Serializable]
 public struct RoomInfo
 {
     public int RoomId;
     public string HostName;
+    public string IpAddress;
+    public ushort Port;
+
     public byte PlayerCount;
     public byte MaxPlayers;
-    public string IpAddress;
-    public int Port;
 
-    public bool IsFull => PlayerCount >= MaxPlayers;
-
-    public override string ToString()
+    public override readonly string ToString()
     {
         return $"[{RoomId}] {HostName} ({PlayerCount}/{MaxPlayers}) @ {IpAddress}:{Port}";
     }
@@ -23,44 +21,27 @@ public struct RoomInfo
 public class RoomManager : SingletonMono<RoomManager>
 {
     // ====== 事件（UI 用）======
-    public event Action OnRoomCreated;
-    public event Action OnJoinedRoom;
-    public event Action OnLeftRoom;
-    public event Action<int> OnPlayerCountChanged; // 玩家数变化（来自网络）
+    //public event Action OnRoomCreated;
+    public event Action<RoomInfo> OnRoomInfoUpdated; // 房间信息更新事件
 
     // ====== 状态 ======
     public RoomInfo? CurrentRoom { get; private set; }
     public bool IsInRoom => CurrentRoom.HasValue;
-    //public bool IsHost => NetworkManager.Instance.netRole == NetworkRole.Host;
+    public bool IsHost => NetworkManager.Instance.NetworkRole == NetworkRole.Host;
+    public int PlayerCount => CurrentRoom?.PlayerCount ?? 0;
 
-    public byte playerIndex;
-
-    // ====== 初始化 ======
-    protected override void OnSingletonInit()
-    {
-        base.OnSingletonInit();
-
-        // 监听网络断开（自动退出房间）
-        //NetworkManager.Instance.OnClientDisconnected += OnNetworkDisconnected;
-    }
-
-    protected override void OnSingletonDestroy()
-    {
-        //NetworkManager.Instance.OnClientDisconnected -= OnNetworkDisconnected;
-        base.OnSingletonDestroy();
-    }
+    public byte selfPlayerIndex;
 
     // ====== 房间操作 ======
 
-    public void CreateRoom(string hostName, byte maxPlayers = 4)
+    public void CreateRoom(string hostName, ushort port = 7777, byte maxPlayers = 4)
     {
         if (IsInRoom) LeaveRoom();
 
-        // 获取本机局域网 IP（需实现 GetLocalIP()）
-        string localIP = GetLocalIPAddress();
-        int port = 7777;
+        // 获取本机局域网 IP
+        string localIP = NetworkManager.GetLocalIPAddress();
 
-        var room = new RoomInfo
+        CurrentRoom = new RoomInfo
         {
             RoomId = UnityEngine.Random.Range(10000, 99999),
             HostName = hostName,
@@ -70,75 +51,83 @@ public class RoomManager : SingletonMono<RoomManager>
             Port = port
         };
 
-        CurrentRoom = room;
-
         // 启动主机
-        //NetworkManager.Instance.StartHost();
+        NetworkManager.Instance.StartHost(port);
 
-        OnRoomCreated?.Invoke();
-        Logger.Info($"[ROOM] Created: {room}");
+        Logger.Info($"Created: {CurrentRoom}", LogTag.Room);
     }
 
-    public void JoinRoom(string ip, ushort port)
+    public void TryJoinRoom(string ip, ushort port)
     {
         if (IsInRoom) LeaveRoom();
 
-        //NetworkManager.Instance.StartClient(ip, port);
-
-        OnJoinedRoom?.Invoke();
-
-        Logger.Debug("尝试加入房间");
+        NetworkManager.Instance.StartClient(ip, port);
     }
 
     public void LeaveRoom()
     {
         if (!IsInRoom) return;
 
-        //NetworkManager.Instance.Shutdown(); // 断开所有连接
+        NetworkManager.Instance.ShutDown();
         CurrentRoom = null;
 
-        OnLeftRoom?.Invoke();
-        Logger.Info("[ROOM] Left room");
+        Logger.Info("Left room", LogTag.Room);
     }
 
-    // ====== 网络回调 ======
-
-    void OnNetworkDisconnected(NetworkConnection conn)
+    public void EnterBattleScene()
     {
-        // 任何网络断开都视为离开房间
-        if (IsInRoom)
+        if (!IsHost || !IsInRoom) return;
+        Logger.Info("Starting battle...", LogTag.Room);
+
+        NetworkManager.Instance.Broadcast(new GameStartMSG());
+        HandleEnterBattleScene();
+    }
+
+    public void HandlePlayerJoinRequest(NetworkConnection conn, string playerName)
+    {
+        if(!IsInRoom) return;
+
+        CurrentRoom = new RoomInfo
         {
-            CurrentRoom = null;
-            OnLeftRoom?.Invoke();
-            Logger.Warn("[ROOM] Disconnected from host");
-        }
-    }
+            RoomId = CurrentRoom.Value.RoomId,
+            HostName = CurrentRoom.Value.HostName,
+            IpAddress = CurrentRoom.Value.IpAddress,
+            Port = CurrentRoom.Value.Port,
+            MaxPlayers = CurrentRoom.Value.MaxPlayers,
+            PlayerCount = (byte)(CurrentRoom.Value.PlayerCount + 1)
+        };
 
-    // ====== 工具方法 ======
 
-    string GetLocalIPAddress()
-    {
-#if UNITY_EDITOR || UNITY_STANDALONE
-        var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
-        foreach (var ip in host.AddressList)
+        NetworkManager.Instance.SendToClient(conn, new JoinResponseMSG()
         {
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                return ip.ToString();
-        }
-        return "127.0.0.1";
-#else
-        return "127.0.0.1"; // 移动端需另处理
-#endif
+            assignedPlayerIndex = (byte)(CurrentRoom.Value.PlayerCount - 1)
+        });
+
+        NetworkManager.Instance.Broadcast(new RoomStateMSG
+        {
+            roomInfo = CurrentRoom.Value
+        });
+
+        Logger.Debug(CurrentRoom.Value.ToString());
+
+        OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
     }
 
-
-    // ====== 外部调用：更新玩家数（由网络消息触发）=====
-    internal void UpdatePlayerCount(byte newCount)
+    public void HandlePlayerJoinResponse(byte playerIndex)
     {
-        if (!CurrentRoom.HasValue) return;
-        var updated = CurrentRoom.Value;
-        updated.PlayerCount = newCount;
-        CurrentRoom = updated;
-        OnPlayerCountChanged?.Invoke(newCount);
+        selfPlayerIndex = playerIndex;
+        UIManager.Instance.ShowPanelAsync<RoomPanel>().Forget();
+    }
+
+    public void HandleRoomStateUpdate(RoomInfo roomInfo)
+    {
+        CurrentRoom = roomInfo;
+        OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
+    }
+
+    public void HandleEnterBattleScene()
+    {
+        UIManager.Instance.CloseAll();
+        SceneLoader.LoadScene("BattleScene");
     }
 }

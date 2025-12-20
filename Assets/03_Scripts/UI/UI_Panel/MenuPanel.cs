@@ -24,19 +24,19 @@ public class MenuPanel : UIPanel
     void OnLocalModeClicked()
     {
         // TODO: 单人模式
+        UIManager.Instance.CloseAll();
         SceneLoader.LoadScene("BattleScene");
-        //GameState.SetIsLocalMode(true);
     }
 
     void OnOnlineModeClicked()
     {
         // 弹出二级选择窗口
-        _ = UIManager.Instance.ShowPanelAsync<OnlineModePanel>();
+        UIManager.Instance.ShowPanelAsync<OnlineModePanel>().Forget();
     }
 
     void OnSettingClicked()
     {
-       _ = UIManager.Instance.ShowPanelAsync<SettingsPanel>();
+        UIManager.Instance.ShowPanelAsync<SettingsPanel>().Forget();
     }
 
     void OnReplayClicked()

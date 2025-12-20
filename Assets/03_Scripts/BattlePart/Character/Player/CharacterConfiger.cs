@@ -1,15 +1,8 @@
 using UnityEngine;
-using UnityEditor;
 
 public class CharacterConfiger : MonoBehaviour
 {
-    public CharacterConfig CharacterConfig
-    {
-        get
-        {
-            return characterConfig;
-        }
-    }
+    public CharacterConfig CharacterConfig => characterConfig;
 
     [SerializeField] CharacterConfig characterConfig;
 
@@ -27,13 +20,11 @@ public class CharacterConfiger : MonoBehaviour
     [SerializeField] Vector2 moveBoxSize;
     [SerializeField] Vector2 moveBoxOffset;
 
-    //[Header("受击碰撞体设置")]
-    //[SerializeField] ColliderComponent bodyCollider;
-    //[SerializeField] float hitRadius;
+    [Header("受击碰撞体设置")]
+    [SerializeField] float hitRadius;
 
-    //[Header("擦弹碰撞体设置")]
-    //[SerializeField] ColliderComponent grazeCollider;
-    //[SerializeField] float grazeRadius; 
+    [Header("擦弹碰撞体设置")]
+    [SerializeField] float grazeRadius;
 
     void Awake()
     {
@@ -42,22 +33,21 @@ public class CharacterConfiger : MonoBehaviour
 
     public void LoadCharacterConfig()
     {
+        if(characterConfig == null) return;
+
         characterName = characterConfig.CharacterID;
         description = characterConfig.Description;
         speed = characterConfig.MoveSpeed;
         slowSpeed = characterConfig.MoveSlowSpeed;
         moveBoxSize = characterConfig.MoveBoxSize;
         moveBoxOffset = characterConfig.MoveBoxOffset;
-        //hitRadius = characterConfig.HitRadius;
-        //grazeRadius = characterConfig.GrazeRadius;
-        //if(bodyCollider != null)
-        //    bodyCollider.Radius = hitRadius;
-        //if(grazeCollider != null)
-        //    grazeCollider.Radius = grazeRadius;
+        hitRadius = characterConfig.HitRadius;
+        grazeRadius = characterConfig.GrazeRadius;
     }
 
     public void SaveCharacterConfig()
     {
+        // 此方法仅用于 Editor 保存，运行时调用无效！
         if (characterConfig == null) return;
 
         characterConfig.CharacterID = characterName;
@@ -66,8 +56,8 @@ public class CharacterConfiger : MonoBehaviour
         characterConfig.MoveSlowSpeed = slowSpeed;
         characterConfig.MoveBoxSize = moveBoxSize;
         characterConfig.MoveBoxOffset = moveBoxOffset;
-        //characterConfig.HitRadius = hitRadius;
-        //characterConfig.GrazeRadius = grazeRadius;
+        characterConfig.HitRadius = hitRadius;
+        characterConfig.GrazeRadius = grazeRadius;
     }
 
     void OnDrawGizmosSelected()
@@ -75,10 +65,10 @@ public class CharacterConfiger : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(transform.position + (Vector3)moveBoxOffset, moveBoxSize);
 
-        //Gizmos.color = Color.white;
-        //Gizmos.DrawSphere(transform.position, hitRadius);
+        Gizmos.color = Color.white;
+        Gizmos.DrawSphere(transform.position, hitRadius);
 
-        //Gizmos.color = Color.blue;
-        //Gizmos.DrawWireSphere(transform.position, grazeRadius);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, grazeRadius);
     }
 }

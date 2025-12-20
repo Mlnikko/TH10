@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configId: Reimu
   CharacterID: 1
-  AvailableWeapons: e8030000e9030000ea030000
+  AvailableWeapons: 0a0b0c
   Description: "\u60A0\u95F2\u7684\u5DEB\u5973\n\u76F8\u5F53\u64C5\u957F\n\u5927\u8303\u56F4\u7684\u653B\u51FB"
   MoveSpeed: 2
   MoveSlowSpeed: 1

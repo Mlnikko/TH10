@@ -13,7 +13,7 @@ public class ObjectPool<T> where T : Component
     readonly Queue<T> inactiveObjects = new();
     readonly List<T> activeObjects = new(); // 用于调试或强制回收
 
-    private T prefab;
+    private readonly T prefab;
     private readonly int initialSize;
     private readonly int maxSize;
     private readonly bool autoRelease; // 是否自动回收（如特效）

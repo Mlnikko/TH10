@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public struct PlayerData
+public struct PlayerBattleData
 {
     public byte playerIndex;
     public E_Character characterId;
     public E_Weapon weaponId;
 
-    public PlayerData(byte index, E_Character character, E_Weapon weapon)
+    public PlayerBattleData(byte index, E_Character character, E_Weapon weapon)
     {
         playerIndex = index;
         characterId = character;
@@ -27,7 +26,7 @@ public enum BattleStatus
 public class BattleManager : SingletonMono<BattleManager>
 {
     public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
-    List<PlayerData> playerDatas = new List<PlayerData>();
+    List<PlayerBattleData> allPlayerDatas = new();
 
     bool[] _activePlayers = new bool[4];
 
@@ -40,19 +39,17 @@ public class BattleManager : SingletonMono<BattleManager>
 
     protected override void OnSingletonInit()
     {
-        BattleInit().Forget();
+        BattleSceneInit().Forget();
+        InitBattleWorld();
     }
 
-    async Task BattleInit()
+    async Task BattleSceneInit()
     {
         try
         {
-  
             await ConfigManager.PreloadConfigsAsync<CharacterConfig>(ConfigHelper.allCharCfgIds);
 
             await ConfigManager.PreloadConfigsAsync<WeaponConfig>(ConfigHelper.allWeapCfgIds);
-
-            //await SpriteManager
 
             await UIManager.Instance.ShowPanelAsync<BattlePreparePanel>();
 
@@ -64,53 +61,50 @@ public class BattleManager : SingletonMono<BattleManager>
         }
     }
 
-
-    public void StartBattle()
-    {
-        if (playerDatas.Count == 0)
-        {
-            Logger.Error("Cannot start battle: No players added.");
-            return;
-        }
-
-        // 初始化战斗世界
-        InitBattleWorld();
-
-        // 创建玩家实体
-        CreatePlayer(); // 或 CreatePlayersAsync() 如果使用异步版本
-
-        // 可以在这里添加战斗开始逻辑
-        Logger.Info($"Battle started with {playerDatas.Count} players");
-    }
-
-    public void AddPlayer(PlayerData playerData)
-    {
-        playerDatas.Add(playerData);
-    }
-
     void InitBattleWorld()
     {
         battleWorld = new World();
-        
-        var movementSys = battleWorld.AddSystem<MovementSystem>();
-        
-        var lifetimeSys = battleWorld.AddSystem<LifetimeSystem>();
 
-        var collisionSys = battleWorld.AddSystem<CollisionSystem>();
-        collisionSys.Initialize(battleArea.InitBattleArea());
+        battleWorld.AddSystem<MovementSystem>();
 
-        var playerControlSys = battleWorld.AddSystem<PlayerControlSystem>();
+        battleWorld.AddSystem<LifetimeSystem>();
+
+        battleWorld.AddSystem<CollisionSystem>().Initialize(battleArea.InitBattleArea());
+
+        battleWorld.AddSystem<PlayerControlSystem>();
+
+        Logger.Info("Battle ECS World initialized.");
+    }
+
+    public void StartBattle(uint startFrame, uint randomSeed, PlayerBattleData[] playerBattleDatas)
+    {
+        //allPlayerDatas = playerBattleDatas
+        CreatePlayer();
+        CurrentStatus = BattleStatus.InBattle;
+    }
+
+    public void AddPlayer(PlayerBattleData playerData)
+    {
+        allPlayerDatas.Add(playerData);
+
+        if (allPlayerDatas.Count == RoomManager.Instance.PlayerCount) 
+        {
+            NetworkManager.Instance.Broadcast(new BattleReadyMSG()
+            {
+                allPlayerBattleDatas = allPlayerDatas.ToArray()
+            });
+        }
     }
 
     public void CreatePlayer()
     {
-        //if (playerDatas == null || playerDatas.Count == 0)
+        //if (allPlayerDatas == null || allPlayerDatas.Count == 0)
         //{
         //    Logger.Error("No player data available to create players.");
         //    return;
         //}
 
-        //foreach (var playerData in playerDatas)
+        //foreach (var playerData in allPlayerDatas)
         //{
         //    string characterPrefabPath = ResourceKeys.CharacterPrefabPath + playerData.characterId.ToString();
 
@@ -142,7 +136,7 @@ public class BattleManager : SingletonMono<BattleManager>
         };
     }
 
-    void InitializePlayerEntity(PlayerData playerData, GameObject playerPrefab)
+    void InitializePlayerEntity(PlayerBattleData playerData, GameObject playerPrefab)
     {
         var playerGO = Instantiate(playerPrefab, playerRoot);
 
@@ -202,8 +196,28 @@ public class BattleManager : SingletonMono<BattleManager>
 
     void FixedUpdate()
     {
+        switch (CurrentStatus)
+        {
+            case BattleStatus.Prepare:
+                UpdatePrepare();
+                break;
+            case BattleStatus.InBattle:
+                UpdateInBattle();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void UpdatePrepare()
+    {
+        // 准备阶段的逻辑更新（如果有需要）
+    }
+
+    void UpdateInBattle()
+    {
         // 只有在战斗中才执行逻辑帧更新
-        if (CurrentStatus != BattleStatus.InBattle || battleWorld == null) return;
+        if (battleWorld == null) return;
 
         uint currentFrame = GameTimeManager.CurrentLogicFrame;
 

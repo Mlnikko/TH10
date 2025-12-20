@@ -104,7 +104,7 @@ public class SettingsPanel : UIPanel
             var prefab = Resources.Load<GameObject>($"UI/Settings/{panelType.Name}");
             if (prefab == null)
             {
-                Debug.LogError($"Missing prefab for {panelType.Name}");
+                Logger.Error($"Missing prefab for {panelType.Name}", LogTag.UI);
                 return;
             }
 

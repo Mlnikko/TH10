@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    CharacterConfig characterConfig;
+    readonly CharacterConfig characterConfig;
 
     [SerializeField] PlayerEmitters playerEmitters;
     [SerializeField] GameObject checkPoint;   
@@ -42,7 +42,6 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        characterConfig = GetComponent<CharacterConfiger>().CharacterConfig;
         animator = GetComponent<Animator>();
     }
     void Start()

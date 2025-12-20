@@ -1,5 +1,5 @@
 using UnityEngine;
-public enum E_Character
+public enum E_Character : byte
 {
     None = 0,
     Reimu = 1,

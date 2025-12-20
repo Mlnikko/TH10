@@ -199,7 +199,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u623F\u95F4\u53F7\uFF1A"
+  m_text: RoomInfo
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1070d173db51dc44d97a1202d3cde3dc, type: 2}
   m_sharedMaterial: {fileID: -6457830052770494169, guid: 1070d173db51dc44d97a1202d3cde3dc, type: 2}

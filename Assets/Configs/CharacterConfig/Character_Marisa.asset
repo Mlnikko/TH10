@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configId: Marisa
   CharacterID: 2
-  AvailableWeapons: f2030000f3030000f4030000
+  AvailableWeapons: 141516
   Description: "\u723D\u6717\u7684\u9B54\u6CD5\u4F7F\n\u901F\u5EA6\u53CA\u987A\u624B\u7275\u7F8A\u65B9\u9762\n\u96BE\u6709\u4EBA\u53EF\u51FA\u5176\u53F3"
   MoveSpeed: 3
   MoveSlowSpeed: 2.5
