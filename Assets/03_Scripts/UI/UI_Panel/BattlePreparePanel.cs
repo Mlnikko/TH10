@@ -14,10 +14,13 @@ public class BattlePreparePanel : UIPanel
     [SerializeField] GameObject characterItemPrefab;
     [SerializeField] GameObject weaponItemPrefab;
     [SerializeField] Button confirmBtn;
-    [SerializeField] TMP_Text countdownText;
+    [SerializeField] TMP_Text confirmCountdownText;
 
-    float countdownDuration = 10f;
-    const string COUNTDOWN_KEY = "BattlePrepare_Countdown";
+    [SerializeField] GameObject lastCountdown;
+    [SerializeField] TMP_Text lastCountdownText;
+
+    float confirmCountdownDuration = 10f;
+    float lastCountdownDuration = 3f;
 
     // 数据缓存
     CharacterConfig[] characterConfigs;
@@ -33,6 +36,7 @@ public class BattlePreparePanel : UIPanel
     public override void Initialize()
     {
         base.Initialize();
+        lastCountdown.SetActive(false);
         ReadConfig();
     }
 
@@ -70,50 +74,59 @@ public class BattlePreparePanel : UIPanel
     public override void OnShow(object data = null)
     {
         base.OnShow(data);
-        confirmBtn.onClick.AddListener(OnConfirmed);
+        confirmBtn.onClick.AddListener(OnConfirmCountdownEnd);
         RefreshCharacterList();
 
-        // 启动倒计时
-        StartCountdown();
+        // 启动确认倒计时
+        CoroutineManager.Instance.StartCoroutine(ConfirmCountdownRoutine());
     }
 
     public override void OnHide()
     {
         base.OnHide();
-        confirmBtn.onClick.RemoveListener(OnConfirmed);
+        confirmBtn.onClick.RemoveListener(OnConfirmCountdownEnd);
         ClearSelection(); // 可选：隐藏时清空选择
     }
 
-    void StartCountdown()
-    {
-        CoroutineManager.Instance.StopCoroutineByKey(COUNTDOWN_KEY); // 安全兜底
-        CoroutineManager.Instance.StartUniqueCoroutine(COUNTDOWN_KEY, CountdownRoutine());
-    }
-
-    void StopCountdown()
-    {
-        CoroutineManager.Instance.StopCoroutineByKey(COUNTDOWN_KEY);
-    }
-
-    IEnumerator CountdownRoutine()
+    IEnumerator ConfirmCountdownRoutine()
     {
         float elapsed = 0f;
-        while (elapsed < countdownDuration)
+        while (elapsed < confirmCountdownDuration)
         {
             elapsed += Time.deltaTime;
 
-            // 更新 UI（可选）
-            if (countdownText != null)
+            if (confirmCountdownText != null)
             {
-                int remaining = Mathf.CeilToInt(countdownDuration - elapsed);
-                countdownText.text = $"自动开始: {remaining}s";
+                int remaining = Mathf.CeilToInt(confirmCountdownDuration - elapsed);
+                confirmCountdownText.text = $"自动开始: {remaining}s";
             }
 
             yield return null;
         }
 
         // 超时，自动确认
-        OnConfirmed();
+        OnConfirmCountdownEnd();
+    }
+
+    IEnumerator LastConfirmCountdownRoutine()
+    {
+        lastCountdown.SetActive(true);
+        float elapsed = 0f;
+        while (elapsed < lastCountdownDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            if (lastCountdownText != null)
+            {
+                int remaining = Mathf.CeilToInt(lastCountdownDuration - elapsed);
+                lastCountdownText.text = $"战斗倒计时: {remaining}s";
+            }
+
+            yield return null;
+        }
+
+        // 超时，自动确认
+        OnLastCountdownEnd();
     }
 
     void RefreshCharacterList()
@@ -237,27 +250,68 @@ public class BattlePreparePanel : UIPanel
         Logger.Info($"Selected Weapon: {selectedWeaponId}");
     }
 
-    void OnConfirmed()
+    void OnConfirmCountdownEnd()
     {
+        CoroutineManager.Instance.StopCoroutine(ConfirmCountdownRoutine());
+
+        CoroutineManager.Instance.StartCoroutine(LastConfirmCountdownRoutine());
+
         var playerBattleData = new PlayerBattleData
         (
-            RoomManager.Instance.selfPlayerIndex,
+            RoomManager.LocalPlayerIndex,
             Enum.TryParse<E_Character>(selectedCharacterId, out var charId) ? charId : E_Character.None,
             Enum.TryParse<E_Weapon>(selectedWeaponId, out var weapId) ? weapId : E_Weapon.None
         );
 
-        if (RoomManager.Instance.IsHost)
+        switch(NetworkManager.Instance.NetworkRole)
         {
-            BattleManager.Instance.AddPlayer(playerBattleData);
+            case NetworkRole.Host:
+                BattleManager.Instance.AddPlayer(playerBattleData);
+                break;
+            case NetworkRole.Client:
+                NetworkManager.Instance.SendToHost(new BattleReadyMSG
+                {
+                    playerBattleData = playerBattleData,
+                });
+                break;
+            case NetworkRole.None:
+                BattleManager.Instance.AddPlayer(playerBattleData);
+                break;
         }
-        else
-        {
-            NetworkManager.Instance.SendToHost(new PlayerBattleDataConfirmedMSG
-            {
-                playerBattleData = playerBattleData,
-            });
-        }
+    }
 
-        UIManager.Instance.HidePanel<BattlePreparePanel>();
+    void OnLastCountdownEnd()
+    {
+        CoroutineManager.Instance.StopCoroutine(LastConfirmCountdownRoutine());
+
+        UIManager.Instance.ClosePanel<BattlePreparePanel>();
+
+       
+
+        switch (NetworkManager.Instance.NetworkRole)
+        {
+            case NetworkRole.Host:
+
+                var allPlayerBattleDatas = BattleManager.Instance.allPlayerDatas.ToArray();
+                var startFrame = BattleTimer.CurrentLogicFrame + 60;
+                uint randomSeed = 0;
+
+                NetworkManager.Instance.Broadcast(new BattleStartMSG()
+                {
+                    allPlayerBattleDatas = allPlayerBattleDatas,
+                    startFrame = startFrame,
+                    randomSeed = randomSeed
+                });
+
+                BattleManager.Instance.StartMutiPlayerBattleForHost();
+
+                break;
+            case NetworkRole.Client:
+                
+                break;
+            case NetworkRole.None:
+                BattleManager.Instance.StartSinglePlayerBattle();
+                break;
+        }
     }
 }

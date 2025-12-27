@@ -90,21 +90,24 @@ public struct CCollider : IComponent
 #region PlayerComponent
 public struct CPlayer : IComponent
 {
-    public int gameObjectId; // 关联的游戏对象ID
     public byte playerIndex;   // 玩家ID（用于多人游戏）
-
     public byte characterId;   // 角色ID, 与角色配置表对应
     public byte weaponId;      // 武器ID, 与武器配置表对应
 }
 
-public struct CPlayerRunTime : IComponent
+// 玩家属性
+public struct CPlayerAttribute : IComponent
 {
-    public byte playerIndex;
-    public float moveSpeed;           // 移动速度
-    public float moveSlowSpeed;       // 慢速移动速度
+    public float moveSpeed;       // 移动速度
+    public float moveSlowSpeed;   // 慢速移动速度
     public float hitRadius;       // 受击判定半径
     public float grazeRadius;     // 擦弹判定半径
+}
+
+public struct CPlayerRunTime : IComponent
+{
     public bool isSlowMode;       // 是否处于慢速模式
+    public bool isInvincible;     // 是否无敌
 }
 #endregion
 

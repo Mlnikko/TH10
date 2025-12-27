@@ -17,6 +17,7 @@ public enum LogTag
     UI,
     Net,
     Room,
+    Battle,
     Audio,
     Resource,
     Input,
@@ -114,7 +115,7 @@ public readonly struct LogData
             LogLevel.Info => "INF",
             LogLevel.Warning => "WRN",
             LogLevel.Error => "ERR",
-            LogLevel.Critical => "CRT",
+            LogLevel.Critical => "!CRT!",
             _ => "LOG"
         };
 
@@ -189,12 +190,12 @@ public static class Logger
     public static void Warn(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Warning, t, c);
     public static void Error(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Error, t, c);
     public static void Critical(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Critical, t, c);
-
     public static void Exception(System.Exception ex, LogTag tag = LogTag.Misc, object context = null)
     {
         if (ex == null) return;
         string msg = $"[{ex.GetType().Name}] {ex.Message}\n{ex.StackTrace}";
         Log(msg, LogLevel.Error, tag, context ?? ex);
     }
+
     #endregion
 }

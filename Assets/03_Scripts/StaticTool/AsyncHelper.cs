@@ -24,7 +24,7 @@ public static class AsyncHelper
         AwaitAndLog(task);
     }
 
-    private static async void AwaitAndLog(Task task)
+    static async void AwaitAndLog(Task task)
     {
         try
         {

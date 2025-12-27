@@ -51,8 +51,10 @@ public struct FrameInput
     public static FrameInput Default => Create(0, 0, 0, 0, false, false, false, false);
 }
 
+#region 键位配置
+
 [Serializable]
-public struct PlayerInputConfig
+public struct InputKeyCodeConfig
 {
     public KeyCode moveLeft;
     public KeyCode moveRight;
@@ -61,8 +63,9 @@ public struct PlayerInputConfig
     public KeyCode shoot;
     public KeyCode bomb;
     public KeyCode slow;
+    public KeyCode pause;
 
-    public static PlayerInputConfig Default => new()
+    public static InputKeyCodeConfig Default => new()
     {
         moveLeft = KeyCode.LeftArrow,
         moveRight = KeyCode.RightArrow,
@@ -70,13 +73,18 @@ public struct PlayerInputConfig
         moveDown = KeyCode.DownArrow,
         shoot = KeyCode.Z,
         bomb = KeyCode.X,
-        slow = KeyCode.LeftShift
+        slow = KeyCode.LeftShift,
+        pause = KeyCode.Escape
     };
 }
 
+#endregion
+
 public class InputManager : SingletonMono<InputManager>
 {
-    public PlayerInputConfig InputConfig => PlayerInputConfig.Default;
+    public bool isLocalInputMode = true;
+
+    public InputKeyCodeConfig InputConfig => InputKeyCodeConfig.Default;
     const int MAX_PLAYERS = 4;
 
     Dictionary<uint, FrameInput>[] _inputFrames;
@@ -87,15 +95,7 @@ public class InputManager : SingletonMono<InputManager>
     {
         base.OnSingletonInit();
         InitializeForGame();
-
-        //// 注册 InputMSG 处理器（所有端都要注册！）
-        //NetworkManager.Instance.RegisterHandler<InputMSG>((msg) =>
-        //{
-        //    AddRemoteInput(msg.input);
-        //});
     }
-
-    // 初始化与清理
 
     public void InitializeForGame()
     {
@@ -129,16 +129,21 @@ public class InputManager : SingletonMono<InputManager>
         _isInitialized = false;
     }
 
+    public void HandleNetInput(FrameInput input)
+    {
+
+    }
+
     // 本地输入记录
 
-    public void RecordLocalInput(byte playerIndex, uint logicFrame)
+    public void RecordAndBroadcastLocalInput(byte playerIndex, uint logicFrame)
     {
         if (!_isInitialized || playerIndex >= MAX_PLAYERS) return;
 
         // 防止重复写入同一帧
         if (_inputFrames[playerIndex].ContainsKey(logicFrame))
         {
-            Logger.Warn($"Input for P{playerIndex} at frame {logicFrame} already recorded!", LogTag.Input);
+            //Logger.Warn($"Input for P{playerIndex} at frame {logicFrame} already recorded!", LogTag.Input);
             return;
         }
 
@@ -154,6 +159,17 @@ public class InputManager : SingletonMono<InputManager>
         );
 
         _inputFrames[playerIndex][logicFrame] = input;
+
+        if (NetworkManager.Instance.NetworkRole == NetworkRole.Client)
+        {
+            // 客户端：发送给主机
+            NetworkManager.Instance.SendToHost(new InputMSG { frameInput = input });
+        }
+        else if (NetworkManager.Instance.NetworkRole == NetworkRole.Host)
+        {
+            // 主机：自己就是权威，直接广播（无需先发给自己）
+            NetworkManager.Instance.Broadcast(new InputMSG { frameInput = input });
+        }
     }
 
     // 远程输入注入
@@ -251,7 +267,6 @@ public class InputManager : SingletonMono<InputManager>
 
     #region 调试显示
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
     public FrameInput GetDebugInput(byte playerIndex)
     {
         if (!_isInitialized || playerIndex >= MAX_PLAYERS)
@@ -282,7 +297,7 @@ public class InputManager : SingletonMono<InputManager>
         if (!_showDebugInput || !_isInitialized) return;
 
         GUILayout.BeginArea(new Rect(10, 10, 350, 200));
-        GUILayout.Label($"Logic Frame: {GameTimeManager.CurrentLogicFrame}", DebugStyle);
+        GUILayout.Label($"Logic Frame: {BattleTimer.CurrentLogicFrame}", DebugStyle);
         GUILayout.Space(8);
 
         for (int i = 0; i < MAX_PLAYERS; i++)
@@ -301,7 +316,6 @@ public class InputManager : SingletonMono<InputManager>
         GUI.color = Color.white;
         GUILayout.EndArea();
     }
-#endif
 
     #endregion
 }

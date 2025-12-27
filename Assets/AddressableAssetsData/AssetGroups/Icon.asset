@@ -27,6 +27,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3cffb8b3d5456f428556ae9f08b5021
+    m_Address: Sprites/Character/Reimu_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86a6441ada71c674fa69da3bdf2b92b0
+    m_Address: Sprites/Character/Marisa_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: bd11330accc092c41b0429724d54b4b3, type: 2}
   m_SchemaSet:

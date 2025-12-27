@@ -45,9 +45,8 @@ public class UIManager : SingletonMono<UIManager>
     }
     Canvas canvas;
 
-
-    Stack<UIPanel> panelStack = new();
-    Dictionary<string, UIPanel> activePanels = new();
+    readonly Stack<UIPanel> panelStack = new();
+    readonly Dictionary<string, UIPanel> activePanels = new();
 
     // 【同步版本】仅当 prefab 已加载时可用
     public T ShowPanel<T>(object data = null) where T : UIPanel
@@ -136,6 +135,30 @@ public class UIManager : SingletonMono<UIManager>
         {
             panel.gameObject.SetActive(false);
             panel.OnHide();
+        }
+    }
+
+    public void ClosePanel<T>() where T : UIPanel
+    {
+        string name = typeof(T).Name;
+        if (activePanels.TryGetValue(name, out var panel) && panel != null)
+        {
+            Destroy(panel.gameObject);
+            activePanels.Remove(name);
+            // 从栈中移除
+            var tempStack = new Stack<UIPanel>();
+            while (panelStack.Count > 0)
+            {
+                var top = panelStack.Pop();
+                if (top != panel)
+                {
+                    tempStack.Push(top);
+                }
+            }
+            while (tempStack.Count > 0)
+            {
+                panelStack.Push(tempStack.Pop());
+            }
         }
     }
 

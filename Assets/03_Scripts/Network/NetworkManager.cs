@@ -1,4 +1,8 @@
 using System;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
@@ -160,6 +164,15 @@ public class NetworkManager : SingletonMono<NetworkManager>
             // 客户端：只处理一个连接
             ProcessIncoming(m_ClientConnection);
         }
+
+        // 自动发送 Ping（仅客户端）
+        if (m_netRole == NetworkRole.Client &&
+            ClientState == ConnectionState.Connected &&
+            Time.time - m_LastPingTime > PING_INTERVAL)
+        {
+            m_LastPingTime = Time.time;
+            SendPing();
+        }
     }
 
     void ProcessIncoming(NetworkConnection conn)
@@ -237,7 +250,16 @@ public class NetworkManager : SingletonMono<NetworkManager>
                 {
                     var msg = new InputMSG();
                     msg.Deserialize(ref stream);
-                    //OnPlayerInput(conn, in msg);
+
+                    if(NetworkRole == NetworkRole.Host)
+                    {
+                        InputManager.Instance.AddRemoteInput(msg.frameInput);
+                        Broadcast(msg);
+                    }
+                    else if(NetworkRole == NetworkRole.Client)
+                    {
+                        InputManager.Instance.AddRemoteInput(msg.frameInput);
+                    }
                     break;
                 }
 
@@ -282,23 +304,52 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     break;
                 }
 
-            case MessageId.PlayerBattleDataConfirmed:
-                {
-                    var msg = new PlayerBattleDataConfirmedMSG();
-                    msg.Deserialize(ref stream);
-                    
-                    BattleManager.Instance.AddPlayer(msg.playerBattleData);
-                    Logger.Info($"Received PlayerBattleDataConfirmed from PlayerIndex: {msg.playerBattleData.playerIndex}", LogTag.Net);
-                    break;
-                }
-
             case MessageId.BattleReady:
                 {
                     var msg = new BattleReadyMSG();
                     msg.Deserialize(ref stream);
+                    
+                    BattleManager.Instance.AddPlayer(msg.playerBattleData);
+                    Logger.Info($"Received BattleReady from PlayerIndex: {msg.playerBattleData.playerIndex}", LogTag.Net);
+                    break;
+                }
 
-                    BattleManager.Instance.StartBattle(msg.startFrame, msg.randomSeed, msg.allPlayerBattleDatas);
-                    Logger.Info("Received BattleReady message. Starting battle...", LogTag.Net);
+            case MessageId.BattleStart:
+                {
+                    var msg = new BattleStartMSG();
+                    msg.Deserialize(ref stream);
+
+                    BattleManager.Instance.StartMutiPlayerBattleForClient(msg.startFrame, msg.randomSeed, msg.allPlayerBattleDatas);
+                    Logger.Info("Received BattleStart message. Starting battle...", LogTag.Net);
+                    break;
+                }
+
+            case MessageId.PingRequest:
+                {
+                    var msg = new PingRequestMSG();
+                    msg.Deserialize(ref stream);
+
+                    // 主机收到 Ping，立即回复
+                    var response = new PingResponseMSG { timestamp = msg.timestamp };
+                    if (m_netRole == NetworkRole.Host)
+                    {
+                        SendToClient(conn, response);
+                    }
+                    break;
+                }
+
+            case MessageId.PingResponse:
+                {
+                    var msg = new PingResponseMSG();
+                    msg.Deserialize(ref stream);
+
+                    // 客户端收到响应
+                    if (m_netRole == NetworkRole.Client && msg.timestamp == m_PendingPingId)
+                    {
+                        float rtt = (Time.time - m_PingSentTime) * 1000f; // 转为毫秒
+                        CurrentRTT = Mathf.Round(rtt);
+                        // Logger.Debug($"Ping RTT: {CurrentRTT} ms", LogTag.Net);
+                    }
                     break;
                 }
 
@@ -320,24 +371,70 @@ public class NetworkManager : SingletonMono<NetworkManager>
         Logger.Info("Network shut down.", LogTag.Net);
     }
 
-    public static string GetLocalIPAddress()
-    {
-#if UNITY_EDITOR || UNITY_STANDALONE
-        var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
-        foreach (var ip in host.AddressList)
-        {
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                return ip.ToString();
-        }
-        return "127.0.0.1";
-#else
-        return "127.0.0.1"; // 移动端需另处理
-#endif
-    }
-
     protected override void OnSingletonDestroy()
     {
         base.OnSingletonDestroy();
         ShutDown();
+    }
+
+    #region Ping
+    float m_LastPingTime = 0f;
+    const float PING_INTERVAL = 1.0f; // 每秒 ping 一次
+
+    // 存储最近一次 RTT（单位：毫秒）
+    public static float CurrentRTT { get; private set; } = -1f;
+
+    // 用于生成唯一时间戳（避免跨平台 DateTime 精度问题）
+    static uint s_TimeStampCounter = 0;
+
+    void SendPing()
+    {
+        if (m_netRole == NetworkRole.Client && ClientState == ConnectionState.Connected)
+        {
+            var msg = new PingRequestMSG
+            {
+                timestamp = ++s_TimeStampCounter // 简单递增 ID 作为“时间戳”
+            };
+            SendToHost(msg);
+            m_PingSentTime = Time.time;
+            m_PendingPingId = msg.timestamp;
+        }
+    }
+
+    private uint m_PendingPingId = 0;
+    private float m_PingSentTime = 0f;
+    #endregion
+
+    void OnGUI()
+    {
+        if (NetworkRole == NetworkRole.None) return;
+
+        string statusText = "";
+        if (NetworkRole == NetworkRole.Client)
+        {
+            statusText = $"[CLIENT]\nRTT: {(CurrentRTT >= 0 ? CurrentRTT.ToString("F0") + " ms" : "—")}";
+        }
+        else if (NetworkRole == NetworkRole.Host)
+        {
+            statusText = "[HOST]";
+        }
+
+        GUIStyle style = new GUIStyle(GUI.skin.box)
+        {
+            fontSize = 12,
+            normal = { textColor = Color.white },
+            alignment = TextAnchor.UpperLeft
+        };
+
+        // 计算右上角位置：X = 屏幕宽度 - 宽度 - 右边距
+        float width = 150f;
+        float height = 60f;
+        float rightMargin = 10f;
+        float topMargin = 10f;
+        Rect rect = new Rect(Screen.width - width - rightMargin, topMargin, width, height);
+
+        GUILayout.BeginArea(rect);
+        GUILayout.Box(statusText, style);
+        GUILayout.EndArea();
     }
 }

@@ -2,7 +2,10 @@ using System.Collections.Generic;
 
 public class UnityConsoleHandler : ILogHandler
 {
-    // 颜色映射（可配置）- 16进制版本
+    // 配置选项
+    public bool EnableColor = true;
+
+    // 日志等级着色
     static readonly Dictionary<LogLevel, string> LevelColors = new()
     {
         { LogLevel.Debug,    "#808080" },  // 灰色
@@ -12,7 +15,7 @@ public class UnityConsoleHandler : ILogHandler
         { LogLevel.Critical, "#FF4444" }   // 亮红色
     };
 
-    // 标签高亮（可选：关键标签额外着色）
+    // 日志标签着色
     static readonly Dictionary<LogTag, string> TagColors = new()
     {
         { LogTag.Net,        "#00FFFF" },  // 青色
@@ -22,9 +25,6 @@ public class UnityConsoleHandler : ILogHandler
 
     public void ProcessLog(in LogData logData)
     {
-        string coloredMessage = FormatColoredLog(logData);
-
-        // 转为 UnityEngine.LogType
         var logType = logData.Level switch
         {
             LogLevel.Warning => UnityEngine.LogType.Warning,
@@ -32,7 +32,17 @@ public class UnityConsoleHandler : ILogHandler
             _ => UnityEngine.LogType.Log
         };
 
-        UnityEngine.Debug.Log(coloredMessage, logData.Context as UnityEngine.Object);
+        string message = EnableColor
+            ? FormatColoredLog(logData)
+            : logData.ToString();
+
+        // 使用 unityLogger 保证与 Unity 控制台行为一致
+        UnityEngine.Debug.unityLogger.logHandler.LogFormat(
+            logType,
+            logData.Context as UnityEngine.Object,
+            "{0}",
+            message
+        );
     }
 
     static string FormatColoredLog(in LogData logData)

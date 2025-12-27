@@ -121,12 +121,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterConfig: {fileID: 11400000, guid: 8081d63c8f9fdfa41ab47d36b3980340, type: 2}
-  characterName: 0
+  characterName: 2
   description: 
   speed: 0
   slowSpeed: 0
   moveBoxSize: {x: 0, y: 0}
   moveBoxOffset: {x: 0, y: 0}
+  hitRadius: 0
+  grazeRadius: 0
 --- !u!1 &8938637964496125510
 GameObject:
   m_ObjectHideFlags: 0

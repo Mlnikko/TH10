@@ -30,7 +30,7 @@ public class RoomManager : SingletonMono<RoomManager>
     public bool IsHost => NetworkManager.Instance.NetworkRole == NetworkRole.Host;
     public int PlayerCount => CurrentRoom?.PlayerCount ?? 0;
 
-    public byte selfPlayerIndex;
+    public static byte LocalPlayerIndex;
 
     // ====== 房间操作 ======
 
@@ -39,7 +39,7 @@ public class RoomManager : SingletonMono<RoomManager>
         if (IsInRoom) LeaveRoom();
 
         // 获取本机局域网 IP
-        string localIP = NetworkManager.GetLocalIPAddress();
+        string localIP = NetworkTool.GetLocalIPAddress();
 
         CurrentRoom = new RoomInfo
         {
@@ -115,7 +115,7 @@ public class RoomManager : SingletonMono<RoomManager>
 
     public void HandlePlayerJoinResponse(byte playerIndex)
     {
-        selfPlayerIndex = playerIndex;
+        LocalPlayerIndex = playerIndex;
         UIManager.Instance.ShowPanelAsync<RoomPanel>().Forget();
     }
 

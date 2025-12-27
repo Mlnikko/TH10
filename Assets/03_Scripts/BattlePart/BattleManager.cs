@@ -23,12 +23,22 @@ public enum BattleStatus
     InBattle
 }
 
+public static class BattleTimer
+{
+    public const float LOGIC_DELTA_TIME = 0.02f;
+    public static uint CurrentLogicFrame { get; private set; }
+    public static void AdvanceLogicFrame() => CurrentLogicFrame++;
+}
+
 public class BattleManager : SingletonMono<BattleManager>
 {
-    public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
-    List<PlayerBattleData> allPlayerDatas = new();
+    public bool isSinglePlayerMode;
+    public GameObject prefab;
 
-    bool[] _activePlayers = new bool[4];
+    public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
+    public List<PlayerBattleData> allPlayerDatas = new();
+
+    bool[] activePlayers = new bool[4];
 
     World battleWorld;
     
@@ -39,11 +49,11 @@ public class BattleManager : SingletonMono<BattleManager>
 
     protected override void OnSingletonInit()
     {
-        BattleSceneInit().Forget();
+        PreloadAndSceneInit().Forget();
         InitBattleWorld();
     }
 
-    async Task BattleSceneInit()
+    async Task PreloadAndSceneInit()
     {
         try
         {
@@ -76,74 +86,77 @@ public class BattleManager : SingletonMono<BattleManager>
         Logger.Info("Battle ECS World initialized.");
     }
 
-    public void StartBattle(uint startFrame, uint randomSeed, PlayerBattleData[] playerBattleDatas)
+    public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] playerBattleDatas)
     {
-        //allPlayerDatas = playerBattleDatas
-        CreatePlayer();
+        isSinglePlayerMode = false;
+
+        foreach (var playerBattleData in playerBattleDatas)
+        {
+            AddPlayer(playerBattleData);
+        }
+
+        GeneratePlayer();
+        CurrentStatus = BattleStatus.InBattle;
+    }
+
+    public void StartMutiPlayerBattleForHost()
+    {
+        isSinglePlayerMode = false;
+        GeneratePlayer();
+        CurrentStatus = BattleStatus.InBattle;
+    }
+
+    public void StartSinglePlayerBattle()
+    {
+        isSinglePlayerMode = true;
+
+        GeneratePlayer();
         CurrentStatus = BattleStatus.InBattle;
     }
 
     public void AddPlayer(PlayerBattleData playerData)
     {
         allPlayerDatas.Add(playerData);
+        activePlayers[playerData.playerIndex] = true;
+    }
 
-        if (allPlayerDatas.Count == RoomManager.Instance.PlayerCount) 
+    public void GeneratePlayer()
+    {
+        if (allPlayerDatas == null || allPlayerDatas.Count == 0)
         {
-            NetworkManager.Instance.Broadcast(new BattleReadyMSG()
-            {
-                allPlayerBattleDatas = allPlayerDatas.ToArray()
-            });
+            Logger.Error("No player data available to create players.");
+            return;
+        }
+
+        foreach (var playerData in allPlayerDatas)
+        {
+            InitializePlayerEntity(playerData, prefab);
         }
     }
 
-    public void CreatePlayer()
-    {
-        //if (allPlayerDatas == null || allPlayerDatas.Count == 0)
-        //{
-        //    Logger.Error("No player data available to create players.");
-        //    return;
-        //}
-
-        //foreach (var playerData in allPlayerDatas)
-        //{
-        //    string characterPrefabPath = ResourceKeys.CharacterPrefabPath + playerData.characterId.ToString();
-
-        //    // 异步加载角色预制体
-        //    ResManager.LoadAssetAsync<GameObject>(characterPrefabPath, (playerPrefab) =>
-        //    {
-        //        if (playerPrefab == null)
-        //        {
-        //            Logger.Error($"Failed to load prefab for character: {playerData.characterId}");
-        //            return;
-        //        }
-
-        //        // 在回调中完成初始化
-        //        InitializePlayerEntity(playerData, playerPrefab);
-        //    });
-        //}
-    }
-
-    Vector2 GetStartPosition(byte playerIndex)
+    Vector2 GetPlayerBornPos(byte playerIndex)
     {
         // 根据玩家索引设置不同的初始位置
         return playerIndex switch
         {
             0 => new Vector2(-3, 0),  // 左下
             1 => new Vector2(3, 0),   // 右下
-            2 => new Vector2(-3, 3),  // 左上
-            3 => new Vector2(3, 3),   // 右上
+            2 => new Vector2(-3, 0),  // 左上
+            3 => new Vector2(3, 0),   // 右上
             _ => Vector2.zero
         };
     }
 
     void InitializePlayerEntity(PlayerBattleData playerData, GameObject playerPrefab)
     {
+        var bornPos = GetPlayerBornPos(playerData.playerIndex);
         var playerGO = Instantiate(playerPrefab, playerRoot);
+        playerGO.transform.position = (Vector3)bornPos;
 
         var em = battleWorld.EntityManager;
         var playerEntity = em.CreateEntity();
 
-        int presentationId = PresentationBridge.Register(playerGO, new PlayerPresentationUpdater(playerGO));
+        int gameObjectId = GameObjectBridge.Register(playerGO, new PlayerUpdater(playerGO));
         var characterConfig = ConfigManager.GetConfig<CharacterConfig>(playerData.characterId.ToString());
         if (characterConfig == null)
         {
@@ -157,7 +170,7 @@ public class BattleManager : SingletonMono<BattleManager>
 
         em.AddComponent(playerEntity, new CPresentationLink
         {
-            presentationId = presentationId
+            presentationId = gameObjectId
         });
 
         em.AddComponent(playerEntity, new CPosition
@@ -181,59 +194,45 @@ public class BattleManager : SingletonMono<BattleManager>
 
         em.AddComponent(playerEntity, new CPlayerRunTime
         {
-            playerIndex = playerData.playerIndex,
+            isSlowMode = false,
+        });
+
+        em.AddComponent(playerEntity, new CPlayerAttribute
+        {
             grazeRadius = characterConfig.GrazeRadius,
             hitRadius = characterConfig.HitRadius,
             moveSlowSpeed = characterConfig.MoveSlowSpeed,
             moveSpeed = characterConfig.MoveSpeed,
-            isSlowMode = false,
         });
 
         #endregion
 
-        Logger.Info($"Player {playerData.playerIndex} ({playerData.characterId}) initialized successfully.");
+        Logger.Info($"Player {playerData.playerIndex} ({playerData.characterId}) initialized successfully.", LogTag.Battle);
     }
 
     void FixedUpdate()
     {
-        switch (CurrentStatus)
-        {
-            case BattleStatus.Prepare:
-                UpdatePrepare();
-                break;
-            case BattleStatus.InBattle:
-                UpdateInBattle();
-                break;
-            default:
-                break;
-        }
-    }
-
-    void UpdatePrepare()
-    {
-        // 准备阶段的逻辑更新（如果有需要）
-    }
-
-    void UpdateInBattle()
-    {
         // 只有在战斗中才执行逻辑帧更新
         if (battleWorld == null) return;
 
-        uint currentFrame = GameTimeManager.CurrentLogicFrame;
+        if (CurrentStatus == BattleStatus.InBattle)
+        {
+            uint currentFrame = BattleTimer.CurrentLogicFrame;
 
-        InputManager.Instance.RecordLocalInput(0, currentFrame);
+            InputManager.Instance.RecordAndBroadcastLocalInput(RoomManager.LocalPlayerIndex, currentFrame);
 
-        // 3. 检查是否所有输入就绪
-        if (!InputManager.Instance.AreAllInputsReady(currentFrame, _activePlayers)) return;
+            // 3. 检查是否所有输入就绪
+            if (!InputManager.Instance.AreAllInputsReady(currentFrame, activePlayers)) return;
 
-        // 4. 推进 ECS 逻辑（使用 currentFrame 的输入）
-        battleWorld?.FixedUpdate(Time.fixedDeltaTime);
+            // 4. 推进 ECS 逻辑
+            battleWorld?.FixedUpdate(BattleTimer.LOGIC_DELTA_TIME);
 
-        // 6. 帧递增（进入下一逻辑帧）
-        GameTimeManager.AdvanceLogicFrame();
+            // 6. 帧递增（进入下一逻辑帧）
+            BattleTimer.AdvanceLogicFrame();
 
-        // 7. 清理旧帧
-        InputManager.Instance.CleanupOldFrames(GameTimeManager.CurrentLogicFrame);
+            // 7. 清理旧帧
+            InputManager.Instance.CleanupOldFrames(currentFrame);
+        }
     }
 
     // Update 和 LateUpdate 主要用于处理非核心逻辑（如渲染等）

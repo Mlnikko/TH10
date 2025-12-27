@@ -53,12 +53,7 @@ public class World
 
     #endregion
 
-    #region 更新系统
-    /// <summary>
-    /// 固定时间步长更新（用于帧同步）
-    /// 所有游戏逻辑系统（移动、碰撞、生命周期等）应在此方法中更新
-    /// 重要：必须使用 Time.fixedDeltaTime 作为参数，确保所有客户端使用相同的固定时间步长
-    /// </summary>
+    #region 系统更新
     public void FixedUpdate(float fixedDeltaTime)
     {
         foreach (var sys in _systems)
@@ -70,11 +65,6 @@ public class World
         }
     }
 
-    /// <summary>
-    /// 每帧更新（用于非逻辑系统更新）
-    /// 注意：帧同步游戏应避免在此方法中执行游戏逻辑
-    /// 所有影响游戏状态的计算都应在 FixedUpdate 中进行
-    /// </summary>
     public void Update(float deltaTime)
     {
         foreach (var sys in _systems)
@@ -86,10 +76,6 @@ public class World
         }
     }
 
-    /// <summary>
-    /// 每帧更新（用于渲染、UI等）
-    /// </summary>
-    /// <param name="deltaTime"></param>
     public void LateUpdate(float deltaTime)
     {
         foreach (var sys in _systems)
@@ -99,7 +85,7 @@ public class World
                 sys.OnLateUpdate(deltaTime);
             }
         }
-        PresentationBridge.UpdateAllPresentations(EntityManager); // ← 关键！
+        GameObjectBridge.UpdateAllGameObjects(EntityManager);
     }
 
     #endregion

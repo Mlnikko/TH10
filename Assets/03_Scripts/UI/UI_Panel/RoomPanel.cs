@@ -140,7 +140,7 @@ public class RoomPanel : UIPanel
     void OnStartBattleClicked()
     {
         RoomManager.Instance.EnterBattleScene();
-        UIManager.Instance.HidePanel<RoomPanel>();
+        UIManager.Instance.ClosePanel<RoomPanel>();
     }
 
     void OnLeaveRoomClicked()

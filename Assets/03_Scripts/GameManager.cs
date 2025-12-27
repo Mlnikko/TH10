@@ -7,12 +7,6 @@ public enum E_FPSMode
     PC120
 }
 
-public static class GameTimeManager
-{
-    public static uint CurrentLogicFrame { get; private set; }
-    public static void AdvanceLogicFrame() => CurrentLogicFrame++;
-}
-
 public class GameManager : SingletonMono<GameManager>
 {
     protected override void OnSingletonInit()
