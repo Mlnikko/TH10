@@ -23,6 +23,18 @@ public enum BattleStatus
     InBattle
 }
 
+public static class GlobalBattleArea
+{
+    public static BattleAreaData Data { get; private set; }
+    public static bool IsInitialized { get; private set; }
+
+    public static void Initialize(BattleAreaData data)
+    {
+        Data = data;
+        IsInitialized = true;
+    }
+}
+
 public static class BattleTimer
 {
     public const float LOGIC_DELTA_TIME = 0.02f;
@@ -41,10 +53,9 @@ public class BattleManager : SingletonMono<BattleManager>
     bool[] activePlayers = new bool[4];
 
     World battleWorld;
-    
 
     [SerializeField] Transform playerRoot;
-    [SerializeField] BattleArea battleArea;
+    [SerializeField] BattleAreaTool battleArea;
 
 
     protected override void OnSingletonInit()
@@ -75,11 +86,11 @@ public class BattleManager : SingletonMono<BattleManager>
     {
         battleWorld = new World();
 
-        battleWorld.AddSystem<MovementSystem>();
+        //battleArea.InitBattleArea();
 
         battleWorld.AddSystem<LifetimeSystem>();
 
-        battleWorld.AddSystem<CollisionSystem>().Initialize(battleArea.InitBattleArea());
+        battleWorld.AddSystem<CollisionSystem>();
 
         battleWorld.AddSystem<PlayerControlSystem>();
 

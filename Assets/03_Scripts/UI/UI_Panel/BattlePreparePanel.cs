@@ -21,6 +21,8 @@ public class BattlePreparePanel : UIPanel
 
     float confirmCountdownDuration = 10f;
     float lastCountdownDuration = 3f;
+    const string ConfirmCountdownKey = "BattlePrepare_ConfirmCountdown";
+    const string LastCountdownKey = "BattlePrepare_LastCountdown";
 
     // 数据缓存
     CharacterConfig[] characterConfigs;
@@ -36,7 +38,6 @@ public class BattlePreparePanel : UIPanel
     public override void Initialize()
     {
         base.Initialize();
-        lastCountdown.SetActive(false);
         ReadConfig();
     }
 
@@ -74,17 +75,21 @@ public class BattlePreparePanel : UIPanel
     public override void OnShow(object data = null)
     {
         base.OnShow(data);
-        confirmBtn.onClick.AddListener(OnConfirmCountdownEnd);
+        confirmBtn.onClick.AddListener(OnConfirmed);
+
+        lastCountdown.SetActive(false);
         RefreshCharacterList();
 
         // 启动确认倒计时
-        CoroutineManager.Instance.StartCoroutine(ConfirmCountdownRoutine());
+        CoroutineManager.Instance.StartWithKey(ConfirmCountdownKey, ConfirmCountdownRoutine());
     }
 
     public override void OnHide()
     {
         base.OnHide();
-        confirmBtn.onClick.RemoveListener(OnConfirmCountdownEnd);
+        confirmBtn.onClick.RemoveListener(OnConfirmed);
+        CoroutineManager.Instance.StopByKey(ConfirmCountdownKey);
+        CoroutineManager.Instance.StopByKey(LastCountdownKey);
         ClearSelection(); // 可选：隐藏时清空选择
     }
 
@@ -98,19 +103,18 @@ public class BattlePreparePanel : UIPanel
             if (confirmCountdownText != null)
             {
                 int remaining = Mathf.CeilToInt(confirmCountdownDuration - elapsed);
-                confirmCountdownText.text = $"自动开始: {remaining}s";
+                confirmCountdownText.text = $"{remaining}s";
             }
 
             yield return null;
         }
 
         // 超时，自动确认
-        OnConfirmCountdownEnd();
+        OnConfirmed();
     }
 
     IEnumerator LastConfirmCountdownRoutine()
     {
-        lastCountdown.SetActive(true);
         float elapsed = 0f;
         while (elapsed < lastCountdownDuration)
         {
@@ -119,7 +123,7 @@ public class BattlePreparePanel : UIPanel
             if (lastCountdownText != null)
             {
                 int remaining = Mathf.CeilToInt(lastCountdownDuration - elapsed);
-                lastCountdownText.text = $"战斗倒计时: {remaining}s";
+                lastCountdownText.text = $"战斗准备: {remaining}s!";
             }
 
             yield return null;
@@ -250,11 +254,13 @@ public class BattlePreparePanel : UIPanel
         Logger.Info($"Selected Weapon: {selectedWeaponId}");
     }
 
-    void OnConfirmCountdownEnd()
+    void OnConfirmed()
     {
-        CoroutineManager.Instance.StopCoroutine(ConfirmCountdownRoutine());
+        CoroutineManager.Instance.StopByKey(ConfirmCountdownKey);
 
-        CoroutineManager.Instance.StartCoroutine(LastConfirmCountdownRoutine());
+        lastCountdown.SetActive(true);
+        CoroutineManager.Instance.StartWithKey(LastCountdownKey, LastConfirmCountdownRoutine());
+        
 
         var playerBattleData = new PlayerBattleData
         (
@@ -285,8 +291,6 @@ public class BattlePreparePanel : UIPanel
         CoroutineManager.Instance.StopCoroutine(LastConfirmCountdownRoutine());
 
         UIManager.Instance.ClosePanel<BattlePreparePanel>();
-
-       
 
         switch (NetworkManager.Instance.NetworkRole)
         {

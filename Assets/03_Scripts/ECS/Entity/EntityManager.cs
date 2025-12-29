@@ -100,8 +100,9 @@ internal static class ComponentStorage<T> where T : struct, IComponent
 /// </summary>
 public static class TempBuffers
 {
-    public static readonly int[] BulletIndices = new int[16384]; // 64KB
+    public static readonly int[] DanmakuIndices = new int[16384]; // 64KB
     public static readonly int[] EnemyIndices = new int[4096];   // 16KB  
+    public static readonly int[] CollisionIndices = new int[16384]; // 64KB
 }
 
 public class EntityManager
@@ -162,6 +163,12 @@ public class EntityManager
         return index < MAX_ENTITIES &&
                _activeEntities[index] &&
                _versions[index] == entity.Version;
+    }
+
+    public bool IsValid(int index)
+    {
+        Entity entity = GetEntityByIndex(index);
+        return IsValid(entity);
     }
 
     // 根据索引获取实体

@@ -1,69 +1,57 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public readonly struct CoroutineHandle
 {
     readonly string _key;
-    readonly Coroutine _routine;
+    readonly CoroutineManager _manager;
 
-    internal CoroutineHandle(string key, Coroutine routine)
+    internal CoroutineHandle(string key, CoroutineManager manager)
     {
         _key = key;
-        _routine = routine;
+        _manager = manager;
     }
 
-    public bool IsValid => _routine != null;
-
-    public void Stop()
-    {
-        CoroutineManager.Instance?.StopCoroutineByKey(_key);
-    }
+    public void Stop() => _manager?.StopByKey(_key);
 }
 
 public class CoroutineManager : SingletonMono<CoroutineManager>
 {
     readonly Dictionary<string, Coroutine> _coroutines = new();
+    static int _autoId = 0;
 
-    public CoroutineHandle StartUniqueCoroutine(string key, IEnumerator routine)
+    public CoroutineHandle StartWithKey(string key, IEnumerator routine)
     {
         if (string.IsNullOrEmpty(key))
         {
-            Debug.LogWarning("Coroutine key is null or empty!");
-            key = "unnamed_" + Time.time;
+            Debug.LogWarning("Coroutine key is null or empty! Using auto ID.");
+            key = "auto_" + _autoId++;
         }
 
-        StopCoroutineByKey(key);
+        StopByKey(key);
         var coroutine = StartCoroutine(routine);
         _coroutines[key] = coroutine;
-        return new CoroutineHandle(key, coroutine);
+        return new CoroutineHandle(key, this);
     }
 
-    public CoroutineHandle StartManagedCoroutine(IEnumerator routine)
+    public void StopByKey(string key)
     {
-        var key = "auto_" + GetHashCode() + "_" + Time.time;
-        var coroutine = StartCoroutine(routine);
-        _coroutines[key] = coroutine;
-        return new CoroutineHandle(key, coroutine);
-    }
-
-    public void StopCoroutineByKey(string key)
-    {
-        if (_coroutines.TryGetValue(key, out Coroutine routine))
+        if (_coroutines.TryGetValue(key, out var routine))
         {
-            StopCoroutine(routine);
+            if (routine != null)
+                StopCoroutine(routine);
             _coroutines.Remove(key);
         }
     }
 
-    public void StopAllManagedCoroutines()
+    public void StopAllManaged()
     {
         foreach (var routine in _coroutines.Values)
         {
-            StopCoroutine(routine);
+            if (routine != null)
+                StopCoroutine(routine);
         }
         _coroutines.Clear();
     }
-
-    public int CoroutineCount => _coroutines.Count;
 }

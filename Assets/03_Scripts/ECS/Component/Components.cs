@@ -1,3 +1,7 @@
+
+using System;
+
+
 /// <summary>
 /// Components为实体附加的数据结构，用于存储实体的各种属性和状态。
 /// 必须为值类型（struct），以提高性能和内存效率。
@@ -45,52 +49,61 @@ public struct CDanmaku : IComponent
 #endregion
 
 #region ColliderComponent
-public enum E_ColliderType
+public enum E_ColliderType : byte
 {
     None,
     Rect,
     Circle,
 }
 
-public enum E_ColliderLayer
+[Flags]
+public enum E_ColliderLayer : ushort
 {
-    Default = 0,
-    Player = 1,
-    Enemy = 2,
-    PlayerDanmaku = 3,
-    EnemyDanmaku = 4,
-    Item = 5,
+    None = 0,
+
+    Default = 1 << 0,
+
+    Player = 1 << 1,
+    Enemy = 1 << 2,
+    PlayerDanmaku = 1 << 3,
+    EnemyDanmaku = 1 << 4,
+    Item = 1 << 5,
 }
 
 public struct CCollider : IComponent
 {
-    public bool Active;
-    public E_ColliderType Type;
+    // 是否激活
+    public bool active;
 
-    // 共享字段：偏移（相对于实体位置）
-    public float OffsetX;
-    public float OffsetY;
+    // 碰撞体类型
+    public E_ColliderType type;
 
-    // Circle 专用
-    public float Radius;
+    // 碰撞层
+    public E_ColliderLayer layer;
 
-    // Rect 专用
-    public float Width;
-    public float Height;
+    // 碰撞掩码
+    public E_ColliderLayer mask;
 
-    // 碰撞层（用于过滤）
-    public byte Layer;           // 0=Player, 1=Enemy, 2=DanmakuConfiger, 3=PlayerBullet...
-    public byte Mask;            // 与哪些层碰撞（位掩码）
+    // 相对偏移
+    public float offsetX;
+    public float offsetY;
 
-    // 标记：是否需要重建网格索引
-    public bool Dirty;
+    // 脏标记
+    public bool dirty;
+
+    // Circle
+    public float radius;
+
+    // Rect
+    public float width;
+    public float height;
 }
 #endregion
 
 #region PlayerComponent
 public struct CPlayer : IComponent
 {
-    public byte playerIndex;   // 玩家ID（用于多人游戏）
+    public byte playerIndex;   // 玩家ID
     public byte characterId;   // 角色ID, 与角色配置表对应
     public byte weaponId;      // 武器ID, 与武器配置表对应
 }
@@ -107,6 +120,7 @@ public struct CPlayerAttribute : IComponent
 public struct CPlayerRunTime : IComponent
 {
     public bool isSlowMode;       // 是否处于慢速模式
+    public bool isShooting;       // 是否正在射击
     public bool isInvincible;     // 是否无敌
 }
 #endregion

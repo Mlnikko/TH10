@@ -21,7 +21,8 @@ public enum LogTag
     Audio,
     Resource,
     Input,
-    Config
+    Config,
+    Collision,
 }
 
 /// <summary>

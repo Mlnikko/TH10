@@ -1,8 +1,4 @@
 using System;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
@@ -165,14 +161,7 @@ public class NetworkManager : SingletonMono<NetworkManager>
             ProcessIncoming(m_ClientConnection);
         }
 
-        // 自动发送 Ping（仅客户端）
-        if (m_netRole == NetworkRole.Client &&
-            ClientState == ConnectionState.Connected &&
-            Time.time - m_LastPingTime > PING_INTERVAL)
-        {
-            m_LastPingTime = Time.time;
-            SendPing();
-        }
+        PingTest();
     }
 
     void ProcessIncoming(NetworkConnection conn)
@@ -386,6 +375,18 @@ public class NetworkManager : SingletonMono<NetworkManager>
 
     // 用于生成唯一时间戳（避免跨平台 DateTime 精度问题）
     static uint s_TimeStampCounter = 0;
+
+    void PingTest()
+    {
+        // 自动发送 Ping（仅客户端）
+        if (m_netRole == NetworkRole.Client &&
+            ClientState == ConnectionState.Connected &&
+            Time.time - m_LastPingTime > PING_INTERVAL)
+        {
+            m_LastPingTime = Time.time;
+            SendPing();
+        }
+    }
 
     void SendPing()
     {

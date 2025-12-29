@@ -5,8 +5,6 @@ public class LifetimeSystem : BaseSystem
 {
     public override void OnFixedUpdate(float fixedDeltaTime)
     {
-        if (!Enabled) return;
-
         var lifetimes = EntityManager.GetComponentSpan<CLifetime>();
         var isActive = EntityManager.ActiveEntities;
 
