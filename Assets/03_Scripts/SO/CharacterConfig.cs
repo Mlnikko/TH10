@@ -6,7 +6,7 @@ public enum E_Character : byte
     Marisa = 2,
 }
 
-[CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Custom/characterConfig")]
+[CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Configs/CharacterConfig")]
 public class CharacterConfig : GameConfig
 {
     [Header("ÐÅÏ¢ÅäÖÃ")]
@@ -40,5 +40,5 @@ public class CharacterConfig : GameConfig
         GrazeRadius = 0.5f;
     }
 
-    public override string ConfigId => CharacterID.ToString();
+    public override string AddressableKeyPrefix => ConfigHelper.CHARACTER_CONFIG_PREFIX;
 }

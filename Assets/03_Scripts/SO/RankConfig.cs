@@ -18,7 +18,7 @@ public class Rank
     public string Description;
 }
 
-[CreateAssetMenu(fileName = "NewRankConfig", menuName = "Custom/RankConfig")]
+[CreateAssetMenu(fileName = "NewRankConfig", menuName = "Configs/RankConfig")]
 public class RankConfig : GameConfig
 {
     public Rank[] ranks;

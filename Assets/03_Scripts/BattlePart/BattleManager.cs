@@ -23,27 +23,25 @@ public enum BattleStatus
     InBattle
 }
 
-public static class GlobalBattleArea
+public static class GlobalBattleData
 {
-    public static BattleAreaData Data { get; private set; }
+    public static BattleAreaData AreaData { get; private set; }
+    public static PlayerSpawnData SpawnData { get; private set; }
+
     public static bool IsInitialized { get; private set; }
 
-    public static void Initialize(BattleAreaData data)
+    public static void Initialize(BattleAreaConfig config)
     {
-        Data = data;
+        AreaData = config.battleAreaData;
+        SpawnData = config.playerSpawnData;
         IsInitialized = true;
     }
 }
 
-public static class BattleTimer
-{
-    public const float LOGIC_DELTA_TIME = 0.02f;
-    public static uint CurrentLogicFrame { get; private set; }
-    public static void AdvanceLogicFrame() => CurrentLogicFrame++;
-}
-
 public class BattleManager : SingletonMono<BattleManager>
 {
+    bool _isResourcesPreloaded = false;
+
     public bool isSinglePlayerMode;
     public GameObject prefab;
 
@@ -52,41 +50,46 @@ public class BattleManager : SingletonMono<BattleManager>
 
     bool[] activePlayers = new bool[4];
 
+    int totalPlayers => allPlayerDatas.Count;
+
     World battleWorld;
-
-    [SerializeField] Transform playerRoot;
-    [SerializeField] BattleAreaTool battleArea;
-
 
     protected override void OnSingletonInit()
     {
-        PreloadAndSceneInit().Forget();
         InitBattleWorld();
     }
 
-    async Task PreloadAndSceneInit()
+    async void Start()
     {
+        await PreloadBattleResourcesAsync();
+        UIManager.Instance.ShowPanelAsync<BattlePreparePanel>().Forget();
+    }
+
+    public async Task PreloadBattleResourcesAsync()
+    {
+        if (_isResourcesPreloaded) return;
+
         try
         {
             await ConfigManager.PreloadConfigsAsync<CharacterConfig>(ConfigHelper.allCharCfgIds);
-
             await ConfigManager.PreloadConfigsAsync<WeaponConfig>(ConfigHelper.allWeapCfgIds);
 
-            await UIManager.Instance.ShowPanelAsync<BattlePreparePanel>();
+            GlobalBattleData.Initialize(await ConfigManager.GetConfigAsync<BattleAreaConfig>(ConfigHelper.BattleAreaCfgId));
 
-            CurrentStatus = BattleStatus.Prepare;
+            _isResourcesPreloaded = true;
+            Logger.Info("Battle resources preloaded.");
         }
         catch (Exception ex)
         {
             Logger.Exception(ex);
+            throw;
         }
     }
 
+    #region 初始化
     void InitBattleWorld()
     {
         battleWorld = new World();
-
-        //battleArea.InitBattleArea();
 
         battleWorld.AddSystem<LifetimeSystem>();
 
@@ -96,14 +99,16 @@ public class BattleManager : SingletonMono<BattleManager>
 
         Logger.Info("Battle ECS World initialized.");
     }
+    #endregion
 
+    #region 战斗启动调用
     public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] playerBattleDatas)
     {
         isSinglePlayerMode = false;
 
         foreach (var playerBattleData in playerBattleDatas)
         {
-            AddPlayer(playerBattleData);
+            AddPlayerData(playerBattleData);
         }
 
         GeneratePlayer();
@@ -124,8 +129,9 @@ public class BattleManager : SingletonMono<BattleManager>
         GeneratePlayer();
         CurrentStatus = BattleStatus.InBattle;
     }
+    #endregion
 
-    public void AddPlayer(PlayerBattleData playerData)
+    public void AddPlayerData(PlayerBattleData playerData)
     {
         allPlayerDatas.Add(playerData);
         activePlayers[playerData.playerIndex] = true;
@@ -145,23 +151,10 @@ public class BattleManager : SingletonMono<BattleManager>
         }
     }
 
-    Vector2 GetPlayerBornPos(byte playerIndex)
-    {
-        // 根据玩家索引设置不同的初始位置
-        return playerIndex switch
-        {
-            0 => new Vector2(-3, 0),  // 左下
-            1 => new Vector2(3, 0),   // 右下
-            2 => new Vector2(-3, 0),  // 左上
-            3 => new Vector2(3, 0),   // 右上
-            _ => Vector2.zero
-        };
-    }
-
     void InitializePlayerEntity(PlayerBattleData playerData, GameObject playerPrefab)
     {
-        var bornPos = GetPlayerBornPos(playerData.playerIndex);
-        var playerGO = Instantiate(playerPrefab, playerRoot);
+        var bornPos = GlobalBattleData.SpawnData.GetPlayerSpawnPos(playerData.playerIndex, totalPlayers);
+        var playerGO = Instantiate(playerPrefab);
         playerGO.transform.position = (Vector3)bornPos;
 
         var em = battleWorld.EntityManager;
@@ -186,8 +179,8 @@ public class BattleManager : SingletonMono<BattleManager>
 
         em.AddComponent(playerEntity, new CPosition
         {
-            x = playerRoot.position.x,
-            y = playerRoot.position.y
+            x = bornPos.x,
+            y = bornPos.y
         });
 
         em.AddComponent(playerEntity, new CVelocity
@@ -228,18 +221,20 @@ public class BattleManager : SingletonMono<BattleManager>
 
         if (CurrentStatus == BattleStatus.InBattle)
         {
-            uint currentFrame = BattleTimer.CurrentLogicFrame;
+            uint currentFrame = LogicTimer.CurrentLogicFrame;
 
             InputManager.Instance.RecordAndBroadcastLocalInput(RoomManager.LocalPlayerIndex, currentFrame);
+
+            // TODO ：本地预测与回滚机制
 
             // 3. 检查是否所有输入就绪
             if (!InputManager.Instance.AreAllInputsReady(currentFrame, activePlayers)) return;
 
             // 4. 推进 ECS 逻辑
-            battleWorld?.FixedUpdate(BattleTimer.LOGIC_DELTA_TIME);
+            battleWorld?.FixedUpdate(LogicTimer.LOGIC_DELTA_TIME);
 
             // 6. 帧递增（进入下一逻辑帧）
-            BattleTimer.AdvanceLogicFrame();
+            LogicTimer.AdvanceLogicFrame();
 
             // 7. 清理旧帧
             InputManager.Instance.CleanupOldFrames(currentFrame);

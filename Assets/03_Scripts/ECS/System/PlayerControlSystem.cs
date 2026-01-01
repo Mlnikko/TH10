@@ -23,7 +23,7 @@ public class PlayerControlSystem : BaseSystem
             int entityIndex = playerIndices[i];
             byte playerIndex = players[entityIndex].playerIndex;
 
-            if (!InputManager.Instance.TryGetInputForFrame(playerIndex, BattleTimer.CurrentLogicFrame, out var input))
+            if (!InputManager.Instance.TryGetInputForFrame(playerIndex, LogicTimer.CurrentLogicFrame, out var input))
             {
                 input = FrameInput.Default;
             }
@@ -47,8 +47,8 @@ public class PlayerControlSystem : BaseSystem
             pos.y += vel.vy * fixedDeltaTime;
 
             // === 限制在战斗区域内 ===
-            pos.x = Mathf.Clamp(pos.x, GlobalBattleArea.Data.Left, GlobalBattleArea.Data.Right);
-            pos.y = Mathf.Clamp(pos.y, GlobalBattleArea.Data.Bottom, GlobalBattleArea.Data.Top);
+            pos.x = Mathf.Clamp(pos.x, GlobalBattleData.AreaData.Left, GlobalBattleData.AreaData.Right);
+            pos.y = Mathf.Clamp(pos.y, GlobalBattleData.AreaData.Bottom, GlobalBattleData.AreaData.Top);
 
             // TODO: 触发射击系统
         }

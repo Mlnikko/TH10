@@ -272,7 +272,7 @@ public class BattlePreparePanel : UIPanel
         switch(NetworkManager.Instance.NetworkRole)
         {
             case NetworkRole.Host:
-                BattleManager.Instance.AddPlayer(playerBattleData);
+                BattleManager.Instance.AddPlayerData(playerBattleData);
                 break;
             case NetworkRole.Client:
                 NetworkManager.Instance.SendToHost(new BattleReadyMSG
@@ -281,7 +281,7 @@ public class BattlePreparePanel : UIPanel
                 });
                 break;
             case NetworkRole.None:
-                BattleManager.Instance.AddPlayer(playerBattleData);
+                BattleManager.Instance.AddPlayerData(playerBattleData);
                 break;
         }
     }
@@ -297,7 +297,7 @@ public class BattlePreparePanel : UIPanel
             case NetworkRole.Host:
 
                 var allPlayerBattleDatas = BattleManager.Instance.allPlayerDatas.ToArray();
-                var startFrame = BattleTimer.CurrentLogicFrame + 60;
+                var startFrame = LogicTimer.CurrentLogicFrame + 60;
                 uint randomSeed = 0;
 
                 NetworkManager.Instance.Broadcast(new BattleStartMSG()

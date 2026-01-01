@@ -5,7 +5,7 @@ using UnityEngine;
 /// 战斗区域数据
 /// </summary>
 [Serializable]
-public class BattleAreaData
+public struct BattleAreaData
 {
     // === 战斗区域 ===
     public float Width;          // 战斗区域宽度（单位：Unity 世界单位）
@@ -17,6 +17,7 @@ public class BattleAreaData
     public int GridCellSize;     // 网格单元格尺寸（建议 64 或 128，正方形）
 
     // === 弹幕回收边界（外扩区域）===
+    [Min(0)]
     public Vector2 DanmakuRecycleMargin; // 超出战斗区域多少距离后回收弹幕
 
     // === 辅助属性（只读，计算得来）===
@@ -74,36 +75,91 @@ public class BattleAreaData
     public override int GetHashCode() => HashCode.Combine(Width, Height, Center, GridCellSize, DanmakuRecycleMargin);
 }
 
+/// <summary>
+/// 玩家出生点数据
+/// </summary>
+[Serializable]
+public struct PlayerSpawnData
+{
+    public Vector2 SpawnRootPos;
+    public float HOffsetPerPlayer;
+
+    /// <summary>
+    /// 获取玩家出生位置，需指定总玩家数以保证对称布局。
+    /// </summary>
+    public readonly Vector2 GetPlayerSpawnPos(byte playerIndex, int totalPlayers)
+    {
+        if (totalPlayers <= 0) totalPlayers = 1;
+        if (totalPlayers > 4) totalPlayers = 4;
+        if (playerIndex >= totalPlayers)
+            return SpawnRootPos; // 容错
+
+        switch(totalPlayers)
+        {
+            case 1:
+                return SpawnRootPos;
+            case 2:
+                return SpawnRootPos + (playerIndex == 0 ? Vector2.left : Vector2.right) * HOffsetPerPlayer;
+            case 3:
+                return playerIndex switch
+                {
+                    0 => SpawnRootPos + Vector2.left * HOffsetPerPlayer,
+                    1 => SpawnRootPos,
+                    2 => SpawnRootPos + Vector2.right * HOffsetPerPlayer,
+                    _ => SpawnRootPos
+                };
+            case 4:
+                {
+                    // 对称四点：-1.5, -0.5, +0.5, +1.5 倍偏移 → 中心仍在 SpawnRootPos
+                    float x = (playerIndex - 1.5f) * HOffsetPerPlayer;
+                    return new Vector2(SpawnRootPos.x + x, SpawnRootPos.y);
+                }
+            default:
+                return SpawnRootPos;
+        }
+    }
+}
+
 public class BattleAreaTool : MonoBehaviour
 {
-    [Header("绑定配置")]
+    [Header("配置引用")]
     public BattleAreaConfig battleAreaConfig;
+
+    [Header("战斗区域数据")]
     [SerializeField] BattleAreaData battleAreaData;
 
-    [SerializeField] bool showGrid = true;
+    [Header("玩家出生点数据")]
+    [SerializeField] PlayerSpawnData playerSpawnData;
 
     public void LoadBattleAreaData()
     {
-        if(battleAreaConfig != null) battleAreaData = battleAreaConfig.battleAreaData;
+        if(battleAreaConfig == null)
+        {
+            Logger.Error("BattleAreaConfig is not assigned!");
+            return;
+        }
+        battleAreaData = battleAreaConfig.battleAreaData;
+        playerSpawnData = battleAreaConfig.playerSpawnData;
     }
 
     public void SaveBattleAreaData()
     {
         if (battleAreaConfig != null)
         {
-            battleAreaConfig.battleAreaData = battleAreaData;         
+            battleAreaConfig.battleAreaData = battleAreaData;   
+            battleAreaConfig.playerSpawnData = playerSpawnData;
         }
     }
 
-    void OnDrawGizmos()
+    void OnDrawGizmosSelected()
     {
         if (battleAreaConfig == null) return;
 
-        // 战斗区域（绿色）
+        // === 战斗区域（绿色）===
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(battleAreaData.Center, new Vector3(battleAreaData.Width, battleAreaData.Height, 0));
 
-        // 回收边界（红色）
+        // === 回收边界（红色）===
         Gizmos.color = Color.red;
         Vector3 recycleSize = new Vector3(
             battleAreaData.Width + battleAreaData.DanmakuRecycleMargin.x * 2f,
@@ -112,19 +168,16 @@ public class BattleAreaTool : MonoBehaviour
         );
         Gizmos.DrawWireCube(battleAreaData.Center, recycleSize);
 
-        // 网格（浅绿）—— 覆盖完整网格区域（含安全边距）
-        if (showGrid && battleAreaData.GridCellSize > 0)
+        // === 特殊基准点：SpawnRootPos（黄色，更大）===
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(new Vector3(playerSpawnData.SpawnRootPos.x, playerSpawnData.SpawnRootPos.y, 0), 0.2f);
+
+        // === 玩家出生点预览（蓝色小球，默认按 4 人）===
+        Gizmos.color = Color.blue;
+        for (byte i = 0; i < 4; i++)
         {
-            Gizmos.color = new Color(0.3f, 1f, 0.3f, 0.3f);
-            float cell = battleAreaData.GridCellSize;
-
-            Vector2 origin = battleAreaData.GridWorldOrigin;
-            Vector2 max = origin + new Vector2(battleAreaData.TotalWidth, battleAreaData.TotalHeight);
-
-            for (float x = origin.x; x <= max.x; x += cell)
-                Gizmos.DrawLine(new Vector3(x, origin.y), new Vector3(x, max.y));
-            for (float y = origin.y; y <= max.y; y += cell)
-                Gizmos.DrawLine(new Vector3(origin.x, y), new Vector3(max.x, y));
+            Vector2 spawnPos = playerSpawnData.GetPlayerSpawnPos(i, 4); // 明确按 4 人预览
+            Gizmos.DrawSphere(new Vector3(spawnPos.x, spawnPos.y, 0), 0.1f);
         }
     }
 }

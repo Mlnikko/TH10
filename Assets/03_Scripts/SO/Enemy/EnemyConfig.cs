@@ -8,8 +8,8 @@ public enum EnemyType
     Boss = 3
 }
 
-[CreateAssetMenu(fileName = "NewEnemyConfig", menuName = "Custom/EnemyConfig")]
-public class EnemyConfig : ScriptableObject
+
+public class EnemyConfig : GameConfig
 {
     public EnemyType EnemyType;
     public Vector2 ColliderSize;

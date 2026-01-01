@@ -49,7 +49,7 @@ public abstract class Enemy : MonoBehaviour
 
     //public virtual void OnHitted(ColliderComponent other)
     //{
-    //    DanmakuConfiger danmaku = other.Owner as DanmakuConfiger;
+    //    DanmakuPrefabTool danmaku = other.Owner as DanmakuPrefabTool;
     //    if (danmaku != null)
     //    {
     //        maxHealth -= danmaku.Damage;

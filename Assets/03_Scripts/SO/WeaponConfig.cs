@@ -13,13 +13,14 @@ public enum E_Weapon : byte
     Weapon_Marisa_2 = 22,
 }
 
-[CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Custom/WeaponConfig")]
+[CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
 public class WeaponConfig : GameConfig
 {
-    public string Name;
+    [Header("ÎäÆ÷ÅäÖÃ")]
     public E_Weapon WeaponID;
+    public string Name;
     [TextArea(1, 5)]
     public string Description;
 
-    public override string ConfigId => WeaponID.ToString();
+    public override string AddressableKeyPrefix => ConfigHelper.WEAPON_CONFIG_PREFIX;
 }

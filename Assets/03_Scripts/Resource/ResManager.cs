@@ -23,7 +23,6 @@ public static class ResManager
         {
             var op = await handle.Task;
             _cache[key] = (op, handle);
-            Logger.Info($"Loaded asset: {key}", LogTag.Resource);
             return op;
         }
         catch

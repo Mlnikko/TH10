@@ -297,7 +297,7 @@ public class InputManager : SingletonMono<InputManager>
         if (!_showDebugInput || !_isInitialized) return;
 
         GUILayout.BeginArea(new Rect(10, 10, 350, 200));
-        GUILayout.Label($"Logic Frame: {BattleTimer.CurrentLogicFrame}", DebugStyle);
+        GUILayout.Label($"Logic Frame: {LogicTimer.CurrentLogicFrame}", DebugStyle);
         GUILayout.Space(8);
 
         for (int i = 0; i < MAX_PLAYERS; i++)

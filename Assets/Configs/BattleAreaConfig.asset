@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f221291003a01340b1b9d5c4d8d1a29, type: 3}
   m_Name: BattleAreaConfig
   m_EditorClassIdentifier: 
-  configId: 
+  ConfigId: DefaultBattleArea
   battleAreaData:
     Width: 4
     Height: 5
     Center: {x: 0, y: 0}
     GridCellSize: 1
     DanmakuRecycleMargin: {x: 0.5, y: 0.5}
+  playerSpawnData:
+    SpawnRootPos: {x: 0, y: -2}
+    HOffsetPerPlayer: 1

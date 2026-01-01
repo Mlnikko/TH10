@@ -70,8 +70,8 @@ public class AudioData
     public bool isLoop;
 }
 
-[CreateAssetMenu(fileName = "NewAudioConfig", menuName = "Custom/AudioConfig")]
-public class AudioConfig : ScriptableObject
+[CreateAssetMenu(fileName = "NewAudioConfig", menuName = "Configs/AudioConfig")]
+public class AudioConfig : GameConfig
 {
     public AudioGroup[] audioGroups;
 }

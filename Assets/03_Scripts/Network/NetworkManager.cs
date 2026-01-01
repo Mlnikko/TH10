@@ -298,7 +298,7 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     var msg = new BattleReadyMSG();
                     msg.Deserialize(ref stream);
                     
-                    BattleManager.Instance.AddPlayer(msg.playerBattleData);
+                    BattleManager.Instance.AddPlayerData(msg.playerBattleData);
                     Logger.Info($"Received BattleReady from PlayerIndex: {msg.playerBattleData.playerIndex}", LogTag.Net);
                     break;
                 }

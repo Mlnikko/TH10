@@ -42,7 +42,7 @@ public class EnemyAnim
    public E_EnemyAnim enemyAnim;
 }
 
-[CreateAssetMenu(fileName = "NewAnimConfig", menuName = "Custom/AnimConfig")]
+[CreateAssetMenu(fileName = "NewAnimConfig", menuName = "Configs/AnimConfig")]
 public class AnimConfig : GameConfig
 {
     public CharacterAnim[] characterAnims;

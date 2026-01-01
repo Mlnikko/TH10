@@ -5,4 +5,5 @@ using UnityEngine;
 public class BattleAreaConfig : GameConfig
 {
     public BattleAreaData battleAreaData = BattleAreaData.Default;
+    public PlayerSpawnData playerSpawnData;
 }

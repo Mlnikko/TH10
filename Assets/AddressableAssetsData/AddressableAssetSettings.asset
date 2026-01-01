@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 468a46d0ae32c3544b7d98094e6448a9, type: 3}
   m_Name: AddressableAssetSettings
   m_EditorClassIdentifier: 
-  m_DefaultGroup: cb855bf0dd08a2a4384afe9d1811d2e4
+  m_DefaultGroup: ce1532357111f0d4a9c779a4293a7eb3
   m_currentHash:
     serializedVersion: 2
-    Hash: 9a6f50b28db0619fa64785ef42dda08d
+    Hash: f5f4ae582014d52b300c8cff2a49d7bf
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -45,11 +45,14 @@ MonoBehaviour:
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
   - {fileID: 11400000, guid: 3d1fd84c2d63e7e4e9fa0190feebc9fe, type: 2}
+  - {fileID: 11400000, guid: ba0b956e87d2b1647a1ece2d1cc05e26, type: 2}
   - {fileID: 11400000, guid: 75025a754a16004478cfaafab1401221, type: 2}
   - {fileID: 11400000, guid: f3a846ce6e3357c44a240b02d984b450, type: 2}
   - {fileID: 11400000, guid: b9edfc8f1585f4d44a161550aeaf2f19, type: 2}
-  - {fileID: 11400000, guid: d9e4de5e1d564df43a21c49856989751, type: 2}
   - {fileID: 11400000, guid: 9a97e9a6b90bd97409710d2d2063edd1, type: 2}
+  - {fileID: 11400000, guid: d3e3ef074e01a194b8f9b08fcf4dd76d, type: 2}
+  - {fileID: 11400000, guid: 942af81c4f6710d40a313ae88e25d2f3, type: 2}
+  - {fileID: 11400000, guid: 2b39412fd5d1bed489ed75eb2f074716, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -91,8 +94,6 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - Audio
-    - CharacterConfig
-    - WeaponConfig
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1fe5883215191c048a9b6facc24c6f8d, type: 2}
