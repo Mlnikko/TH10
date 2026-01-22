@@ -48,7 +48,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aaf3a19affdf5c2408060432e85d27f3
-    m_Address: Configs/DefaultBattleArea
+    m_Address: Configs/BattleAreaConfig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -69,6 +69,61 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35a834f408d757a468c1938fb9a1d7aa
     m_Address: Configs/DanmakuEmitters/DE_Reimu_Main
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87d415b641b8e6d4ba18da60fc2f1043
+    m_Address: Configs/Rank
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b332f7aa42eaffc4e9bb82de4920c13b
+    m_Address: Configs/AudioConfig
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79f68cadc6e72654c9af06f08903e3fa
+    m_Address: Configs/Danmakus/Reimu_Homing
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 462e9767835d93841b90124df5562395
+    m_Address: Configs/Danmakus/Reimu_Main
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57d31a3e627f0db458f2257284530b0c
+    m_Address: Configs/GameConfigChecklist
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 002873001e15c764785b6acad369ab1e
+    m_Address: Configs/Danmakus/Star_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 606381807f124234fac0390291a46bfe
+    m_Address: Configs/Danmakus/Star_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ace4fa1f9de85f4db65baedc1556560
+    m_Address: Configs/Danmakus/Star_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c2080d22f18fc84786924536000d067
+    m_Address: Configs/Danmakus/Star_5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc84a175d06d21c45a9e0f104f04b043
+    m_Address: Configs/Danmakus/Star_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f8f330ae92ceaa4e97606a9433b8427
+    m_Address: Configs/Danmakus/Star_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -93,7 +93,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5263050860798265493}
-  - component: {fileID: 227501576336116165}
   m_Layer: 0
   m_Name: Main
   m_TagString: Untagged
@@ -116,30 +115,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7529082766854794309}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &227501576336116165
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2349257482251975273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97b11ef27f2431445b3214524c434f4b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fireable: 1
-  emitterConfig: {fileID: 11400000, guid: 35a834f408d757a468c1938fb9a1d7aa, type: 2}
-  danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
-  poolMinSize: 20
-  poolMaxSize: 500
-  positionOffset: {x: 0, y: 0}
-  startRotation: {x: 0, y: 0, z: 0}
-  startVelocity: {x: 0, y: 1}
-  audio_Fire: 5
-  emitterCamp: 1
-  launchInterval: 0.1
-  launchSpeed: 15
 --- !u!1 &4121693430955986105
 GameObject:
   m_ObjectHideFlags: 0
@@ -266,9 +241,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7529082766854794309}
-  - component: {fileID: 7904876781101845708}
   m_Layer: 0
-  m_Name: EmittersGroup_01
+  m_Name: Emitters_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -290,18 +264,6 @@ Transform:
   - {fileID: 5263050860798265493}
   m_Father: {fileID: 2148496877824739000}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7904876781101845708
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4687880191969235325}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88fd76573a256ba43a78c13ddd4eb488, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7965144628213866835
 GameObject:
   m_ObjectHideFlags: 0

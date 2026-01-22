@@ -308,7 +308,7 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     var msg = new BattleStartMSG();
                     msg.Deserialize(ref stream);
 
-                    BattleManager.Instance.StartMutiPlayerBattleForClient(msg.startFrame, msg.randomSeed, msg.allPlayerBattleDatas);
+                    BattleManager.Instance.StartMutiPlayerBattleForClient(msg.startFrame, msg.randomSeed, msg.playerDatas);
                     Logger.Info("Received BattleStart message. Starting battle...", LogTag.Net);
                     break;
                 }

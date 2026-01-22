@@ -2,17 +2,22 @@ using UnityEngine;
 
 public class DanmakuUpdater : IGameObjectUpdater
 {
-    Transform transform;
-    SpriteRenderer spriteRenderer;
+    Transform _transform;
+    SpriteRenderer _spriteRenderer;
 
     public DanmakuUpdater(GameObject gameObject)
     {
-        transform = gameObject.transform;
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        _transform = gameObject.transform;
+        _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
     }
 
     public void UpdateGameObject(in EntityManager em, Entity entity)
     {
-        
+        // === Î»ÖÃ¸üÐÂ ===
+        if (_transform != null)
+        {
+            var pos = em.GetComponentSpan<CPosition>()[entity.Index];
+            _transform.position = new Vector3(pos.x, pos.y, 0);
+        }
     }
 }

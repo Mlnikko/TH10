@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DE_Reimu_Homing
   m_EditorClassIdentifier: 
-  ConfigId: 
+  ConfigId: 1010
   Type: 1
   MinPoolSize: 20
   MaxPoolSize: 500
   LaunchInterval: 0.5
   LaunchSpeed: 2
-  PositionOffset: {x: 0, y: 0}
-  StartRotation: {x: 0, y: 0, z: 0}
-  EmitterCamp: 2
+  LaunchPosOffset: {x: 0, y: 0}
+  LaunchRotOffset: {x: 0, y: 0, z: 0}
+  EmitterCamp: 1
   Audio_Fire: 0
   LineDirection: {x: 0, y: 1}
   LineCount: 1

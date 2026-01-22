@@ -19,6 +19,8 @@ public class WeaponConfig : GameConfig
     [Header("Œ‰∆˜≈‰÷√")]
     public E_Weapon WeaponID;
     public string Name;
+
+    public int[] DanmakuEmitterConfigIds;
     [TextArea(1, 5)]
     public string Description;
 

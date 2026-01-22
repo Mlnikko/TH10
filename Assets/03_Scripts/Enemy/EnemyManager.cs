@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class EnemyManager : SingletonMono<EnemyManager>
 {
-    ObjectPool<Enemy> enemyPool;
     protected override void OnSingletonInit()
     {
         

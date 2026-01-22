@@ -1,38 +1,67 @@
 using System;
-public static class LogicTimer
-{
-    public const float LOGIC_DELTA_TIME = 0.02f;
-    public static uint CurrentLogicFrame { get; private set; }
-    public static void AdvanceLogicFrame() => CurrentLogicFrame++;
-}
 
-public class LogicTickDriver
+/// <summary>
+/// 独立的逻辑帧计时器（帧同步核心）
+/// - 与 Unity 的 Update/FixedUpdate 解耦
+/// - 提供 determinism 安全的时间推进
+/// - 支持暂停、重置、追赶控制
+/// </summary>
+public class LogicFrameTimer
 {
-    World _world;
-    Func<uint, bool> _areInputsReady;
-    Action<uint> _cleanupOldFrames;
-    Action _onFrameAdvanced;
+    public uint CurrentFrame { get; private set; } = 0;
 
-    public LogicTickDriver(World world, Func<uint, bool> areInputsReady, Action<uint> cleanupOldFrames, Action onFrameAdvanced = null)
+    public readonly float FrameInterval;        // 1f / fps (用于配置/转换)
+    public readonly double FrameIntervalSeconds; // 高精度版本
+
+    private double _accumulatedTime = 0.0;
+    private bool _isRunning = true;
+
+    public LogicFrameTimer(int logicFps = 60)
     {
-        _world = world;
-        _areInputsReady = areInputsReady;
-        _cleanupOldFrames = cleanupOldFrames;
-        _onFrameAdvanced = onFrameAdvanced;
+        if (logicFps <= 0) throw new ArgumentException("FPS must be positive");
+        FrameInterval = 1f / logicFps;
+        FrameIntervalSeconds = 1.0 / logicFps;
     }
 
-    public bool TryAdvanceFrame()
+    /// <summary>
+    /// 累积真实经过的时间（通常在 MonoBehaviour.Update 中调用）
+    /// </summary>
+    public void AccumulateDeltaTime(float deltaTime)
     {
-        uint frame = LogicTimer.CurrentLogicFrame;
-
-        if (!_areInputsReady(frame))
-            return false;
-
-        _world.FixedUpdate(LogicTimer.LOGIC_DELTA_TIME);
-        LogicTimer.AdvanceLogicFrame();
-        _cleanupOldFrames(frame);
-        _onFrameAdvanced?.Invoke();
-
-        return true;
+        if (_isRunning)
+            _accumulatedTime += deltaTime;
     }
+
+    /// <summary>
+    /// 是否已累积足够时间以推进到下一逻辑帧？
+    /// （只查询，不修改任何状态）
+    /// </summary>
+    public bool CanAdvance() => _accumulatedTime >= FrameIntervalSeconds;
+
+    /// <summary>
+    /// 强制推进一帧（由外部系统在确认输入就绪后调用）
+    /// 不消耗 accumulatedTime，保留用于 catch-up 或动态调整
+    /// </summary>
+    public void AdvanceFrame() => CurrentFrame++;
+
+    /// <summary>
+    /// 手动消耗一帧的时间
+    /// </summary>
+    public void ConsumeFrameTime()
+    {
+        if (_accumulatedTime >= FrameIntervalSeconds)
+            _accumulatedTime -= FrameIntervalSeconds;
+    }
+
+    public void ResetToFrame(uint frame)
+    {
+        CurrentFrame = frame;
+        _accumulatedTime = 0.0; // 清空时间，从零开始累积
+    }
+
+    public void Pause() => _isRunning = false;
+    public void Resume() => _isRunning = true;
+    public bool IsRunning => _isRunning;
+
+    public double GetAccumulatedTime() => _accumulatedTime;
 }

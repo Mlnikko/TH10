@@ -31,7 +31,7 @@ public abstract class Enemy : MonoBehaviour
 
     void InitCollider()
     {
-        //Collider = new RectCollider(this, E_ColliderLayer.Enemy, transform.position, colliderSize);
+        //Collider = new RectCollider(this, E_ColliderLayer.Enemy, _transform.position, colliderSize);
         //Collider.OnCollide += OnHitted;
         //CollisionSystem.AddCollider(Collider);
     }

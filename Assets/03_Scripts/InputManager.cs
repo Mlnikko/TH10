@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -48,45 +47,31 @@ public struct FrameInput
         };
     }
 
-    public static FrameInput Default => Create(0, 0, 0, 0, false, false, false, false);
+    public static FrameInput None => Create(0, 0, 0, 0, false, false, false, false);
 }
 
 #region 键位配置
 
 [Serializable]
-public struct InputKeyCodeConfig
+public class InputKeyCodeConfig
 {
-    public KeyCode moveLeft;
-    public KeyCode moveRight;
-    public KeyCode moveUp;
-    public KeyCode moveDown;
-    public KeyCode shoot;
-    public KeyCode bomb;
-    public KeyCode slow;
-    public KeyCode pause;
-
-    public static InputKeyCodeConfig Default => new()
-    {
-        moveLeft = KeyCode.LeftArrow,
-        moveRight = KeyCode.RightArrow,
-        moveUp = KeyCode.UpArrow,
-        moveDown = KeyCode.DownArrow,
-        shoot = KeyCode.Z,
-        bomb = KeyCode.X,
-        slow = KeyCode.LeftShift,
-        pause = KeyCode.Escape
-    };
+    public KeyCode moveLeft = KeyCode.LeftArrow;
+    public KeyCode moveRight = KeyCode.RightArrow;
+    public KeyCode moveUp = KeyCode.UpArrow;
+    public KeyCode moveDown = KeyCode.DownArrow;
+    public KeyCode shoot = KeyCode.Z;
+    public KeyCode bomb = KeyCode.X;
+    public KeyCode slow = KeyCode.LeftShift;
+    public KeyCode pause = KeyCode.Escape;
 }
 
 #endregion
 
 public class InputManager : SingletonMono<InputManager>
 {
-    public bool isLocalInputMode = true;
-
-    public InputKeyCodeConfig InputConfig => InputKeyCodeConfig.Default;
     const int MAX_PLAYERS = 4;
 
+    InputKeyCodeConfig _inputKeyCodeCfg;
     Dictionary<uint, FrameInput>[] _inputFrames;
     FrameInput[] _currentConsumedInputs;
     bool _isInitialized = false;
@@ -99,13 +84,14 @@ public class InputManager : SingletonMono<InputManager>
 
     public void InitializeForGame()
     {
+        _inputKeyCodeCfg = new InputKeyCodeConfig(); // 可根据需要加载自定义配置
         _inputFrames = new Dictionary<uint, FrameInput>[MAX_PLAYERS];
         _currentConsumedInputs = new FrameInput[MAX_PLAYERS];
 
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
             _inputFrames[i] = new Dictionary<uint, FrameInput>();
-            _currentConsumedInputs[i] = FrameInput.Default;
+            _currentConsumedInputs[i] = FrameInput.None;
         }
 
         _isInitialized = true;
@@ -118,7 +104,7 @@ public class InputManager : SingletonMono<InputManager>
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
             _inputFrames[i]?.Clear();
-            _currentConsumedInputs[i] = FrameInput.Default;
+            _currentConsumedInputs[i] = FrameInput.None;
         }
     }
 
@@ -129,37 +115,36 @@ public class InputManager : SingletonMono<InputManager>
         _isInitialized = false;
     }
 
-    public void HandleNetInput(FrameInput input)
-    {
-
-    }
-
     // 本地输入记录
-
-    public void RecordAndBroadcastLocalInput(byte playerIndex, uint logicFrame)
+    public FrameInput RecordLocalInput(byte playerIndex, uint logicFrame)
     {
-        if (!_isInitialized || playerIndex >= MAX_PLAYERS) return;
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS) return FrameInput.None;
 
         // 防止重复写入同一帧
         if (_inputFrames[playerIndex].ContainsKey(logicFrame))
         {
             //Logger.Warn($"Input for P{playerIndex} at frame {logicFrame} already recorded!", LogTag.Input);
-            return;
+            return FrameInput.None;
         }
 
         var input = FrameInput.Create(
             logicFrame,
             playerIndex,
-            (sbyte)(Input.GetKey(InputConfig.moveRight) ? 1 : Input.GetKey(InputConfig.moveLeft) ? -1 : 0),
-            (sbyte)(Input.GetKey(InputConfig.moveUp) ? 1 : Input.GetKey(InputConfig.moveDown) ? -1 : 0),
-            Input.GetKey(InputConfig.shoot),
-            Input.GetKey(InputConfig.bomb),
-            Input.GetKey(InputConfig.slow),
+            (sbyte)(Input.GetKey(_inputKeyCodeCfg.moveRight) ? 1 : Input.GetKey(_inputKeyCodeCfg.moveLeft) ? -1 : 0),
+            (sbyte)(Input.GetKey(_inputKeyCodeCfg.moveUp) ? 1 : Input.GetKey(_inputKeyCodeCfg.moveDown) ? -1 : 0),
+            Input.GetKey(_inputKeyCodeCfg.shoot),
+            Input.GetKey(_inputKeyCodeCfg.bomb),
+            Input.GetKey(_inputKeyCodeCfg.slow),
             Input.anyKey
         );
 
         _inputFrames[playerIndex][logicFrame] = input;
 
+        return input;
+    }
+
+    public void BroadcastLocalInput(FrameInput input)
+    {
         if (NetworkManager.Instance.NetworkRole == NetworkRole.Client)
         {
             // 客户端：发送给主机
@@ -169,6 +154,11 @@ public class InputManager : SingletonMono<InputManager>
         {
             // 主机：自己就是权威，直接广播（无需先发给自己）
             NetworkManager.Instance.Broadcast(new InputMSG { frameInput = input });
+        }
+        else
+        {
+            // 单机模式：无需广播
+            Logger.Warn("单机模式下无需广播本地输入", LogTag.Input);
         }
     }
 
@@ -214,9 +204,14 @@ public class InputManager : SingletonMono<InputManager>
         {
             if (activePlayers[i])
             {
-                if (!_inputFrames[i].ContainsKey(logicFrame)) return false;
+                if (!_inputFrames[i].ContainsKey(logicFrame))
+                {
+                    //Logger.Warn($"[Input] Waiting for P{i} input at frame {logicFrame}");
+                    return false;
+                }
             }
         }
+
         return true;
     }
 
@@ -224,23 +219,23 @@ public class InputManager : SingletonMono<InputManager>
     // 逻辑帧输入获取
     // ========================
 
-    public bool TryGetInputForFrame(byte playerIndex, uint logicFrame, out FrameInput input)
+    public FrameInput GetInputForFrame(byte playerIndex, uint logicFrame)
     {
+
         if (!_isInitialized || playerIndex >= MAX_PLAYERS)
         {
-            input = FrameInput.Default;
-            return false;
+            return FrameInput.None;
         }
 
-        if (_inputFrames[playerIndex].TryGetValue(logicFrame, out input))
+        if (_inputFrames[playerIndex].TryGetValue(logicFrame, out var input))
         {
             _currentConsumedInputs[playerIndex] = input;
-            return true;
+            return input;
         }
 
-        input = FrameInput.Default;
-        _currentConsumedInputs[playerIndex] = input;
-        return false;
+        _currentConsumedInputs[playerIndex] = FrameInput.None;
+
+        return FrameInput.None;
     }
 
     public void CleanupOldFrames(uint currentFrame, int keepWindow = 10)
@@ -270,7 +265,7 @@ public class InputManager : SingletonMono<InputManager>
     public FrameInput GetDebugInput(byte playerIndex)
     {
         if (!_isInitialized || playerIndex >= MAX_PLAYERS)
-            return FrameInput.Default;
+            return FrameInput.None;
 
         return _currentConsumedInputs[playerIndex];
     }
@@ -297,7 +292,6 @@ public class InputManager : SingletonMono<InputManager>
         if (!_showDebugInput || !_isInitialized) return;
 
         GUILayout.BeginArea(new Rect(10, 10, 350, 200));
-        GUILayout.Label($"Logic Frame: {LogicTimer.CurrentLogicFrame}", DebugStyle);
         GUILayout.Space(8);
 
         for (int i = 0; i < MAX_PLAYERS; i++)

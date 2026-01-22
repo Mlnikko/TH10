@@ -15,4 +15,5 @@ MonoBehaviour:
   ConfigId: Weapon_Reimu_0
   WeaponID: 10
   Name: 
+  DanmakuEmitterConfigIds: e8030000f2030000
   Description: 

@@ -11,7 +11,6 @@ public class GameManager : SingletonMono<GameManager>
 {
     protected override void OnSingletonInit()
     {
-        base.OnSingletonInit();
         SetApplicationFPS(E_FPSMode.NoLimit, false);
     }
 

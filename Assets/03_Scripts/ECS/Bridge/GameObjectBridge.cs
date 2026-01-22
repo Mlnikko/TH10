@@ -58,7 +58,7 @@ public static class GameObjectBridge
     public static void UpdateAllGameObjects(in EntityManager em)
     {
         Span<int> indices = stackalloc int[1024];
-        int count = em.GetEntities<CPresentationLink>(indices);
+        int count = em.GetEntities<CGameObjectLink>(indices);
 
         for (int i = 0; i < count; i++)
         {
@@ -66,7 +66,7 @@ public static class GameObjectBridge
             Entity entity = em.GetEntityByIndex(index);
             if (!em.IsValid(entity)) continue; // ← 安全校验
 
-            int id = em.GetComponentSpan<CPresentationLink>()[index].presentationId;
+            int id = em.GetComponentSpan<CGameObjectLink>()[index].gameObjectId;
             _updaters[id]?.UpdateGameObject(em, entity);
         }
     }

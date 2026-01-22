@@ -52,10 +52,12 @@ public class BattleManager : SingletonMono<BattleManager>
 
     int totalPlayers => allPlayerDatas.Count;
 
+    LogicFrameTimer logicTimer;
     World battleWorld;
 
     protected override void OnSingletonInit()
     {
+        logicTimer = new LogicFrameTimer();
         InitBattleWorld();
     }
 
@@ -70,11 +72,20 @@ public class BattleManager : SingletonMono<BattleManager>
         if (_isResourcesPreloaded) return;
 
         try
-        {
-            await ConfigManager.PreloadConfigsAsync<CharacterConfig>(ConfigHelper.allCharCfgIds);
-            await ConfigManager.PreloadConfigsAsync<WeaponConfig>(ConfigHelper.allWeapCfgIds);
-
-            GlobalBattleData.Initialize(await ConfigManager.GetConfigAsync<BattleAreaConfig>(ConfigHelper.BattleAreaCfgId));
+        {         
+            await ConfigManager.PreloadCharacterConfigsAsync();
+            await ConfigManager.PreloadWeaponConfigsAsync();
+            await ConfigManager.PreloadDanmakuConfigsAsync();
+            await ConfigManager.PreloadEmitterConfigsAsync();
+            var battleAreaConfig = await ConfigManager.GetConfigAsync<BattleAreaConfig>(ConfigManager.Checklist.BattleAreaCfgId);
+            if (battleAreaConfig != null)
+            {
+                GlobalBattleData.Initialize(battleAreaConfig);
+            }
+            else
+            {
+                throw new Exception("Failed to load BattleAreaConfig.");
+            }
 
             _isResourcesPreloaded = true;
             Logger.Info("Battle resources preloaded.");
@@ -97,29 +108,39 @@ public class BattleManager : SingletonMono<BattleManager>
 
         battleWorld.AddSystem<PlayerControlSystem>();
 
+        battleWorld.AddSystem<DanmakuSystem>();
+
+        battleWorld.AddSystem<DanmakuEmitSystem>();
+
         Logger.Info("Battle ECS World initialized.");
     }
     #endregion
 
     #region 战斗启动调用
-    public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] playerBattleDatas)
+    public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] allPlayerDatas)
     {
-        isSinglePlayerMode = false;
-
-        foreach (var playerBattleData in playerBattleDatas)
-        {
-            AddPlayerData(playerBattleData);
-        }
-
-        GeneratePlayer();
-        CurrentStatus = BattleStatus.InBattle;
+        StartMutiPlayerBattle(startFrame, randomSeed, allPlayerDatas);
     }
 
     public void StartMutiPlayerBattleForHost()
     {
-        isSinglePlayerMode = false;
-        GeneratePlayer();
-        CurrentStatus = BattleStatus.InBattle;
+        var allPlayerDatas = this.allPlayerDatas.ToArray();
+
+        // 1. 生成全局一致的起始参数
+        uint startFrame = 0;
+        uint randomSeed = 0;
+
+        // 2. 广播给所有客户端
+        var startMsg = new BattleStartMSG
+        {
+            startFrame = startFrame,
+            randomSeed = randomSeed,
+            playerDatas = allPlayerDatas
+        };
+        NetworkManager.Instance.Broadcast(startMsg);
+
+        // 3. 主机自己也初始化
+        StartMutiPlayerBattle(startFrame, randomSeed, allPlayerDatas);
     }
 
     public void StartSinglePlayerBattle()
@@ -128,6 +149,28 @@ public class BattleManager : SingletonMono<BattleManager>
 
         GeneratePlayer();
         CurrentStatus = BattleStatus.InBattle;
+    }
+
+    void StartMutiPlayerBattle(uint startFrame, uint randomSeed, PlayerBattleData[] playerDatas)
+    {
+        isSinglePlayerMode = false;
+
+        // 2. 初始化玩家数据
+        allPlayerDatas.Clear();
+
+        foreach (var data in playerDatas)
+        {
+            AddPlayerData(data);
+        }
+
+        // 3. 生成角色（ECS 实体等）
+        GeneratePlayer();
+
+        logicTimer.ResetToFrame(startFrame);
+
+        // 5. 标记进入战斗
+       
+        CurrentStatus = BattleStatus.InBattle;   
     }
     #endregion
 
@@ -172,9 +215,9 @@ public class BattleManager : SingletonMono<BattleManager>
 
         #region 添加组件
 
-        em.AddComponent(playerEntity, new CPresentationLink
+        em.AddComponent(playerEntity, new CGameObjectLink
         {
-            presentationId = gameObjectId
+            gameObjectId = gameObjectId
         });
 
         em.AddComponent(playerEntity, new CPosition
@@ -201,49 +244,71 @@ public class BattleManager : SingletonMono<BattleManager>
             isSlowMode = false,
         });
 
-        em.AddComponent(playerEntity, new CPlayerAttribute
+        var weaponConfig = ConfigManager.GetConfig<WeaponConfig>(playerData.weaponId.ToString());
+
+        foreach (var emitterId in weaponConfig.DanmakuEmitterConfigIds)
         {
-            grazeRadius = characterConfig.GrazeRadius,
-            hitRadius = characterConfig.HitRadius,
-            moveSlowSpeed = characterConfig.MoveSlowSpeed,
-            moveSpeed = characterConfig.MoveSpeed,
-        });
+            em.AddComponent(playerEntity, new CDanmakuEmitter
+            {
+                emitterConfigIndex = emitterId,
+            });
+        }
+
+        em.AddComponent(playerEntity, characterConfig.ToRuntimeAttribute(logicTimer.FrameInterval));
 
         #endregion
 
         Logger.Info($"Player {playerData.playerIndex} ({playerData.characterId}) initialized successfully.", LogTag.Battle);
     }
 
-    void FixedUpdate()
-    {
-        // 只有在战斗中才执行逻辑帧更新
-        if (battleWorld == null) return;
-
-        if (CurrentStatus == BattleStatus.InBattle)
-        {
-            uint currentFrame = LogicTimer.CurrentLogicFrame;
-
-            InputManager.Instance.RecordAndBroadcastLocalInput(RoomManager.LocalPlayerIndex, currentFrame);
-
-            // TODO ：本地预测与回滚机制
-
-            // 3. 检查是否所有输入就绪
-            if (!InputManager.Instance.AreAllInputsReady(currentFrame, activePlayers)) return;
-
-            // 4. 推进 ECS 逻辑
-            battleWorld?.FixedUpdate(LogicTimer.LOGIC_DELTA_TIME);
-
-            // 6. 帧递增（进入下一逻辑帧）
-            LogicTimer.AdvanceLogicFrame();
-
-            // 7. 清理旧帧
-            InputManager.Instance.CleanupOldFrames(currentFrame);
-        }
-    }
 
     // Update 和 LateUpdate 主要用于处理非核心逻辑（如渲染等）
     void Update()
     {
+        if (battleWorld == null) return;
+        if (CurrentStatus != BattleStatus.InBattle) return;
+
+        // 累积时间（用于控制帧率）
+        logicTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
+
+        // 【关键】只有时间到了，才尝试处理 CurrentFrame
+        if (logicTimer.CanAdvance()) // 即 accumulated >= frameInterval
+        {
+            uint frameToProcess = logicTimer.CurrentFrame;
+
+            FrameInput input = InputManager.Instance.RecordLocalInput(RoomManager.LocalPlayerIndex, frameToProcess);
+
+            if (!isSinglePlayerMode)
+            {
+                InputManager.Instance.BroadcastLocalInput(input);
+            }
+
+            // 检查是否所有满足帧推进条件（单人模式 或 多人模式输入就绪）
+            if (isSinglePlayerMode || InputManager.Instance.AreAllInputsReady(frameToProcess, activePlayers))
+            {
+                // 执行逻辑
+                battleWorld.LogicTick(frameToProcess);
+
+                // 推进到下一帧（现在 CurrentFrame 表示“下一个要处理的帧”）
+                logicTimer.AdvanceFrame(); // CurrentFrame++
+
+                // 消耗时间
+                logicTimer.ConsumeFrameTime();
+
+                //// 清理旧输入
+                InputManager.Instance.CleanupOldFrames(frameToProcess);
+            }
+            else
+            {
+                // 时间到了但输入没齐 → 卡住（正常行为，等待网络）
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Debug.Log($"[Frame {frameToProcess}] Time ready but inputs not ready.");
+#endif
+            }
+
+        }
+
+        // 8. 表现层更新（每帧都执行！）
         battleWorld?.Update(Time.deltaTime);
     }
 

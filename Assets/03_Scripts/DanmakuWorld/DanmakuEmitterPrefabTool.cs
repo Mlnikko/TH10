@@ -13,6 +13,9 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
     public DanmakuEmitterConfig emitterConfig;
     public DanmakuConfig danmakuConfig;
 
+    [Header("发射器类型")]
+    [SerializeField] EmitterType emitterType;
+
     [Header("发射器阵营")]
     [SerializeField] EmitterCamp emitterCamp;
 
@@ -41,14 +44,14 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
             return false;
         }
 
-        launchPosOffset = emitterConfig.PositionOffset;
-        launchRotOffset = emitterConfig.StartRotation;
-
+        emitterType = emitterConfig.Type;
+        emitterCamp = emitterConfig.EmitterCamp;
+        launchPosOffset = emitterConfig.LaunchPosOffset;
+        launchRotOffset = emitterConfig.LaunchRotOffset;
         launchInterval = emitterConfig.LaunchInterval;
         launchSpeed = emitterConfig.LaunchSpeed;
-
         launchAudio = emitterConfig.Audio_Fire;
-        emitterCamp = emitterConfig.EmitterCamp;
+        
 
         Logger.Debug("已加载发射器配置" + emitterConfig.name, LogTag.Config);
 
@@ -63,13 +66,14 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
             return;
         }
 
-        emitterConfig.PositionOffset = launchPosOffset;
-        emitterConfig.StartRotation = launchRotOffset;
+        emitterConfig.Type = emitterType;
+        emitterConfig.EmitterCamp = emitterCamp;
+        emitterConfig.LaunchPosOffset = launchPosOffset;
+        emitterConfig.LaunchRotOffset = launchRotOffset;
         emitterConfig.LaunchInterval = launchInterval;
         emitterConfig.LaunchSpeed = launchSpeed;
         emitterConfig.Audio_Fire = launchAudio;
-        emitterConfig.EmitterCamp = emitterCamp;
-
+      
         Logger.Debug("成功保存发射器配置" + emitterConfig.name, LogTag.Config);
     }
 
@@ -77,15 +81,15 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
     {
         if (LoadEmitterConfig() == false) return;
 
-        // 临时生成若干轮弹幕用于预览（比如3轮）
-        for (int round = 0; round < 3; round++)
-        {
-            float delay = round * launchInterval;
-            UnityEditor.EditorApplication.delayCall += () =>
-            {
-                EmitPreviewDanmaku();
-            };
-        }
+        //// 临时生成若干轮弹幕用于预览（比如3轮）
+        //for (int round = 0; round < 3; round++)
+        //{
+        //    float delay = round * launchInterval;
+        //    UnityEditor.EditorApplication.delayCall += () =>
+        //    {
+        //        EmitPreviewDanmaku();
+        //    };
+        //}
     }
 
     void EmitPreviewDanmaku()

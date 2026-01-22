@@ -57,9 +57,9 @@ public abstract class BaseSystem
     public virtual void OnUpdate(float deltaTime) { }
 
     /// <summary>
-    /// 固定时间步长更新（用于物理、逻辑）
+    /// 逻辑帧更新（用于帧同步）
     /// </summary>
-    public virtual void OnFixedUpdate(float fixedDeltaTime) { }
+    public virtual void OnLogicTick(uint tick) { }
 
     /// <summary>
     /// 每帧更新（用于渲染、UI等）

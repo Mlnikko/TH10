@@ -196,7 +196,7 @@ public struct BattleReadyMSG : INetworkMessage
 
 public struct BattleStartMSG : INetworkMessage
 {
-    public PlayerBattleData[] allPlayerBattleDatas;
+    public PlayerBattleData[] playerDatas;
     public uint startFrame;         // 开始游戏的逻辑帧
     public uint randomSeed;        // 统一随机种子
 
@@ -205,12 +205,12 @@ public struct BattleStartMSG : INetworkMessage
     public void Serialize(ref DataStreamWriter writer)
     {
         // 1. 写入玩家数量
-        writer.WriteByte((byte)allPlayerBattleDatas.Length);
+        writer.WriteByte((byte)playerDatas.Length);
 
         // 2. 写入每个玩家的数据
-        for (int i = 0; i < allPlayerBattleDatas.Length; i++)
+        for (int i = 0; i < playerDatas.Length; i++)
         {
-            var data = allPlayerBattleDatas[i];
+            var data = playerDatas[i];
             writer.WriteByte(data.playerIndex);
             writer.WriteByte((byte)data.characterId);
             writer.WriteByte((byte)data.weaponId);
@@ -227,12 +227,12 @@ public struct BattleStartMSG : INetworkMessage
     {
         // 1. 读取玩家数量
         byte playerCount = reader.ReadByte();
-        allPlayerBattleDatas = new PlayerBattleData[playerCount];
+        playerDatas = new PlayerBattleData[playerCount];
 
         // 2. 读取每个玩家的数据
         for (int i = 0; i < playerCount; i++)
         {
-            allPlayerBattleDatas[i] = new PlayerBattleData
+            playerDatas[i] = new PlayerBattleData
             {
                 playerIndex = reader.ReadByte(),
                 characterId = (E_Character)reader.ReadByte(),

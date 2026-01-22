@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// ECS World 管理器，负责系统的注册和更新。
-/// 在帧同步需求下，所有游戏逻辑系统应在 FixedUpdate 中运行。
+/// 在帧同步需求下，所有游戏逻辑系统应在 LogicTick 中运行。
 /// </summary>
 public class World
 {
@@ -54,13 +54,13 @@ public class World
     #endregion
 
     #region 系统更新
-    public void FixedUpdate(float fixedDeltaTime)
+    public void LogicTick(uint currentTick)
     {
         foreach (var sys in _systems)
         {
             if (sys.Enabled)
             {
-                sys.OnFixedUpdate(fixedDeltaTime);
+                sys.OnLogicTick(currentTick);
             }
         }
     }

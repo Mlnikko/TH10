@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c61e268449ae5a4d9e1d7900ddd6f8f, type: 3}
   m_Name: Rank
   m_EditorClassIdentifier: 
+  ConfigId: RankConfig
   ranks:
   - rank: 0
     Description: "\u7528\u4E8E\u719F\u6089\u64CD\u4F5C\u7684\u96BE\u5EA6\u3002\n\u518D\u6C42\u7CBE\u8FDB\u662F\u4E3A\u4EBA\u7684\u57FA\u672C\u3002"

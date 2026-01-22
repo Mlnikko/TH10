@@ -43,9 +43,7 @@ public class BattlePreparePanel : UIPanel
 
     void ReadConfig()
     {
-        string[] ids = ConfigHelper.allCharCfgIds;
-
-        characterConfigs = ConfigManager.GetConfig<CharacterConfig>(ids);
+        characterConfigs = ConfigManager.GetConfig<CharacterConfig>(ConfigManager.Checklist.characterConfigIds);
 
         characterWeaponsMap.Clear();
 
@@ -294,21 +292,8 @@ public class BattlePreparePanel : UIPanel
 
         switch (NetworkManager.Instance.NetworkRole)
         {
-            case NetworkRole.Host:
-
-                var allPlayerBattleDatas = BattleManager.Instance.allPlayerDatas.ToArray();
-                var startFrame = LogicTimer.CurrentLogicFrame + 60;
-                uint randomSeed = 0;
-
-                NetworkManager.Instance.Broadcast(new BattleStartMSG()
-                {
-                    allPlayerBattleDatas = allPlayerBattleDatas,
-                    startFrame = startFrame,
-                    randomSeed = randomSeed
-                });
-
+            case NetworkRole.Host:       
                 BattleManager.Instance.StartMutiPlayerBattleForHost();
-
                 break;
             case NetworkRole.Client:
                 

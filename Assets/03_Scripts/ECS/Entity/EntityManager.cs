@@ -7,8 +7,14 @@ using System.Runtime.CompilerServices;
 /// </summary>
 public class BitSet
 {
-    private readonly uint[] _data;
-    private readonly int _length;
+    static readonly byte[] _tzLookup = new byte[32]
+    {
+        0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+        31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+    };
+
+    readonly uint[] _data;
+    readonly int _length;
 
     public BitSet(int length)
     {
@@ -76,13 +82,20 @@ public class BitSet
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int TrailingZeroCount(uint x)
+    static int TrailingZeroCount(uint x)
     {
         if (x == 0) return 32;
-        int count = 0;
-        while ((x & 1) == 0) { count++; x >>= 1; }
-        return count;
+        // De Bruijn 算法：O(1)，无循环
+        return _tzLookup[((uint)((x & -(int)x) * 0x077CB531U)) >> 27];
     }
+}
+
+/// <summary>
+/// 预分配临时位集：用于系统内部临时计算，避免频繁分配。
+/// </summary>
+public static class TempBitSets
+{
+    public static readonly BitSet Collision = new BitSet(EntityManager.MAX_ENTITIES);
 }
 
 /// <summary>
@@ -100,25 +113,41 @@ internal static class ComponentStorage<T> where T : struct, IComponent
 /// </summary>
 public static class TempBuffers
 {
+    public static readonly int[] DanmakuEmitterIndices = new int[4096]; // 16KB
     public static readonly int[] DanmakuIndices = new int[16384]; // 64KB
+
+
     public static readonly int[] EnemyIndices = new int[4096];   // 16KB  
+
+
     public static readonly int[] CollisionIndices = new int[16384]; // 64KB
+    public static readonly int[] CollisionActive = new int[16384];   // 用于收集活跃碰撞体
+    public static readonly int[] CollisionQuery = new int[16384];   // 用于网格查询结果
 }
 
 public class EntityManager
 {
     public const int MAX_ENTITIES = 65536; // 必须 ≤ 65536
 
-    private readonly bool[] _activeEntities = new bool[MAX_ENTITIES];
-    private readonly ushort[] _versions = new ushort[MAX_ENTITIES]; // 关键：版本数组
-    private readonly Queue<int> _freeIds = new Queue<int>();
+    readonly bool[] _activeEntities = new bool[MAX_ENTITIES];
+    readonly ushort[] _versions = new ushort[MAX_ENTITIES]; // 版本数组
+    readonly Queue<int> _freeIds = new();
 
     public bool[] ActiveEntities => _activeEntities;
 
     public EntityManager()
     {
+        Initialize();
+    }
+
+    void Initialize()
+    {
         for (int i = 0; i < MAX_ENTITIES; i++)
+        {
             _freeIds.Enqueue(i);
+            _versions[i] = 1; // ← 确保首个实体 Version ≥ 1
+            _activeEntities[i] = false;
+        }
     }
 
     public Entity CreateEntity()
@@ -128,16 +157,12 @@ public class EntityManager
 
         int index = _freeIds.Dequeue();
 
-        // 关键：销毁时已递增过 Version，这里直接使用当前值
-        // 但为确保唯一性，创建时再递增一次（可选，保守做法）
-        _versions[index]++;
         _activeEntities[index] = true;
 
         Entity entity = Entity.FromIndexAndVersion(index, _versions[index]);
 
         return entity;
     }
-
     public void DestroyEntity(Entity entity)
     {
         if (entity.IsNull) return;
@@ -159,12 +184,8 @@ public class EntityManager
     public bool IsValid(Entity entity)
     {
         if (entity.IsNull) return false;
-        int index = entity.Index;
-        return index < MAX_ENTITIES &&
-               _activeEntities[index] &&
-               _versions[index] == entity.Version;
+        return entity.Index < MAX_ENTITIES && _activeEntities[entity.Index] && _versions[entity.Index] == entity.Version;
     }
-
     public bool IsValid(int index)
     {
         Entity entity = GetEntityByIndex(index);

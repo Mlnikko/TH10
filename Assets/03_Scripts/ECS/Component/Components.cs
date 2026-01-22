@@ -1,6 +1,4 @@
-
 using System;
-
 
 /// <summary>
 /// Components为实体附加的数据结构，用于存储实体的各种属性和状态。
@@ -10,30 +8,28 @@ using System;
 public interface IComponent { }
 
 // 所有需要同步到 GameObject 的实体都带这个组件
-public struct CPresentationLink : IComponent
+public struct CGameObjectLink : IComponent
 {
-    public int presentationId; // 全局唯一表现 ID
+    public int gameObjectId; // 全局唯一表现 ID
 }
 
 public struct CPosition : IComponent
 {
     public float x, y;
-    public CPosition(float x, float y) => (this.x, this.y) = (x, y);
 }
 
 public struct CVelocity : IComponent
 {
     public float vx, vy;
-    public CVelocity(float vx, float vy) => (this.vx, this.vy) = (vx, vy);
 }
 
 public struct CLifetime : IComponent
 {
-    public float ttl; // time to live，单位：秒
-    public CLifetime(float seconds) => ttl = seconds;
+    public uint spawnFrame;      // 实体创建时的逻辑帧号
+    public uint maxLifeFrames;   // 最大生存帧数
 }
 
-#region DanmakuComponent
+#region 弹幕组件
 public enum DanmakuType
 {
     Normal,
@@ -42,10 +38,29 @@ public enum DanmakuType
 
 public struct CDanmaku : IComponent
 {
-    public DanmakuType type; // 枚举：Bullet, Enemy, Player, Effect...
-    public ushort ownerId;  // 谁发射的（用于伤害归属）
-    public float damage;     // 伤害值
+    public int ownerId;  // 谁发射的
+    public int danmakuConfigIndex; // 弹幕配置索引
 }
+
+public struct CDanmakuRuntime : IComponent
+{
+    public float speed;
+    public float homingAngle; // 仅 Homing 弹幕使用，当前追踪角度
+}
+#endregion
+
+#region 弹幕发射器组件
+public struct CDanmakuEmitter : IComponent
+{
+    public int emitterConfigIndex;
+}
+
+public struct CDanmakuEmitterRunTime : IComponent
+{
+    public bool isEnabled;
+    public uint lastFireFrame;
+}
+
 #endregion
 
 #region ColliderComponent
@@ -85,8 +100,7 @@ public struct CCollider : IComponent
     public E_ColliderLayer mask;
 
     // 相对偏移
-    public float offsetX;
-    public float offsetY;
+    public float offsetX, offsetY;
 
     // 脏标记
     public bool dirty;
@@ -95,8 +109,7 @@ public struct CCollider : IComponent
     public float radius;
 
     // Rect
-    public float width;
-    public float height;
+    public float width, height;
 }
 #endregion
 
@@ -111,8 +124,9 @@ public struct CPlayer : IComponent
 // 玩家属性
 public struct CPlayerAttribute : IComponent
 {
-    public float moveSpeed;       // 移动速度
-    public float moveSlowSpeed;   // 慢速移动速度
+    public float moveSpeedPerFrame;      // e.g. 0.05f （= 3.0 / 60）
+    public float moveSlowSpeedPerFrame;  // e.g. 0.025f
+
     public float hitRadius;       // 受击判定半径
     public float grazeRadius;     // 擦弹判定半径
 }
@@ -121,6 +135,7 @@ public struct CPlayerRunTime : IComponent
 {
     public bool isSlowMode;       // 是否处于慢速模式
     public bool isShooting;       // 是否正在射击
+    public bool isBombing;        // 是否正在使用炸弹
     public bool isInvincible;     // 是否无敌
 }
 #endregion

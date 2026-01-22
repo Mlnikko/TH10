@@ -61,7 +61,7 @@ public class PlayerUpdater : IGameObjectUpdater
             if (isSlowMode != _lastIsSlowMode)
             {
                 _lastIsSlowMode = isSlowMode;
-                float weight = isSlowMode ? 1.0f : 0.0f;
+                float weight = isSlowMode ? 1 : 0;
                 _animator.SetLayerWeight(_slowEffectLayerIndex, weight);
             }
         }

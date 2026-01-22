@@ -23,6 +23,7 @@ public enum LogTag
     Input,
     Config,
     Collision,
+    Pool
 }
 
 /// <summary>

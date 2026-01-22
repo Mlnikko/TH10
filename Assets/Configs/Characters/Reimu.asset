@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3972ac5ebeade5849989dc9bc80b2557, type: 3}
-  m_Name: Character_Marisa
+  m_Name: Reimu
   m_EditorClassIdentifier: 
-  ConfigId: Marisa
-  CharacterID: 2
-  AvailableWeapons: 141516
-  Description: "\u723D\u6717\u7684\u9B54\u6CD5\u4F7F\n\u901F\u5EA6\u53CA\u987A\u624B\u7275\u7F8A\u65B9\u9762\n\u96BE\u6709\u4EBA\u53EF\u51FA\u5176\u53F3"
-  MoveSpeed: 2.2
-  MoveSlowSpeed: 1.1
+  ConfigId: Reimu
+  CharacterID: 1
+  AvailableWeapons: 0a0b0c
+  Description: "\u60A0\u95F2\u7684\u5DEB\u5973\n\u76F8\u5F53\u64C5\u957F\n\u5927\u8303\u56F4\u7684\u653B\u51FB"
+  MoveSpeed: 2
+  MoveSlowSpeed: 1
   MoveBoxSize: {x: 0.3, y: 0.5}
-  MoveBoxOffset: {x: 0, y: 0.08}
-  HitRadius: 0.05
+  MoveBoxOffset: {x: 0, y: 0}
+  HitRadius: 0.04
   GrazeRadius: 0.25

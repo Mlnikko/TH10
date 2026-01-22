@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 public class DeterministicGrid
 {
@@ -66,7 +65,7 @@ public class DeterministicGrid
     /// <summary>
     /// 查询与指定碰撞体可能相交的所有实体（去重、升序）
     /// </summary>
-    public int Query(float cx, float cy, in CCollider col, int[] outputBuffer, BitSet tempSet)
+    public int Query(float cx, float cy, in CCollider col, Span<int> outputBuffer, BitSet tempSet)
     {
         GetBounds(cx, cy, col, out float minX, out float minY, out float maxX, out float maxY);
 
@@ -127,25 +126,11 @@ public class CollisionSystem : BaseSystem
 {
     DeterministicGrid _grid;
 
-    // 缓冲区
-    readonly int[] _activeColliders = new int[EntityManager.MAX_ENTITIES];
-    readonly int[] _queryResults = new int[EntityManager.MAX_ENTITIES];
-    readonly BitSet _tempBitSet = new BitSet(EntityManager.MAX_ENTITIES);
-
-    protected override void OnCreate()
-    {
-        base.OnCreate();
-        //if(!BattleAreaTool.isInitialized)
-        //{
-        //    Logger.Error("BattleAreaTool 未初始化，无法正确创建网格！");
-        //    return;
-        //}
-        //_grid = new DeterministicGrid(BattleAreaTool.battleAreaData);
-    }
-
-    public override void OnFixedUpdate(float fixedDeltaTime)
+    public override void OnLogicTick(uint tick)
     {
         if (_grid == null) return;
+        Span<int> activeColliders = TempBuffers.CollisionActive;
+        Span<int> queryResults = TempBuffers.CollisionQuery;
 
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var colliders = EntityManager.GetComponentSpan<CCollider>();
@@ -155,7 +140,7 @@ public class CollisionSystem : BaseSystem
         for (int i = 0; i < EntityManager.MAX_ENTITIES; i++)
         {
             if (EntityManager.IsValid(i) && colliders[i].active)
-                _activeColliders[colliderCount++] = i;
+                activeColliders[colliderCount++] = i;
         }
 
         // Step 2: 清空并重建网格
@@ -163,7 +148,7 @@ public class CollisionSystem : BaseSystem
 
         for (int idx = 0; idx < colliderCount; idx++)
         {
-            int e = _activeColliders[idx];
+            int e = activeColliders[idx];
             ref readonly var col = ref colliders[e];
 
             // 插入时使用带偏移的碰撞中心
@@ -175,18 +160,18 @@ public class CollisionSystem : BaseSystem
         // Step 3: 检测碰撞（顺序严格确定：i < j）
         for (int iIdx = 0; iIdx < colliderCount; iIdx++)
         {
-            int i = _activeColliders[iIdx];
+            int i = activeColliders[iIdx];
             ref readonly var colA = ref colliders[i];
 
             // 查询也使用带偏移的位置
             float ax = positions[i].x + colA.offsetX;
             float ay = positions[i].y + colA.offsetY;
 
-            int queryCount = _grid.Query(ax, ay, colA, _queryResults, _tempBitSet);
+            int queryCount = _grid.Query(ax, ay, colA, queryResults, TempBitSets.Collision);
 
             for (int k = 0; k < queryCount; k++)
             {
-                int j = _queryResults[k];
+                int j = queryResults[k];
                 if (j <= i) continue;
 
                 ref readonly var colB = ref colliders[j];

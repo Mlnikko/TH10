@@ -14,9 +14,12 @@ public class GameLauncher : MonoBehaviour
         }
     }
 
-    // 改为 async void —— 这是 Unity 中启动异步逻辑的标准方式
     async void Start()
     {
+        // 读取配置清单
+        var checklist = await ConfigManager.GetConfigAsync<GameConfigChecklist>(ConfigHelper.GAME_CONFIG_CHECKLIST);
+        ConfigManager.Initialize(checklist);
+
         bool sceneLoaded = await SceneLoader.LoadSceneAsync("TitleScene");
         if (sceneLoaded)
         {

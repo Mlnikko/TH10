@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 public static class ConfigHelper
@@ -11,19 +9,7 @@ public static class ConfigHelper
     public const string DANMAKU_CONFIG_PREFIX = CONFIG_PREFIX + "Danmakus/";
     public const string DANMAKU_EMITTER_CONFIG_PREFIX = CONFIG_PREFIX + "DanmakuEmitters/";
 
-    public static string[] allCharCfgIds = Enum.GetValues(typeof(E_Character))
-                                                .Cast<E_Character>()
-                                                .Where(e => e != E_Character.None)
-                                                .Select(e => e.ToString())
-                                                .ToArray();
-
-    public static string[] allWeapCfgIds = Enum.GetValues(typeof(E_Weapon))
-                                                .Cast<E_Weapon>()
-                                                .Where(e => e != E_Weapon.None)
-                                                .Select(e => e.ToString())
-                                                .ToArray();
-
-    public static string BattleAreaCfgId = "DefaultBattleArea";
+    public const string GAME_CONFIG_CHECKLIST = "GameConfigChecklist";
 
     /// <summary>
     /// 根据配置类型和ID获取资源key
@@ -38,6 +24,8 @@ public static class ConfigHelper
         {
             _ when typeof(T) == typeof(CharacterConfig) => CHARACTER_CONFIG_PREFIX,
             _ when typeof(T) == typeof(WeaponConfig) => WEAPON_CONFIG_PREFIX,
+            _ when typeof(T) == typeof(DanmakuConfig) => DANMAKU_CONFIG_PREFIX,
+            _ when typeof(T) == typeof(DanmakuEmitterConfig) => DANMAKU_EMITTER_CONFIG_PREFIX,
 
             _ => CONFIG_PREFIX
         };
@@ -48,6 +36,27 @@ public static class ConfigHelper
 
 public static class ConfigManager
 {
+    static bool _isInitialized = false;
+    public static GameConfigChecklist Checklist
+    {
+        get
+        {
+            if (!_isInitialized)
+                throw new InvalidOperationException("ConfigManager is not initialized. Please call Initialize() before accessing the Checklist.");
+            return _checklist;
+        }
+    }
+
+    static GameConfigChecklist _checklist;
+
+    // 初始加载配置清单
+    public static void Initialize(GameConfigChecklist checklist)
+    {
+        if (checklist == null) return;
+        _checklist = checklist;
+        _isInitialized = true;
+    }
+
     /// <summary>
     /// 异步获取
     /// </summary>
@@ -116,5 +125,29 @@ public static class ConfigManager
         }
 
         await ResManager.PreloadAsync<T>(paths);
+    }
+
+    public static async Task PreloadCharacterConfigsAsync()
+    {
+        if (_checklist?.characterConfigIds != null)
+            await PreloadConfigsAsync<CharacterConfig>(_checklist.characterConfigIds);
+    }
+
+    public static async Task PreloadWeaponConfigsAsync()
+    {
+        if (_checklist?.weaponConfigIds != null)
+            await PreloadConfigsAsync<WeaponConfig>(_checklist.weaponConfigIds);
+    }
+
+    public static async Task PreloadDanmakuConfigsAsync()
+    {
+        if (_checklist?.danmakuConfigIds != null)
+            await PreloadConfigsAsync<DanmakuConfig>(_checklist.danmakuConfigIds);
+    }
+
+    public static async Task PreloadEmitterConfigsAsync()
+    {
+        if (_checklist?.emitterConfigIds != null)
+            await PreloadConfigsAsync<DanmakuEmitterConfig>(_checklist.emitterConfigIds);
     }
 }

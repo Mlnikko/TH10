@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2c6ec6ac05c7b439d7fb154d7e6491, type: 3}
   m_Name: AudioConfig
   m_EditorClassIdentifier: 
+  ConfigId: AudioConfig
   audioGroups:
   - displayName: BGM
     audioGroup: 0
