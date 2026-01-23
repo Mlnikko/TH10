@@ -16,17 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: a3adc714b2d832b499c01533bdcd72c8
-  m_SerializeEntries:
-  - m_GUID: 6b033378e3f9aca428df749900de259d
-    m_Address: Prefabs/Characters/Reimu
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6b9ba9abeb1ffc3498188b2fb6f89885
-    m_Address: Prefabs/Characters/Marisa
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: bd11330accc092c41b0429724d54b4b3, type: 2}
   m_SchemaSet:

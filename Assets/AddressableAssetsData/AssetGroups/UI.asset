@@ -16,47 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: cb855bf0dd08a2a4384afe9d1811d2e4
-  m_SerializeEntries:
-  - m_GUID: e4ead09567355304b9f658d4941a41a0
-    m_Address: UI/Panels/RoomPanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2fe27a8efcd67e04ab4ad36b16ba66f3
-    m_Address: UI/Panels/MenuPanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac2ecef0e79282c48bd8aa6594775cd1
-    m_Address: UI/Panels/OnlineModePanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6c4cfa5c6a049bb45a456c1bb439f400
-    m_Address: UI/Panels/JoinRoomInputPanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 67117722a812a2e46ab8cb8eafbf5f5e
-    m_Address: UI/Panels/DebugConsolePanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7c598cca04b048e4e91b3bb0f0a79391
-    m_Address: UI/Panels/SettingsPanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f3109c7fb72eaaa4e90c8c80dad09a40
-    m_Address: UI/Panels/BattlePreparePanel
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 48dfbad5ea739de458a6fdd67753b864
-    m_Address: Sprites/Weapon
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: bd11330accc092c41b0429724d54b4b3, type: 2}
   m_SchemaSet:
