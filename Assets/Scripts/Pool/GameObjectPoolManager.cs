@@ -4,44 +4,42 @@ using UnityEngine;
 
 public static class ObjectPoolManager
 {
-    private static readonly Dictionary<string, GameObjectPool> _pools = new();
+    static readonly Dictionary<string, GameObjectPool> _pools = new();
 
     /// <summary>
-    /// 创建或获取一个对象池（建议在关卡开始前调用）
+    /// 初始化所有池（在游戏启动或关卡加载时调用，异步加载 prefab 在此完成）
     /// </summary>
-    /// <param name="prefabKey">Addressable 资源 Key</param>
-    /// <param name="initialCapacity">初始预热数量</param>
-    public static void CreatePool(string prefabKey, int initialCapacity = 10)
+    public static async Task InitializePoolsAsync(Dictionary<string, int> poolConfigs)
     {
-        if (_pools.ContainsKey(prefabKey))
+        // 1. 并行加载所有 prefab
+        var prefabTasks = new Dictionary<string, Task<GameObject>>();
+        foreach (var key in poolConfigs.Keys)
         {
-            Logger.Warn($"Pool for {prefabKey} already exists!", LogTag.Pool);
-            return;
+            prefabTasks[key] = ResManager.LoadAsync<GameObject>(key);
         }
 
-        var pool = new GameObjectPool(prefabKey, initialCapacity);
-        _pools[prefabKey] = pool;
-    }
+        await Task.WhenAll(prefabTasks.Values);
 
-    /// <summary>
-    /// 异步获取对象（推荐用于运行时发射弹幕等）
-    /// </summary>
-    public static async Task<GameObject> SpawnAsync(string prefabKey, Vector3 position, Quaternion rotation, Transform parent = null)
-    {
-        if (!_pools.TryGetValue(prefabKey, out var pool))
+        // 2. 同步创建池（此时所有 prefab 已就绪）
+        foreach (var kvp in poolConfigs)
         {
-            // 自动创建池（懒加载），但不预热（可能有性能抖动）
-            Logger.Warn($"Pool not created for {prefabKey}, creating on-demand!", LogTag.Pool);
-            pool = new GameObjectPool(prefabKey);
-            _pools[prefabKey] = pool;
-        }
+            string key = kvp.Key;
+            int capacity = kvp.Value;
+            GameObject prefab = await prefabTasks[key];
 
-        return await pool.GetAsync(position, rotation, parent);
+            if (prefab != null)
+            {
+                _pools[key] = new GameObjectPool(key, prefab, capacity);
+            }
+        }
     }
 
-    /// <summary>
-    /// 回收对象（必须配对使用！）
-    /// </summary>
+    // 同步接口（供逻辑系统使用）
+    public static GameObject Spawn(string prefabKey)
+    {
+        return _pools.TryGetValue(prefabKey, out var pool) ? pool.Get() : null;
+    }
+
     public static void Despawn(GameObject obj, string prefabKey)
     {
         if (_pools.TryGetValue(prefabKey, out var pool))
@@ -50,33 +48,7 @@ public static class ObjectPoolManager
         }
         else
         {
-            // 安全兜底：如果没池，直接 Destroy（但应避免）
-            Logger.Warn($"No pool found for {prefabKey}, destroying object directly!", LogTag.Pool);
-            UnityEngine.Object.Destroy(obj);
+            UnityEngine.Object.Destroy(obj); // 安全兜底
         }
-    }
-
-    /// <summary>
-    /// 批量预热多个池（适合关卡加载时调用）
-    /// </summary>
-    public static void PreWarmPools(params (string key, int count)[] configs)
-    {
-        foreach (var (key, count) in configs)
-        {
-            CreatePool(key, count);
-        }
-    }
-
-    /// <summary>
-    /// 清理所有池（切换场景时调用）
-    /// </summary>
-    public static void ClearAllPools()
-    {
-        foreach (var pool in _pools.Values)
-        {
-            pool.Dispose();
-        }
-        _pools.Clear();
-        Logger.Info("All pools cleared", LogTag.Pool);
     }
 }

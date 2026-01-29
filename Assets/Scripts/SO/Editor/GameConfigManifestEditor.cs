@@ -21,7 +21,7 @@ public class GameConfigManifestEditor : Editor
 
     void AutoFillConfigIds()
     {
-        var checklist = (GameConfigManifest)target;
+        var manifest = (GameConfigManifest)target;
 
         // 查找所有 GameConfig 子类的 ScriptableObject
         string[] guids = AssetDatabase.FindAssets($"t:{nameof(GameConfig)}", new[] { SEARCH_PATH });
@@ -36,7 +36,7 @@ public class GameConfigManifestEditor : Editor
             string path = AssetDatabase.GUIDToAssetPath(guid);
             var asset = AssetDatabase.LoadAssetAtPath<GameConfig>(path);
 
-            if (asset == null || asset == checklist) continue; // 跳过自己
+            if (asset == null || asset == manifest) continue; // 跳过自己
 
             string id = asset.ConfigId;
 
@@ -56,14 +56,14 @@ public class GameConfigManifestEditor : Editor
         characterIds = characterIds.Distinct().OrderBy(x => x).ToList();
         weaponIds = weaponIds.Distinct().OrderBy(x => x).ToList();
 
-        // 应用到 checklist
-        Undo.RecordObject(checklist, "Auto Fill Config IDs");
-        checklist.danmakuConfigIds = danmakuIds.ToArray();
-        checklist.emitterConfigIds = emitterIds.ToArray();
-        checklist.characterConfigIds = characterIds.ToArray();
-        checklist.weaponConfigIds = weaponIds.ToArray();
+        // 应用到 manifest
+        Undo.RecordObject(manifest, "Auto Fill Config IDs");
+        manifest.danmakuConfigIds = danmakuIds.ToArray();
+        manifest.emitterConfigIds = emitterIds.ToArray();
+        manifest.characterConfigIds = characterIds.ToArray();
+        manifest.weaponConfigIds = weaponIds.ToArray();
 
-        EditorUtility.SetDirty(checklist);
+        EditorUtility.SetDirty(manifest);
         AssetDatabase.SaveAssets();
 
         Logger.Info($"Auto-filled configs:\n" +

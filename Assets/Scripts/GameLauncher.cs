@@ -16,11 +16,10 @@ public class GameLauncher : MonoBehaviour
 
     async void Start()
     {
-        // ∂¡»°≈‰÷√«Âµ•
-
-        await ConfigDB.InitializeAsync();
+        await GameResDB.InitializeAsync();
 
         bool sceneLoaded = await SceneLoader.LoadSceneAsync("TitleScene");
+
         if (sceneLoaded)
         {
             try
@@ -33,7 +32,7 @@ public class GameLauncher : MonoBehaviour
             }
             catch (System.Exception ex)
             {
-                Logger.Exception(ex);
+                Logger.Critical(ex.ToString());
             }
         }
         else

@@ -23,7 +23,7 @@ public class CharacterSelectionUI : MonoBehaviour
     {
         this.onSelect = onSelect;
         ConfigId = config.ConfigId;
-        nameLabel.text = config.Description;
+        nameLabel.text = config.description;
 
         string key = ResHelper.GetTextureKey(config.ConfigId, SpriteCategory.Character);
         var sprite = await ResManager.LoadAsync<Sprite>(key);

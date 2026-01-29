@@ -38,7 +38,7 @@ public static class NetworkTool
         }
         catch (Exception ex)
         {
-            Logger.Exception(ex);
+            Logger.Critical("Error while getting local IP address: " + ex.Message);
         }
 
         return "127.0.0.1";

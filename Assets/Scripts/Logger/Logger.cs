@@ -191,12 +191,18 @@ public static class Logger
     public static void Info(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Info, t, c);
     public static void Warn(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Warning, t, c);
     public static void Error(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Error, t, c);
-    public static void Critical(string m, LogTag t = LogTag.Misc, object c = null) => Log(m, LogLevel.Critical, t, c);
-    public static void Exception(System.Exception ex, LogTag tag = LogTag.Misc, object context = null)
+
+    /// <summary>
+    /// 记录致命错误日志并抛出异常中断程序
+    /// </summary>
+    /// <param name="m"></param>
+    /// <param name="t"></param>
+    /// <param name="c"></param>
+    /// <exception cref="System.InvalidOperationException"></exception>
+    public static void Critical(string m, LogTag t = LogTag.Misc, object c = null)
     {
-        if (ex == null) return;
-        string msg = $"[{ex.GetType().Name}] {ex.Message}\n{ex.StackTrace}";
-        Log(msg, LogLevel.Error, tag, context ?? ex);
+        Log(m, LogLevel.Critical, t, c);
+        throw new System.InvalidOperationException( $"[CRITICAL] [{t}] {m}");
     }
 
     #endregion

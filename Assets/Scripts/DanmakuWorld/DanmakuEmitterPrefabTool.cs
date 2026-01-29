@@ -14,7 +14,7 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
     public DanmakuConfig danmakuConfig;
 
     [Header("发射器类型")]
-    [SerializeField] EmitterType emitterType;
+    [SerializeField] EmitMode emitterType;
 
     [Header("发射器阵营")]
     [SerializeField] EmitterCamp emitterCamp;
@@ -44,13 +44,13 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
             return false;
         }
 
-        emitterType = emitterConfig.Type;
-        emitterCamp = emitterConfig.EmitterCamp;
-        launchPosOffset = emitterConfig.LaunchPosOffset;
-        launchRotOffset = emitterConfig.LaunchRotOffset;
-        launchInterval = emitterConfig.LaunchInterval;
-        launchSpeed = emitterConfig.LaunchSpeed;
-        launchAudio = emitterConfig.Audio_Fire;
+        emitterType = emitterConfig.emitMode;
+        emitterCamp = emitterConfig.emitterCamp;
+        launchPosOffset = emitterConfig.launchPosOffset;
+        launchRotOffset = emitterConfig.launchRotOffset;
+        launchInterval = emitterConfig.launchInterval;
+        launchSpeed = emitterConfig.launchSpeed;
+        launchAudio = emitterConfig.audio_Fire;
         
 
         Logger.Debug("已加载发射器配置" + emitterConfig.name, LogTag.Config);
@@ -66,13 +66,13 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
             return;
         }
 
-        emitterConfig.Type = emitterType;
-        emitterConfig.EmitterCamp = emitterCamp;
-        emitterConfig.LaunchPosOffset = launchPosOffset;
-        emitterConfig.LaunchRotOffset = launchRotOffset;
-        emitterConfig.LaunchInterval = launchInterval;
-        emitterConfig.LaunchSpeed = launchSpeed;
-        emitterConfig.Audio_Fire = launchAudio;
+        emitterConfig.emitMode = emitterType;
+        emitterConfig.emitterCamp = emitterCamp;
+        emitterConfig.launchPosOffset = launchPosOffset;
+        emitterConfig.launchRotOffset = launchRotOffset;
+        emitterConfig.launchInterval = launchInterval;
+        emitterConfig.launchSpeed = launchSpeed;
+        emitterConfig.audio_Fire = launchAudio;
       
         Logger.Debug("成功保存发射器配置" + emitterConfig.name, LogTag.Config);
     }
@@ -97,12 +97,12 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
         Vector3 emitterPos = transform.position + (Vector3)launchPosOffset;
         Quaternion emitterRot = Quaternion.Euler(launchRotOffset);
 
-        //switch (emitterConfig.Type)
+        //switch (emitterConfig.emitMode)
         //{
-        //    case EmitterType.Line:
+        //    case EmitMode.Line:
         //        EmitLinePreview(emitterPos, emitterRot);
         //        break;
-        //    case EmitterType.Arc:
+        //    case EmitMode.Arc:
         //        EmitArcPreview(emifierPos, emitterRot);
         //        break;
         //    default:

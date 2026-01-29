@@ -43,14 +43,13 @@ public class BattleManager : SingletonMono<BattleManager>
     bool _isResourcesPreloaded = false;
 
     public bool isSinglePlayerMode;
-    public GameObject prefab;
 
     public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
     public List<PlayerBattleData> allPlayerDatas = new();
 
     bool[] activePlayers = new bool[4];
 
-    int totalPlayers => allPlayerDatas.Count;
+    int TotalPlayers => allPlayerDatas.Count;
 
     LogicFrameTimer logicTimer;
     World battleWorld;
@@ -70,31 +69,26 @@ public class BattleManager : SingletonMono<BattleManager>
     public async Task PreloadBattleResourcesAsync()
     {
         if (_isResourcesPreloaded) return;
-        var manifest = await ConfigLoader.GetConfigAsync<GameConfigManifest>(ResHelper.GAME_CONFIG_CHECKLIST);
+        var manifest = await ResLoader.GetConfigAsync<GameConfigManifest>(ResHelper.GAME_CONFIG_CHECKLIST);
         try
-        {         
-            await ConfigLoader.PreloadConfigsAsync<CharacterConfig>(manifest.characterConfigIds);
-            await ConfigLoader.PreloadConfigsAsync<WeaponConfig>(manifest.weaponConfigIds);
-            await ConfigLoader.PreloadConfigsAsync<DanmakuConfig>(manifest.danmakuConfigIds);
-            await ConfigLoader.PreloadConfigsAsync<DanmakuEmitterConfig>(manifest.emitterConfigIds);
+        {
+            var battleAreaConfig = await ResLoader.GetConfigAsync<BattleAreaConfig>(manifest.BattleAreaCfgId);
 
-            var battleAreaConfig = await ConfigLoader.GetConfigAsync<BattleAreaConfig>(manifest.BattleAreaCfgId);
             if (battleAreaConfig != null)
             {
                 GlobalBattleData.Initialize(battleAreaConfig);
             }
             else
             {
-                throw new Exception("Failed to load BattleAreaConfig.");
+                Logger.Critical("Failed to load BattleAreaConfig.", LogTag.Config);
             }
 
             _isResourcesPreloaded = true;
             Logger.Info("Battle resources preloaded.");
         }
-        catch (Exception ex)
+        catch
         {
-            Logger.Exception(ex);
-            throw;
+            Logger.Critical("Error during battle resources preloading: ", LogTag.Battle);
         }
     }
 
@@ -191,69 +185,55 @@ public class BattleManager : SingletonMono<BattleManager>
 
         foreach (var playerData in allPlayerDatas)
         {
-            InitializePlayerEntity(playerData, prefab);
+            InitializePlayerEntity(playerData);
         }
     }
 
-    void InitializePlayerEntity(PlayerBattleData playerData, GameObject playerPrefab)
+    void InitializePlayerEntity(PlayerBattleData playerData)
     {
-        var bornPos = GlobalBattleData.SpawnData.GetPlayerSpawnPos(playerData.playerIndex, totalPlayers);
-        var playerGO = Instantiate(playerPrefab);
+        var characterConfig = GameResDB.GetConfigById<CharacterConfig>(playerData.characterId.ToString());
+
+        if (characterConfig == null)
+        {
+            Logger.Error($"CharacterConfig not found for ID: {playerData.characterId}");
+            return;
+        }
+
+        var bornPos = GlobalBattleData.SpawnData.GetPlayerSpawnPos(playerData.playerIndex, TotalPlayers);
+
+        var characterPrefab = GameResDB.GetPrefabById(PrefabCategory.Character, playerData.characterId.ToString());
+
+        var playerGO = Instantiate(characterPrefab);
+
         playerGO.transform.position = (Vector3)bornPos;
 
         var em = battleWorld.EntityManager;
         var playerEntity = em.CreateEntity();
 
         int gameObjectId = GameObjectBridge.Register(playerGO, new PlayerUpdater(playerGO));
-        var characterConfig = ConfigDB.GetCharacter((int)playerData.characterId);
-        if (characterConfig == null)
-        {
-            Logger.Error($"CharacterConfig not found for ID: {playerData.characterId}");
-            // 可选：销毁已实例化的 GameObject
-            GameObject.Destroy(playerGO);
-            return;
-        }
 
         #region 添加组件
 
         em.AddComponent(playerEntity, new CGameObjectLink
         {
-            gameObjectId = gameObjectId
+            gid = gameObjectId
         });
 
-        em.AddComponent(playerEntity, new CPosition
-        {
-            x = bornPos.x,
-            y = bornPos.y
-        });
-
-        em.AddComponent(playerEntity, new CVelocity
-        {
-            vx = 0,
-            vy = 0
-        });
-
-        em.AddComponent(playerEntity, new CPlayer
-        {
-            playerIndex = playerData.playerIndex,
-            characterId = (byte)playerData.characterId,
-            weaponId = (byte)playerData.weaponId,
-        });
-
+        em.AddComponent(playerEntity, new CPosition(bornPos.x, bornPos.y));
+        em.AddComponent(playerEntity, new CVelocity(0, 0));
+        em.AddComponent(playerEntity, new CPlayer(playerData.playerIndex, (byte)playerData.characterId, (byte)playerData.weaponId));
         em.AddComponent(playerEntity, new CPlayerRunTime
         {
             isSlowMode = false,
         });
 
-        //var weaponConfig = ConfigDB.GetWeapon((int)playerData.weaponId);
+        var emitterConfig = GameResDB.GetConfigById<WeaponConfig>(playerData.weaponId.ToString());
 
-        //foreach (var emitterId in weaponConfig.DanmakuEmitterConfigIds)
-        //{
-        //    em.AddComponent(playerEntity, new CDanmakuEmitter
-        //    {
-        //       //cfgIndex = emitterId,
-        //    });
-        //}
+        foreach (var emitterId in emitterConfig.danmakuEmitterConfigIds)
+        {
+            em.AddComponent(playerEntity, new CDanmakuEmitter(true, GameResDB.GetIndexById<DanmakuEmitterConfig>(emitterId)));
+        }
+
 
         em.AddComponent(playerEntity, characterConfig.ToRuntimeAttribute(logicTimer.FrameInterval));
 

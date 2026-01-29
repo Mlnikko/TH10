@@ -7,20 +7,36 @@ using System;
 
 public interface IComponent { }
 
-// 所有需要同步到 GameObject 的实体都带这个组件
 public struct CGameObjectLink : IComponent
 {
-    public int gameObjectId; // 全局唯一表现 ID
+    public int gid; // 全局唯一表现 ID
+    public int prefabIndex; // 预制体索引（用于对象池）
+
+    public CGameObjectLink(int prefabIndex)
+    {
+        this.gid = 0;
+        this.prefabIndex = prefabIndex;
+    }
 }
 
 public struct CPosition : IComponent
 {
     public float x, y;
+    public CPosition(float x, float y)
+    {
+        this.x = x;
+        this.y = y;
+    }
 }
 
 public struct CVelocity : IComponent
 {
     public float vx, vy;
+    public CVelocity(float vx, float vy)
+    {
+        this.vx = vx;
+        this.vy = vy;
+    }
 }
 
 public struct CLifetime : IComponent
@@ -40,26 +56,35 @@ public struct CDanmaku : IComponent
 {
     public int ownerId;  // 谁发射的
     public int cfgIndex; // 弹幕配置索引
+
+    public CDanmaku(int ownerId, int cfgIndex)
+    {
+        this.ownerId = ownerId;
+        this.cfgIndex = cfgIndex;
+    }
 }
 
-public struct CDanmakuRuntime : IComponent
-{
-    public float speed;
-    public float homingAngle; // 仅 Homing 弹幕使用，当前追踪角度
-}
 #endregion
 
 #region 弹幕发射器组件
 public struct CDanmakuEmitter : IComponent
 {
+    public bool isEnabled;
     public int cfgIndex;
+    public uint lastFireFrame;
+
+    public CDanmakuEmitter(bool isEnabled, int cfgIndex)
+    {
+        this.isEnabled = isEnabled;
+        this.cfgIndex = cfgIndex;
+        this.lastFireFrame = 0;
+    }
 }
 
-public struct CDanmakuEmitterRunTime : IComponent
-{
-    public bool isEnabled;
-    public uint lastFireFrame;
-}
+//public struct CDanmakuEmitterRunTime : IComponent
+//{
+   
+//}
 
 #endregion
 
@@ -119,6 +144,13 @@ public struct CPlayer : IComponent
     public byte playerIndex;   // 玩家ID
     public byte characterId;   // 角色ID, 与角色配置表对应
     public byte weaponId;      // 武器ID, 与武器配置表对应
+
+    public CPlayer(byte playerIndex, byte characterId, byte weaponId)
+    {
+        this.playerIndex = playerIndex;
+        this.characterId = characterId;
+        this.weaponId = weaponId;
+    }
 }
 
 // 玩家属性

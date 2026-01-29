@@ -15,7 +15,7 @@ public class PlayerUpdater : IGameObjectUpdater
         _animator = gameObject.GetComponent<Animator>();
 
         // »º´æÍ¼²ãË÷Òý£¨±ÜÃâÃ¿Ö¡×Ö·û´®²éÕÒ£©
-        _slowEffectLayerIndex = _animator.GetLayerIndex("SlowEffect");
+        _slowEffectLayerIndex = _animator.GetLayerIndex("Slow Effect");
         if (_slowEffectLayerIndex == -1)
         {
             Logger.Warn("Animator missing 'SlowEffect' layer!");

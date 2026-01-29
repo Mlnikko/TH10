@@ -3,6 +3,7 @@ using System;
 public enum SpriteCategory
 {
     Common,
+
     UI,
     Character,
     Weapon,
@@ -13,9 +14,15 @@ public enum SpriteCategory
 public enum PrefabCategory
 {
     Common,
+
+    Character,
+    Enemy,
+    Danmaku,
+ 
     UI_Panel,
     UI_Item,
-    VFX
+
+    VFX,
 }
 
 public enum ConfigCategory
@@ -31,6 +38,7 @@ public static class ResHelper
 {
     // =============== 配置清单资源 ===============
     public const string GAME_CONFIG_CHECKLIST = "GameConfigManifest";
+    public const string GAME_PREFAB_CHECKLIST = "GamePrefabManifest";
 
     // =============== 配置资源key前缀 ===============
     public const string CONFIG_PREFIX = "Configs/";
@@ -49,9 +57,13 @@ public static class ResHelper
 
     // =============== 预制体资源key前缀 ===============
     public const string PREFAB_PREFIX = "Prefabs/";
+    public const string DANMAKU_PREFAB_PREFIX = PREFAB_PREFIX + "Danmakus/";
+    public const string CHARACTER_PREFAB_PREFIX = PREFAB_PREFIX + "Characters/";
+    public const string ENEMY_PREFAB_PREFIX = PREFAB_PREFIX + "Enemies/";
     public const string UI_PANEL_PREFIX = PREFAB_PREFIX + "UI/Panels/";
     public const string UI_ITEM_PREFIX = PREFAB_PREFIX + "UI/Items/";
     public const string VFX_PREFIX = PREFAB_PREFIX + "VFX/";
+
 
     /// <summary>
     /// 获取 Config 资源的 Addressables Key（仅限 GameConfig 子类）
@@ -76,25 +88,26 @@ public static class ResHelper
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="prefabName"></param>
+    /// <param name="prefabId"></param>
     /// <param name="category"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException"></exception>
-    public static string GetPrefabKey(string prefabName, PrefabCategory category)
+    public static string GetPrefabKey(string prefabId, PrefabCategory category)
     {
-        if (string.IsNullOrEmpty(prefabName))
-            throw new ArgumentException("Prefab name cannot be null or empty.", nameof(prefabName));
+        if (string.IsNullOrEmpty(prefabId))
+            throw new ArgumentException("Prefab name cannot be null or empty.", nameof(prefabId));
 
         string prefix = category switch
-        {
-            PrefabCategory.Common => PREFAB_PREFIX,
+        {       
+            PrefabCategory.Danmaku => DANMAKU_PREFAB_PREFIX,
+            PrefabCategory.Character => CHARACTER_PREFAB_PREFIX,
             PrefabCategory.UI_Panel => UI_PANEL_PREFIX,
             PrefabCategory.UI_Item => UI_ITEM_PREFIX,
             PrefabCategory.VFX => VFX_PREFIX,
             _ => PREFAB_PREFIX
         };
 
-        return prefix + prefabName;
+        return prefix + prefabId;
     }
 
     /// <summary>

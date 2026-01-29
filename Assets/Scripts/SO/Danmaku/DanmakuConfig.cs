@@ -3,25 +3,28 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewDanmakuConfig", menuName = "Configs/Danmaku")]
 public class DanmakuConfig : GameConfig
 {
+    [Header("µ¯Ä»Ô¤ÖÆÌåID")]
+    public string prefabId;
+
     [Header("µ¯Ä»ÀàĞÍ")]
-    public DanmakuType DanmakuType = DanmakuType.Normal;
+    public DanmakuType danmakuType = DanmakuType.Normal;
 
     [Header("µ¯Ä»Ëõ·Å")]
-    public Vector2 LocalScale = Vector2.one;
+    public Vector2 localScale = Vector2.one;
 
     [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
-    public Sprite Sprite = null;
-    public Color Color = Color.white;
+    public Sprite sprite = null;
+    public Color color = Color.white;
 
     [Header("µ¯Ä»Åö×²Æ÷ÉèÖÃ")]
-    public E_ColliderType ColliderType = E_ColliderType.None;
-    public E_ColliderLayer ColliderLayer = E_ColliderLayer.Default;
-    public Vector2 ColliderOffset = Vector2.zero;
-    public Vector2 Size = Vector2.zero;
-    public float Radius = 0;  
+    public E_ColliderType colliderType = E_ColliderType.None;
+    public E_ColliderLayer colliderLayer = E_ColliderLayer.Default;
+    public Vector2 colliderOffset = Vector2.zero;
+    public Vector2 size = Vector2.zero;
+    public float radius = 0;  
 
     [Header("µ¯Ä»ÉËº¦")]
-    public float Damage = 1f;
+    public float damage = 1f;
 
     [Header("µ¯Ä»×·×ÙÉèÖÃ")]
     [HideInInspector] public float HomingTurnSpeed = 5f;

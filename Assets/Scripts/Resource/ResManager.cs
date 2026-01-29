@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 
 /// <summary>
 /// 资源加载管理器（全自动引用计数管理）
-/// 仅用于启动加载或预加载！运行时请通过 ConfigDB 或组件持有引用访问。
+/// 仅用于启动加载或预加载！运行时请通过 GameResDB 或组件持有引用访问。
 /// 所有加载的资源由 Addressables 自动管理生命周期，无需手动释放。
 /// </summary>
 public static class ResManager

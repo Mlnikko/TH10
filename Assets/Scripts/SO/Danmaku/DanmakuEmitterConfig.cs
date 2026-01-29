@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum EmitterType
+public enum EmitMode
 { 
     None,
     Line,
@@ -21,28 +21,32 @@ public class DanmakuEmitterConfig : GameConfig
     public string[] danmakuConfigIds;
     public DanmakuSelectMode danmakuSelectMode = DanmakuSelectMode.First;
 
-    public EmitterType Type = EmitterType.None;
-    public int MinPoolSize = 100;
-    public int MaxPoolSize = 500;
+    public EmitMode emitMode = EmitMode.None;
+
+    //public int minPoolSize = 100;
+    //public int maxPoolSize = 500;
 
     [Header("通用发射器参数")]
-    [Min(0f)] public float LaunchInterval = 0.5f;
-    public float LaunchSpeed = 2f;
 
-    public Vector2 LaunchPosOffset = Vector2.zero;
-    public Vector3 LaunchRotOffset = Vector3.zero;
+    [Min(0f)] public float launchInterval = 0.5f;
+    public float launchSpeed = 2f;
 
-    public EmitterCamp EmitterCamp = EmitterCamp.Enemy;
-    public AudioName Audio_Fire = AudioName.None;
+    public Vector2 launchPosOffset = Vector2.zero;
+    public Vector3 launchRotOffset = Vector3.zero;
 
-    // === Line 发射器参数（仅当 Type == Line 时有效）===
+    public EmitterCamp emitterCamp = EmitterCamp.Enemy;
+    public AudioName audio_Fire = AudioName.None;
+
     [Header("Line 发射器")]
+
+    [Tooltip("发射方向，会转换成单位向量使用")]
     public Vector2 LineDirection = Vector2.up; // 替代 DirX/DirY
     [Min(1)] public int LineCount = 1;
     [Min(0f)] public float LineSpacing = 0.2f;
 
-    // === Arc 发射器参数（仅当 Type == Arc 时有效）===
+
     [Header("Arc 发射器")]
+
     public float ArcAngle = 90f;      // 弧度范围（度）
 
     [Min(0f)]

@@ -10,33 +10,34 @@ public enum E_Character : byte
 public class CharacterConfig : GameConfig
 {
     [Header("–≈œ¢≈‰÷√")]
-    public E_Character CharacterID = E_Character.None;
-    public E_Weapon[] AvailableWeapons;
+    public E_Character characterID = E_Character.None;
+
+    public E_Weapon[] weaponIds;
     [TextArea(1, 5)]
-    public string Description;
+    public string description;
 
     [Header("“∆ÀŸ≈‰÷√")]
-    public float MoveSpeed;
-    public float MoveSlowSpeed;
+    public float moveSpeed;
+    public float moveSlowSpeed;
 
     [Header("“∆∂Ø≈ˆ◊≤ÃÂ…Ë÷√")]
-    public Vector2 MoveBoxSize = new(0.3f, 0.5f);
-    public Vector2 MoveBoxOffset = new(0, 0.08f);
+    public Vector2 moveBoxSize = new(0.3f, 0.5f);
+    public Vector2 moveBoxOffset = new(0, 0.08f);
 
     [Header(" ‹ª˜≈ˆ◊≤ÃÂ…Ë÷√")]
-    public float HitRadius = 0.1f;
+    public float hitRadius = 0.1f;
 
     [Header("≤¡µØ∞Îæ∂")]
-    public float GrazeRadius = 0.5f;
+    public float grazeRadius = 0.5f;
 
     public CPlayerAttribute ToRuntimeAttribute(float logicDeltaTime)
     {
         return new CPlayerAttribute
         {
-            moveSpeedPerFrame = Mathf.Max(MoveSpeed, 0.01f) * logicDeltaTime,
-            moveSlowSpeedPerFrame = Mathf.Max(MoveSlowSpeed, 0.01f) * logicDeltaTime,
-            hitRadius = Mathf.Max(HitRadius, 0.01f),
-            grazeRadius = Mathf.Max(GrazeRadius, 0.01f)
+            moveSpeedPerFrame = Mathf.Max(moveSpeed, 0.01f) * logicDeltaTime,
+            moveSlowSpeedPerFrame = Mathf.Max(moveSlowSpeed, 0.01f) * logicDeltaTime,
+            hitRadius = Mathf.Max(hitRadius, 0.01f),
+            grazeRadius = Mathf.Max(grazeRadius, 0.01f)
         };
     }
 }

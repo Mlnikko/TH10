@@ -23,14 +23,9 @@ MonoBehaviour:
   - Weapon_Reimu_1
   - Weapon_Reimu_2
   danmakuConfigIds:
-  - Reimu_Homing
   - Reimu_Main
+  - Reimu_Homing
   - Star_0
-  - Star_1
-  - Star_2
-  - Star_3
-  - Star_4
-  - Star_5
   emitterConfigIds:
   - DE_Reimu_Homing
   - DE_Reimu_Main

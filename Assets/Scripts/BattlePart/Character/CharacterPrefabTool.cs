@@ -35,14 +35,14 @@ public class CharacterPrefabTool : MonoBehaviour
     {
         if(characterConfig == null) return;
 
-        characterName = characterConfig.CharacterID;
-        description = characterConfig.Description;
-        speed = characterConfig.MoveSpeed;
-        slowSpeed = characterConfig.MoveSlowSpeed;
-        moveBoxSize = characterConfig.MoveBoxSize;
-        moveBoxOffset = characterConfig.MoveBoxOffset;
-        hitRadius = characterConfig.HitRadius;
-        grazeRadius = characterConfig.GrazeRadius;
+        characterName = characterConfig.characterID;
+        description = characterConfig.description;
+        speed = characterConfig.moveSpeed;
+        slowSpeed = characterConfig.moveSlowSpeed;
+        moveBoxSize = characterConfig.moveBoxSize;
+        moveBoxOffset = characterConfig.moveBoxOffset;
+        hitRadius = characterConfig.hitRadius;
+        grazeRadius = characterConfig.grazeRadius;
     }
 
     public void SaveCharacterConfig()
@@ -50,14 +50,14 @@ public class CharacterPrefabTool : MonoBehaviour
         // 此方法仅用于 Editor 保存，运行时调用无效！
         if (characterConfig == null) return;
 
-        characterConfig.CharacterID = characterName;
-        characterConfig.Description = description;
-        characterConfig.MoveSpeed = speed;
-        characterConfig.MoveSlowSpeed = slowSpeed;
-        characterConfig.MoveBoxSize = moveBoxSize;
-        characterConfig.MoveBoxOffset = moveBoxOffset;
-        characterConfig.HitRadius = hitRadius;
-        characterConfig.GrazeRadius = grazeRadius;
+        characterConfig.characterID = characterName;
+        characterConfig.description = description;
+        characterConfig.moveSpeed = speed;
+        characterConfig.moveSlowSpeed = slowSpeed;
+        characterConfig.moveBoxSize = moveBoxSize;
+        characterConfig.moveBoxOffset = moveBoxOffset;
+        characterConfig.hitRadius = hitRadius;
+        characterConfig.grazeRadius = grazeRadius;
     }
 
     void OnDrawGizmosSelected()

@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class DanmakuUpdater : IGameObjectUpdater
 {
+    GameObject _gameObject;
     Transform _transform;
     SpriteRenderer _spriteRenderer;
 

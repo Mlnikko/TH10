@@ -17,9 +17,10 @@ public enum E_Weapon : byte
 public class WeaponConfig : GameConfig
 {
     [Header("Œ‰∆˜≈‰÷√")]
-    public E_Weapon WeaponID;
+    public E_Weapon weaponID;
 
-    public string[] DanmakuEmitterConfigIds;
+    public string[] danmakuEmitterConfigIds;
+
     [TextArea(1, 5)]
-    public string Description;
+    public string description;
 }

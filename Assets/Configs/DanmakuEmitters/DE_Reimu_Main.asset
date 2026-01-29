@@ -12,17 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DE_Reimu_Main
   m_EditorClassIdentifier: 
-  danmakuConfig:
-  - {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
-  Type: 1
-  MinPoolSize: 20
-  MaxPoolSize: 500
-  LaunchInterval: 0.5
-  LaunchSpeed: 2
-  LaunchPosOffset: {x: 0, y: 0}
-  LaunchRotOffset: {x: 0, y: 0, z: 0}
-  EmitterCamp: 1
-  Audio_Fire: 0
+  danmakuConfigIds:
+  - Reimu_Main
+  danmakuSelectMode: 0
+  emitMode: 1
+  launchInterval: 0.5
+  launchSpeed: 0.01
+  launchPosOffset: {x: 0, y: 0}
+  launchRotOffset: {x: 0, y: 0, z: 0}
+  emitterCamp: 2
+  audio_Fire: 0
   LineDirection: {x: 0, y: 1}
   LineCount: 1
   LineSpacing: 0

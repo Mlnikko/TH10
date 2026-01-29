@@ -27,8 +27,7 @@ public static class GameObjectBridge
     /// </summary>
     public static int Register(GameObject go, IGameObjectUpdater updater)
     {
-        if (_nextId >= EntityManager.MAX_ENTITIES)
-            throw new InvalidOperationException("Presentation ID pool exhausted");
+        if (_nextId >= EntityManager.MAX_ENTITIES) Logger.Critical("Presentation ID pool exhausted");
 
         int id = _nextId++;
         _gameObjects[id] = go;
@@ -66,7 +65,7 @@ public static class GameObjectBridge
             Entity entity = em.GetEntityByIndex(index);
             if (!em.IsValid(entity)) continue; // ← 安全校验
 
-            int id = em.GetComponentSpan<CGameObjectLink>()[index].gameObjectId;
+            int id = em.GetComponentSpan<CGameObjectLink>()[index].gid;
             _updaters[id]?.UpdateGameObject(em, entity);
         }
     }

@@ -23,7 +23,7 @@ public class WeaponSelectionUI : MonoBehaviour
     {
         this.onSelect = onSelect;
         ConfigId = config.ConfigId;
-        nameLabel.text = config.Description;
+        nameLabel.text = config.description;
 
         string weaponAtlasKey = ResHelper.GetSpriteAtlasKey("Weapon");
 

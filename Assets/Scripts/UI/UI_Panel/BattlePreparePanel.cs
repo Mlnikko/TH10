@@ -43,7 +43,7 @@ public class BattlePreparePanel : UIPanel
 
     void ReadConfig()
     {
-        characterConfigs = ConfigDB.GetCharacters();
+        characterConfigs = GameResDB.GetAllConfigs<CharacterConfig>();
 
         characterWeaponsMap.Clear();
 
@@ -52,14 +52,14 @@ public class BattlePreparePanel : UIPanel
             if (charCfg == null || string.IsNullOrEmpty(charCfg.ConfigId))
                 continue;
 
-            var weaponIds = charCfg.AvailableWeapons;
+            var weaponIds = charCfg.weaponIds;
             var weapons = new List<WeaponConfig>();
 
             foreach (var wid in weaponIds)
             {
                 if (wid == E_Weapon.None) continue;
 
-                var wcfg = ConfigDB.GetWeaponById(wid.ToString());
+                var wcfg = GameResDB.GetConfigById<WeaponConfig>(wid.ToString());
                 if (wcfg != null)
                     weapons.Add(wcfg);
                 else

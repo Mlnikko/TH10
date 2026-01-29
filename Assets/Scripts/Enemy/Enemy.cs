@@ -52,7 +52,7 @@ public abstract class Enemy : MonoBehaviour
     //    DanmakuPrefabTool danmaku = other.Owner as DanmakuPrefabTool;
     //    if (danmaku != null)
     //    {
-    //        maxHealth -= danmaku.Damage;
+    //        maxHealth -= danmaku.damage;
     //        if (maxHealth <= 0)
     //        {
     //            Die();

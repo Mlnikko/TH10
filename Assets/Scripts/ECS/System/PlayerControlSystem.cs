@@ -16,7 +16,7 @@ public class PlayerControlSystem : BaseSystem
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var playerRuntimes = EntityManager.GetComponentSpan<CPlayerRunTime>();
         var playerAttr = EntityManager.GetComponentSpan<CPlayerAttribute>();
-        var emitterRuntimes = EntityManager.GetComponentSpan<CDanmakuEmitterRunTime>();
+        var emitters = EntityManager.GetComponentSpan<CDanmakuEmitter>();
 
         for (int i = 0; i < playerCount; i++)
         {
@@ -29,7 +29,7 @@ public class PlayerControlSystem : BaseSystem
             ref var vel = ref velocities[entityIndex];
             ref var runtime = ref playerRuntimes[entityIndex];
             ref var attr = ref playerAttr[entityIndex];
-            ref var emitter = ref emitterRuntimes[entityIndex];
+            ref var emitter = ref emitters[entityIndex];
 
             // 更新运行时状态
             runtime.isSlowMode = input.SlowMode;
@@ -52,12 +52,9 @@ public class PlayerControlSystem : BaseSystem
             pos.x = Mathf.Clamp(pos.x, GlobalBattleData.AreaData.Left, GlobalBattleData.AreaData.Right);
             pos.y = Mathf.Clamp(pos.y, GlobalBattleData.AreaData.Bottom, GlobalBattleData.AreaData.Top);
 
-            if (input.Shoot)
-            {
-                emitter.isEnabled = true;
-            }
+            emitter.isEnabled = input.Shoot;
 
-            if(input.Bomb)
+            if (input.Bomb)
             {
 
             }

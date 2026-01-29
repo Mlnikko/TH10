@@ -12,17 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb0659cc521f3714da71df64a0ef43b3, type: 3}
   m_Name: Reimu_Homing
   m_EditorClassIdentifier: 
-  ConfigId: 
-  DanmakuType: 1
-  LocalScale: {x: 1, y: 1}
-  Sprite: {fileID: -857190109, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
-  Color: {r: 1, g: 1, b: 1, a: 1}
-  ColliderType: 0
-  ColliderLayer: 0
-  ColliderOffset: {x: 0, y: 0}
-  Size: {x: 0, y: 0}
-  Radius: 0
-  Damage: 1
+  prefabId: Reimu_Homing
+  danmakuType: 0
+  localScale: {x: 1, y: 1}
+  sprite: {fileID: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  colliderType: 0
+  colliderLayer: 1
+  colliderOffset: {x: 0, y: 0}
+  size: {x: 0, y: 0}
+  radius: 0
+  damage: 1
   HomingTurnSpeed: 5
   HomingTargetLayers:
     serializedVersion: 2

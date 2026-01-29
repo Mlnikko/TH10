@@ -11,6 +11,17 @@ public static class AddressableAutoConfig
 {
     const string ASSETS_PREFIX = "Assets/";
 
+    static readonly HashSet<string> EXCLUDED_PATH_PREFIXES = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Assets/Plugins/",
+        "Assets/Editor/",
+        "Assets/StreamingAssets/",
+        "Assets/AddressableAssetsData/",
+        "Assets/TextMesh Pro/",      // 示例：排除 TMP
+        "Assets/Demigiant/",         // 示例：排除 DOTween
+        "Assets/LeanTween/"          // 示例：排除 LeanTween
+    };
+
     // 特殊路径前缀映射表：原始路径前缀 => 期望的 Addressable Key 前缀
     // 注意：必须以 "Assets/" 开头，且以 '/' 结尾
     static readonly Dictionary<string, string> PREFIX_MAPPINGS = new()
@@ -43,7 +54,7 @@ public static class AddressableAutoConfig
         // 配置所有 Texture2D
         ConfigureAssetsByType("t:Texture2D", ".png,.jpg", settings, group, ref count);
 
-        // 配置所有 Sprite Atlas
+        // 配置所有 sprite Atlas
         ConfigureAssetsByType("t:SpriteAtlas", ".spriteatlasv2", settings, group, ref count);
 
         // 配置所有 Prefab
@@ -56,7 +67,7 @@ public static class AddressableAutoConfig
 
         EditorUtility.SetDirty(settings);
         AssetDatabase.SaveAssets();
-        Logger.Debug( $"自动配置了 {count} 个资源的 Addressable Key", LogTag.Resource);
+        Logger.Debug( $"已更新 {count} 个资源的 Addressable Key", LogTag.Resource);
     }
 
     static void ConfigureAssetsByType(
@@ -74,14 +85,14 @@ public static class AddressableAutoConfig
             if (string.IsNullOrEmpty(guid)) continue;
 
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (string.IsNullOrEmpty(path)) continue;
-            if (!path.StartsWith(ASSETS_PREFIX, StringComparison.Ordinal)) continue;
 
-            // 新增：跳过 Addressables 系统文件
-            if (path.StartsWith("Assets/AddressableAssetsData/", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (string.IsNullOrEmpty(path) || !path.StartsWith(ASSETS_PREFIX)) continue;
+
+            // 跳过排除路径
+            if (EXCLUDED_PATH_PREFIXES.Any(prefix => path.StartsWith(prefix))) continue;
+
+            // 跳过扩展名不匹配的
+            if (!extList.Contains(Path.GetExtension(path))) continue;
 
             string ext = Path.GetExtension(path);
             if (!extList.Contains(ext)) continue;

@@ -30,15 +30,15 @@ public class DanmakuPrefabTool : MonoBehaviour
             return;
         }
 
-        localScale = danmakuConfig.LocalScale;
-        sprite = danmakuConfig.Sprite;
-        color = danmakuConfig.Color;
-        colliderOffset = danmakuConfig.ColliderOffset;
-        colliderType = danmakuConfig.ColliderType;
-        size = danmakuConfig.Size;
-        radius = danmakuConfig.Radius;
-        danmakuType = danmakuConfig.DanmakuType;
-        damage = danmakuConfig.Damage;
+        localScale = danmakuConfig.localScale;
+        sprite = danmakuConfig.sprite;
+        color = danmakuConfig.color;
+        colliderOffset = danmakuConfig.colliderOffset;
+        colliderType = danmakuConfig.colliderType;
+        size = danmakuConfig.size;
+        radius = danmakuConfig.radius;
+        danmakuType = danmakuConfig.danmakuType;
+        damage = danmakuConfig.damage;
 
         Logger.Debug($"弹幕配置文件加载完成: {danmakuConfig.name}");
     }
@@ -51,15 +51,15 @@ public class DanmakuPrefabTool : MonoBehaviour
             return;
         }
 
-        danmakuConfig.LocalScale = localScale;
-        danmakuConfig.Sprite = sprite;
-        danmakuConfig.Color = color;
-        danmakuConfig.ColliderOffset = colliderOffset;
-        danmakuConfig.ColliderType = colliderType;
-        danmakuConfig.Size = size;
-        danmakuConfig.Radius = radius;
-        danmakuConfig.DanmakuType = danmakuType;
-        danmakuConfig.Damage = damage;
+        danmakuConfig.localScale = localScale;
+        danmakuConfig.sprite = sprite;
+        danmakuConfig.color = color;
+        danmakuConfig.colliderOffset = colliderOffset;
+        danmakuConfig.colliderType = colliderType;
+        danmakuConfig.size = size;
+        danmakuConfig.radius = radius;
+        danmakuConfig.danmakuType = danmakuType;
+        danmakuConfig.damage = damage;
 
         Logger.Debug($"弹幕配置文件保存完成: {danmakuConfig.name}");
     }
@@ -87,7 +87,7 @@ public class DanmakuPrefabTool : MonoBehaviour
         // 碰撞器中心绘制
         Gizmos.color = Color.yellow;
 
-        Vector3 colliderCenter = transform.position + (Vector3)danmakuConfig.ColliderOffset;
+        Vector3 colliderCenter = transform.position + (Vector3)danmakuConfig.colliderOffset;
 
         Gizmos.DrawSphere(transform.position, 0.01f);
         Gizmos.DrawLine(transform.position, colliderCenter);
