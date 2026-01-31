@@ -49,21 +49,24 @@ public class BattlePreparePanel : UIPanel
 
         foreach (var charCfg in characterConfigs)
         {
-            if (charCfg == null || string.IsNullOrEmpty(charCfg.ConfigId))
-                continue;
+            if (charCfg == null || string.IsNullOrEmpty(charCfg.ConfigId)) continue;
 
             var weaponIds = charCfg.weaponIds;
             var weapons = new List<WeaponConfig>();
 
-            foreach (var wid in weaponIds)
+            foreach (var weaponId in weaponIds)
             {
-                if (wid == E_Weapon.None) continue;
+                if (weaponId == E_Weapon.None) continue;
 
-                var wcfg = GameResDB.GetConfigById<WeaponConfig>(wid.ToString());
-                if (wcfg != null)
-                    weapons.Add(wcfg);
-                else
-                    Logger.Warn($"Weapon '{wid}' not found for character '{charCfg.ConfigId}'");
+                string weaponIdStr = weaponId.ToString().ToLowerInvariant();
+                var weaponCfg = GameResDB.GetConfig<WeaponConfig>(weaponIdStr);
+
+                if (weaponCfg == null)
+                {
+                    Logger.Warn("WeaponConfig not found for ID: " + weaponId);
+                    continue;
+                }
+                weapons.Add(weaponCfg);
             }
 
             characterWeaponsMap[charCfg.ConfigId] = weapons;
@@ -150,7 +153,7 @@ public class BattlePreparePanel : UIPanel
                 continue;
             }
 
-            item.Initialize(config, () => OnCharacterSelected(config.ConfigId)).Forget();
+            item.Initialize(config, () => OnCharacterSelected(config.ConfigId));
             characterItems.Add(item);
         }
 
@@ -190,7 +193,7 @@ public class BattlePreparePanel : UIPanel
                 continue;
             }
 
-            item.Initialize(wcfg, () => OnWeaponSelected(wcfg.ConfigId)).Forget();
+            item.Initialize(wcfg, () => OnWeaponSelected(wcfg.ConfigId));
             weaponItems.Add(item);
         }
 

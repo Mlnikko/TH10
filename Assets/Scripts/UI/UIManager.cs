@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -51,18 +50,15 @@ public class UIManager : SingletonMono<UIManager>
     /// </summary>
     public async Task<T> ShowPanelAsync<T>(object data = null) where T : UIPanel
     {
-        string panelName = typeof(T).Name;
-
-        string assetKey = ResHelper.GetPrefabKey(panelName, PrefabCategory.UI_Panel);
+        string panelKey = typeof(T).Name;
 
         // 如果已激活，直接返回（不重新实例化）
-        if (activePanels.TryGetValue(panelName, out var existing) && existing != null && existing.gameObject.activeSelf)
+        if (activePanels.TryGetValue(panelKey, out var existing) && existing != null && existing.gameObject.activeSelf)
         {
             return (T)existing;
         }
 
-        // 尝试从 ResManager 获取
-        GameObject prefab = await ResManager.LoadAsync<GameObject>(assetKey);
+        GameObject prefab = await ResManager.Instance.LoadAsync<GameObject>(E_ResourceCategory.Prefab, panelKey);
 
         // 显示面板
         var panel = InternalShowPanel<T>(prefab, data);

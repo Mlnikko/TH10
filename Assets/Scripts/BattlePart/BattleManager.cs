@@ -69,10 +69,9 @@ public class BattleManager : SingletonMono<BattleManager>
     public async Task PreloadBattleResourcesAsync()
     {
         if (_isResourcesPreloaded) return;
-        var manifest = await ResLoader.GetConfigAsync<GameConfigManifest>(ResHelper.GAME_CONFIG_CHECKLIST);
         try
         {
-            var battleAreaConfig = await ResLoader.GetConfigAsync<BattleAreaConfig>(manifest.BattleAreaCfgId);
+            var battleAreaConfig = await ResManager.Instance.LoadAsync<BattleAreaConfig>(E_ResourceCategory.Config,"DefaultBattleArea");
 
             if (battleAreaConfig != null)
             {
@@ -191,17 +190,26 @@ public class BattleManager : SingletonMono<BattleManager>
 
     void InitializePlayerEntity(PlayerBattleData playerData)
     {
-        var characterConfig = GameResDB.GetConfigById<CharacterConfig>(playerData.characterId.ToString());
+        
+        string characterIdStr = playerData.characterId.ToString().ToLowerInvariant();
+        var characterConfig = GameResDB.GetConfig<CharacterConfig>(characterIdStr);
 
         if (characterConfig == null)
         {
-            Logger.Error($"CharacterConfig not found for ID: {playerData.characterId}");
+            Logger.Error($"CharacterConfig not found for Key: {characterIdStr}");
             return;
         }
 
         var bornPos = GlobalBattleData.SpawnData.GetPlayerSpawnPos(playerData.playerIndex, TotalPlayers);
 
-        var characterPrefab = GameResDB.GetPrefabById(PrefabCategory.Character, playerData.characterId.ToString());
+        string charPrefabId = playerData.characterId.ToString().ToLowerInvariant();
+        var characterPrefab = GameResDB.GetPrefab(charPrefabId);
+
+        if (characterPrefab == null)
+        {
+            Logger.Error($"Character prefab not found for ID: {charPrefabId}");
+            return;
+        }
 
         var playerGO = Instantiate(characterPrefab);
 
@@ -227,11 +235,12 @@ public class BattleManager : SingletonMono<BattleManager>
             isSlowMode = false,
         });
 
-        var emitterConfig = GameResDB.GetConfigById<WeaponConfig>(playerData.weaponId.ToString());
+        string weaponIdStr = playerData.weaponId.ToString().ToLowerInvariant();
+        var weaponConfig = GameResDB.GetConfig<WeaponConfig>(weaponIdStr);
 
-        foreach (var emitterId in emitterConfig.danmakuEmitterConfigIds)
+        foreach (var emitterId in weaponConfig.danmakuEmitterConfigIds)
         {
-            em.AddComponent(playerEntity, new CDanmakuEmitter(true, GameResDB.GetIndexById<DanmakuEmitterConfig>(emitterId)));
+            //em.AddComponent(playerEntity, new CDanmakuEmitter(true, GameResDB.GetIndexById(emitterId)));
         }
 
 

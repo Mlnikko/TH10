@@ -19,17 +19,15 @@ public class WeaponSelectionUI : MonoBehaviour
         selectButton.onClick.AddListener(OnClick);
     }
 
-    public async Task Initialize(WeaponConfig config, System.Action onSelect)
+    public void Initialize(WeaponConfig config, System.Action onSelect)
     {
         this.onSelect = onSelect;
         ConfigId = config.ConfigId;
         nameLabel.text = config.description;
+        
+        var sprite = GameResDB.GetSpriteFromAtlas("weapon", config.ConfigId.ToString().ToLowerInvariant());
 
-        string weaponAtlasKey = ResHelper.GetSpriteAtlasKey("Weapon");
-
-        var atlas = await ResManager.LoadAsync<SpriteAtlas>(weaponAtlasKey);
-
-        iconImage.sprite = atlas.GetSprite(config.ConfigId);
+        iconImage.sprite = sprite;
     }
 
     public void SetSelected(bool selected)

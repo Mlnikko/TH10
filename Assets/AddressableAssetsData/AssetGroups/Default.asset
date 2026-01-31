@@ -18,957 +18,952 @@ MonoBehaviour:
   m_GUID: ce1532357111f0d4a9c779a4293a7eb3
   m_SerializeEntries:
   - m_GUID: 21eab830fde214d44a882133316bd2a2
-    m_Address: Configs/Weapons/Weapon_Marisa_0
+    m_Address: cfg_weapon_marisa_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f71a12f69b46e1d418028435f48d1cbb
-    m_Address: Configs/Weapons/Weapon_Reimu_2
+    m_Address: cfg_weapon_reimu_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9fc456f9b7d8c0f4c92b33f1cb161bbd
-    m_Address: Configs/Weapons/Weapon_Marisa_1
+    m_Address: cfg_weapon_marisa_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4de346eab560c424bb2c0f88ea7da36f
-    m_Address: Configs/Weapons/Weapon_Reimu_1
+    m_Address: cfg_weapon_reimu_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d209723abf2f3724189acc6a22b21478
-    m_Address: Configs/Weapons/Weapon_Reimu_0
+    m_Address: cfg_weapon_reimu_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec66ad94cc580cb40abab3c4a50af209
-    m_Address: Configs/Weapons/Weapon_Marisa_2
+    m_Address: cfg_weapon_marisa_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aaf3a19affdf5c2408060432e85d27f3
-    m_Address: Configs/BattleAreaConfig
+    m_Address: cfg_defaultbattlearea
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8081d63c8f9fdfa41ab47d36b3980340
-    m_Address: Configs/Characters/Marisa
+    m_Address: cfg_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b5faa925c8b9ea64cbd65c2684362cf7
-    m_Address: Configs/Characters/Reimu
+    m_Address: cfg_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c27335b6dbc1a1f4dba5b818f7fd1cce
-    m_Address: Configs/DanmakuEmitters/DE_Reimu_Homing
+    m_Address: cfg_dme_reimu_homing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35a834f408d757a468c1938fb9a1d7aa
-    m_Address: Configs/DanmakuEmitters/DE_Reimu_Main
+    m_Address: cfg_dme_reimu_main
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 87d415b641b8e6d4ba18da60fc2f1043
-    m_Address: Configs/Rank
+    m_Address: cfg_rank
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b332f7aa42eaffc4e9bb82de4920c13b
-    m_Address: Configs/AudioConfig
+    m_Address: cfg_audioconfig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79f68cadc6e72654c9af06f08903e3fa
-    m_Address: Configs/Danmakus/Reimu_Homing
+    m_Address: cfg_dm_reimu_homing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 462e9767835d93841b90124df5562395
-    m_Address: Configs/Danmakus/Reimu_Main
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 57d31a3e627f0db458f2257284530b0c
-    m_Address: Configs/GameConfigManifest
+    m_Address: cfg_dm_reimu_main
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 002873001e15c764785b6acad369ab1e
-    m_Address: Configs/Danmakus/Star_0
+    m_Address: cfg_dm_star_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ccd4e67b46f59d24b9616b95cc831a2d
-    m_Address: Art/Textures/Characters/Marisa
+    m_Address: tex_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ada309e2b84346e44a8667ad4ad0a576
-    m_Address: Art/Textures/Characters/Reimu
+    m_Address: tex_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86a6441ada71c674fa69da3bdf2b92b0
-    m_Address: Art/Textures/Characters/Marisa_1
+    m_Address: tex_marisa_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f3eac5b9a58dc042a94467433e8c18d
-    m_Address: Art/ANM/Bullet/etama
+    m_Address: tex_etama
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 984f553d7043b73418103409ec53f2b7
-    m_Address: Art/ANM/Bullet/etama6
+    m_Address: tex_etama6
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10d6831266fa6db499680189a87e8523
-    m_Address: Art/ANM/Enemy/enemy
+    m_Address: tex_enemy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4178e6290255dce4b9e510b6a0969960
-    m_Address: Art/ANM/Front/front00
+    m_Address: tex_front00
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cf28af01a6bad494d893c6a579a40351
-    m_Address: Art/ANM/Loading/loading
+    m_Address: tex_loading
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b5e33c0e2da6e20408f899cfbdfbe1ed
-    m_Address: Art/ANM/Player/etama2
+    m_Address: tex_etama2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 01ce1d31b6a8e4b429259ed1363c9f07
-    m_Address: Art/ANM/Player/etama3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 26ced90f533491b4baf77b785ea6b010
-    m_Address: Art/ANM/Player/marisa
+    m_Address: tex_etama3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff5475af0712d5f4ab3fc3f13ec03629
-    m_Address: Art/ANM/Player/reimu
+    m_Address: tex_atlas_reimu
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26ced90f533491b4baf77b785ea6b010
+    m_Address: tex_atlas_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 88ae0ea383f6b9b42baf2e5efe868d9c
-    m_Address: Art/ANM/Stage/background/stg1bg
+    m_Address: tex_stg1bg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dcecf8d5be2903f46b6e251d8b44811e
-    m_Address: Art/ANM/Stage/background/stg1bg2
+    m_Address: tex_stg1bg2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 167eb29edbdbf834d9fbdbbdee02cd1b
-    m_Address: Art/ANM/Stage/background/stg1bg3
+    m_Address: tex_stg1bg3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1facf56da46e634993580598361d458
-    m_Address: Art/ANM/Stage/background/stg1bg4
+    m_Address: tex_stg1bg4
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c4ffab4829fd0bf4698aa6f06c1e5a73
-    m_Address: Art/ANM/Title/rank00
+    m_Address: tex_rank00
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0981462057d0f740a818cafc09b6095
-    m_Address: Art/ANM/Title/select00
+    m_Address: tex_select00
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32af3c5f43cacbf499dbc0a2480c3752
-    m_Address: Art/ANM/Title/select01
+    m_Address: tex_select01
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9cf5c646ca1b742418f5de75f4a6546a
-    m_Address: Art/ANM/Title/sl_pl00b
+    m_Address: tex_sl_pl00b
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 98d6d5abd7f45e14498a87da4dcedb5d
-    m_Address: Art/ANM/Title/sl_pl01b
+    m_Address: tex_sl_pl01b
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b12674d14bb6f419783b196182d84714
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Blue Checkerboard
+    m_Address: tex_blue checkerboard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 473f10ee963b644f4bef41f2b5dcccc3
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Blue Stripes
+    m_Address: tex_blue stripes
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4a4b973ee4fc740238c6360079c00a17
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Dark Checkerboard
+    m_Address: tex_dark checkerboard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c4ce27367278c4380a08bedcd3137ff1
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Dark Stripes
+    m_Address: tex_dark stripes
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9fb04f65535cd47cd8c226d5249a6415
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Green Checkerboard
+    m_Address: tex_green checkerboard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd001d1555320480192a250126182e39
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Green Stripes
+    m_Address: tex_green stripes
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec44aff29dad74095b976479ebc66af8
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Red Checkerboard
+    m_Address: tex_red checkerboard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: af7fd3c28a4714137aa51a67d07709cf
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/Red Stripes
+    m_Address: tex_red stripes
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71f179552933f4aff84739963a220f38
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/White Checkerboard
+    m_Address: tex_white checkerboard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 338de845e320441e787608e5eb54ce36
-    m_Address: Art/Quantum UI/Sprites/Backgrounds/White Stripes
+    m_Address: tex_white stripes
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d1cc1614df9a42d8aec0469b1e60a5e
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Circle Button
+    m_Address: tex_blue circle button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7d0420c800f674185a20c5f8dd6d3be6
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Circle Outline Button
+    m_Address: tex_blue circle outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3c6eef88ff67043a3ab37af593f8620a
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Round Button
+    m_Address: tex_blue round button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5fa85b6040900479daac222f222158ff
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Round Outline Button
+    m_Address: tex_blue round outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0b4d929628fb1451b84de65e27f0789d
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Rounded Button
+    m_Address: tex_blue rounded button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4ef3f5adb6c6d4226a87a50ae9eb8b91
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Rounded Outline Button
+    m_Address: tex_blue rounded outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0cafdc2798ba044ad8c47e37dfe1f056
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Square Button
+    m_Address: tex_blue square button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bc454c18443941b496e577e1eb93a67
-    m_Address: Art/Quantum UI/Sprites/Buttons/Blue Square Outline Button
+    m_Address: tex_blue square outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 78a0bf8f458524411bab8f762f983f77
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Circle Button
+    m_Address: tex_dark circle button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79008e6d026d84f94a594b62fa815314
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Circle Outline Button
+    m_Address: tex_dark circle outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8e354bd2437594e9bb376ffa06c9ff6b
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Round Button
+    m_Address: tex_dark round button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40c84cb4693f74c73acdbe064b8d7000
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Round Outline Button
+    m_Address: tex_dark round outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a80101232bdf848a38a10881ea870425
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Rounded Button
+    m_Address: tex_dark rounded button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1ed88a02cd6854e13bdcea1895d8dafe
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Rounded Outline Button
+    m_Address: tex_dark rounded outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 28a56a91eea824a6595651bfd457e79e
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Square Button
+    m_Address: tex_dark square button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c7b81f3c72974de19ac7027704d8f50
-    m_Address: Art/Quantum UI/Sprites/Buttons/Dark Square Outline Button
+    m_Address: tex_dark square outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9bf5fe38fdda04af29528c06a571c837
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Circle Button
+    m_Address: tex_green circle button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9dc06b146dc694d3083c3ea4fb0079d2
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Circle Outline Button
+    m_Address: tex_green circle outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3702a3287128749ccbf7c9bd7c13c871
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Round Button
+    m_Address: tex_green round button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40689eed5d9294eddb110e5b43f5bdff
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Round Outline Button
+    m_Address: tex_green round outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 39a35d5e6ddab4e4da9ea5e72286253a
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Rounded Button
+    m_Address: tex_green rounded button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cc4159309963a4576864561a4f6d8d32
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Rounded Outline Button
+    m_Address: tex_green rounded outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a0d1dbd56dec40abb8138c0592c299a
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Square Button
+    m_Address: tex_green square button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8d2d66a13291340f1acbb8bca320d151
-    m_Address: Art/Quantum UI/Sprites/Buttons/Green Square Outline Button
+    m_Address: tex_green square outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7efd4168743fc4c218a9101148393244
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Circle Button
+    m_Address: tex_red circle button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9933a3b8f6b6243229059924b14bc48c
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Circle Outline Button
+    m_Address: tex_red circle outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dca951feb01de487f97d842fbe9fb1f5
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Round Button
+    m_Address: tex_red round button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 543b3bfb0b8044678ab13fbe1b99886f
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Round Outline Button
+    m_Address: tex_red round outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1f270fc399274b49ababce4dfd30d10
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Rounded Button
+    m_Address: tex_red rounded button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a6c2962623c74bc1ba317def2d16680
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Rounded Outline Button
+    m_Address: tex_red rounded outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b63016ec16ac04cfbaf61580a21a4d5d
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Square Button
+    m_Address: tex_red square button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 511ac66591df94f2490927beaa96acc5
-    m_Address: Art/Quantum UI/Sprites/Buttons/Red Square Outline Button
+    m_Address: tex_red square outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e6450a15ab10f4016a29e51bb1036188
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Circle Button
+    m_Address: tex_white circle button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23e031f1dfb7b4eddae812b4a3a0e268
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Circle Outline Button
+    m_Address: tex_white circle outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2d1db67f26a74f13bb10147155953dd
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Round Button
+    m_Address: tex_white round button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 361685eeac9f141b09b365c40e020b2a
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Round Outline Button
+    m_Address: tex_white round outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1cfdba0090d5d4c7d9701ae3ff1699ce
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Rounded Button
+    m_Address: tex_white rounded button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7daffb0fa3284a03a5002d4f7d3fd79
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Rounded Outline Button
+    m_Address: tex_white rounded outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dae719cc6ae5b4091b66fa23139b23be
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Square Button
+    m_Address: tex_white square button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e5343799bfa9e4e4c9edf6b3b99c0eb5
-    m_Address: Art/Quantum UI/Sprites/Buttons/White Square Outline Button
+    m_Address: tex_white square outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ac1796dcbf91c4ce9852cb0e516aa614
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Bars
+    m_Address: tex_dark bars
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 60b3a0f5c4ccc42f7b8301ee4973f512
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Checkmark
+    m_Address: tex_dark checkmark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2673fc7391ff4256918cd4d93943a84
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Dots
+    m_Address: tex_dark dots
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1b6ddff80fe8a40b38397ad0d29423c0
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Down Arrow
+    m_Address: tex_dark down arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eb1fdf509ce5e41f18c2a9500ed4fea5
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Exclamation
+    m_Address: tex_dark exclamation
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8c3c0166eb1b643f4a06a5354040bf33
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Gear
+    m_Address: tex_dark gear
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 62903b20a9e7543f788f983367e44657
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark House
+    m_Address: tex_dark house
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 64962464d95374bec9ca01c28b3a54a2
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Info
+    m_Address: tex_dark info
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf0f86f7c3dbe4c8eab456408a66edc1
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Left Arrow
+    m_Address: tex_dark left arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2955a694378af44dca80c7797d631fa4
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Minus
+    m_Address: tex_dark minus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7ea27d795133348878d46789b5fe4337
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Mute
+    m_Address: tex_dark mute
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 41ffa33d53fb44752a17c9253186686f
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Pause
+    m_Address: tex_dark pause
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec64c286fac2449848bf69c46b4980d1
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Play
+    m_Address: tex_dark play
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8aba7b2c03e82491389e5d6705552b87
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Plus
+    m_Address: tex_dark plus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4011a12b3d33344f3964cfa65c962379
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Question
+    m_Address: tex_dark question
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7d83dc62e94b64eba9abcfd29451a40a
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Right Arrow
+    m_Address: tex_dark right arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cf48101c791c04974bbd765a063dab44
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Sound
+    m_Address: tex_dark sound
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 819578eb43eda44b0b066a9a66e75363
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark Up Arrow
+    m_Address: tex_dark up arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2cb5d8329fe554f84b289db2aac8dd93
-    m_Address: Art/Quantum UI/Sprites/Icons/Dark X
+    m_Address: tex_dark x
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb5a5f985a9db4957a0522f2fc7e0894
-    m_Address: Art/Quantum UI/Sprites/Icons/White Bars
+    m_Address: tex_white bars
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf28281279a5e479c8105c959d2268aa
-    m_Address: Art/Quantum UI/Sprites/Icons/White Checkmark
+    m_Address: tex_white checkmark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e322a7a418040463fb053c543d2ea9fc
-    m_Address: Art/Quantum UI/Sprites/Icons/White Dots
+    m_Address: tex_white dots
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ac1ea26e75c8e47a08fbbfa39f286d29
-    m_Address: Art/Quantum UI/Sprites/Icons/White Down Arrow
+    m_Address: tex_white down arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 777beaf84bb8b41d4ae3fd993af441f3
-    m_Address: Art/Quantum UI/Sprites/Icons/White Exclamation
+    m_Address: tex_white exclamation
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f55f75488890d4747835fc8299828fe7
-    m_Address: Art/Quantum UI/Sprites/Icons/White Gear
+    m_Address: tex_white gear
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05b85860d5cf649478cdd1a1ec3c95a7
-    m_Address: Art/Quantum UI/Sprites/Icons/White House
+    m_Address: tex_white house
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 31109ff4e70d141018ad17620c1728db
-    m_Address: Art/Quantum UI/Sprites/Icons/White Info
+    m_Address: tex_white info
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a45ca74a8e3554df5862c1cc65fbc192
-    m_Address: Art/Quantum UI/Sprites/Icons/White Left Arrow
+    m_Address: tex_white left arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff2a254658ad5427fbb6aa23e6c5ec95
-    m_Address: Art/Quantum UI/Sprites/Icons/White Minus
+    m_Address: tex_white minus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc560b3b0ac724b68ad7810f7dcaad73
-    m_Address: Art/Quantum UI/Sprites/Icons/White Mute
+    m_Address: tex_white mute
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f202d0535d8d34970abcfaa21aba2019
-    m_Address: Art/Quantum UI/Sprites/Icons/White Pause
+    m_Address: tex_white pause
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4d100b612cc9d4bac8fee900296353ae
-    m_Address: Art/Quantum UI/Sprites/Icons/White Play
+    m_Address: tex_white play
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2485a46199e57482fb858f4c4982436b
-    m_Address: Art/Quantum UI/Sprites/Icons/White Plus
+    m_Address: tex_white plus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8878f6aeee8f5456ba946015221cdc65
-    m_Address: Art/Quantum UI/Sprites/Icons/White Question
+    m_Address: tex_white question
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56b5445fb30cc460a8bdf929fc626bf9
-    m_Address: Art/Quantum UI/Sprites/Icons/White Right Arrow
+    m_Address: tex_white right arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e7ff8ffb2f30c4a898a73e447e53cc36
-    m_Address: Art/Quantum UI/Sprites/Icons/White Sound
+    m_Address: tex_white sound
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e22d3a7dcdf3347a9bdbd9c26bf18385
-    m_Address: Art/Quantum UI/Sprites/Icons/White Up Arrow
+    m_Address: tex_white up arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f1b2565520fde4893a9047ef83d215dc
-    m_Address: Art/Quantum UI/Sprites/Icons/White X
+    m_Address: tex_white x
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 631806e346db9455e9f14819df36b7a9
-    m_Address: Art/Quantum UI/Sprites/Input Fields/Blue Input Field
+    m_Address: tex_blue input field
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f30f367f46e8043d28e148ddbdb619d7
-    m_Address: Art/Quantum UI/Sprites/Input Fields/Dark Input Field
+    m_Address: tex_dark input field
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c8f60bd04999c401fa9fd3dbbd0dbb51
-    m_Address: Art/Quantum UI/Sprites/Input Fields/Green Input Field
+    m_Address: tex_green input field
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9b7d83189e043421abd9b3bce627d152
-    m_Address: Art/Quantum UI/Sprites/Input Fields/Red Input Field
+    m_Address: tex_red input field
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f552135dd8b234310af7e8710d71ad48
-    m_Address: Art/Quantum UI/Sprites/Input Fields/White Input Field
+    m_Address: tex_white input field
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 787cf6daf0d2d45a5b8f95a848d703b5
-    m_Address: Art/Quantum UI/Sprites/Scene Transitions/Fade to Black
+    m_Address: tex_fade to black
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f842610c9b48c40c18c82ecc44966062
-    m_Address: Art/Quantum UI/Sprites/Tabs/Blue Round Inactive Tab
+    m_Address: tex_blue round inactive tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e6288fee0c38640ec9bae245aba978fb
-    m_Address: Art/Quantum UI/Sprites/Tabs/Blue Round Tab
+    m_Address: tex_blue round tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d00475e1c93c0468a96b7dd4d72003e0
-    m_Address: Art/Quantum UI/Sprites/Tabs/Dark Round Inactive Tab
+    m_Address: tex_dark round inactive tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 93c63e67306814d6486fd7bee93f4426
-    m_Address: Art/Quantum UI/Sprites/Tabs/Dark Round Tab
+    m_Address: tex_dark round tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d0e862efef437402cbac5561e0c41ccf
-    m_Address: Art/Quantum UI/Sprites/Tabs/Green Round Inactive Tab
+    m_Address: tex_green round inactive tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7aae8e35187dc4abba6b5b5656e303f6
-    m_Address: Art/Quantum UI/Sprites/Tabs/Green Round Tab
+    m_Address: tex_green round tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c5c88878883a3449b838351c70fe3608
-    m_Address: Art/Quantum UI/Sprites/Tabs/Red Round Inactive Tab
+    m_Address: tex_red round inactive tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 006f88eb96b2444f7b0ca916c60fec9c
-    m_Address: Art/Quantum UI/Sprites/Tabs/Red Round Tab
+    m_Address: tex_red round tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 291f7479bbc4e49769a1fad29d9dab9a
-    m_Address: Art/Quantum UI/Sprites/Tabs/White Round Inactive Tab
+    m_Address: tex_white round inactive tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5ac0cae87edd146fea9dbf184c34a717
-    m_Address: Art/Quantum UI/Sprites/Tabs/White Round Tab
+    m_Address: tex_white round tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cba7ce4a138bc4fa1be5ea62e1fc17b7
-    m_Address: Art/Quantum UI/Sprites/Toggles/Blue Rounded Switch Off
+    m_Address: tex_blue rounded switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b457806e19ef442229e0cd49418d1d92
-    m_Address: Art/Quantum UI/Sprites/Toggles/Blue Rounded Switch On
+    m_Address: tex_blue rounded switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9aa581cf681c040a4a19e43d6bfbf78d
-    m_Address: Art/Quantum UI/Sprites/Toggles/Blue Square Switch Off
+    m_Address: tex_blue square switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4071528e8551d4ce6b9cd02607d1858d
-    m_Address: Art/Quantum UI/Sprites/Toggles/Blue Square Switch On
+    m_Address: tex_blue square switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 58fb70e7b882b41b889205ead88b389f
-    m_Address: Art/Quantum UI/Sprites/Toggles/Dark Rounded Switch Off
+    m_Address: tex_dark rounded switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b0b36ec102434636b1c95ff0e870fbc
-    m_Address: Art/Quantum UI/Sprites/Toggles/Dark Rounded Switch On
+    m_Address: tex_dark rounded switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10bf3731434a64a9a9e5d595c5245e7a
-    m_Address: Art/Quantum UI/Sprites/Toggles/Dark Square Switch Off
+    m_Address: tex_dark square switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c02de5852d43e4e23bc0a4b5cc266230
-    m_Address: Art/Quantum UI/Sprites/Toggles/Dark Square Switch On
+    m_Address: tex_dark square switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 50286193103a74a07858afe56b85838c
-    m_Address: Art/Quantum UI/Sprites/Toggles/Green Rounded Switch Off
+    m_Address: tex_green rounded switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8d63f0731b37c4f8a92f30aed16fd0f0
-    m_Address: Art/Quantum UI/Sprites/Toggles/Green Rounded Switch On
+    m_Address: tex_green rounded switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32bcd02d627c148168a2a603223ad80b
-    m_Address: Art/Quantum UI/Sprites/Toggles/Green Square Switch Off
+    m_Address: tex_green square switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 080cf1c8b2e3243bd8caf2c7275f36d7
-    m_Address: Art/Quantum UI/Sprites/Toggles/Green Square Switch On
+    m_Address: tex_green square switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 68861e1744d114856b34bf45a409f326
-    m_Address: Art/Quantum UI/Sprites/Toggles/Red Rounded Switch Off
+    m_Address: tex_red rounded switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0abaefb49cb9f499faaa0e59e90d7e58
-    m_Address: Art/Quantum UI/Sprites/Toggles/Red Rounded Switch On
+    m_Address: tex_red rounded switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fdfa37b3878264042b15f7358338e199
-    m_Address: Art/Quantum UI/Sprites/Toggles/Red Square Switch Off
+    m_Address: tex_red square switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4dc189fcf51084765988e5b7bb8bed7e
-    m_Address: Art/Quantum UI/Sprites/Toggles/Red Square Switch On
+    m_Address: tex_red square switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 292a2d83002c94c4c9ad558eca6802d7
-    m_Address: Art/Quantum UI/Sprites/Toggles/White Rounded Switch Off
+    m_Address: tex_white rounded switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 73f86462d8ca748bfa6ce29a228ceb7b
-    m_Address: Art/Quantum UI/Sprites/Toggles/White Rounded Switch On
+    m_Address: tex_white rounded switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db83a0473cb7d4d2583440567e3d0ea1
-    m_Address: Art/Quantum UI/Sprites/Toggles/White Square Switch Off
+    m_Address: tex_white square switch off
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 081153d58139441329eddabc600e068d
-    m_Address: Art/Quantum UI/Sprites/Toggles/White Square Switch On
+    m_Address: tex_white square switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7974d998bb2ae4cd9b79b452c60029f8
-    m_Address: Art/Quantum UI/Sprites/Windows/Blue Rounded Window
+    m_Address: tex_blue rounded window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 439d5b7b84deb4a9596236dfe5b9d797
-    m_Address: Art/Quantum UI/Sprites/Windows/Blue Square Window
+    m_Address: tex_blue square window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 82f94fe808b5341fd9566d544c5cb6c3
-    m_Address: Art/Quantum UI/Sprites/Windows/Dark Rounded Window
+    m_Address: tex_dark rounded window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0c9c1783230404e3ea3930be66eab709
-    m_Address: Art/Quantum UI/Sprites/Windows/Dark Square Window
+    m_Address: tex_dark square window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b79e5e858702844669f573cd10eb1ddf
-    m_Address: Art/Quantum UI/Sprites/Windows/Green Rounded Window
+    m_Address: tex_green rounded window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2dc67863e77d4627ad3970d18ea41e3
-    m_Address: Art/Quantum UI/Sprites/Windows/Green Square Window
+    m_Address: tex_green square window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f79c91048c950436ca75cb699c7a34bc
-    m_Address: Art/Quantum UI/Sprites/Windows/Red Rounded Window
+    m_Address: tex_red rounded window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27a61c3d0bc70471fb85b08b1faf6251
-    m_Address: Art/Quantum UI/Sprites/Windows/Red Square Window
+    m_Address: tex_red square window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1612ec7a0b26245809266786171f4559
-    m_Address: Art/Quantum UI/Sprites/Windows/White Rounded Window
+    m_Address: tex_white rounded window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f544e4f1ff5f9453084e1ff5e7d5e828
-    m_Address: Art/Quantum UI/Sprites/Windows/White Square Window
+    m_Address: tex_white square window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a3cffb8b3d5456f428556ae9f08b5021
-    m_Address: Art/Textures/Characters/Reimu_1
+    m_Address: tex_reimu_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b9ba9abeb1ffc3498188b2fb6f89885
-    m_Address: Prefabs/Characters/Marisa
+    m_Address: prefab_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b033378e3f9aca428df749900de259d
-    m_Address: Prefabs/Characters/Reimu
+    m_Address: prefab_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 16ec59042b78ee34fa89c09c8e8b319e
-    m_Address: Prefabs/Danmakus/Reimu_Homing
+    m_Address: prefab_dm_reimu_homing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c3a89e662a108a7489464c853fc841f1
-    m_Address: Prefabs/Danmakus/Reimu_Main
+    m_Address: prefab_dm_reimu_main
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 65049c74871e96144a6c03fde3ce4f60
-    m_Address: Prefabs/Danmakus/Star_0
+    m_Address: prefab_dm_star_0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 802840e8e27e2074c99245aa3174458e
-    m_Address: Prefabs/DanmakuEmitters/DE_Reimu_Homing
+    m_Address: prefab_dme_reimu_homing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f93a67310d0fd8243af32fc357b9b4a1
-    m_Address: Prefabs/DanmakuEmitters/DE_Reimu_Main
+    m_Address: prefab_dme_reimu_main
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a53889af21e396c40b0b51624e423dc8
-    m_Address: Prefabs/Enemy/Fariy
+    m_Address: prefab_fariy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d0aea53085226174ab2268c02d0ff896
-    m_Address: Prefabs/UI/Items/CharacterSelectionUI
+    m_Address: prefab_characterselectionui
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db1b76f213ff07743a9b7e61e79d30dd
-    m_Address: Prefabs/UI/Items/PlayerInfoUI
+    m_Address: prefab_playerinfoui
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83f80d062d37b9544ad8eadad247b3d5
-    m_Address: Prefabs/UI/Items/SettingCategoryButton
+    m_Address: prefab_settingcategorybutton
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: da569b060ffc7d24bbd3684a91a57abe
-    m_Address: Prefabs/UI/Items/WeaponSelectionUI
+    m_Address: prefab_weaponselectionui
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f3109c7fb72eaaa4e90c8c80dad09a40
-    m_Address: Prefabs/UI/Panels/BattlePreparePanel
+    m_Address: prefab_battlepreparepanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c4cfa5c6a049bb45a456c1bb439f400
-    m_Address: Prefabs/UI/Panels/JoinRoomInputPanel
+    m_Address: prefab_joinroominputpanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2fe27a8efcd67e04ab4ad36b16ba66f3
-    m_Address: Prefabs/UI/Panels/MenuPanel
+    m_Address: prefab_menupanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ac2ecef0e79282c48bd8aa6594775cd1
-    m_Address: Prefabs/UI/Panels/OnlineModePanel
+    m_Address: prefab_onlinemodepanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e4ead09567355304b9f658d4941a41a0
-    m_Address: Prefabs/UI/Panels/RoomPanel
+    m_Address: prefab_roompanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7c598cca04b048e4e91b3bb0f0a79391
-    m_Address: Prefabs/UI/Panels/SettingsPanel
+    m_Address: prefab_settingspanel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1005,27 +1000,27 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 81c2854cbce46eb4ca9ea0381b40ddd8
-    m_Address: Art/Font/Exotic 350 Demi-Bold BT/Exotic 350 Demi-Bold BT SDF
+    m_Address: cfg_exotic 350 demi-bold bt sdf
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 42b32d13761fff04da2d866b95346d62
-    m_Address: Art/Font/Unique-Heavy/unique-heavy SDF
+    m_Address: cfg_unique-heavy sdf
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 94372b37536c348c69ca263f84cda3f8
-    m_Address: Art/Quantum UI/Fonts/Montserrat/Montserrat-Regular SDF
+    m_Address: cfg_montserrat-regular sdf
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bbb2c76c117338045854982ba0901625
-    m_Address: Configs/Enemy/Minions/MinionConfig
+    m_Address: cfg_minionconfig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1070d173db51dc44d97a1202d3cde3dc
-    m_Address: Fonts/SiYuanHeiTi-Normal/SourceHanSansSC-Normal-2 SDF
+    m_Address: cfg_sourcehansanssc-normal-2 sdf
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1045,7 +1040,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 653f074fc0d3b324593cb0beeedff0ea
-    m_Address: Resources/DOTweenSettings
+    m_Address: cfg_dotweensettings
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1075,12 +1070,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c06da3af9b3c08b4f99bfb77eaef0a62
-    m_Address: Art/Atlases/Weapon
+    m_Address: atlas_weapon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 48dfbad5ea739de458a6fdd67753b864
-    m_Address: Art/Textures/Weapon
+    m_Address: tex_weapon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1089,8 +1084,278 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 210c6c632f3d18c489dcb28dbbdd12d0
-    m_Address: Configs/GamePrefabManifest
+  - m_GUID: 5b42ca69af911fd448c6875af801937f
+    m_Address: cfg_gameresourcemanifest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ab2c36844556e24ebfd11c48d872c14
+    m_Address: se_th10_01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70b2e636be7864f4fa29c795447e336d
+    m_Address: se_th10_02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1ce17a7256305d47839af21daac2130
+    m_Address: se_th10_03
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de28eab97d3590546877b9379716586e
+    m_Address: se_th10_04
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6a2e74a0e76bad48875fca647710627
+    m_Address: se_th10_05
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2cf52c91dba3098408aab01b8a3ac257
+    m_Address: se_th10_06
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9c0b806503c97e4891d16f9e1fb81b1
+    m_Address: se_th10_07
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b1c04dcda0d782429a210f64f9bd6e0
+    m_Address: se_th10_08
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 759918f18bf67bb4e83e84424740e5f9
+    m_Address: se_th10_09
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e08ef4f5581dd9d48b4ed7a0b9fc14dc
+    m_Address: se_th10_10
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 72366c8e9740e1345ac5597f537d05a2
+    m_Address: se_th10_11
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b7f5ac4f3560b846926d186686db84c
+    m_Address: se_th10_12
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4918f6041815adf488199831644135e8
+    m_Address: se_th10_13
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bdf3cf74b36036d4e93083fda8f1c84e
+    m_Address: se_bonus3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb43f6be8aa246f4d87cb29fbebf9df7
+    m_Address: se_cancel00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 400c773a8e3bf5f4286272c3e101e7af
+    m_Address: se_cardget
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8a55eaaa59e67d40a438ff683a5db2f
+    m_Address: se_cat00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a954f5d2aa15b134db3b61ac969815ce
+    m_Address: se_ch00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9f6cc3de6a693d45961b23be67348d2
+    m_Address: se_ch01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3243a96668e0f384da3ff22474fa7c12
+    m_Address: se_damage00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e440a2aa7a84b8c43918f9034a6363a3
+    m_Address: se_damage01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19c628c80cd4a524eab4321ed53dc61b
+    m_Address: se_enep00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e99ecf3638582904097eee1672dce282
+    m_Address: se_enep01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5478421c8391c32408de9c5fa4a4ab35
+    m_Address: se_extend
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eeb00259c06e04e428d543ad9088048b
+    m_Address: se_graze
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5da242c71a7d832479a543c139389166
+    m_Address: se_gun00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69c5ed21a55a2d64e90c27252a36aba6
+    m_Address: se_hint00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f494f861e9506f4d96e3308653779c2
+    m_Address: se_invalid
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a58beb6792afe1b4bacb6c8b68c0dd57
+    m_Address: se_item00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b330946327eb68740b4c576caa5651e6
+    m_Address: se_kira00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7be39cac1189fe94e819bee7455cba82
+    m_Address: se_kira01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d11ae4c5b5148848be87b54d4009b87
+    m_Address: se_kira02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 725de80ab7f335841bc881493eed45b0
+    m_Address: se_lazer00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a97f7960589269249baefda0582b3deb
+    m_Address: se_lazer01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60a21e187a2f6004c84bed8c9647ac66
+    m_Address: se_ok00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ea28450b3899934bb6d6984102c7084
+    m_Address: se_option
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aebe22c104b52c24b979d3f76bbd7c5e
+    m_Address: se_pause
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e54aa045da0a1e841b54fbad2a141994
+    m_Address: se_pldead00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e36fa5963c37924e9cfc8bd86ad4120
+    m_Address: se_plst00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39db14b82cb3f554593904b782ade172
+    m_Address: se_power0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17c2b69067296594489a122925af5b6c
+    m_Address: se_power1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87a7b29a9bdce494c892b19b48105d01
+    m_Address: se_powerup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bee6f3192f8435943add5405a8ee4e2c
+    m_Address: se_select00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a06fdf93b50ed764b8951bc9eeb98395
+    m_Address: se_slash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b5a6ec57d1c6bf47a92795defb90dff
+    m_Address: se_tan00
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 697f7d3f5c4aabc4ea8b47de52456278
+    m_Address: se_tan01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 660a6bf26edeb7747bd25064998b5f36
+    m_Address: se_tan02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65917975ad25e1d46a81616f3dab2a23
+    m_Address: se_timeout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d827df9984729c44b65b38254835ca0
+    m_Address: se_timeout2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56afba5ff0ac5d44ea73b15fa8e9b92a
+    m_Address: se_water
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0dd9960505adf7942a51edd9f037dff0
+    m_Address: atlas_danmaku
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 948fcdb8cad4c3542b2847dc9ada2156
+    m_Address: atlas_fairy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f34d7366080f6e49a95d10b7a4b2774
+    m_Address: atlas_marisa
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9fe6b307b510fd4282b9708fcdbae10
+    m_Address: atlas_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

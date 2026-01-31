@@ -3,9 +3,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewDanmakuConfig", menuName = "Configs/Danmaku")]
 public class DanmakuConfig : GameConfig
 {
-    [Header("弹幕预制体ID")]
-    public string prefabId;
-
     [Header("弹幕类型")]
     public DanmakuType danmakuType = DanmakuType.Normal;
 

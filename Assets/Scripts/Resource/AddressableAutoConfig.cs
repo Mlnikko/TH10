@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
-using UnityEngine;
 
 public static class AddressableAutoConfig
 {
@@ -17,141 +16,107 @@ public static class AddressableAutoConfig
         "Assets/Editor/",
         "Assets/StreamingAssets/",
         "Assets/AddressableAssetsData/",
-        "Assets/TextMesh Pro/",      // 示例：排除 TMP
-        "Assets/Demigiant/",         // 示例：排除 DOTween
-        "Assets/LeanTween/"          // 示例：排除 LeanTween
+        "Assets/TextMesh Pro/",
+        "Assets/Demigiant/",
+        "Assets/LeanTween/"
+        // 按需补充
     };
 
-    // 特殊路径前缀映射表：原始路径前缀 => 期望的 Addressable Key 前缀
-    // 注意：必须以 "Assets/" 开头，且以 '/' 结尾
-    static readonly Dictionary<string, string> PREFIX_MAPPINGS = new()
+    // 核心：资源类型 -> 前缀映射
+    static readonly Dictionary<string, (string[] extensions, string prefix)> s_typeConfigs = new()
     {
-        { "Assets/Art/", "Art/" },
-        { "Assets/Audio/", "Audio/" },
-        // 可继续添加，例如：
-        // { "Assets/Resources/UI/", "UI/" },
+        { "t:Prefab", (new[] { ".prefab" }, "prefab") },
+        { "t:ScriptableObject", (new[] { ".asset" }, "cfg") },
+        { "t:AudioClip", (new[] { ".wav", ".mp3", ".ogg", ".aif", ".aiff" }, "se") },
+        { "t:Texture2D", (new[] { ".png", ".jpg", ".jpeg", ".tga", ".bmp" }, "tex") },
+        { "t:SpriteAtlas", (new[] { ".spriteatlas", ".spriteatlasv2" }, "atlas") },
+        { "t:Shader", (new[] { ".shader", ".compute" }, "shader") },
+        // 可继续扩展：VFX, Material, etc.
     };
 
-    [MenuItem("Tools/Addressables/Auto Configure All Keys")]
+    [MenuItem("Tools/Addressables/Auto Configure All Keys (With Type Prefix)")]
     public static void AutoConfigureAllKeys()
     {
         var settings = AddressableAssetSettingsDefaultObject.Settings;
         if (settings == null)
         {
-            Logger.Error("Addressables 未初始化！", LogTag.Resource);
+            Logger.Error("Addressables 未初始化！");
             return;
         }
 
         var group = settings.DefaultGroup;
         if (group == null)
         {
-            Logger.Error("默认分组不存在！", LogTag.Resource);
+            Logger.Error("默认分组不存在！");
             return;
         }
 
         int count = 0;
+        var allKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // 忽略大小写防冲突
 
-        // 配置所有 Texture2D
-        ConfigureAssetsByType("t:Texture2D", ".png,.jpg", settings, group, ref count);
-
-        // 配置所有 sprite Atlas
-        ConfigureAssetsByType("t:SpriteAtlas", ".spriteatlasv2", settings, group, ref count);
-
-        // 配置所有 Prefab
-        ConfigureAssetsByType("t:Prefab", ".prefab", settings, group, ref count);
-
-        // 配置所有 ScriptableObject 配置
-        ConfigureAssetsByType("t:ScriptableObject", ".asset", settings, group, ref count);
-
-        // 可继续添加 VFX、Audio 等...
+        foreach (var kvp in s_typeConfigs)
+        {
+            string filter = kvp.Key;
+            var (extensions, prefix) = kvp.Value;
+            ConfigureAssetsByType(filter, extensions, prefix, settings, group, ref count, allKeys);
+        }
 
         EditorUtility.SetDirty(settings);
         AssetDatabase.SaveAssets();
-        Logger.Debug( $"已更新 {count} 个资源的 Addressable Key", LogTag.Resource);
+        Logger.Info($"已更新 {count} 个资源的 Addressable Key（带类型前缀）");
     }
 
-    static void ConfigureAssetsByType(
-       string filter,
-       string extensions,
-       AddressableAssetSettings settings,
-       AddressableAssetGroup group,
-       ref int totalCount)
+    static void ConfigureAssetsByType(string filter, string[] extensions, string prefix, AddressableAssetSettings settings, AddressableAssetGroup group, ref int totalCount, HashSet<string> allKeys)
     {
         var guids = AssetDatabase.FindAssets(filter);
-        var extList = new HashSet<string>(extensions.Split(','), StringComparer.OrdinalIgnoreCase);
+        var extSet = new HashSet<string>(extensions.Select(e => e.ToLowerInvariant()));
 
         foreach (string guid in guids)
         {
             if (string.IsNullOrEmpty(guid)) continue;
 
             string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrEmpty(path) || !path.StartsWith(ASSETS_PREFIX, StringComparison.Ordinal))
+                continue;
 
-            if (string.IsNullOrEmpty(path) || !path.StartsWith(ASSETS_PREFIX)) continue;
+            if (EXCLUDED_PATH_PREFIXES.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+                continue;
 
-            // 跳过排除路径
-            if (EXCLUDED_PATH_PREFIXES.Any(prefix => path.StartsWith(prefix))) continue;
-
-            // 跳过扩展名不匹配的
-            if (!extList.Contains(Path.GetExtension(path))) continue;
-
-            string ext = Path.GetExtension(path);
-            if (!extList.Contains(ext)) continue;
+            string ext = Path.GetExtension(path).ToLowerInvariant();
+            if (!extSet.Contains(ext))
+                continue;
 
             try
             {
-                string expectedKey = GetAddressableKeyFromPath(path);
+                string baseName = Path.GetFileNameWithoutExtension(path);
+                string key = $"{prefix}_{baseName}".ToLowerInvariant();
+
+                if (allKeys.Contains(key))
+                {
+                    Logger.Warn($"重复的 Addressable Key: '{key}'（路径: {path}）\n请重命名以避免冲突！");
+                }
+                else
+                {
+                    allKeys.Add(key);
+                }
 
                 var entry = settings.CreateOrMoveEntry(guid, group);
                 if (entry == null)
                 {
-                    Logger.Warn( $"无法为资源创建 Addressable 条目: {path}（可能是系统保留资源）", LogTag.Resource);
+                    Logger.Warn($"无法为资源创建 Addressable 条目: {path}");
                     continue;
                 }
 
-                if (entry.address != expectedKey)
+                if (entry.address != key)
                 {
-                    entry.address = expectedKey;
+                    entry.address = key;
                     totalCount++;
                 }
             }
             catch (Exception e)
             {
-                Logger.Error( $"配置资源失败: {path}\n{e}", LogTag.Resource);
+                Logger.Error($"配置资源失败: {path}\n{e}");
             }
         }
-    }
-
-    /// <summary>
-    /// 根据资源路径生成 Addressable Key
-    /// 规则：
-    /// 1. 若路径匹配 PREFIX_MAPPINGS 中的某个前缀，则替换为映射值；
-    /// 2. 否则，移除 "Assets/" 前缀；
-    /// 3. 移除文件扩展名。
-    /// </summary>
-    static string GetAddressableKeyFromPath(string assetPath)
-    {
-        // 按长度降序排序，确保长前缀优先匹配（避免 Assets/A 匹配到 Assets/Art）
-        var sortedMappings = PREFIX_MAPPINGS
-            .OrderByDescending(kvp => kvp.Key.Length)
-            .ToArray();
-
-        foreach (var (originalPrefix, mappedPrefix) in sortedMappings)
-        {
-            if (assetPath.StartsWith(originalPrefix, StringComparison.Ordinal))
-            {
-                string relative = assetPath.Substring(originalPrefix.Length);
-                return Path.ChangeExtension(mappedPrefix + relative, null);
-            }
-        }
-
-        // 默认：移除 "Assets/"
-        if (assetPath.StartsWith(ASSETS_PREFIX, StringComparison.Ordinal))
-        {
-            string relative = assetPath.Substring(ASSETS_PREFIX.Length);
-            return Path.ChangeExtension(relative, null);
-        }
-
-        // 理论上不会走到这里
-        return Path.ChangeExtension(assetPath, null);
     }
 }

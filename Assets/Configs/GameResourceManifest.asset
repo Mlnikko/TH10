@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6bd98a2a33b0ed4292df5bde10f68a9, type: 3}
+  m_Name: GameResourceManifest
+  m_EditorClassIdentifier: 
+  resourceCategories:
+  - categoryName: "\u914D\u7F6E\u6587\u4EF6"
+    resCategory: 0
+    resGroups:
+    - groupName: Battle
+      resourceIds:
+      - defaultbattlearea
+    - groupName: Character
+      resourceIds:
+      - marisa
+      - reimu
+    - groupName: Danmaku
+      resourceIds:
+      - dm_reimu_homing
+      - dm_reimu_main
+      - dm_star_0
+    - groupName: DanmakuEmitter
+      resourceIds:
+      - dme_reimu_homing
+      - dme_reimu_main
+    - groupName: Enemy
+      resourceIds:
+      - minionconfig
+    - groupName: Weapon
+      resourceIds:
+      - weapon_marisa_0
+      - weapon_marisa_1
+      - weapon_marisa_2
+      - weapon_reimu_0
+      - weapon_reimu_1
+      - weapon_reimu_2
+  - categoryName: "\u9884\u5236\u4F53"
+    resCategory: 1
+    resGroups:
+    - groupName: Character
+      resourceIds:
+      - marisa
+      - reimu
+    - groupName: Danmaku
+      resourceIds:
+      - dm_reimu_homing
+      - dm_reimu_main
+      - dm_star_0
+    - groupName: DanmakuEmitter
+      resourceIds:
+      - dme_reimu_homing
+      - dme_reimu_main
+    - groupName: Enemy
+      resourceIds:
+      - fariy
+    - groupName: UI_Item
+      resourceIds:
+      - characterselectionui
+      - playerinfoui
+      - settingcategorybutton
+      - weaponselectionui
+    - groupName: UI_Panel
+      resourceIds:
+      - battlepreparepanel
+      - joinroominputpanel
+      - menupanel
+      - onlinemodepanel
+      - roompanel
+      - settingspanel
+  - categoryName: "\u56FE\u96C6"
+    resCategory: 5
+    resGroups:
+    - groupName: Character
+      resourceIds:
+      - marisa
+      - reimu
+    - groupName: Danmaku
+      resourceIds:
+      - danmaku
+    - groupName: Enemy
+      resourceIds:
+      - fairy
+    - groupName: Weapon
+      resourceIds:
+      - weapon
+  - categoryName: "2D\u7EB9\u7406"
+    resCategory: 2
+    resGroups:
+    - groupName: Character
+      resourceIds:
+      - marisa
+      - reimu

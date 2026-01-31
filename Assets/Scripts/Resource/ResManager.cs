@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine.AddressableAssets;
 
+
 /// <summary>
 /// 资源加载管理器（全自动引用计数管理）
 /// 仅用于启动加载或预加载！运行时请通过 GameResDB 或组件持有引用访问。
 /// 所有加载的资源由 Addressables 自动管理生命周期，无需手动释放。
 /// </summary>
-public static class ResManager
+public static class ResLoader
 {
     /// <summary>
     /// 异步加载单个资源
@@ -27,7 +28,7 @@ public static class ResManager
         {
             // 加载失败时释放 handle，避免引用泄漏
             Addressables.Release(handle);
-            Logger.Error( $"Failed to load asset '{key}' of type {typeof(T).Name}: {ex.Message}", LogTag.Resource);
+            Logger.Error( $"Failed to load asset '{key}' of resCategory {typeof(T).Name}: {ex.Message}", LogTag.Resource);
             throw; // 保留异常类型，便于上层处理
         }
     }
@@ -67,7 +68,7 @@ public static class ResManager
         if (tasks.Count > 0)
         {
             await Task.WhenAll(tasks);
-            Logger.Info( $"Preloaded {validKeyCount} assets of type {typeof(T).Name}", LogTag.Resource);
+            Logger.Info( $"Preloaded {validKeyCount} assets of resCategory {typeof(T).Name}", LogTag.Resource);
         }
     }
 
@@ -77,5 +78,78 @@ public static class ResManager
     public static Task PreloadAsync<T>(params string[] keys) where T : UnityEngine.Object
     {
         return PreloadAsync<T>((IList<string>)keys);
+    }
+}
+
+public static class ResHelper
+{
+    public static string GetAddressableKey(E_ResourceCategory resCategory, string resourceName)
+    {
+        if (string.IsNullOrWhiteSpace(resourceName))
+            throw new ArgumentException("Resource resId cannot be null or empty.", nameof(resourceName));
+
+        var prefix = GetPrefixForResType(resCategory);
+
+        // 全小写，与 AddressableAutoConfig / Manifest 完全一致
+        return $"{prefix}_{resourceName}".ToLowerInvariant();
+    }
+
+    public static string GetPrefixForResType(E_ResourceCategory resCategory)
+    {
+        return resCategory switch
+        {
+            E_ResourceCategory.Prefab => "prefab",
+            E_ResourceCategory.Config => "cfg",
+            E_ResourceCategory.Audio => "se",
+            E_ResourceCategory.Texture => "tex",
+            E_ResourceCategory.Atlas => "atlas",
+            E_ResourceCategory.Shader => "shader",
+            _ => "asset"
+        };
+    }
+}
+
+public class ResManager : Singleton<ResManager>
+{
+    public GameResourceManifest Manifest
+    {
+        get
+        {
+            return _manifest;
+        }
+    }
+    GameResourceManifest _manifest;
+    bool _isInitialized;
+
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized) return;
+
+        // 加载 Manifest（它是 cfg_gameresourcemanifest）
+        _manifest = await ResLoader.LoadAsync<GameResourceManifest>(
+            ResHelper.GetAddressableKey(E_ResourceCategory.Config, "gameresourcemanifest")
+        );
+        _isInitialized = true;
+    }
+
+    // 主力加载方法：类型安全 + 自动 Key 生成
+    public async Task<T> LoadAsync<T>(E_ResourceCategory resCategory, string resId) where T : UnityEngine.Object
+    {
+        if (!_isInitialized)
+            await InitializeAsync(); // 自动初始化
+
+        string key = ResHelper.GetAddressableKey(resCategory, resId);
+        return await ResLoader.LoadAsync<T>(key);
+    }
+
+    // 预加载（支持多个）
+    public async Task PreloadAsync<T>(E_ResourceCategory resCategory, params string[] names) where T : UnityEngine.Object
+    {
+        var keys = new string[names.Length];
+        for (int i = 0; i < names.Length; i++)
+        {
+            keys[i] = ResHelper.GetAddressableKey(resCategory, names[i]);
+        }
+        await ResLoader.PreloadAsync<T>(keys);
     }
 }

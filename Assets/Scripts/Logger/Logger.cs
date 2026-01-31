@@ -20,6 +20,7 @@ public enum LogTag
     Battle,
     Audio,
     Resource,
+    File,
     Input,
     Config,
     Collision,

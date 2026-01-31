@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.U2D;
 
-#region 注册表
-/// <summary>
-/// 泛型配置注册表 —— 每个 T 有独立的 configs 数组和 idToIndex 映射
-/// </summary>
-public static class ConfigRegistry<T> where T : GameConfig
+public class ResourceRegistry<T> where T : UnityEngine.Object
 {
-    public static T[] Configs { get; private set; } = Array.Empty<T>();
-    public static Dictionary<string, int> IdToIndex { get; private set; } = new();
+    private T[] _assets = Array.Empty<T>();
+    private Dictionary<string, int> _idToIndex = new();
 
-    internal static void Initialize(T[] configs, string[] ids)
+    public void Initialize(T[] assets, string[] ids)
     {
-        Configs = configs ?? Array.Empty<T>();
-        IdToIndex = BuildIdToIndexMap(ids);
+        _assets = assets ?? Array.Empty<T>();
+        _idToIndex = BuildIdToIndexMap(ids);
     }
 
-    static Dictionary<string, int> BuildIdToIndexMap(string[] ids)
+    private static Dictionary<string, int> BuildIdToIndexMap(string[] ids)
     {
         if (ids == null) return new Dictionary<string, int>();
         var map = new Dictionary<string, int>(ids.Length);
@@ -30,75 +28,29 @@ public static class ConfigRegistry<T> where T : GameConfig
         return map;
     }
 
-    // 运行时访问（ECS）
-    public static T Get(int index) =>
-        (uint)index < (uint)Configs.Length ? Configs[index] : null;
-
-    // 运行时访问（UI）
-    public static T GetById(string id) =>
-        !string.IsNullOrEmpty(id) && IdToIndex.TryGetValue(id, out int idx)
-            ? Configs[idx]
-            : null;
+    public T Get(int index) => (uint)index < (uint)_assets.Length ? _assets[index] : null;
+    public T GetById(string id) => !string.IsNullOrEmpty(id) && _idToIndex.TryGetValue(id, out int idx) ? _assets[idx] : null;
+    public int GetIndexById(string id) => !string.IsNullOrEmpty(id) && _idToIndex.TryGetValue(id, out int idx) ? idx : -1;
+    public T[] GetAll() => _assets;
 }
 
-/// <summary>
-/// 统一的 Prefab 注册中心 —— 按 PrefabCategory 分类存储
-/// </summary>
-public static class PrefabRegistry
-{
-    static readonly Dictionary<PrefabCategory, GameObject[]> _prefabs = new();
-    static readonly Dictionary<PrefabCategory, Dictionary<string, int>> _idToIndex = new();
-
-    // 初始化时由 GameDB 调用
-    internal static void Initialize(PrefabCategory category, GameObject[] prefabs, string[] ids)
-    {
-        prefabs ??= Array.Empty<GameObject>();
-        _prefabs[category] = prefabs;
-
-        var map = new Dictionary<string, int>(StringComparer.Ordinal);
-        if (ids != null)
-        {
-            for (int i = 0; i < ids.Length; i++)
-            {
-                if (!string.IsNullOrEmpty(ids[i]))
-                    map[ids[i]] = i;
-            }
-        }
-        _idToIndex[category] = map;
-    }
-
-    // === 运行时访问 API ===
-
-    public static GameObject Get(PrefabCategory category, int index)
-    {
-        return (uint)index < (uint)_prefabs.GetValueOrDefault(category, Array.Empty<GameObject>()).Length
-            ? _prefabs[category][index]
-            : null;
-    }
-
-    public static GameObject GetById(PrefabCategory category, string id)
-    {
-        if (string.IsNullOrEmpty(id)) return null;
-        if (!_idToIndex.TryGetValue(category, out var map)) return null;
-        return map.TryGetValue(id, out int idx) ? Get(category, idx) : null;
-    }
-
-    public static int GetIndexById(PrefabCategory category, string id)
-    {
-        if (string.IsNullOrEmpty(id)) return -1;
-        return _idToIndex.TryGetValue(category, out var map) && map.TryGetValue(id, out int idx)
-            ? idx
-            : -1;
-    }
-
-    // 可选：获取全部（用于调试/UI）
-    public static GameObject[] GetAll(PrefabCategory category) => _prefabs.GetValueOrDefault(category, Array.Empty<GameObject>());
-}
-#endregion
 
 public static class GameResDB
 {
     public static bool IsInitialized { get; private set; }
+
+    // 跨引用缓存
+    static int[] _danmakuConfigToPrefabIndex = null;
+    static int[][] _emitterToDanmakuIndices = null;
+
+    // 类型化配置缓存
+    static Dictionary<Type, GameConfig[]> _typedConfigsCache = null;
+
+    // 各类资源注册器（内部使用）
+    static readonly ResourceRegistry<GameConfig> ConfigRegistry = new();
+    static readonly ResourceRegistry<GameObject> PrefabRegistry = new();
+    static readonly ResourceRegistry<Texture2D> TextureRegistry = new();
+    static readonly ResourceRegistry<SpriteAtlas> AtlasRegistry = new();
 
     public static async Task InitializeAsync()
     {
@@ -106,116 +58,117 @@ public static class GameResDB
 
         Logger.Info("Initializing GameResDB...", LogTag.Resource);
 
-        var configManifest = await ResLoader.GetConfigAsync<GameConfigManifest>(ResHelper.GAME_CONFIG_CHECKLIST);
-        if (configManifest == null) Logger.Critical("GameConfigManifest not found.");
+        var manifest = ResManager.Instance.Manifest;
+        if (manifest == null)
+            throw new InvalidOperationException("GameResourceManifest is missing!");
 
-        var prefabManifest = await ResLoader.GetConfigAsync<GamePrefabManifest>(ResHelper.GAME_PREFAB_CHECKLIST);
-        if (prefabManifest == null) Logger.Critical("GamePrefabManifest not found.");
+        // 并行加载各类资源（可选：按需串行）
+        var loadTasks = new List<Task>();
+        foreach (var category in manifest.resourceCategories)
+        {
+            switch (category.resCategory)
+            {
+                case E_ResourceCategory.Config:
+                    loadTasks.Add(LoadAndRegisterConfigs(category));
+                    break;
+                case E_ResourceCategory.Prefab:
+                    loadTasks.Add(LoadAndRegisterPrefabs(category));
+                    break;
+                case E_ResourceCategory.Texture:
+                    loadTasks.Add(LoadAndRegisterTextures(category));
+                    break;
+                case E_ResourceCategory.Atlas:
+                    loadTasks.Add(LoadAndRegisterAtlas(category));
+                    break;
+                default:
+                    Logger.Warn($"Unsupported resource category: {category.resCategory}");
+                    break;
+            }
+        }
 
-        // 2. 加载注册配置表
-        await BuildConfigRegistries(configManifest);
+        await Task.WhenAll(loadTasks);
 
-        // 3. 构建 Prefab 注册表（含反向映射）
-        await BuildPrefabRegistries(prefabManifest);
-
-        // 4. 解析跨配置引用
-        ResolveCrossReferences(configManifest, prefabManifest);
+        ResolveCrossReferences();
+        BuildTypedConfigCache();
 
         IsInitialized = true;
-        Logger.Info("GameDB initialized successfully.", LogTag.Resource);
+        Logger.Info("GameResDB initialized successfully.", LogTag.Resource);
     }
 
-    static async Task BuildConfigRegistries(GameConfigManifest manifest)
+    // —————— 加载与注册 ——————
+
+    static async Task LoadAndRegisterConfigs(ResourceCategory category)
     {
-        var tasks = new[]
-        {
-            RegisterConfigsAsync<DanmakuConfig>(manifest.danmakuConfigIds),
-            RegisterConfigsAsync<CharacterConfig>(manifest.characterConfigIds),
-            RegisterConfigsAsync<WeaponConfig>(manifest.weaponConfigIds),
-            RegisterConfigsAsync<DanmakuEmitterConfig>(manifest.emitterConfigIds)
-        };
-        await Task.WhenAll(tasks);
-    }
-    static async Task BuildPrefabRegistries(GamePrefabManifest manifest)
-    {
-        var tasks = new[]
-        {
-            RegisterPrefabsAsync(manifest.danmakuPrefabIds, PrefabCategory.Danmaku),
-            RegisterPrefabsAsync(manifest.characterPrefabIds, PrefabCategory.Character),
-            //
-        };
-        await Task.WhenAll(tasks);
+        var ids = CollectAllIds(category);
+        var assets = await LoadAssetsAsync<GameConfig>(ids, category.resCategory);
+        ConfigRegistry.Initialize(assets, ids);
     }
 
-    static async Task RegisterConfigsAsync<T>(string[] ids) where T : GameConfig
+    static async Task LoadAndRegisterPrefabs(ResourceCategory category)
     {
-        if (ids == null || ids.Length == 0)
+        var ids = CollectAllIds(category);
+        if (ids.Length > 0)
+            await ResManager.Instance.PreloadAsync<GameObject>(E_ResourceCategory.Prefab, ids);
+        var assets = await LoadAssetsAsync<GameObject>(ids, category.resCategory);
+        PrefabRegistry.Initialize(assets, ids);
+    }
+
+    static async Task LoadAndRegisterTextures(ResourceCategory category)
+    {
+        var ids = CollectAllIds(category);
+        var assets = await LoadAssetsAsync<Texture2D>(ids, category.resCategory);
+        TextureRegistry.Initialize(assets, ids);
+    }
+
+    static async Task LoadAndRegisterAtlas(ResourceCategory category)
+    {
+        var ids = CollectAllIds(category);
+        var assets = await LoadAssetsAsync<SpriteAtlas>(ids, category.resCategory);
+        AtlasRegistry.Initialize(assets, ids);
+    }
+
+    static async Task<T[]> LoadAssetsAsync<T>(IList<string> ids, E_ResourceCategory category) where T : UnityEngine.Object
+    {
+        if (ids.Count == 0) return Array.Empty<T>();
+
+        var tasks = new Task<T>[ids.Count];
+        for (int i = 0; i < ids.Count; i++)
         {
-            ConfigRegistry<T>.Initialize(Array.Empty<T>(), Array.Empty<string>());
-            return;
+            tasks[i] = ResManager.Instance.LoadAsync<T>(category, ids[i]);
         }
 
-        var configs = new T[ids.Length];
-        var loadTasks = new Task<T>[ids.Length];
-        for (int i = 0; i < ids.Length; i++)
-        {
-            loadTasks[i] = ResLoader.GetConfigAsync<T>(ids[i]);
-        }
-
-        var results = await Task.WhenAll(loadTasks);
+        var results = await Task.WhenAll(tasks);
         for (int i = 0; i < results.Length; i++)
         {
-            configs[i] = results[i];
-            if (configs[i] == null)
-                Logger.Error( $"Failed to load {typeof(T).Name}: {ids[i]}");
+            if (results[i] == null)
+                Logger.Error($"Failed to load {typeof(T).Name}: '{ids[i]}'", LogTag.Resource);
         }
-
-        ConfigRegistry<T>.Initialize(configs, ids);
-    }
-    static async Task RegisterPrefabsAsync(string[] ids, PrefabCategory category)
-    {
-        if (ids == null || ids.Length == 0)
-        {
-            PrefabRegistry.Initialize(category, Array.Empty<GameObject>(), Array.Empty<string>());
-            return;
-        }
-
-        var keys = new string[ids.Length];
-        for (int i = 0; i < ids.Length; i++)
-        {
-            keys[i] = ResHelper.GetPrefabKey(ids[i], category);
-        }
-
-        await ResManager.PreloadAsync<GameObject>(keys);
-
-        var loadTasks = new Task<GameObject>[keys.Length];
-        for (int i = 0; i < keys.Length; i++)
-        {
-            loadTasks[i] = ResManager.LoadAsync<GameObject>(keys[i]);
-        }
-
-        var prefabs = await Task.WhenAll(loadTasks);
-        for (int i = 0; i < prefabs.Length; i++)
-        {
-            if (prefabs[i] == null)
-                Logger.Error($"Failed to load prefab: {keys[i]}", LogTag.Resource);
-        }
-
-        PrefabRegistry.Initialize(category, prefabs, ids);
+        return results;
     }
 
-    static void ResolveCrossReferences(GameConfigManifest configManifest, GamePrefabManifest prefabManifest)
+    static string[] CollectAllIds(ResourceCategory category)
     {
-        // 1. DanmakuConfig.prefabId → prefabIndex
-        var danmakuConfigs = ConfigRegistry<DanmakuConfig>.Configs;
-        _danmakuConfigToPrefabIndex = new int[danmakuConfigs.Length];
-        for (int i = 0; i < danmakuConfigs.Length; i++)
+        var list = new List<string>();
+        foreach (var group in category.resGroups)
         {
-            var cfg = danmakuConfigs[i];
-            if (cfg != null && !string.IsNullOrEmpty(cfg.prefabId))
+            if (group?.resourceIds != null)
+                list.AddRange(group.resourceIds.Where(id => !string.IsNullOrEmpty(id)));
+        }
+        return list.ToArray();
+    }
+
+    // —————— 引用解析 ——————
+
+    static void ResolveCrossReferences()
+    {
+        var allConfigs = ConfigRegistry.GetAll();
+        _danmakuConfigToPrefabIndex = new int[allConfigs.Length];
+
+        for (int i = 0; i < allConfigs.Length; i++)
+        {
+            if (allConfigs[i] is DanmakuConfig danmaku)
             {
-                int idx = PrefabRegistry.GetIndexById(PrefabCategory.Danmaku, cfg.prefabId);
-                _danmakuConfigToPrefabIndex[i] = idx; // -1 if not found
+                _danmakuConfigToPrefabIndex[i] = PrefabRegistry.GetIndexById(danmaku.ConfigId);
             }
             else
             {
@@ -223,23 +176,33 @@ public static class GameResDB
             }
         }
 
-        // 2. Emitter → Danmaku indices
-        ParseEmitterReferences(configManifest.emitterConfigIds);
+        ParseEmitterReferences();
     }
 
-    // 特殊处理跨配置引用
-    static void ParseEmitterReferences(string[] emitterIds)
+    static void ParseEmitterReferences()
     {
-        var emitters = ConfigRegistry<DanmakuEmitterConfig>.Configs;
-        var danmakuIdToIndex = ConfigRegistry<DanmakuConfig>.IdToIndex;
+        var emitters = new List<DanmakuEmitterConfig>();
+        var configs = ConfigRegistry.GetAll();
+        for (int i = 0; i < configs.Length; i++)
+        {
+            if (configs[i] is DanmakuEmitterConfig emitter)
+                emitters.Add(emitter);
+        }
 
-        var emitterToDanmakuIndices = new int[emitters.Length][];
-        for (int i = 0; i < emitters.Length; i++)
+        var danmakuIdToIndex = new Dictionary<string, int>();
+        for (int i = 0; i < configs.Length; i++)
+        {
+            if (configs[i] is DanmakuConfig danmaku)
+                danmakuIdToIndex[danmaku.ConfigId] = i;
+        }
+
+        _emitterToDanmakuIndices = new int[emitters.Count][];
+        for (int i = 0; i < emitters.Count; i++)
         {
             var emitter = emitters[i];
             if (emitter?.danmakuConfigIds == null)
             {
-                emitterToDanmakuIndices[i] = Array.Empty<int>();
+                _emitterToDanmakuIndices[i] = Array.Empty<int>();
                 continue;
             }
 
@@ -249,53 +212,102 @@ public static class GameResDB
                 string id = emitter.danmakuConfigIds[j];
                 indices[j] = danmakuIdToIndex.TryGetValue(id, out int idx) ? idx : -1;
                 if (indices[j] == -1)
-                    Logger.Error($"Emitter '{emitter.ConfigId}' references unknown danmaku: {id}");
+                    Logger.Error($"Emitter '{emitter.ConfigId}' references unknown danmaku config: '{id}'");
             }
-            emitterToDanmakuIndices[i] = indices;
+            _emitterToDanmakuIndices[i] = indices;
+        }
+    }
+
+    // —————— 枚举映射构建 ——————
+
+    static void BuildTypedConfigCache()
+    {
+        var allConfigs = ConfigRegistry.GetAll();
+        var typeMap = new Dictionary<Type, List<GameConfig>>();
+
+        foreach (var cfg in allConfigs)
+        {
+            if (cfg == null) continue;
+            var type = cfg.GetType();
+            if (!typeMap.TryGetValue(type, out var list))
+            {
+                list = new List<GameConfig>();
+                typeMap[type] = list;
+            }
+            list.Add(cfg);
         }
 
-        // 存储到专用字段（因为这是“派生数据”，不属于原始 Config）
-        _emitterToDanmakuIndices = emitterToDanmakuIndices;
+        _typedConfigsCache = typeMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray());
     }
 
-    // === 保留派生数据字段 ===
-    static int[] _danmakuConfigToPrefabIndex = null;
-    static int[][] _emitterToDanmakuIndices = null;
+    // —————— 公共访问接口 ——————
 
-    #region 外部访问 API
-
-    // 索引访问（ECS 推荐）
-    public static T GetConfig<T>(int index) where T : GameConfig => ConfigRegistry<T>.Get(index);
-
-    public static T[] GetAllConfigs<T>() where T : GameConfig => ConfigRegistry<T>.Configs;
-
-    // ID 访问（UI 推荐）
-    public static T GetConfigById<T>(string id) where T : GameConfig => ConfigRegistry<T>.GetById(id);
-
-    public static int GetIndexById<T>(string id) where T : GameConfig
+    // Config
+    public static T GetConfig<T>(string configId) where T : GameConfig
     {
-        var map = ConfigRegistry<T>.IdToIndex;
-        return !string.IsNullOrEmpty(id) && map.TryGetValue(id, out int idx) ? idx : -1;
+        var cfg = ConfigRegistry.GetById(configId);
+        return cfg as T;
     }
 
-
-    // --- Prefab 访问 ---
-    public static GameObject GetPrefabById(PrefabCategory category, string id) => PrefabRegistry.GetById(category, id);
-    
-    public static GameObject GetPrefab(PrefabCategory category, int index) => PrefabRegistry.Get(category, index);
-
-    // --- 跨引用访问（关键！）---
-    public static int GetDanmakuPrefabIndex(int danmakuConfigIndex)
+    public static T GetConfig<T>(int index) where T : GameConfig
     {
-        if ((uint)danmakuConfigIndex < (uint)_danmakuConfigToPrefabIndex.Length)
-            return _danmakuConfigToPrefabIndex[danmakuConfigIndex];
-        return -1;
+        var cfg = ConfigRegistry.Get(index);
+        return cfg as T;
     }
-    public static int[] GetEmitterDanmakuIndices(int emitterIndex)
+
+    public static T[] GetAllConfigs<T>() where T : GameConfig
     {
-        if ((uint)emitterIndex < (uint)_emitterToDanmakuIndices?.Length)
-            return _emitterToDanmakuIndices[emitterIndex];
-        return null;
+        if (_typedConfigsCache == null)
+            throw new InvalidOperationException("GameResDB not initialized.");
+
+        return _typedConfigsCache.TryGetValue(typeof(T), out var array)
+            ? Array.ConvertAll(array, c => (T)c)
+            : Array.Empty<T>();
     }
-    #endregion
+
+    // Prefab
+    public static GameObject GetPrefab(string id) => PrefabRegistry.GetById(id);
+    public static GameObject GetPrefab(int index) => PrefabRegistry.Get(index);
+
+    // Texture
+    public static Texture2D GetTexture(string id) => TextureRegistry.GetById(id);
+
+    // Atlas & Sprite
+    public static Sprite GetSpriteFromAtlas(string atlasId, string spriteName)
+    {
+        var atlas = AtlasRegistry.GetById(atlasId);
+        if (atlas == null)
+        {
+            Logger.Error($"Atlas '{atlasId}' not found.", LogTag.Resource);
+            return null;
+        }
+
+        var sprite = atlas.GetSprite(spriteName);
+        if (sprite == null)
+            Logger.Error($"Sprite '{spriteName}' not found in atlas '{atlasId}'.", LogTag.Resource);
+        return sprite;
+    }
+
+    public static Sprite GetSpriteFromTexture(string textureId, float pixelsPerUnit = 100f)
+    {
+        var texture = GetTexture(textureId);
+        if (texture == null)
+        {
+            Logger.Error($"Texture '{textureId}' not found.", LogTag.Resource);
+            return null;
+        }
+        return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
+            new Vector2(0.5f, 0.5f), pixelsPerUnit);
+    }
+
+    // 跨引用（不变）
+    public static int GetDanmakuPrefabIndex(int danmakuConfigIndex) =>
+        (uint)danmakuConfigIndex < (uint)_danmakuConfigToPrefabIndex?.Length
+            ? _danmakuConfigToPrefabIndex[danmakuConfigIndex]
+            : -1;
+
+    public static int[] GetEmitterDanmakuIndices(int emitterIndex) =>
+        (uint)emitterIndex < (uint)_emitterToDanmakuIndices?.Length
+            ? _emitterToDanmakuIndices[emitterIndex]
+            : Array.Empty<int>();
 }

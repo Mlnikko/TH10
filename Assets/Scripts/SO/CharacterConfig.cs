@@ -13,6 +13,7 @@ public class CharacterConfig : GameConfig
     public E_Character characterID = E_Character.None;
 
     public E_Weapon[] weaponIds;
+
     [TextArea(1, 5)]
     public string description;
 
