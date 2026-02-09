@@ -18,8 +18,7 @@ public class DanmakuEmitSystem : BaseSystem
 
             ref var emitter = ref emitters[entity];
 
-            var emitterConfig = GameResDB.GetConfig<DanmakuEmitterConfig>(emitter.cfgIndex);
-            var danmakuIndices = GameResDB.GetEmitterDanmakuIndices(emitter.cfgIndex);
+            var emitterConfig = GameResDB.Instance.GetConfig<DanmakuEmitterConfig>(emitter.cfgIndex);
 
             if (!emitter.isEnabled) return;
 
@@ -28,7 +27,7 @@ public class DanmakuEmitSystem : BaseSystem
             switch (emitterConfig.danmakuSelectMode)
             {
                 case DanmakuSelectMode.First:
-                    EmitFirst(position.x, position.y, emitterConfig, danmakuIndices);
+                    EmitFirst(position.x, position.y, emitterConfig);
                     break;
                 case DanmakuSelectMode.Sequential:
                     //EmitSequential(position.x, position.y, emitterConfig, danmakuIndices);
@@ -43,17 +42,18 @@ public class DanmakuEmitSystem : BaseSystem
         }
     }
 
-    void EmitFirst(float emitPosX, float emitPosY, DanmakuEmitterConfig emitterConfig, int[] danmakuIndices)
+    void EmitFirst(float emitPosX, float emitPosY, DanmakuEmitterConfig emitterConfig)
     {
-        if (danmakuIndices.Length == 0)
+
+        if (emitterConfig.danmakuCfgIndices.Length == 0)
         {
             Logger.Warn("No danmaku configurations available for emission.");
             return;
         }
 
-        int danmakuIndex = danmakuIndices[0];
+        int danmakuIndex = emitterConfig.danmakuCfgIndices[0];
 
-        var danmakuCfg = GameResDB.GetConfig<DanmakuConfig>(danmakuIndex);
+        var danmakuCfg = GameResDB.Instance.GetConfig<DanmakuConfig>(danmakuIndex);
 
         if(danmakuCfg == null)
         {
@@ -77,7 +77,7 @@ public class DanmakuEmitSystem : BaseSystem
         }
 
         //
-        int prefabIndex = GameResDB.GetDanmakuPrefabIndex(danmakuIndex);
+        int prefabIndex = danmakuCfg.danmakuPrefabIndex;
         EntityManager.AddComponent(danmakuEntity, new CGameObjectLink(prefabIndex));
 
         Logger.Info($"Emitted danmaku entity {danmakuEntity.Index} at position ({emitPosX}, {emitPosY}) with config index {danmakuIndex}.");

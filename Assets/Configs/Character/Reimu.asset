@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3972ac5ebeade5849989dc9bc80b2557, type: 3}
   m_Name: Reimu
   m_EditorClassIdentifier: 
-  characterID: 1
+  configId: 
+  characterPrefabId: Reimu
+  characterName: 1
   weaponIds: 0a0b0c
   description: "\u535A\u4E3D\u7075\u68A6"
   moveSpeed: 2

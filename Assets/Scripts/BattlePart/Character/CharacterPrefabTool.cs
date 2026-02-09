@@ -35,7 +35,7 @@ public class CharacterPrefabTool : MonoBehaviour
     {
         if(characterConfig == null) return;
 
-        characterName = characterConfig.characterID;
+        characterName = characterConfig.characterName;
         description = characterConfig.description;
         speed = characterConfig.moveSpeed;
         slowSpeed = characterConfig.moveSlowSpeed;
@@ -50,7 +50,7 @@ public class CharacterPrefabTool : MonoBehaviour
         // 此方法仅用于 Editor 保存，运行时调用无效！
         if (characterConfig == null) return;
 
-        characterConfig.characterID = characterName;
+        characterConfig.characterName = characterName;
         characterConfig.description = description;
         characterConfig.moveSpeed = speed;
         characterConfig.moveSlowSpeed = slowSpeed;

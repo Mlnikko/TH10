@@ -3,6 +3,44 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine.AddressableAssets;
 
+public enum E_ResourceCategory
+{
+    Prefab,
+    Config,
+    Audio,
+    Texture,
+    Atlas,
+    Shader,
+    Other
+}
+
+public static class ResHelper
+{
+    public static string GetAddressableKey(E_ResourceCategory resCategory, string resourceName)
+    {
+        if (string.IsNullOrWhiteSpace(resourceName))
+            throw new ArgumentException("Resource resId cannot be null or empty.", nameof(resourceName));
+
+        var prefix = GetPrefixForResType(resCategory);
+
+        // 全小写，与 AddressableAutoConfig / Manifest 完全一致
+        return $"{prefix}_{resourceName}".ToLowerInvariant();
+    }
+
+    public static string GetPrefixForResType(E_ResourceCategory resCategory)
+    {
+        return resCategory switch
+        {
+            E_ResourceCategory.Prefab => "prefab",
+            E_ResourceCategory.Config => "cfg",
+            E_ResourceCategory.Audio => "se",
+            E_ResourceCategory.Texture => "tex",
+            E_ResourceCategory.Atlas => "atlas",
+            E_ResourceCategory.Shader => "shader",
+            _ => "asset"
+        };
+    }
+}
 
 /// <summary>
 /// 资源加载管理器（全自动引用计数管理）
@@ -81,34 +119,6 @@ public static class ResLoader
     }
 }
 
-public static class ResHelper
-{
-    public static string GetAddressableKey(E_ResourceCategory resCategory, string resourceName)
-    {
-        if (string.IsNullOrWhiteSpace(resourceName))
-            throw new ArgumentException("Resource resId cannot be null or empty.", nameof(resourceName));
-
-        var prefix = GetPrefixForResType(resCategory);
-
-        // 全小写，与 AddressableAutoConfig / Manifest 完全一致
-        return $"{prefix}_{resourceName}".ToLowerInvariant();
-    }
-
-    public static string GetPrefixForResType(E_ResourceCategory resCategory)
-    {
-        return resCategory switch
-        {
-            E_ResourceCategory.Prefab => "prefab",
-            E_ResourceCategory.Config => "cfg",
-            E_ResourceCategory.Audio => "se",
-            E_ResourceCategory.Texture => "tex",
-            E_ResourceCategory.Atlas => "atlas",
-            E_ResourceCategory.Shader => "shader",
-            _ => "asset"
-        };
-    }
-}
-
 public class ResManager : Singleton<ResManager>
 {
     public GameResourceManifest Manifest
@@ -147,6 +157,16 @@ public class ResManager : Singleton<ResManager>
     {
         var keys = new string[names.Length];
         for (int i = 0; i < names.Length; i++)
+        {
+            keys[i] = ResHelper.GetAddressableKey(resCategory, names[i]);
+        }
+        await ResLoader.PreloadAsync<T>(keys);
+    }
+
+    public async Task PreloadAsync<T>(E_ResourceCategory resCategory, IList<string> names) where T : UnityEngine.Object
+    {
+        var keys = new string[names.Count];
+        for (int i = 0; i < names.Count; i++)
         {
             keys[i] = ResHelper.GetAddressableKey(resCategory, names[i]);
         }

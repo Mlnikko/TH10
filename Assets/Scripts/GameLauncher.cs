@@ -17,7 +17,7 @@ public class GameLauncher : MonoBehaviour
     async void Start()
     {
         await ResManager.Instance.InitializeAsync();
-        await GameResDB.InitializeAsync();
+        await GameResDB.Instance.InitializeAsync();
 
         bool sceneLoaded = await SceneLoader.LoadSceneAsync("TitleScene");
 

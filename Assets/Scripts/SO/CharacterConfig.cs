@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 public enum E_Character : byte
 {
@@ -7,12 +8,19 @@ public enum E_Character : byte
 }
 
 [CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Configs/CharacterConfig")]
-public class CharacterConfig : GameConfig
+public class CharacterConfig : GameConfig, IReferenceResolver
 {
-    [Header("信息配置")]
-    public E_Character characterID = E_Character.None;
+    [Header("预制体配置")]
+    public string characterPrefabId;
+    [NonSerialized]
+    public int characterPrefabIndex = -1;
 
-    public E_Weapon[] weaponIds;
+    [Header("信息配置")]
+    public E_Character characterName = E_Character.None;
+
+    //public E_Weapon[] weaponIds;
+    //[NonSerialized]
+    //public int[] weaponIndices;
 
     [TextArea(1, 5)]
     public string description;
@@ -30,6 +38,54 @@ public class CharacterConfig : GameConfig
 
     [Header("擦弹半径")]
     public float grazeRadius = 0.5f;
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (!string.IsNullOrEmpty(characterPrefabId))
+        {
+            characterPrefabId = characterPrefabId.ToLowerInvariant().Trim();
+        }
+    }
+#endif
+
+    public void ResolveReferences(GameResDB resDb)
+    {
+        // 1. 解析角色预制体索引
+        characterPrefabIndex = resDb.GetPrefabIndex(characterPrefabId);
+        if (characterPrefabIndex == -1)
+        {
+            Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {configId})", LogTag.Resource);
+        }
+
+        //// 2. 解析武器配置索引
+        //if (weaponIds != null && weaponIds.Length > 0)
+        //{
+        //    weaponIndices = new int[weaponIds.Length];
+        //    for (int i = 0; i < weaponIds.Length; i++)
+        //    {
+        //        if (weaponIds[i] == E_Weapon.None)
+        //        {
+        //            weaponIndices[i] = -1;
+        //        }
+        //        else
+        //        {
+        //            // 将枚举转为小写字符串（与 Manifest 中的 ID 一致）
+        //            string weaponIdStr = weaponIds[i].ToString().ToLowerInvariant();
+        //            weaponIndices[i] = resDb.GetConfigIndex(weaponIdStr);
+
+        //            if (weaponIndices[i] == -1)
+        //            {
+        //                Logger.Warn($"[CharacterConfig] Weapon config not found: '{weaponIdStr}' (in character: {configId})", LogTag.Resource);
+        //            }
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    weaponIndices = Array.Empty<int>();
+        //}
+    }
 
     public CPlayerAttribute ToRuntimeAttribute(float logicDeltaTime)
     {

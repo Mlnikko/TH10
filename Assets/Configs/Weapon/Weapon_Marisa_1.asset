@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1624a18d887774459c5d78881f0331f, type: 3}
   m_Name: Weapon_Marisa_1
   m_EditorClassIdentifier: 
-  ConfigId: Weapon_Marisa_1
-  WeaponID: 21
-  Name: 
-  Description: 
+  configId: 
+  characterID: 2
+  weaponID: 21
+  danmakuEmitterConfigIds: []
+  description: 

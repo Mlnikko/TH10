@@ -1,5 +1,10 @@
 using UnityEngine;
+using System;
 public abstract class GameConfig : ScriptableObject
 {
-    public virtual string ConfigId => name;
+    [HideInInspector]
+    public string configId = string.Empty;
+
+    [NonSerialized]
+    public int configIndex = -1;
 }

@@ -45,7 +45,7 @@ public class WeaponButton : CustomButton
     }
     void UpdateWeaponSprites()
     {
-        //switch (BattleManager.battleConfig.characterId)
+        //switch (BattleManager.battleConfig.characterCfgIndex)
         //{
         //    case E_Character.Reimu:
         //        weaponName.sprite = weaponNameSprites[0];

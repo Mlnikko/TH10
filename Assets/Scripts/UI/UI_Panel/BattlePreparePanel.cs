@@ -25,11 +25,11 @@ public class BattlePreparePanel : UIPanel
     const string LastCountdownKey = "BattlePrepare_LastCountdown";
 
     // 数据缓存
-    CharacterConfig[] characterConfigs;
-    Dictionary<string, List<WeaponConfig>> characterWeaponsMap = new();
+    List<CharacterConfig> characterConfigs = new();
+    Dictionary<E_Character, List<WeaponConfig>> characterWeaponsMap = new();
 
-    string selectedCharacterId;
-    string selectedWeaponId;
+    E_Character selectedCharacterId;
+    E_Weapon selectedWeaponId;
 
     // 当前 UI Item 缓存（用于高亮管理）
     List<CharacterSelectionUI> characterItems = new();
@@ -37,39 +37,48 @@ public class BattlePreparePanel : UIPanel
 
     public override void Initialize()
     {
-        base.Initialize();
         ReadConfig();
     }
 
     void ReadConfig()
     {
-        characterConfigs = GameResDB.GetAllConfigs<CharacterConfig>();
+        var allCharacterCfgIds = ResManager.Instance.Manifest.characterConfigIds;
+        var allWeaponIds = ResManager.Instance.Manifest.weaponConfigIds;
+        foreach (var cid in allCharacterCfgIds)
+        {
+            var charCfg = GameResDB.Instance.GetConfig<CharacterConfig>(cid);
+            if (charCfg != null)
+            {
+                characterConfigs.Add(charCfg);
+            }
+        }
 
         characterWeaponsMap.Clear();
 
-        foreach (var charCfg in characterConfigs)
+        foreach (var wid in allWeaponIds)
         {
-            if (charCfg == null || string.IsNullOrEmpty(charCfg.ConfigId)) continue;
-
-            var weaponIds = charCfg.weaponIds;
-            var weapons = new List<WeaponConfig>();
-
-            foreach (var weaponId in weaponIds)
+            var weaponCfg = GameResDB.Instance.GetConfig<WeaponConfig>(wid);
+            if (weaponCfg == null)
             {
-                if (weaponId == E_Weapon.None) continue;
+                Logger.Warn("WeaponConfig not found for ID: " + wid);
+                continue;
+            }
+            var charId = weaponCfg.characterID;
 
-                string weaponIdStr = weaponId.ToString().ToLowerInvariant();
-                var weaponCfg = GameResDB.GetConfig<WeaponConfig>(weaponIdStr);
-
-                if (weaponCfg == null)
-                {
-                    Logger.Warn("WeaponConfig not found for ID: " + weaponId);
-                    continue;
-                }
-                weapons.Add(weaponCfg);
+            if(charId == E_Character.None)
+            {
+                Logger.Warn($"WeaponConfig {weaponCfg.weaponID} has invalid characterID: {charId}");
+                continue;
             }
 
-            characterWeaponsMap[charCfg.ConfigId] = weapons;
+            if (!characterWeaponsMap.ContainsKey(charId))
+            {
+                characterWeaponsMap[charId] = new List<WeaponConfig> { weaponCfg };
+            }
+            else
+            {
+                characterWeaponsMap[charId].Add(weaponCfg);
+            }
         }
     }
 
@@ -135,8 +144,9 @@ public class BattlePreparePanel : UIPanel
 
     void RefreshCharacterList()
     {
-        foreach (var item in characterItems)
+        foreach (var item in characterItems) 
             Destroy(item.gameObject);
+
         characterItems.Clear();
 
         // 创建新的角色项
@@ -145,25 +155,25 @@ public class BattlePreparePanel : UIPanel
             if (config == null) continue;
 
             var go = Instantiate(characterItemPrefab, characterListContent);
-            var item = go.GetComponent<CharacterSelectionUI>();
-            if (item == null)
+
+            if (!go.TryGetComponent<CharacterSelectionUI>(out var item))
             {
                 Logger.Error($"CharacterSelectionUI component missing on prefab: {characterItemPrefab.name}");
                 Destroy(go);
                 continue;
             }
 
-            item.Initialize(config, () => OnCharacterSelected(config.ConfigId));
+            item.Initialize(config, () => OnCharacterSelected(config.characterName));
             characterItems.Add(item);
         }
 
         // 如果尚未选择角色，默认选中第一个有效角色
-        if (string.IsNullOrEmpty(selectedCharacterId) && characterConfigs.Length > 0)
+        if (selectedCharacterId == E_Character.None && characterConfigs.Count > 0)
         {
-            var firstValid = characterConfigs.FirstOrDefault(c => c != null && !string.IsNullOrEmpty(c.ConfigId));
+            var firstValid = characterConfigs.FirstOrDefault(c => c != null && c.characterName != E_Character.None);
             if (firstValid != null)
             {
-                OnCharacterSelected(firstValid.ConfigId);
+                OnCharacterSelected(firstValid.characterName);
             }
         }
     }
@@ -175,7 +185,7 @@ public class BattlePreparePanel : UIPanel
             Destroy(item.gameObject);
         weaponItems.Clear();
 
-        if (string.IsNullOrEmpty(selectedCharacterId) || !characterWeaponsMap.TryGetValue(selectedCharacterId, out var weapons))
+        if (selectedCharacterId == E_Character.None || !characterWeaponsMap.TryGetValue(selectedCharacterId, out var weapons))
         {
             // 没有选中角色或该角色无武器，清空列表
             return;
@@ -193,28 +203,28 @@ public class BattlePreparePanel : UIPanel
                 continue;
             }
 
-            item.Initialize(wcfg, () => OnWeaponSelected(wcfg.ConfigId));
+            item.Initialize(wcfg, () => OnWeaponSelected(wcfg.weaponID));
             weaponItems.Add(item);
         }
 
         // 默认选中第一个武器（如果当前未选或已失效）
-        if (string.IsNullOrEmpty(selectedWeaponId) || !weapons.Any(w => w.ConfigId == selectedWeaponId))
+        if (selectedWeaponId == E_Weapon.None || !weapons.Any(w => w.weaponID == selectedWeaponId))
         {
             if (weapons.Count > 0)
             {
-                OnWeaponSelected(weapons[0].ConfigId);
+                OnWeaponSelected(weapons[0].weaponID);
             }
             else
             {
-                selectedWeaponId = null; // 安全兜底
+                selectedWeaponId = E_Weapon.None; // 安全兜底
             }
         }
     }
 
     void ClearSelection()
     {
-        selectedCharacterId = null;
-        selectedWeaponId = null;
+        selectedCharacterId = E_Character.None;
+        selectedWeaponId = E_Weapon.None;
 
         // 取消所有高亮（假设 CharacterSelectionUI/WeaponSelectionUI 有 SetSelected(bool) 方法）
         foreach (var item in characterItems)
@@ -223,7 +233,7 @@ public class BattlePreparePanel : UIPanel
             item.SetSelected(false);
     }
 
-    void OnCharacterSelected(string characterId)
+    void OnCharacterSelected(E_Character characterId)
     {
         // 避免无意义刷新
         if (selectedCharacterId == characterId) return;
@@ -233,7 +243,7 @@ public class BattlePreparePanel : UIPanel
 
         // 高亮选中的角色
         foreach (var item in characterItems)
-            item.SetSelected(item.ConfigId == characterId);
+            item.SetSelected(item.characterName == characterId);
 
         // 刷新武器列表（因为不同角色可用武器不同）
         RefreshWeaponList();
@@ -241,7 +251,7 @@ public class BattlePreparePanel : UIPanel
         Logger.Info($"Selected Character: {selectedCharacterId}");
     }
 
-    void OnWeaponSelected(string weaponId)
+    void OnWeaponSelected(E_Weapon weaponId)
     {
         if (selectedWeaponId == weaponId) return;
 
@@ -249,7 +259,7 @@ public class BattlePreparePanel : UIPanel
 
         // 高亮选中的武器
         foreach (var item in weaponItems)
-            item.SetSelected(item.ConfigId == weaponId);
+            item.SetSelected(item.weaponId == weaponId);
 
         Logger.Info($"Selected Weapon: {selectedWeaponId}");
     }
@@ -265,8 +275,8 @@ public class BattlePreparePanel : UIPanel
         var playerBattleData = new PlayerBattleData
         (
             RoomManager.LocalPlayerIndex,
-            Enum.TryParse<E_Character>(selectedCharacterId, out var charId) ? charId : E_Character.None,
-            Enum.TryParse<E_Weapon>(selectedWeaponId, out var weapId) ? weapId : E_Weapon.None
+            selectedCharacterId,
+            selectedWeaponId
         );
 
         switch(NetworkManager.Instance.NetworkRole)

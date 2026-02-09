@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb0659cc521f3714da71df64a0ef43b3, type: 3}
   m_Name: DM_Reimu_Homing
   m_EditorClassIdentifier: 
+  configId: 
+  danmakuPrefabId: DM_Reimu_Homing
   danmakuType: 0
   localScale: {x: 1, y: 1}
   sprite: {fileID: 0}

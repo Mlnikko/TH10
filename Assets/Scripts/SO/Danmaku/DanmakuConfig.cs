@@ -1,8 +1,14 @@
+using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewDanmakuConfig", menuName = "Configs/Danmaku")]
-public class DanmakuConfig : GameConfig
+public class DanmakuConfig : GameConfig , IReferenceResolver
 {
+    [Header("弹幕预制体")]
+    public string danmakuPrefabId;
+    [NonSerialized]
+    public int danmakuPrefabIndex;
+
     [Header("弹幕类型")]
     public DanmakuType danmakuType = DanmakuType.Normal;
 
@@ -31,4 +37,25 @@ public class DanmakuConfig : GameConfig
     public bool IsAccelerating = false;
     [HideInInspector] public float MaxSpeed = 10f;
     [HideInInspector] public float Acceleration = 2f;
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (!string.IsNullOrEmpty(danmakuPrefabId))
+            danmakuPrefabId = danmakuPrefabId.ToLowerInvariant().Trim();
+    }
+#endif
+
+    public void ResolveReferences(GameResDB resDb)
+    {
+        danmakuPrefabIndex = resDb.GetPrefabIndex(danmakuPrefabId);
+        if (danmakuPrefabIndex == -1)
+        {
+            Logger.Warn(
+                $"[DanmakuConfig] Prefab not found: '{danmakuPrefabId}' " +
+                $"(configId: {configId})",
+                LogTag.Resource
+            );
+        }
+    }
 }

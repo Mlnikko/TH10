@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -190,24 +189,22 @@ public class BattleManager : SingletonMono<BattleManager>
 
     void InitializePlayerEntity(PlayerBattleData playerData)
     {
-        
-        string characterIdStr = playerData.characterId.ToString().ToLowerInvariant();
-        var characterConfig = GameResDB.GetConfig<CharacterConfig>(characterIdStr);
+        string characterId = playerData.characterId.ToString().ToLowerInvariant();
+        var characterConfig = GameResDB.Instance.GetConfig<CharacterConfig>(characterId);
 
         if (characterConfig == null)
         {
-            Logger.Error($"CharacterConfig not found for Key: {characterIdStr}");
+            Logger.Error($"CharacterConfig not found for Key: {characterId}");
             return;
         }
 
         var bornPos = GlobalBattleData.SpawnData.GetPlayerSpawnPos(playerData.playerIndex, TotalPlayers);
 
-        string charPrefabId = playerData.characterId.ToString().ToLowerInvariant();
-        var characterPrefab = GameResDB.GetPrefab(charPrefabId);
+        var characterPrefab = GameResDB.Instance.GetPrefab(characterConfig.characterPrefabIndex);
 
         if (characterPrefab == null)
         {
-            Logger.Error($"Character prefab not found for ID: {charPrefabId}");
+            Logger.Error($"Character prefab not found for ID: {characterConfig.characterPrefabIndex}", LogTag.Battle);
             return;
         }
 
@@ -235,12 +232,12 @@ public class BattleManager : SingletonMono<BattleManager>
             isSlowMode = false,
         });
 
-        string weaponIdStr = playerData.weaponId.ToString().ToLowerInvariant();
-        var weaponConfig = GameResDB.GetConfig<WeaponConfig>(weaponIdStr);
+        string weaponId = playerData.weaponId.ToString().ToLowerInvariant();
+        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(weaponId);
 
-        foreach (var emitterId in weaponConfig.danmakuEmitterConfigIds)
+        foreach (var emitterIndex in weaponConfig.danmakuEmitterCfgIndices)
         {
-            //em.AddComponent(playerEntity, new CDanmakuEmitter(true, GameResDB.GetIndexById(emitterId)));
+            em.AddComponent(playerEntity, new CDanmakuEmitter(true, emitterIndex));
         }
 
 
@@ -292,7 +289,7 @@ public class BattleManager : SingletonMono<BattleManager>
             {
                 // 时间到了但输入没齐 → 卡住（正常行为，等待网络）
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.Log($"[Frame {frameToProcess}] Time ready but inputs not ready.");
+                Logger.Debug($"[Frame {frameToProcess}] Time ready but inputs not ready.");
 #endif
             }
 

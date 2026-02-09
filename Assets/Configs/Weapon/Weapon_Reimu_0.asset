@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1624a18d887774459c5d78881f0331f, type: 3}
   m_Name: Weapon_Reimu_0
   m_EditorClassIdentifier: 
+  configId: 
+  characterID: 1
   weaponID: 10
   danmakuEmitterConfigIds:
-  - DE_Reimu_Main
+  - dme_reimu_main
   description: 

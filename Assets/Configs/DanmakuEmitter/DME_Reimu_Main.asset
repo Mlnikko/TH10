@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DME_Reimu_Main
   m_EditorClassIdentifier: 
+  configId: 
+  emitterPrefabId: DME_Reimu_Main
   danmakuConfigIds:
   - DM_Reimu_Main
   danmakuSelectMode: 0

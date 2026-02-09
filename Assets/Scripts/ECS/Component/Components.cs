@@ -142,14 +142,14 @@ public struct CCollider : IComponent
 public struct CPlayer : IComponent
 {
     public byte playerIndex;   // 玩家ID
-    public byte characterId;   // 角色ID, 与角色配置表对应
-    public byte weaponId;      // 武器ID, 与武器配置表对应
+    public byte characterCfgIndex;   // 角色ID, 与角色配置表对应
+    public byte weaponCfgIndex;      // 武器ID, 与武器配置表对应
 
-    public CPlayer(byte playerIndex, byte characterId, byte weaponId)
+    public CPlayer(byte playerIndex, byte characterCfgIndex, byte weaponCfgIndex)
     {
         this.playerIndex = playerIndex;
-        this.characterId = characterId;
-        this.weaponId = weaponId;
+        this.characterCfgIndex = characterCfgIndex;
+        this.weaponCfgIndex = weaponCfgIndex;
     }
 }
 

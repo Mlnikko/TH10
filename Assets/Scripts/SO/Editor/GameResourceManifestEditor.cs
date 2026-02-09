@@ -1,12 +1,36 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.U2D;
 
 [CustomEditor(typeof(GameResourceManifest))]
 public class GameResourceManifestEditor : Editor
 {
+    static readonly Dictionary<string, (string folder, System.Type assetType)> s_FieldRules = new()
+    {
+        // Configs
+        { nameof(GameResourceManifest.characterConfigIds),       ("/Configs/Character/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.weaponConfigIds),          ("/Configs/Weapon/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.danmakuConfigIds),         ("/Configs/Danmaku/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.danmakuEmitterConfigIds),  ("/Configs/DanmakuEmitter/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/Enemy/", typeof(ScriptableObject)) },
+
+        // Prefabs
+        { nameof(GameResourceManifest.characterPrefabIds),       ("/Prefabs/Character/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.enemyPrefabIds),           ("/Prefabs/Enemy/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.danmakuPrefabIds),         ("/Prefabs/Danmaku/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.danmakuEmitterPrefabIds),  ("/Prefabs/DanmakuEmitter/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.effectPrefabIds),          ("/Prefabs/Effect/", typeof(GameObject)) },
+
+        // Atlases
+        { nameof(GameResourceManifest.atlases),                  ("/Art/Atlas/", typeof(SpriteAtlas)) },
+
+        // Textures
+        { nameof(GameResourceManifest.characterImages),          ("/Art/Texture/Character/", typeof(Texture2D)) },
+    };
+
+
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -17,116 +41,57 @@ public class GameResourceManifestEditor : Editor
     void FillResources()
     {
         var manifest = (GameResourceManifest)target;
+        Undo.RecordObject(manifest, "Auto-fill Resource Manifest");
 
-        // 清空现有数据
-        foreach (var cat in manifest.resourceCategories)
-            foreach (var grp in cat.resGroups)
-                grp.resourceIds.Clear();
-
-        Undo.RecordObject(manifest, "Fill Resources");
-
-        // 按 category 分组收集需要处理的 group 及其物理路径
-        var categoryToGroups = new Dictionary<E_ResourceCategory, List<(ResourceGroup group, string folder)>>();
-
-        foreach (var cat in manifest.resourceCategories)
+        foreach (var kvp in s_FieldRules)
         {
-            string basePath = GetBasePathForCategory(cat.resCategory);
-            var groupList = new List<(ResourceGroup, string)>();
+            string fieldName = kvp.Key;
+            string folderPath = $"Assets{kvp.Value.folder}";
+            System.Type assetType = kvp.Value.assetType;
 
-            foreach (var grp in cat.resGroups)
+            // 获取字段的 SerializedProperty（用于修改数组）
+            SerializedProperty arrayProp = serializedObject.FindProperty(fieldName);
+            if (arrayProp == null)
             {
-                if (string.IsNullOrWhiteSpace(grp.groupName)) continue;
-
-                string folder = $"Assets{basePath.TrimEnd('/')}/{grp.groupName}";
-                if (!Directory.Exists(folder))
-                {
-                    Logger.Warn($"{cat.resCategory}分类下，{grp.groupName}组不存在，跳过: {folder}", LogTag.File, manifest);
-                    continue;
-                }
-
-                groupList.Add((grp, folder));
+                Debug.LogWarning($"Field not found: {fieldName}");
+                continue;
             }
 
-            if (groupList.Count > 0)
-                categoryToGroups[cat.resCategory] = groupList;
-        }
+            // 清空数组
+            arrayProp.ClearArray();
 
-        // 按类型批量处理
-        foreach (var kvp in categoryToGroups)
-        {
-            var groups = kvp.Value;
+            if (!Directory.Exists(folderPath))
+            {
+                Logger.Warn($"Folder not found, skipping: {folderPath}", LogTag.File, manifest);
+                continue;
+            }
 
-            // 一次性获取该类型下所有目标目录的资源 GUIDs
-            string[] allFolders = groups.Select(g => g.folder).ToArray();
-            string[] guids = GetAssetGUIDsByCategory(kvp.Key, allFolders);
+            // 批量查找资源
+            string[] guids = AssetDatabase.FindAssets($"t:{assetType.Name}", new[] { folderPath });
+            var ids = new List<string>();
 
             foreach (string guid in guids)
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 if (string.IsNullOrEmpty(assetPath)) continue;
 
-                // 精确分配：找到 assetPath 所属的 group（按最长前缀匹配更安全）
-                ResourceGroup targetGroup = null;
-                int maxMatchLength = -1;
+                string fileName = Path.GetFileNameWithoutExtension(assetPath);
+                string id = fileName.ToLowerInvariant();
+                if (!ids.Contains(id))
+                    ids.Add(id);
+            }
 
-                foreach (var (grp, folder) in groups)
-                {
-                    // 确保路径以目录结尾（避免 Danmaku 匹配到 DanmakuBoss）
-                    string normalizedFolder = folder.EndsWith("/") ? folder : folder + "/";
-                    if (assetPath.StartsWith(normalizedFolder, System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        int len = normalizedFolder.Length;
-                        if (len > maxMatchLength)
-                        {
-                            maxMatchLength = len;
-                            targetGroup = grp;
-                        }
-                    }
-                }
-
-                if (targetGroup != null)
-                {
-                    string baseName = Path.GetFileNameWithoutExtension(assetPath);
-                    string id = $"{baseName}".ToLowerInvariant();
-
-                    if (!targetGroup.resourceIds.Contains(id))
-                    {
-                        targetGroup.resourceIds.Add(id);
-                    }
-                }
+            // 填入 SerializedProperty
+            arrayProp.arraySize = ids.Count;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                arrayProp.GetArrayElementAtIndex(i).stringValue = ids[i];
             }
         }
 
-        EditorUtility.SetDirty(manifest);
+        serializedObject.ApplyModifiedProperties();
         AssetDatabase.SaveAssets();
-        Logger.Debug("资源填充完成！（基于 Manifest 结构 + 批量扫描）");
-    }
 
-    static string GetBasePathForCategory(E_ResourceCategory category)
-    {
-        return category switch
-        {
-            E_ResourceCategory.Prefab => "/Prefabs/",
-            E_ResourceCategory.Config => "/Configs/",
-            E_ResourceCategory.Audio => "/Audio/",
-            E_ResourceCategory.Texture => "/Art/Texture/",
-            E_ResourceCategory.Atlas => "/Art/Atlas/",
-            E_ResourceCategory.Shader => "/Shaders/",
-            _ => "/Assets/"
-        };
-    }
-
-    static string[] GetAssetGUIDsByCategory(E_ResourceCategory category, string[] searchInFolders)
-    {
-        return category switch
-        {
-            E_ResourceCategory.Prefab => AssetDatabase.FindAssets("t:Prefab", searchInFolders),
-            E_ResourceCategory.Config => AssetDatabase.FindAssets("t:ScriptableObject", searchInFolders),
-            E_ResourceCategory.Audio => AssetDatabase.FindAssets("t:AudioClip", searchInFolders),
-            E_ResourceCategory.Texture => AssetDatabase.FindAssets("t:Texture2D", searchInFolders),
-            E_ResourceCategory.Shader => AssetDatabase.FindAssets("t:Shader", searchInFolders),
-            E_ResourceCategory.Atlas => AssetDatabase.FindAssets("t:SpriteAtlas", searchInFolders),
-            _ => AssetDatabase.FindAssets("", searchInFolders)
-        };
+        Logger.Debug("资源清单自动填充完成！（基于扁平化字段规则）", LogTag.Resource, manifest);
     }
 }

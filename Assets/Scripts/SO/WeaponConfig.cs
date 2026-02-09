@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum E_Weapon : byte
@@ -14,13 +15,60 @@ public enum E_Weapon : byte
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
-public class WeaponConfig : GameConfig
+public class WeaponConfig : GameConfig , IReferenceResolver
 {
     [Header("Œ‰∆˜≈‰÷√")]
+    public E_Character characterID;
+
     public E_Weapon weaponID;
 
+    [Header("Œ‰∆˜∑¢…‰∆˜≈‰÷√")]
     public string[] danmakuEmitterConfigIds;
+    [NonSerialized]
+    public int[] danmakuEmitterCfgIndices;
 
     [TextArea(1, 5)]
     public string description;
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (danmakuEmitterConfigIds != null)
+        {
+            for (int i = 0; i < danmakuEmitterConfigIds.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(danmakuEmitterConfigIds[i]))
+                {
+                    danmakuEmitterConfigIds[i] = danmakuEmitterConfigIds[i].ToLowerInvariant().Trim();
+                }
+            }
+        }
+    }
+#endif
+
+    public void ResolveReferences(GameResDB resDb)
+    {
+        if (danmakuEmitterConfigIds != null && danmakuEmitterConfigIds.Length > 0)
+        {
+            danmakuEmitterCfgIndices = new int[danmakuEmitterConfigIds.Length];
+            for (int i = 0; i < danmakuEmitterConfigIds.Length; i++)
+            {
+                string emitterId = danmakuEmitterConfigIds[i].ToLowerInvariant();
+                danmakuEmitterCfgIndices[i] = resDb.GetConfigIndex(emitterId);
+
+                if (danmakuEmitterCfgIndices[i] == -1)
+                {
+                    Logger.Warn(
+                        $"[WeaponConfig] DanmakuEmitter config not found: '{emitterId}' " +
+                        $"(in weapon: {configId})",
+                        LogTag.Resource
+                    );
+                }
+            }
+        }
+        else
+        {
+            danmakuEmitterCfgIndices = Array.Empty<int>();
+        }
+    }
 }

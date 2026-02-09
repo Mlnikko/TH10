@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3972ac5ebeade5849989dc9bc80b2557, type: 3}
   m_Name: Marisa
   m_EditorClassIdentifier: 
-  characterID: 2
+  configId: 
+  characterPrefabId: Marisa
+  characterName: 2
   weaponIds: 141516
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"
   moveSpeed: 2.2

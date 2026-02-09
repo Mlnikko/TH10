@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,8 +8,7 @@ public class CharacterSelectionUI : MonoBehaviour
     public TMP_Text nameLabel;
     public Image iconImage;
     public Button selectButton;
-
-    public string ConfigId { get; private set; }
+    public E_Character characterName;
 
     Action onSelect;
 
@@ -21,11 +19,17 @@ public class CharacterSelectionUI : MonoBehaviour
 
     public void Initialize(CharacterConfig config, Action onSelect)
     {
-        this.onSelect = onSelect;
-        ConfigId = config.ConfigId;
+        this.onSelect = onSelect;     
         nameLabel.text = config.description;
+        characterName = config.characterName;
 
-        var sprite = GameResDB.GetSpriteFromTexture(config.characterID.ToString().ToLowerInvariant());
+        string characterId = characterName.ToString().ToLowerInvariant();
+        Sprite sprite = GameResDB.Instance.GetSpriteFromTexture(characterId);
+
+        if(sprite == null)
+        {
+            Logger.Warn($"character icon sprite not found for configId: {characterName}");
+        }
 
         iconImage.sprite = sprite;
     }

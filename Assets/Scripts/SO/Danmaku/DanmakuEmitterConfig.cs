@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum EmitMode
@@ -16,11 +17,20 @@ public enum DanmakuSelectMode
 
 
 [CreateAssetMenu(fileName = "NewDanmakuEmitterConfig", menuName = "Configs/DanmakuEmitterConfig")]
-public class DanmakuEmitterConfig : GameConfig
+public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
 {
-    public string[] danmakuConfigIds;
-    public DanmakuSelectMode danmakuSelectMode = DanmakuSelectMode.First;
+    [Header("发射器预制体")]
+    public string emitterPrefabId;
+    [NonSerialized]
+    public int emitterPrefabIndex;
 
+    [Header("装填弹幕配置")]
+    public string[] danmakuConfigIds;
+    [NonSerialized]
+    public int[] danmakuCfgIndices;
+
+    [Header("弹幕选择与发射模式")]
+    public DanmakuSelectMode danmakuSelectMode = DanmakuSelectMode.First;
     public EmitMode emitMode = EmitMode.None;
 
     //public int minPoolSize = 100;
@@ -52,4 +62,55 @@ public class DanmakuEmitterConfig : GameConfig
     [Min(0f)]
     public int ArcBulletCount = 5;    // 弧线上子弹数
     public bool ArcClockwise = true;
+
+    void OnValidate()
+    {
+        if(!string.IsNullOrEmpty(emitterPrefabId))
+            emitterPrefabId = emitterPrefabId.ToLowerInvariant().Trim();
+
+        if(danmakuConfigIds != null)
+        {
+            for (int i = 0; i < danmakuConfigIds.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(danmakuConfigIds[i]))
+                    danmakuConfigIds[i] = danmakuConfigIds[i].ToLowerInvariant().Trim();
+            }
+        }
+    }
+
+    public void ResolveReferences(GameResDB resDb)
+    {
+        // 1. 解析发射器预制体索引
+        emitterPrefabIndex = resDb.GetPrefabIndex(emitterPrefabId);
+        if (emitterPrefabIndex == -1)
+        {
+            Logger.Warn(
+                $"[DanmakuEmitterConfig] Prefab not found: '{emitterPrefabId}' " +
+                $"(configId: {configId})",
+                LogTag.Resource
+            );
+        }
+
+        // 2. 解析弹幕配置索引
+        if (danmakuConfigIds != null && danmakuConfigIds.Length > 0)
+        {
+            danmakuCfgIndices = new int[danmakuConfigIds.Length];
+            for (int i = 0; i < danmakuConfigIds.Length; i++)
+            {
+                danmakuCfgIndices[i] = resDb.GetConfigIndex(danmakuConfigIds[i]);
+                if (danmakuCfgIndices[i] == -1)
+                {
+                    Logger.Warn(
+                        $"[DanmakuEmitterConfig] Danmaku config not found: '{danmakuConfigIds[i]}' " +
+                        $"(in emitter: {configId})",
+                        LogTag.Resource
+                    );
+                }
+            }
+        }
+        else
+        {
+            danmakuCfgIndices = Array.Empty<int>();
+        }
+    }
 }

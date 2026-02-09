@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.U2D;
 using UnityEngine.UI;
 
 public class WeaponSelectionUI : MonoBehaviour
@@ -9,9 +8,7 @@ public class WeaponSelectionUI : MonoBehaviour
     public TMP_Text nameLabel;
     public Image iconImage;
     public Button selectButton;
-
-    public string ConfigId { get; private set; }
-
+    public E_Weapon weaponId;
     System.Action onSelect;
 
     void OnEnable()
@@ -22,10 +19,15 @@ public class WeaponSelectionUI : MonoBehaviour
     public void Initialize(WeaponConfig config, System.Action onSelect)
     {
         this.onSelect = onSelect;
-        ConfigId = config.ConfigId;
         nameLabel.text = config.description;
-        
-        var sprite = GameResDB.GetSpriteFromAtlas("weapon", config.ConfigId.ToString().ToLowerInvariant());
+        weaponId = config.weaponID;
+
+        var sprite = GameResDB.Instance.GetSpriteFromAtlas("weapon", weaponId.ToString().ToLowerInvariant());
+
+        if(sprite == null)
+        {
+            Logger.Warn($"Weapon icon sprite not found for configId: {weaponId}");
+        }
 
         iconImage.sprite = sprite;
     }
