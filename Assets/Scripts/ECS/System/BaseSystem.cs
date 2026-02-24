@@ -9,9 +9,16 @@ public abstract class BaseSystem
     {
         get
         {
-            if (World == null) throw new System.InvalidOperationException("World is not initialized.");
-
+            if (World == null) Logger.Critical("World is not initialized.");
             return World.EntityManager;
+        }
+    }
+    protected EntityFactory EntityFactory
+    {
+        get
+        {
+            if (World == null) Logger.Critical("World is not initialized.");
+            return World.EntityFactory;
         }
     }
     /// <summary>

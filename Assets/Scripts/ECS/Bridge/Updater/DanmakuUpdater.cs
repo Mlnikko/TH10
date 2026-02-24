@@ -2,14 +2,11 @@ using UnityEngine;
 
 public class DanmakuUpdater : IGameObjectUpdater
 {
-    GameObject _gameObject;
     Transform _transform;
-    SpriteRenderer _spriteRenderer;
 
     public DanmakuUpdater(GameObject gameObject)
     {
         _transform = gameObject.transform;
-        _spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
     }
 
     public void UpdateGameObject(in EntityManager em, Entity entity)

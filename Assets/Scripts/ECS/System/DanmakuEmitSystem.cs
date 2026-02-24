@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 public class DanmakuEmitSystem : BaseSystem
 {
@@ -51,36 +50,11 @@ public class DanmakuEmitSystem : BaseSystem
             return;
         }
 
-        int danmakuIndex = emitterConfig.danmakuCfgIndices[0];
+        int danmakuCfgIndex = emitterConfig.danmakuCfgIndices[0];
 
-        var danmakuCfg = GameResDB.Instance.GetConfig<DanmakuConfig>(danmakuIndex);
+        Entity e_danmaku = EntityFactory.CreateDanmaku(emitterConfig, danmakuCfgIndex, emitPosX, emitPosY);
 
-        if(danmakuCfg == null)
-        {
-            Logger.Error($"Danmaku configuration not found for index {danmakuIndex}.");
-            return;
-        }
-
-        var danmakuEntity = EntityManager.CreateEntity();
-
-        EntityManager.AddComponent(danmakuEntity, new CDanmaku { cfgIndex = danmakuIndex });
-        EntityManager.AddComponent(danmakuEntity, new CPosition(emitPosX, emitPosY));
-
-        switch(emitterConfig.emitMode)
-        {
-            case EmitMode.Line:
-                Vector2 dir = emitterConfig.LineDirection;
-                EntityManager.AddComponent(danmakuEntity, new CVelocity(emitterConfig.launchSpeed * dir.x, emitterConfig.launchSpeed * dir.y));
-                break;
-            case EmitMode.Arc:
-                break;
-        }
-
-        //
-        int prefabIndex = danmakuCfg.danmakuPrefabIndex;
-        EntityManager.AddComponent(danmakuEntity, new CGameObjectLink(prefabIndex));
-
-        Logger.Info($"Emitted danmaku entity {danmakuEntity.Index} at position ({emitPosX}, {emitPosY}) with config index {danmakuIndex}.");
+        Logger.Info($"Emitted danmaku entity {e_danmaku.Index} at position ({emitPosX}, {emitPosY}) with config index {danmakuCfgIndex}.");
     }
 
     void EmitSequential(float emitPosX, float emitPosY, DanmakuEmitterConfig emitterConfig, int[] danmakuIndices)

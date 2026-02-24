@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
-  m_Name: DME_Reimu_Main
+  m_Name: DME_Test
   m_EditorClassIdentifier: 
   configId: 
-  emitterPrefabId: dme_reimu_main
+  emitterPrefabId: dme_test
   danmakuConfigIds:
-  - dm_reimu_main
+  - dm_test
   danmakuSelectMode: 0
   emitMode: 1
-  launchInterval: 0.5
-  launchSpeed: 0.5
+  launchInterval: 0.01
+  launchSpeed: 0.01
   launchPosOffset: {x: 0, y: 0}
   launchRotOffset: {x: 0, y: 0, z: 0}
   emitterCamp: 1

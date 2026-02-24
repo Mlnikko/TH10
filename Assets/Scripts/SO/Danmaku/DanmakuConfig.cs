@@ -9,11 +9,14 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
     [NonSerialized]
     public int danmakuPrefabIndex;
 
+    public int poolSize = 100;
+
     [Header("µ¯Ä»ÀàĞÍ")]
     public DanmakuType danmakuType = DanmakuType.Normal;
 
-    [Header("µ¯Ä»Ëõ·Å")]
+    [Header("µ¯Ä»Transform")]
     public Vector2 localScale = Vector2.one;
+    public Vector3 localRotation = Vector3.zero;
 
     [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
     public Sprite sprite = null;

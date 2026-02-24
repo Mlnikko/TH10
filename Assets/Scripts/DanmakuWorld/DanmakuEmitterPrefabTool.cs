@@ -19,10 +19,6 @@ public class DanmakuEmitterPrefabTool : MonoBehaviour
     [Header("发射器阵营")]
     [SerializeField] EmitterCamp emitterCamp;
 
-    [Header("对象池配置")]
-    [SerializeField] int poolMinSize;
-    [SerializeField] int poolMaxSize;
-
     [Header("弹幕发射调整")]
     [SerializeField] Vector2 launchPosOffset;
     [SerializeField] Vector3 launchRotOffset;

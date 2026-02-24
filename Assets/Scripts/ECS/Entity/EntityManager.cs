@@ -226,6 +226,12 @@ public class EntityManager
         return ref ComponentStorage<T>.Components[entity.Index];
     }
 
+    public bool HasComponent<T>(Entity entity) where T : struct, IComponent
+    {
+        if (!IsValid(entity)) return false;
+        return ComponentStorage<T>.HasComponent.Get(entity.Index);
+    }
+
     public Span<T> GetComponentSpan<T>() where T : struct, IComponent
     {
         return ComponentStorage<T>.Components.AsSpan();

@@ -6,15 +6,21 @@ using System.Collections.Generic;
 /// </summary>
 public class World
 {
-    private readonly List<BaseSystem> _systems;
-    private readonly EntityManager _entityManager;
+    readonly List<BaseSystem> _systems;
+    readonly EntityManager _entityManager;
+    readonly EntityFactory _entityFactory;
+    readonly GameObjectBridge _gameObjectBridge;
 
+    public EntityFactory EntityFactory => _entityFactory;
     public EntityManager EntityManager => _entityManager;
+    public GameObjectBridge GameObjectBridge => _gameObjectBridge;
 
     public World()
     {
         _systems = new List<BaseSystem>();
         _entityManager = new EntityManager();
+        _entityFactory = new EntityFactory(_entityManager);
+        _gameObjectBridge = new GameObjectBridge();
     }
 
     #region 添加系统
@@ -85,7 +91,7 @@ public class World
                 sys.OnLateUpdate(deltaTime);
             }
         }
-        GameObjectBridge.UpdateAllGameObjects(EntityManager);
+        _gameObjectBridge.UpdateAllGameObjects(EntityManager);
     }
 
     #endregion

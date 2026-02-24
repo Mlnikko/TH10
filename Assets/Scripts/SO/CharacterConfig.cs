@@ -57,34 +57,6 @@ public class CharacterConfig : GameConfig, IReferenceResolver
         {
             Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {configId})", LogTag.Resource);
         }
-
-        //// 2. 解析武器配置索引
-        //if (weaponIds != null && weaponIds.Length > 0)
-        //{
-        //    weaponIndices = new int[weaponIds.Length];
-        //    for (int i = 0; i < weaponIds.Length; i++)
-        //    {
-        //        if (weaponIds[i] == E_Weapon.None)
-        //        {
-        //            weaponIndices[i] = -1;
-        //        }
-        //        else
-        //        {
-        //            // 将枚举转为小写字符串（与 Manifest 中的 ID 一致）
-        //            string weaponIdStr = weaponIds[i].ToString().ToLowerInvariant();
-        //            weaponIndices[i] = resDb.GetConfigIndex(weaponIdStr);
-
-        //            if (weaponIndices[i] == -1)
-        //            {
-        //                Logger.Warn($"[CharacterConfig] Weapon config not found: '{weaponIdStr}' (in character: {configId})", LogTag.Resource);
-        //            }
-        //        }
-        //    }
-        //}
-        //else
-        //{
-        //    weaponIndices = Array.Empty<int>();
-        //}
     }
 
     public CPlayerAttribute ToRuntimeAttribute(float logicDeltaTime)

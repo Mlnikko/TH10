@@ -55,6 +55,11 @@ internal class ResourceRegistry<T> where T : UnityEngine.Object
         return index >= 0 ? _assets[index] : null;
     }
 
+    internal List<T> GetAssets()
+    {
+        return new List<T>(_assets);
+    }
+
     internal int Count => _assets.Length;
 }
 
@@ -75,6 +80,9 @@ public class GameResDB : Singleton<GameResDB>
     public int GetConfigIndex(string id) => _configRegistry.GetIndexById(id);
     public int GetTextureIndex(string id) => _textureRegistry.GetIndexById(id);
     public int GetAtlasIndex(string id) => _atlasRegistry.GetIndexById(id);
+
+
+    public int GetMaxPrefabIndex() => _prefabRegistry.Count;
 
     // —————— 初始化 ——————
     public async Task InitializeAsync()
@@ -195,6 +203,16 @@ public class GameResDB : Singleton<GameResDB>
     {
         int index = _configRegistry.GetIndexById(configId);
         return GetConfig<T>(index);
+    }
+
+    public List<T> GetConfigs<T>() where T : GameConfig
+    {
+        // 直接调用 Registry 的方法，拿到所有资产列表
+        var allAssets = _configRegistry.GetAssets();
+
+        // 过滤出特定类型 T
+        // 注意：这里会有轻微的 LINQ 开销，但只在 Loading 阶段执行一次，完全可接受
+        return allAssets.OfType<T>().ToList();
     }
     #endregion
 

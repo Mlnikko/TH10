@@ -7,18 +7,23 @@ public class DanmakuPrefabTool : MonoBehaviour
 
     [SerializeField] DanmakuType danmakuType;
 
-    [Header("µØƒª‘§÷∆ÃÂÀı∑≈…Ë÷√")]
+    [Header("µØƒª≥ÿ¥Û–°")]
+    [SerializeField] int poolSize;
+
+    [Header("µØƒªTransform…Ë÷√")]
     [SerializeField] Vector2 localScale;
+    [SerializeField] Vector3 localRotation;
 
     [Header("µØƒª‰÷»æ…Ë÷√")]
     [SerializeField] Sprite sprite;
     [SerializeField] Color color;
 
     [Header("µØƒª≈ˆ◊≤∆˜…Ë÷√")]
-    [SerializeField] Vector2 colliderOffset;
     [SerializeField] E_ColliderType colliderType;
+    [SerializeField] E_ColliderLayer colliderLayer;
     [SerializeField] Vector2 size;
     [SerializeField] float radius;
+    [SerializeField] Vector2 colliderOffset;
 
     [SerializeField] float damage;
 
@@ -30,13 +35,19 @@ public class DanmakuPrefabTool : MonoBehaviour
             return;
         }
 
+        poolSize = danmakuConfig.poolSize;
+
         localScale = danmakuConfig.localScale;
+        localRotation = danmakuConfig.localRotation;
+
         sprite = danmakuConfig.sprite;
         color = danmakuConfig.color;
-        colliderOffset = danmakuConfig.colliderOffset;
+       
         colliderType = danmakuConfig.colliderType;
+        colliderLayer = danmakuConfig.colliderLayer;
         size = danmakuConfig.size;
         radius = danmakuConfig.radius;
+        colliderOffset = danmakuConfig.colliderOffset;
         danmakuType = danmakuConfig.danmakuType;
         damage = danmakuConfig.damage;
 
@@ -50,14 +61,19 @@ public class DanmakuPrefabTool : MonoBehaviour
             Logger.Warn("µØƒª≈‰÷√Œƒº˛Œ¥…Ë÷√", LogTag.Config);
             return;
         }
-
+        danmakuConfig.poolSize = poolSize;
         danmakuConfig.localScale = localScale;
+        danmakuConfig.localRotation = localRotation;
+
         danmakuConfig.sprite = sprite;
         danmakuConfig.color = color;
-        danmakuConfig.colliderOffset = colliderOffset;
+       
         danmakuConfig.colliderType = colliderType;
+        danmakuConfig.colliderLayer = colliderLayer;
+
         danmakuConfig.size = size;
         danmakuConfig.radius = radius;
+        danmakuConfig.colliderOffset = colliderOffset;
         danmakuConfig.danmakuType = danmakuType;
         danmakuConfig.damage = damage;
 
@@ -70,6 +86,7 @@ public class DanmakuPrefabTool : MonoBehaviour
 
         // ‘§¿¿Àı∑≈
         transform.localScale = localScale;
+        transform.localRotation = Quaternion.Euler(localRotation);
 
         // ‘§¿¿‰÷»æ
         if (TryGetComponent<SpriteRenderer>(out var spriteRenderer))
@@ -80,14 +97,13 @@ public class DanmakuPrefabTool : MonoBehaviour
     }
 
     protected void OnDrawGizmosSelected()
-    {
-        
+    {      
         if (danmakuConfig == null) return;
 
         // ≈ˆ◊≤∆˜÷––ƒªÊ÷∆
         Gizmos.color = Color.yellow;
 
-        Vector3 colliderCenter = transform.position + (Vector3)danmakuConfig.colliderOffset;
+        Vector3 colliderCenter = transform.position + (Vector3)colliderOffset;
 
         Gizmos.DrawSphere(transform.position, 0.01f);
         Gizmos.DrawLine(transform.position, colliderCenter);

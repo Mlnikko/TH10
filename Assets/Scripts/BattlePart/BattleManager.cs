@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 public struct PlayerBattleData
@@ -57,6 +58,7 @@ public class BattleManager : SingletonMono<BattleManager>
     {
         logicTimer = new LogicFrameTimer();
         InitBattleWorld();
+        WarmupPool();
     }
 
     async void Start()
@@ -105,7 +107,22 @@ public class BattleManager : SingletonMono<BattleManager>
 
         battleWorld.AddSystem<DanmakuEmitSystem>();
 
+        battleWorld.AddSystem<PresentationSystem>();
+
         Logger.Info("Battle ECS World initialized.");
+    }
+
+    void WarmupPool()
+    {
+        int maxPrefabIndex = GameResDB.Instance.GetMaxPrefabIndex();
+        GameObjectPoolManager.Instance.Initialize(maxPrefabIndex);
+
+        var danmakuCfgs = GameResDB.Instance.GetConfigs<DanmakuConfig>();
+        foreach (var config in danmakuCfgs)
+        {
+            GameObjectPoolManager.Instance.WarmupPool(config.danmakuPrefabIndex, config.poolSize);
+        }
+            
     }
     #endregion
 
@@ -215,14 +232,9 @@ public class BattleManager : SingletonMono<BattleManager>
         var em = battleWorld.EntityManager;
         var playerEntity = em.CreateEntity();
 
-        int gameObjectId = GameObjectBridge.Register(playerGO, new PlayerUpdater(playerGO));
+        battleWorld.GameObjectBridge.Link(playerEntity, playerGO, new PlayerUpdater(playerGO), em);
 
         #region 添加组件
-
-        em.AddComponent(playerEntity, new CGameObjectLink
-        {
-            gid = gameObjectId
-        });
 
         em.AddComponent(playerEntity, new CPosition(bornPos.x, bornPos.y));
         em.AddComponent(playerEntity, new CVelocity(0, 0));
@@ -248,8 +260,6 @@ public class BattleManager : SingletonMono<BattleManager>
         Logger.Info($"Player {playerData.playerIndex} ({playerData.characterId}) initialized successfully.", LogTag.Battle);
     }
 
-
-    // Update 和 LateUpdate 主要用于处理非核心逻辑（如渲染等）
     void Update()
     {
         if (battleWorld == null) return;
@@ -295,7 +305,6 @@ public class BattleManager : SingletonMono<BattleManager>
 
         }
 
-        // 8. 表现层更新（每帧都执行！）
         battleWorld?.Update(Time.deltaTime);
     }
 

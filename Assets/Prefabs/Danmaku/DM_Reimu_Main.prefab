@@ -32,7 +32,7 @@ Transform:
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4959689819910237749
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -98,12 +98,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
+  danmakuType: 0
+  poolSize: 200
   localScale: {x: 1, y: 1}
+  localRotation: {x: 0, y: 0, z: 90}
   sprite: {fileID: -1146824268, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
-  colliderOffset: {x: 0, y: 0.23}
   colliderType: 1
-  size: {x: 0.1, y: 0.15}
+  colliderLayer: 8
+  size: {x: 0.12, y: 0.16}
   radius: 0
-  danmakuType: 0
+  colliderOffset: {x: 0, y: 0.24}
   damage: 1

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2120049749566012503}
   - component: {fileID: 4801490282356181558}
   m_Layer: 0
-  m_Name: DME_Reimu_Main
+  m_Name: DME_Test
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -97,8 +97,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71971fac512de7048b631644cc0eddba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emitterConfig: {fileID: 11400000, guid: 35a834f408d757a468c1938fb9a1d7aa, type: 2}
-  danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
+  emitterConfig: {fileID: 11400000, guid: 56f905c7288be0e4abb006b80c2c5032, type: 2}
+  danmakuConfig: {fileID: 11400000, guid: 5755a258a3adb9846b569706f7ca88f3, type: 2}
   emitterType: 1
   emitterCamp: 1
   launchPosOffset: {x: 0, y: 0}

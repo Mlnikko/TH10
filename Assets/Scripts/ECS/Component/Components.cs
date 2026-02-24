@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 /// <summary>
 /// Components为实体附加的数据结构，用于存储实体的各种属性和状态。
@@ -7,59 +8,66 @@ using System;
 
 public interface IComponent { }
 
+
+/// <summary>
+/// 表现层GO同步组件，负责将ECS实体与Unity的GameObject进行关联，并通过Updater驱动表现更新。
+/// </summary>
 public struct CGameObjectLink : IComponent
 {
-    public int gid; // 全局唯一表现 ID
-    public int prefabIndex; // 预制体索引（用于对象池）
-
-    public CGameObjectLink(int prefabIndex)
-    {
-        this.gid = 0;
-        this.prefabIndex = prefabIndex;
-    }
+    public GameObject GameObject;
+    public IGameObjectUpdater Updater;
+    public bool IsDirty; // 标记是否需要同步
 }
+
+/// <summary>
+/// 渲染系统使用的标记组件，标记实体需要在当前帧进行表现更新。系统会根据这个组件来决定哪些实体需要同步到GameObject。
+/// </summary>
+public struct CPendingPresentation : IComponent { }
+
+
+#region Base
 
 public struct CPosition : IComponent
-{
-    public float x, y;
-    public CPosition(float x, float y)
     {
-        this.x = x;
-        this.y = y;
+        public float x, y;
+        public CPosition(float x, float y)
+        {
+            this.x = x;
+            this.y = y;
+        }
     }
-}
 
 public struct CVelocity : IComponent
-{
-    public float vx, vy;
-    public CVelocity(float vx, float vy)
     {
-        this.vx = vx;
-        this.vy = vy;
+        public float vx, vy;
+        public CVelocity(float vx, float vy)
+        {
+            this.vx = vx;
+            this.vy = vy;
+        }
     }
-}
 
 public struct CLifetime : IComponent
-{
-    public uint spawnFrame;      // 实体创建时的逻辑帧号
-    public uint maxLifeFrames;   // 最大生存帧数
-}
+    {
+        public uint spawnFrame;      // 实体创建时的逻辑帧号
+        public uint maxLifeFrames;   // 最大生存帧数
+    }
+
+#endregion
 
 #region 弹幕组件
 public enum DanmakuType
-{
-    Normal,
-    Homing
-}
+    {
+        Normal,
+        Homing
+    }
 
 public struct CDanmaku : IComponent
 {
-    public int ownerId;  // 谁发射的
     public int cfgIndex; // 弹幕配置索引
 
-    public CDanmaku(int ownerId, int cfgIndex)
+    public CDanmaku(int cfgIndex)
     {
-        this.ownerId = ownerId;
         this.cfgIndex = cfgIndex;
     }
 }
@@ -81,14 +89,9 @@ public struct CDanmakuEmitter : IComponent
     }
 }
 
-//public struct CDanmakuEmitterRunTime : IComponent
-//{
-   
-//}
-
 #endregion
 
-#region ColliderComponent
+#region Collider
 public enum E_ColliderType : byte
 {
     None,
@@ -138,7 +141,7 @@ public struct CCollider : IComponent
 }
 #endregion
 
-#region PlayerComponent
+#region Player
 public struct CPlayer : IComponent
 {
     public byte playerIndex;   // 玩家ID
@@ -172,7 +175,7 @@ public struct CPlayerRunTime : IComponent
 }
 #endregion
 
-#region EnemyComponent
+#region Enemy
 public struct CEnemy : IComponent
 {
     public ushort enemyId;       // 敌人ID
