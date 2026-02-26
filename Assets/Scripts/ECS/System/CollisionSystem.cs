@@ -139,7 +139,7 @@ public class CollisionSystem : BaseSystem
         int colliderCount = 0;
         for (int i = 0; i < EntityManager.MAX_ENTITIES; i++)
         {
-            if (EntityManager.IsValid(i) && colliders[i].active)
+            if (colliders[i].active)
                 activeColliders[colliderCount++] = i;
         }
 

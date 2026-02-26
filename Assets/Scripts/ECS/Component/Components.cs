@@ -19,11 +19,20 @@ public struct CGameObjectLink : IComponent
     public bool IsDirty; // 标记是否需要同步
 }
 
+public enum E_PresentationState : byte
+{
+    None = 0,       // 无操作
+    Spawn = 1,      // 需要创建 GameObject
+    Despawn = 2,    // 需要销毁/回收 GameObject
+    Update = 3      // (可选) 仅需要同步位置/旋转，不创建/销毁
+}
+
 /// <summary>
 /// 渲染系统使用的标记组件，标记实体需要在当前帧进行表现更新。系统会根据这个组件来决定哪些实体需要同步到GameObject。
 /// </summary>
-public struct CPendingPresentation : IComponent { }
+public struct CPoolGet : IComponent { }
 
+public struct CPoolRecycle : IComponent { }
 
 #region Base
 

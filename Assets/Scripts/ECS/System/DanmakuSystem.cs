@@ -13,12 +13,14 @@ public class DanmakuSystem : BaseSystem
 
         for (int i = 0; i < danmakuCount; i++)
         {
-            int danmakuIndex = danmakuIndices[i];
-            ref var danmaku = ref danmakus[danmakuIndex];
-            ref var position = ref positions[danmakuIndex];   
-            ref var velocity = ref velocities[danmakuIndex];
+            int entityIndex = danmakuIndices[i];
+
+            ref var danmaku = ref danmakus[entityIndex];
+            ref var position = ref positions[entityIndex];   
+            ref var velocity = ref velocities[entityIndex];
 
             UpdateDanmakuPosition(ref position, ref velocity);
+            RecycleOutOfBoundsDanmaku(position, entityIndex);
         }
     }
     
@@ -26,5 +28,14 @@ public class DanmakuSystem : BaseSystem
     {
         position.x += velocity.vx;
         position.y += velocity.vy;
+    }
+
+    // 弹幕超出边界后回收
+    void RecycleOutOfBoundsDanmaku(CPosition position, int entityIndex)
+    {
+       if(!GlobalBattleData.AreaData.IsPointInRecycleArea(position.x, position.y))
+       {
+           EntityManager.AddComponent(entityIndex, new CPoolRecycle());
+        }
     }
 }

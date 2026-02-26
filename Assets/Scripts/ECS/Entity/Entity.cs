@@ -6,11 +6,11 @@ using System;
 /// </summary>
 public readonly struct Entity
 {
-    private readonly int _packed; // 高16位=Version, 低16位=Index
+    readonly int _packed; // 高16位=Version, 低16位=Index
 
     public static readonly Entity Null = new(0); // 约定：0 表示无效
 
-    private Entity(int packed) => _packed = packed;
+    Entity(int packed) => _packed = packed;
 
     public bool IsNull => _packed == 0;
 
@@ -18,7 +18,6 @@ public readonly struct Entity
 
     internal ushort Version => (ushort)(_packed >> 16);
 
-    // 仅 EntityManager 可创建
     internal static Entity FromIndexAndVersion(int index, ushort version)
     {
         return new Entity((version << 16) | index);

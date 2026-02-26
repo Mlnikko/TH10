@@ -61,18 +61,10 @@ public struct BattleAreaData
     // 默认构造（避免未初始化）
     public static BattleAreaData Default => new BattleAreaData(1280, 720, Vector2.zero, 64, new Vector2(100, 100));
 
-    // 用于帧同步一致性校验
-    public bool Equals(BattleAreaData other)
+    public bool IsPointInRecycleArea(float x , float y)
     {
-        return Width == other.Width &&
-               Height == other.Height &&
-               Center.Equals(other.Center) &&
-               GridCellSize == other.GridCellSize &&
-               DanmakuRecycleMargin.Equals(other.DanmakuRecycleMargin);
+        return x >= RecycleLeft && x <= RecycleRight && y >= RecycleBottom && y <= RecycleTop;
     }
-
-    public override bool Equals(object obj) => obj is BattleAreaData other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(Width, Height, Center, GridCellSize, DanmakuRecycleMargin);
 }
 
 /// <summary>

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 using UnityEngine;
 
 public interface IPoolable
@@ -122,22 +121,15 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         // 检查池是否为空
         if (queue == null || queue.Count == 0)
         {
-            // 【STG 铁律】：池空了绝不 Instantiate，直接返回 null
-            // 这能强制你在策划阶段就配好足够的预热数量
             Logger.Error($"POOL EXHAUSTED! Index: {prefabIndex}. Increase warmup count!");
             return null;
         }
 
-        var obj = queue.Dequeue();
-
-        // 激活并设置状态
-        obj.SetActive(true);
+        var obj = queue.Dequeue();      
 
         obj.transform.SetParent(null); // 移出池容器
 
-
         obj.GetComponent<IPoolable>()?.OnGet();
-
         return obj;
     }
 
@@ -164,9 +156,6 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         if (prefabIndex <= _maxPrefabIndex && _poolRoots[prefabIndex] != null)
         {
             obj.transform.SetParent(_poolRoots[prefabIndex]);
-            // 可选：重置本地坐标，防止累积误差
-            //obj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-
             _pools[prefabIndex].Enqueue(obj);
         }
         else
@@ -201,7 +190,6 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         Logger.Info("All pools cleared.");
     }
 
-
     Transform GetOrCreatePoolRoot(int prefabIndex, string prefabName)
     {
         if (_poolRoots[prefabIndex] != null)
@@ -221,7 +209,6 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         _poolRoots[prefabIndex] = rootObj.transform;
         return rootObj.transform;
     }
-
     string ExtractCategoryName(string prefabName)
     {
         if (prefabName.StartsWith("DM")) return "Danmaku";

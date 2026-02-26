@@ -24,9 +24,11 @@ MonoBehaviour:
   launchRotOffset: {x: 0, y: 0, z: 0}
   emitterCamp: 1
   audio_Fire: 0
-  LineDirection: {x: 0, y: 1}
-  LineCount: 1
-  LineSpacing: 0
-  ArcAngle: 90
-  ArcBulletCount: 5
-  ArcClockwise: 1
+  lineDirection: {x: 0, y: 1}
+  lineCount: 2
+  lineSpacing: 0.2
+  arcStartAngle: 0
+  arcAngle: 90
+  arcRadius: 1
+  arcBulletCount: 5
+  arcClockwise: 1

@@ -186,11 +186,6 @@ public class EntityManager
         if (entity.IsNull) return false;
         return entity.Index < MAX_ENTITIES && _activeEntities[entity.Index] && _versions[entity.Index] == entity.Version;
     }
-    public bool IsValid(int index)
-    {
-        Entity entity = GetEntityByIndex(index);
-        return IsValid(entity);
-    }
 
     // 根据索引获取实体
     public Entity GetEntityByIndex(int index)
@@ -210,6 +205,17 @@ public class EntityManager
         ComponentStorage<T>.HasComponent.Set(i, true);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddComponent<T>(int index, in T component) where T : struct, IComponent
+    {
+        // 合并检查：负数转 uint 后会变大，一次比较搞定范围 + 负数检查
+        if ((uint)index >= MAX_ENTITIES || !_activeEntities[index])
+            return;
+
+        ComponentStorage<T>.Components[index] = component;
+        ComponentStorage<T>.HasComponent.Set(index, true);
+    }
+
     // 泛型移除组件
     public void RemoveComponent<T>(Entity entity) where T : struct, IComponent
     {
@@ -217,6 +223,16 @@ public class EntityManager
         int i = entity.Index;
         ComponentStorage<T>.Components[i] = default;
         ComponentStorage<T>.HasComponent.Set(i, false);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void RemoveComponent<T>(int index) where T : struct, IComponent
+    {
+        if ((uint)index >= MAX_ENTITIES || !_activeEntities[index])
+            return;
+
+        ComponentStorage<T>.Components[index] = default;
+        ComponentStorage<T>.HasComponent.Set(index, false);
     }
 
     public ref T GetComponent<T>(Entity entity) where T : struct, IComponent

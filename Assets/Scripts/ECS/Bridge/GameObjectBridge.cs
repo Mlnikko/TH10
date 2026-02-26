@@ -21,7 +21,6 @@ public class GameObjectBridge
 {
     readonly Dictionary<Entity, GameObject> _entityToGO;
     readonly Dictionary<int, Entity> _goIDToEntity;
-    readonly GameObjectPoolManager _poolManager;
 
     const int MAX_QUERY_BUFFER = 8192;
 
@@ -76,23 +75,8 @@ public class GameObjectBridge
         _goIDToEntity.Remove(go.GetInstanceID());
         _entityToGO.Remove(entity);
 
-        //// 3. 清理 MonoBehaviour (可选，防止残留引用)
-        //var linkBehav = go.GetComponent<EntityLinkBehaviour>();
-        //if (linkBehav != null)
-        //{
-        //    linkBehav.Clear(); // 清空内部引用
-        //}
-
-        // 4. 返回对象池 (核心优化)
-        if (_poolManager != null)
-        {
-            _poolManager.Return(go);
-        }
-        else
-        {
-            // 降级处理：如果没有池，直接销毁 (开发模式或错误状态)
-            UnityEngine.Object.Destroy(go);
-        }
+        // 4. 返回对象池
+        // GameObjectPoolManager.Instance.Return(go);
     }
 
     /// <summary>
@@ -119,9 +103,6 @@ public class GameObjectBridge
         {
             int index = indices[i];
             Entity entity = em.GetEntityByIndex(index);
-
-            // 双重校验有效性
-            if (!em.IsValid(entity)) continue;
 
             ref var link = ref linkSpan[index];
 

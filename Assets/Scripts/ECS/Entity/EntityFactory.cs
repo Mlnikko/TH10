@@ -20,7 +20,7 @@ public class EntityFactory
             isSlowMode = false,
         });
 
-        _entityManager.AddComponent(e_player, new CPendingPresentation());
+        _entityManager.AddComponent(e_player, new CPoolGet());
 
         return e_player;
     }
@@ -44,14 +44,14 @@ public class EntityFactory
         switch (emitterConfig.emitMode)
         {
             case EmitMode.Line:
-                Vector2 dir = emitterConfig.LineDirection;
+                Vector2 dir = emitterConfig.lineDirection;
                 _entityManager.AddComponent(e_danmaku, new CVelocity(emitterConfig.launchSpeed * dir.x, emitterConfig.launchSpeed * dir.y));
                 break;
             case EmitMode.Arc:
                 break;
         }
 
-        _entityManager.AddComponent(e_danmaku,new CPendingPresentation());
+        //_entityManager.AddComponent(e_danmaku,new CPoolGet());
 
         return e_danmaku;
     }
