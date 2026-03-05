@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent (typeof(SpriteRenderer))]
-public class DanmakuPrefabTool : MonoBehaviour
+public class DanmakuConfigViewer : MonoBehaviour
 {
     public DanmakuConfig danmakuConfig;
 
@@ -19,11 +19,7 @@ public class DanmakuPrefabTool : MonoBehaviour
     [SerializeField] Color color;
 
     [Header("弹幕碰撞器设置")]
-    [SerializeField] E_ColliderType colliderType;
-    [SerializeField] E_ColliderLayer colliderLayer;
-    [SerializeField] Vector2 size;
-    [SerializeField] float radius;
-    [SerializeField] Vector2 colliderOffset;
+    [SerializeField] ColliderConfig colliderConfig;
 
     [SerializeField] float damage;
 
@@ -43,12 +39,10 @@ public class DanmakuPrefabTool : MonoBehaviour
         sprite = danmakuConfig.sprite;
         color = danmakuConfig.color;
        
-        colliderType = danmakuConfig.colliderType;
-        colliderLayer = danmakuConfig.colliderLayer;
-        size = danmakuConfig.size;
-        radius = danmakuConfig.radius;
-        colliderOffset = danmakuConfig.colliderOffset;
         danmakuType = danmakuConfig.danmakuType;
+
+        colliderConfig = danmakuConfig.colliderConfig;
+
         damage = danmakuConfig.damage;
 
         Logger.Debug($"弹幕配置文件加载完成: {danmakuConfig.name}");
@@ -68,13 +62,10 @@ public class DanmakuPrefabTool : MonoBehaviour
         danmakuConfig.sprite = sprite;
         danmakuConfig.color = color;
        
-        danmakuConfig.colliderType = colliderType;
-        danmakuConfig.colliderLayer = colliderLayer;
-
-        danmakuConfig.size = size;
-        danmakuConfig.radius = radius;
-        danmakuConfig.colliderOffset = colliderOffset;
         danmakuConfig.danmakuType = danmakuType;
+
+        danmakuConfig.colliderConfig = colliderConfig;
+
         danmakuConfig.damage = damage;
 
         Logger.Debug($"弹幕配置文件保存完成: {danmakuConfig.name}");
@@ -103,7 +94,7 @@ public class DanmakuPrefabTool : MonoBehaviour
         // 碰撞器中心绘制
         Gizmos.color = Color.yellow;
 
-        Vector3 colliderCenter = transform.position + (Vector3)colliderOffset;
+        var colliderCenter = transform.position + (Vector3)colliderConfig.offset;
 
         Gizmos.DrawSphere(transform.position, 0.01f);
         Gizmos.DrawLine(transform.position, colliderCenter);
@@ -111,15 +102,15 @@ public class DanmakuPrefabTool : MonoBehaviour
 
         // 碰撞器绘制
         Gizmos.color = Color.green;
-        switch (colliderType)
+        switch (colliderConfig.type)
         {
             case E_ColliderType.None:
                 break;
             case E_ColliderType.Rect:
-                Gizmos.DrawWireCube(colliderCenter, size);
+                Gizmos.DrawWireCube(colliderCenter, colliderConfig.boxSize);
                 break;
             case E_ColliderType.Circle:
-                Gizmos.DrawWireSphere(colliderCenter, radius);
+                Gizmos.DrawWireSphere(colliderCenter, colliderConfig.radius);
                 break;
         }
     }

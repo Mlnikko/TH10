@@ -95,7 +95,7 @@ public class BitSet
 /// </summary>
 public static class TempBitSets
 {
-    public static readonly BitSet Collision = new BitSet(EntityManager.MAX_ENTITIES);
+    public static readonly BitSet Collision = new(EntityManager.MAX_ENTITIES);
 }
 
 /// <summary>
@@ -105,7 +105,7 @@ public static class TempBitSets
 internal static class ComponentStorage<T> where T : struct, IComponent
 {
     public static readonly T[] Components = new T[EntityManager.MAX_ENTITIES];
-    public static readonly BitSet HasComponent = new BitSet(EntityManager.MAX_ENTITIES);
+    public static readonly BitSet HasComponent = new (EntityManager.MAX_ENTITIES);
 }
 
 /// <summary>
@@ -129,14 +129,17 @@ public class EntityManager
 {
     public const int MAX_ENTITIES = 65536; // 必须 ≤ 65536
 
-    readonly bool[] _activeEntities = new bool[MAX_ENTITIES];
-    readonly ushort[] _versions = new ushort[MAX_ENTITIES]; // 版本数组
-    readonly Queue<int> _freeIds = new();
+    readonly BitSet _activeMask;
+    readonly ushort[] _versions;
+    readonly Queue<int> _freeIds;
 
-    public bool[] ActiveEntities => _activeEntities;
+    //public BitSet ActiveMask => _activeMask;
 
     public EntityManager()
     {
+        _activeMask = new BitSet(MAX_ENTITIES);
+        _versions = new ushort[MAX_ENTITIES];
+        _freeIds = new Queue<int>(MAX_ENTITIES);
         Initialize();
     }
 
@@ -146,7 +149,6 @@ public class EntityManager
         {
             _freeIds.Enqueue(i);
             _versions[i] = 1; // ← 确保首个实体 Version ≥ 1
-            _activeEntities[i] = false;
         }
     }
 
@@ -157,7 +159,7 @@ public class EntityManager
 
         int index = _freeIds.Dequeue();
 
-        _activeEntities[index] = true;
+        _activeMask.Set(index, true);
 
         Entity entity = Entity.FromIndexAndVersion(index, _versions[index]);
 
@@ -171,12 +173,12 @@ public class EntityManager
         ushort version = entity.Version;
 
         // 安全校验：防止重复销毁或销毁无效句柄
-        if (index >= MAX_ENTITIES || !_activeEntities[index] || _versions[index] != version)
+        if (index >= MAX_ENTITIES || !_activeMask.Get(index) || _versions[index] != version)
             return;
 
         // 销毁时递增 Version！这是防复用的关键
         _versions[index]++;
-        _activeEntities[index] = false;
+        _activeMask.Set(index, false);
         _freeIds.Enqueue(index);
     }
 
@@ -184,13 +186,13 @@ public class EntityManager
     public bool IsValid(Entity entity)
     {
         if (entity.IsNull) return false;
-        return entity.Index < MAX_ENTITIES && _activeEntities[entity.Index] && _versions[entity.Index] == entity.Version;
+        return entity.Index < MAX_ENTITIES && _activeMask.Get(entity.Index) && _versions[entity.Index] == entity.Version;
     }
 
     // 根据索引获取实体
     public Entity GetEntityByIndex(int index)
     {
-        if (index < 0 || index >= MAX_ENTITIES || !_activeEntities[index])
+        if (index < 0 || index >= MAX_ENTITIES || !_activeMask.Get(index))
             return Entity.Null;
         return Entity.FromIndexAndVersion(index, _versions[index]);
     }
@@ -209,7 +211,7 @@ public class EntityManager
     public void AddComponent<T>(int index, in T component) where T : struct, IComponent
     {
         // 合并检查：负数转 uint 后会变大，一次比较搞定范围 + 负数检查
-        if ((uint)index >= MAX_ENTITIES || !_activeEntities[index])
+        if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index))
             return;
 
         ComponentStorage<T>.Components[index] = component;
@@ -228,7 +230,7 @@ public class EntityManager
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RemoveComponent<T>(int index) where T : struct, IComponent
     {
-        if ((uint)index >= MAX_ENTITIES || !_activeEntities[index])
+        if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index))
             return;
 
         ComponentStorage<T>.Components[index] = default;

@@ -11,14 +11,16 @@ public enum EnemyType
 
 public class EnemyConfig : GameConfig
 {
-    public EnemyType EnemyType;
+    public EnemyType enemyType;
+
+    public ColliderConfig colliderConfig;
     public Vector2 ColliderSize;
 
     public float MaxHealth;
 
     public EnemyConfig() 
     { 
-        EnemyType = EnemyType.None;
+        enemyType = EnemyType.None;
         ColliderSize = new Vector2(1, 1);
         MaxHealth = 10f;
     }

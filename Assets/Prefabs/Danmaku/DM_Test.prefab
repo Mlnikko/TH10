@@ -109,4 +109,11 @@ MonoBehaviour:
   size: {x: 0.12, y: 0.16}
   radius: 0
   colliderOffset: {x: 0, y: 0.19}
+  colliderConfig:
+    type: 1
+    layer: 0
+    mask: 0
+    radius: 0
+    boxSize: {x: 0.12, y: 0.16}
+    offset: {x: 0, y: 0.19}
   damage: 1

@@ -53,12 +53,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8081d63c8f9fdfa41ab47d36b3980340
-    m_Address: cfg_marisa
+    m_Address: cfg_character_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b5faa925c8b9ea64cbd65c2684362cf7
-    m_Address: cfg_reimu
+    m_Address: cfg_character_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -98,12 +98,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ccd4e67b46f59d24b9616b95cc831a2d
-    m_Address: tex_marisa
+    m_Address: tex_character_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ada309e2b84346e44a8667ad4ad0a576
-    m_Address: tex_reimu
+    m_Address: tex_character_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -878,12 +878,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b9ba9abeb1ffc3498188b2fb6f89885
-    m_Address: prefab_marisa
+    m_Address: prefab_character_marisa
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b033378e3f9aca428df749900de259d
-    m_Address: prefab_reimu
+    m_Address: prefab_character_reimu
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -913,7 +913,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a53889af21e396c40b0b51624e423dc8
-    m_Address: prefab_fariy
+    m_Address: prefab_minion_fariy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1031,11 +1031,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ac3f234217273a644aed606c7b88b85a
     m_Address: Plugins/ParadoxNotion/CanvasCore/Framework/Design/Editor/Resources/StyleSheet/StyleSheetLight
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a884fa375bd23da4b968cb3a33caeb61
-    m_Address: Plugins/ParrelSync/ScriptableObjects/ParrelSyncProjectSettings
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1356,6 +1351,36 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e9fe6b307b510fd4282b9708fcdbae10
     m_Address: atlas_reimu
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e9cb5d2dd966e74f8c8d6591de98b4f
+    m_Address: prefab_dm_test
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd231b9b33107bd4ea4b04ecb4e95deb
+    m_Address: prefab_dme_test
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e971af894ed361447a6c40705e97b584
+    m_Address: cfg_stagetimeline_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5755a258a3adb9846b569706f7ca88f3
+    m_Address: cfg_dm_test
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56f905c7288be0e4abb006b80c2c5032
+    m_Address: cfg_dme_test
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6886bc29f47c7b4da5c70c7446e6d11
+    m_Address: cfg_bossphaseconfig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

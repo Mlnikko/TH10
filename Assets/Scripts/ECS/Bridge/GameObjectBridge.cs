@@ -20,14 +20,14 @@ public interface IGameObjectUpdater
 public class GameObjectBridge
 {
     readonly Dictionary<Entity, GameObject> _entityToGO;
-    readonly Dictionary<int, Entity> _goIDToEntity;
+    //readonly Dictionary<int, Entity> _goIDToEntity;
 
     const int MAX_QUERY_BUFFER = 8192;
 
     public GameObjectBridge()
     {
         _entityToGO = new Dictionary<Entity, GameObject>(1024);
-        _goIDToEntity = new Dictionary<int, Entity>(1024);
+        //_goIDToEntity = new Dictionary<int, Entity>(1024);
     }
 
     /// <summary>
@@ -42,12 +42,12 @@ public class GameObjectBridge
         }
 
         _entityToGO[entity] = go;
-        _goIDToEntity[go.GetInstanceID()] = entity;
+        //_goIDToEntity[go.GetInstanceID()] = entity;
 
         // 添加ECS组件
         em.AddComponent(entity, new CGameObjectLink
         {
-            GameObject = go,
+            //GameObject = go,
             Updater = updater,
             IsDirty = true
         });
@@ -58,7 +58,7 @@ public class GameObjectBridge
         //link.Initialize(entity, this);
     }
 
-    public void Unlink(Entity entity, EntityManager em)
+    public void Unlink(Entity entity, EntityManager em, bool returnToPool = true)
     {
         if (!_entityToGO.TryGetValue(entity, out var go))
         {
@@ -72,11 +72,18 @@ public class GameObjectBridge
         }
 
         // 2. 清除映射
-        _goIDToEntity.Remove(go.GetInstanceID());
+        //_goIDToEntity.Remove(go.GetInstanceID());
         _entityToGO.Remove(entity);
 
         // 4. 返回对象池
-        // GameObjectPoolManager.Instance.Return(go);
+        if (returnToPool)
+        {
+            GameObjectPoolManager.Instance.Return(go);
+        }
+        else
+        {
+            //UnityEngine.Object.Destroy(go);
+        }
     }
 
     /// <summary>
@@ -106,8 +113,8 @@ public class GameObjectBridge
 
             ref var link = ref linkSpan[index];
 
-            // 快速路径：如果 GO 丢失或 Updater 为空，跳过并标记清理
-            if (link.GameObject == null || link.Updater == null)
+            // 快速路径：如果 Updater 为空，跳过并标记清理
+            if (link.Updater == null)
             {
                 // 这种情况通常不应该发生，如果发生了，说明数据不一致
                 // 可以在这里添加 CDestroyTag 让逻辑层清理
@@ -122,7 +129,7 @@ public class GameObjectBridge
             link.Updater.UpdateGameObject(em, entity);
 
             // 可选：如果 Updater 内部没有修改 IsDirty 的需求，这里可以统一置 false
-            // 或者由 Updater 自己决定是否需要标记 dirty
+            // 或者由 Updater 自己决定是否需要标记 isDirty
             link.IsDirty = false;
         }
     }

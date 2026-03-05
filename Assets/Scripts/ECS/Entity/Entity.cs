@@ -1,5 +1,3 @@
-using System;
-
 /// <summary>
 /// 安全实体句柄，含版本号防止 Use-After-Free。
 /// Index: 0~65535 (16 bits), Version: 0~65535 (16 bits)

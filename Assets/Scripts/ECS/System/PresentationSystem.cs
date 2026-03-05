@@ -102,7 +102,7 @@ public class PresentationSystem : BaseSystem
             if (hasLink && entityIndex < linkComponents.Length)
             {
                 ref var link = ref linkComponents[entityIndex];
-                GameObjectPoolManager.Instance.Return(link.GameObject);
+                //GameObjectPoolManager.Instance.Return(link.GameObject);
                 World.GameObjectBridge.Unlink(entity, EntityManager);
             }
             else

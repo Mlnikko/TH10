@@ -14,11 +14,11 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.weaponConfigIds),          ("/Configs/Weapon/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.danmakuConfigIds),         ("/Configs/Danmaku/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.danmakuEmitterConfigIds),  ("/Configs/DanmakuEmitter/", typeof(ScriptableObject)) },
-        { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/Enemy/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/EnemyConfigViewer/", typeof(ScriptableObject)) },
 
         // Prefabs
         { nameof(GameResourceManifest.characterPrefabIds),       ("/Prefabs/Character/", typeof(GameObject)) },
-        { nameof(GameResourceManifest.enemyPrefabIds),           ("/Prefabs/Enemy/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.enemyPrefabIds),           ("/Prefabs/EnemyConfigViewer/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuPrefabIds),         ("/Prefabs/Danmaku/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuEmitterPrefabIds),  ("/Prefabs/DanmakuEmitter/", typeof(GameObject)) },
         { nameof(GameResourceManifest.effectPrefabIds),          ("/Prefabs/Effect/", typeof(GameObject)) },

@@ -14,7 +14,6 @@ public interface IComponent { }
 /// </summary>
 public struct CGameObjectLink : IComponent
 {
-    public GameObject GameObject;
     public IGameObjectUpdater Updater;
     public bool IsDirty; // 标记是否需要同步
 }
@@ -125,7 +124,7 @@ public enum E_ColliderLayer : ushort
 public struct CCollider : IComponent
 {
     // 是否激活
-    public bool active;
+    public bool isActive;
 
     // 碰撞体类型
     public E_ColliderType type;
@@ -140,7 +139,7 @@ public struct CCollider : IComponent
     public float offsetX, offsetY;
 
     // 脏标记
-    public bool dirty;
+    public bool isDirty;
 
     // Circle
     public float radius;

@@ -211,8 +211,9 @@ GameObject:
   - component: {fileID: 5734727350752357153}
   - component: {fileID: 4351186149182974702}
   - component: {fileID: 2599454971203792774}
+  - component: {fileID: 4754697693594978003}
   m_Layer: 0
-  m_Name: Marisa
+  m_Name: Character_Marisa
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -308,6 +309,44 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4754697693594978003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1075929028107132105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 379739832170d48498e43caba0844d7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterConfig: {fileID: 11400000, guid: 8081d63c8f9fdfa41ab47d36b3980340, type: 2}
+  characterName: 2
+  description: "\u96FE\u96E8\u9B54\u7406\u6C99"
+  speed: 2.2
+  slowSpeed: 1.1
+  moveColliderConfig:
+    type: 1
+    layer: 0
+    mask: 0
+    radius: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
+  hitColliderConfig:
+    type: 2
+    layer: 0
+    mask: 0
+    radius: 0.1
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
+  grazeColliderConfig:
+    type: 2
+    layer: 0
+    mask: 0
+    radius: 0.5
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
 --- !u!1 &1678994016658262516
 GameObject:
   m_ObjectHideFlags: 0

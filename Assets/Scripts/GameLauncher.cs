@@ -1,14 +1,14 @@
-using System.Collections;
 using UnityEngine;
 
 public class GameLauncher : MonoBehaviour
 {
+    [SerializeField]bool enableDebug = false;
     public GameObject IngameDebugPanel;
     void Awake()
     {
         _ = UIManager.Instance;
 
-        if (IngameDebugPanel != null)
+        if (IngameDebugPanel != null && enableDebug)
         {
             Instantiate(IngameDebugPanel);
         }

@@ -15,5 +15,6 @@ MonoBehaviour:
   configId: 
   characterID: 1
   weaponID: 12
-  danmakuEmitterConfigIds: []
+  danmakuEmitterConfigIds:
+  - dme_test
   description: 

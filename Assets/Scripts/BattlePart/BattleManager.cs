@@ -292,8 +292,8 @@ public class BattleManager : SingletonMono<BattleManager>
                 // 消耗时间
                 logicTimer.ConsumeFrameTime();
 
-                //// 清理旧输入
-                InputManager.Instance.CleanupOldFrames(frameToProcess);
+                // 清理旧输入
+                //InputManager.Instance.CleanupOldFrames(frameToProcess);
             }
             else
             {

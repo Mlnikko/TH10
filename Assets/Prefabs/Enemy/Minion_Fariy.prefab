@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 2852273768426750513}
   - component: {fileID: 4833275360255002992}
   - component: {fileID: 1748072179014107921}
-  - component: {fileID: 9040344556244286541}
+  - component: {fileID: 360951883700552032}
   m_Layer: 0
-  m_Name: Fariy
+  m_Name: Minion_Fariy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 7649650662600007512}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.004, y: 1.576, z: 0.05219988}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -107,7 +107,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &9040344556244286541
+--- !u!114 &360951883700552032
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -116,11 +116,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 7649650662600007512}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c2cf1a404ae6144fabe69e1e36cbd03, type: 3}
+  m_Script: {fileID: 11500000, guid: 4298cc99b6179a44bb251d7fba64b09b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   enemyConfig: {fileID: 11400000, guid: bbb2c76c117338045854982ba0901625, type: 2}
-  colliderSize: {x: 0.15, y: 0.15}
+  colliderConfig:
+    type: 1
+    layer: 0
+    mask: 0
+    offsetX: 0
+    offsetY: 0
+    radius: 0.54
+    width: 0
+    height: 0
   enemyType: 1
-  maxHealth: 10
-  dieAudioName: 7
+  maxHealth: 0
+  dieAudioName: 0

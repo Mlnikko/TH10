@@ -21,7 +21,7 @@ public class CharacterSelectionUI : MonoBehaviour
     {
         this.onSelect = onSelect;     
         nameLabel.text = config.description;
-        characterName = config.characterName;
+        characterName = config.character;
 
         string characterId = characterName.ToString().ToLowerInvariant();
         Sprite sprite = GameResDB.Instance.GetSpriteFromTexture(characterId);

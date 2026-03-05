@@ -420,7 +420,7 @@ public class NetworkManager : SingletonMono<NetworkManager>
             statusText = "[HOST]";
         }
 
-        GUIStyle style = new GUIStyle(GUI.skin.box)
+        GUIStyle style = new(GUI.skin.box)
         {
             fontSize = 12,
             normal = { textColor = Color.white },

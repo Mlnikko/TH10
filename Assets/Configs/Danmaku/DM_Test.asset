@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DM_Test
   m_EditorClassIdentifier: 
   configId: 
-  danmakuPrefabId: dm_reimu_main
+  danmakuPrefabId: dm_test
   poolSize: 200
   danmakuType: 0
   localScale: {x: 1, y: 1}
@@ -22,9 +22,17 @@ MonoBehaviour:
   color: {r: 1, g: 1, b: 1, a: 1}
   colliderType: 1
   colliderLayer: 8
+  colliderMask: 1
   colliderOffset: {x: 0, y: 0.19}
   size: {x: 0.12, y: 0.16}
   radius: 0
+  colliderConfig:
+    type: 1
+    layer: 0
+    mask: 0
+    radius: 0
+    boxSize: {x: 0.12, y: 0.16}
+    offset: {x: 0, y: 0.19}
   damage: 1
   HomingTurnSpeed: 5
   HomingTargetLayers:

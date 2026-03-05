@@ -195,7 +195,7 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         if (_poolRoots[prefabIndex] != null)
             return _poolRoots[prefabIndex];
 
-        // 尝试从配置获取更友好的分类名 (例如 "Danmaku", "Enemy")
+        // 尝试从配置获取更友好的分类名 (例如 "Danmaku", "EnemyConfigViewer")
         // 这里简单处理：提取预制体名字的前缀，或者统一命名
         // 假设预制体叫 "Danmaku_Bullet_01"，我们可以提取 "Danmaku" 作为文件夹名
         string categoryName = ExtractCategoryName(prefabName);

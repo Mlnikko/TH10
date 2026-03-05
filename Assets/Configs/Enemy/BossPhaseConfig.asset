@@ -9,7 +9,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0011418c9d75434988a06b6df93b283, type: 3}
-  m_Name: ParrelSyncProjectSettings
+  m_Script: {fileID: 11500000, guid: 2d204312f7f97cb4ba26ce22721ef34a, type: 3}
+  m_Name: BossPhaseConfig
   m_EditorClassIdentifier: 
-  m_OptionalSymbolicLinkFolders: []
+  configId: 
+  phaseName: 
+  triggerType: 0
+  triggerFrameOffset: 0
+  triggerHpPercent: 0
+  spellCardId: 
+  durationFrames: -1
+  bgmRef: 

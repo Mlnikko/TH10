@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: GameResourceManifest
   m_EditorClassIdentifier: 
   characterConfigIds:
-  - marisa
-  - reimu
-  enemyConfigIds:
-  - minionconfig
+  - character_marisa
+  - character_reimu
+  enemyConfigIds: []
   weaponConfigIds:
   - weapon_marisa_0
   - weapon_marisa_1
@@ -28,26 +27,29 @@ MonoBehaviour:
   - dm_reimu_homing
   - dm_reimu_main
   - dm_star_0
+  - dm_test
   danmakuEmitterConfigIds:
   - dme_reimu_homing
   - dme_reimu_main
+  - dme_test
   battleAreaConfigId: defaultbattlearea
   characterPrefabIds:
-  - marisa
-  - reimu
-  enemyPrefabIds:
-  - fariy
+  - character_marisa
+  - character_reimu
+  enemyPrefabIds: []
   danmakuPrefabIds:
   - dm_reimu_homing
   - dm_reimu_main
   - dm_star_0
+  - dm_test
   danmakuEmitterPrefabIds:
   - dme_reimu_homing
   - dme_reimu_main
+  - dme_test
   effectPrefabIds: []
   characterImages:
-  - marisa
-  - reimu
+  - character_marisa
+  - character_reimu
   atlases:
   - marisa
   - reimu

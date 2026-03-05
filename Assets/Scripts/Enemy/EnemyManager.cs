@@ -12,7 +12,7 @@ public class EnemyManager : SingletonMono<EnemyManager>
 
     }
 
-    public void RemoveEnemy(Enemy enemy)
+    public void RemoveEnemy(EnemyConfigViewer enemy)
     {
         enemy.gameObject.SetActive(false);
     }

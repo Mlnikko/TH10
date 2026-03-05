@@ -361,7 +361,7 @@ GameObject:
   - component: {fileID: 5701818006714011742}
   - component: {fileID: 6101497621876454730}
   m_Layer: 0
-  m_Name: Reimu
+  m_Name: Character_Reimu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -474,10 +474,33 @@ MonoBehaviour:
   description: "\u60A0\u95F2\u7684\u5DEB\u5973\n\u76F8\u5F53\u64C5\u957F\n\u5927\u8303\u56F4\u7684\u653B\u51FB"
   speed: 2
   slowSpeed: 1
-  moveBoxSize: {x: 0.3, y: 0.5}
-  moveBoxOffset: {x: 0, y: 0}
-  hitRadius: 0.04
-  grazeRadius: 0.25
+  moveColliderConfig:
+    type: 1
+    layer: 0
+    mask: 0
+    radius: 0
+    width: 0.3
+    height: 0.5
+    offsetX: 0
+    offsetY: 0.08
+  hitColliderConfig:
+    type: 2
+    layer: 0
+    mask: 0
+    radius: 0.04
+    width: 0
+    height: 0
+    offsetX: 0
+    offsetY: 0
+  grazeColliderConfig:
+    type: 2
+    layer: 0
+    mask: 0
+    radius: 0.25
+    width: 0
+    height: 0
+    offsetX: 0
+    offsetY: 0
 --- !u!1 &8978273608409045429
 GameObject:
   m_ObjectHideFlags: 0

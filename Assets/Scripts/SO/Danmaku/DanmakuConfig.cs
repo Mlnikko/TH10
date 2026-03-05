@@ -23,11 +23,7 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
     public Color color = Color.white;
 
     [Header("µ¯Ä»Åö×²Æ÷ÉèÖÃ")]
-    public E_ColliderType colliderType = E_ColliderType.None;
-    public E_ColliderLayer colliderLayer = E_ColliderLayer.Default;
-    public Vector2 colliderOffset = Vector2.zero;
-    public Vector2 size = Vector2.zero;
-    public float radius = 0;  
+    public ColliderConfig colliderConfig = new ColliderConfig();
 
     [Header("µ¯Ä»ÉËº¦")]
     public float damage = 1f;

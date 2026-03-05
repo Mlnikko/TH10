@@ -163,17 +163,17 @@ public class BattlePreparePanel : UIPanel
                 continue;
             }
 
-            item.Initialize(config, () => OnCharacterSelected(config.characterName));
+            item.Initialize(config, () => OnCharacterSelected(config.character));
             characterItems.Add(item);
         }
 
         // 如果尚未选择角色，默认选中第一个有效角色
         if (selectedCharacterId == E_Character.None && characterConfigs.Count > 0)
         {
-            var firstValid = characterConfigs.FirstOrDefault(c => c != null && c.characterName != E_Character.None);
+            var firstValid = characterConfigs.FirstOrDefault(c => c != null && c.character != E_Character.None);
             if (firstValid != null)
             {
-                OnCharacterSelected(firstValid.characterName);
+                OnCharacterSelected(firstValid.character);
             }
         }
     }

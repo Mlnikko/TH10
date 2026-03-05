@@ -62,8 +62,9 @@ public class World
     #region 系统更新
     public void LogicTick(uint currentTick)
     {
-        foreach (var sys in _systems)
+        for (int i = 0; i < _systems.Count; i++)
         {
+            var sys = _systems[i];
             if (sys.Enabled)
             {
                 sys.OnLogicTick(currentTick);
@@ -73,8 +74,9 @@ public class World
 
     public void Update(float deltaTime)
     {
-        foreach (var sys in _systems)
+        for (int i = 0; i < _systems.Count; i++)
         {
+            var sys = _systems[i];
             if (sys.Enabled)
             {
                 sys.OnUpdate(deltaTime);
@@ -84,8 +86,9 @@ public class World
 
     public void LateUpdate(float deltaTime)
     {
-        foreach (var sys in _systems)
+        for (int i = 0; i < _systems.Count; i++)
         {
+            var sys = _systems[i];
             if (sys.Enabled)
             {
                 sys.OnLateUpdate(deltaTime);
@@ -98,8 +101,9 @@ public class World
 
     public void Dispose()
     {
-        foreach (var sys in _systems)
+        for (int i = 0; i < _systems.Count; i++)
         {
+            var sys = _systems[i];
             sys.Destroy();
         }
         _systems.Clear();

@@ -124,7 +124,7 @@ public class DeterministicGrid
 
 public class CollisionSystem : BaseSystem
 {
-    DeterministicGrid _grid;
+    readonly DeterministicGrid _grid;
 
     public override void OnLogicTick(uint tick)
     {
@@ -139,7 +139,7 @@ public class CollisionSystem : BaseSystem
         int colliderCount = 0;
         for (int i = 0; i < EntityManager.MAX_ENTITIES; i++)
         {
-            if (colliders[i].active)
+            if (colliders[i].isActive)
                 activeColliders[colliderCount++] = i;
         }
 
@@ -262,6 +262,15 @@ public class CollisionSystem : BaseSystem
         float bTop = by + bH * 0.5f;
 
         return aLeft <= bRight && aRight >= bLeft && aBottom <= bTop && aTop >= bBottom;
+    }
+
+    public bool CheckCircleCirle(float caX, float caY, float caR, float cbX, float cbY, float cbR)
+    {
+        float dx = caX - cbX;
+        float dy = caY - cbY;
+        float distSq = dx * dx + dy * dy;
+        float rSum = caR + cbR;
+        return distSq <= rSum * rSum;
     }
 
     #endregion

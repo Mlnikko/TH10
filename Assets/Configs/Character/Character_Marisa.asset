@@ -10,16 +10,36 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3972ac5ebeade5849989dc9bc80b2557, type: 3}
-  m_Name: Marisa
+  m_Name: Character_Marisa
   m_EditorClassIdentifier: 
   configId: 
-  characterPrefabId: Marisa
-  characterName: 2
-  weaponIds: 141516
+  characterPrefabId: character_marisa
+  character: 2
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"
   moveSpeed: 2.2
-  moveSlowSpeed: 1.7
+  moveSlowSpeed: 1.1
   moveBoxSize: {x: 0.3, y: 0.5}
   moveBoxOffset: {x: 0, y: 0.08}
+  moveColliderConfig:
+    type: 1
+    layer: 0
+    mask: 0
+    radius: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
   hitRadius: 0.1
+  hitColliderConfig:
+    type: 2
+    layer: 0
+    mask: 0
+    radius: 0.1
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
   grazeRadius: 0.5
+  grazeColliderConfig:
+    type: 2
+    layer: 0
+    mask: 0
+    radius: 0.5
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}

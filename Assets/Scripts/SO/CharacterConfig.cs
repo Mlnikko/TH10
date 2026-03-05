@@ -3,8 +3,8 @@ using UnityEngine;
 public enum E_Character : byte
 {
     None = 0,
-    Reimu = 1,
-    Marisa = 2,
+    Character_Reimu = 1,
+    Character_Marisa = 2,
 }
 
 [CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Configs/CharacterConfig")]
@@ -16,11 +16,7 @@ public class CharacterConfig : GameConfig, IReferenceResolver
     public int characterPrefabIndex = -1;
 
     [Header("信息配置")]
-    public E_Character characterName = E_Character.None;
-
-    //public E_Weapon[] weaponIds;
-    //[NonSerialized]
-    //public int[] weaponIndices;
+    public E_Character character = E_Character.None;
 
     [TextArea(1, 5)]
     public string description;
@@ -32,12 +28,15 @@ public class CharacterConfig : GameConfig, IReferenceResolver
     [Header("移动碰撞体设置")]
     public Vector2 moveBoxSize = new(0.3f, 0.5f);
     public Vector2 moveBoxOffset = new(0, 0.08f);
+    public ColliderConfig moveColliderConfig;
 
     [Header("受击碰撞体设置")]
     public float hitRadius = 0.1f;
+    public ColliderConfig hitColliderConfig;
 
     [Header("擦弹半径")]
     public float grazeRadius = 0.5f;
+    public ColliderConfig grazeColliderConfig;
 
 #if UNITY_EDITOR
     void OnValidate()
