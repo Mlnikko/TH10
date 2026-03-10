@@ -57,15 +57,4 @@ public class CharacterConfig : GameConfig, IReferenceResolver
             Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {configId})", LogTag.Resource);
         }
     }
-
-    public CPlayerAttribute ToRuntimeAttribute(float logicDeltaTime)
-    {
-        return new CPlayerAttribute
-        {
-            moveSpeedPerFrame = Mathf.Max(moveSpeed, 0.01f) * logicDeltaTime,
-            moveSlowSpeedPerFrame = Mathf.Max(moveSlowSpeed, 0.01f) * logicDeltaTime,
-            hitRadius = Mathf.Max(hitRadius, 0.01f),
-            grazeRadius = Mathf.Max(grazeRadius, 0.01f)
-        };
-    }
 }

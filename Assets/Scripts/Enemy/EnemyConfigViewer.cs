@@ -42,4 +42,11 @@ public class EnemyConfigViewer : MonoBehaviour
         enemyConfig.colliderConfig = colliderConfig;
         Logger.Debug("“—±£¥Êµ–»À≈‰÷√£∫" + enemyConfig.name);
     }
+
+    void OnDrawGizmosSelected()
+    {
+        if (enemyConfig == null) return;
+
+        GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, colliderConfig, Color.yellow, Color.green);
+    }
 }

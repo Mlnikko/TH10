@@ -10,9 +10,8 @@ public class DanmakuConfigViewer : MonoBehaviour
     [Header("µ¯Ä»³Ø´óÐ¡")]
     [SerializeField] int poolSize;
 
-    [Header("µ¯Ä»TransformÉèÖÃ")]
-    [SerializeField] Vector2 localScale;
-    [SerializeField] Vector3 localRotation;
+    [Header("µ¯Ä»Ëõ·Å")]
+    [SerializeField] float scale;
 
     [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
     [SerializeField] Sprite sprite;
@@ -33,8 +32,7 @@ public class DanmakuConfigViewer : MonoBehaviour
 
         poolSize = danmakuConfig.poolSize;
 
-        localScale = danmakuConfig.localScale;
-        localRotation = danmakuConfig.localRotation;
+        scale = danmakuConfig.scale;
 
         sprite = danmakuConfig.sprite;
         color = danmakuConfig.color;
@@ -56,8 +54,7 @@ public class DanmakuConfigViewer : MonoBehaviour
             return;
         }
         danmakuConfig.poolSize = poolSize;
-        danmakuConfig.localScale = localScale;
-        danmakuConfig.localRotation = localRotation;
+        danmakuConfig.scale = scale;
 
         danmakuConfig.sprite = sprite;
         danmakuConfig.color = color;
@@ -75,9 +72,7 @@ public class DanmakuConfigViewer : MonoBehaviour
     {
         LoadDanmakuConfig();
 
-        // Ô¤ÀÀËõ·Å
-        transform.localScale = localScale;
-        transform.localRotation = Quaternion.Euler(localRotation);
+        transform.localScale = Vector3.one * scale;
 
         // Ô¤ÀÀäÖÈ¾
         if (TryGetComponent<SpriteRenderer>(out var spriteRenderer))
@@ -90,28 +85,6 @@ public class DanmakuConfigViewer : MonoBehaviour
     protected void OnDrawGizmosSelected()
     {      
         if (danmakuConfig == null) return;
-
-        // Åö×²Æ÷ÖÐÐÄ»æÖÆ
-        Gizmos.color = Color.yellow;
-
-        var colliderCenter = transform.position + (Vector3)colliderConfig.offset;
-
-        Gizmos.DrawSphere(transform.position, 0.01f);
-        Gizmos.DrawLine(transform.position, colliderCenter);
-        Gizmos.DrawSphere(colliderCenter, 0.01f);
-
-        // Åö×²Æ÷»æÖÆ
-        Gizmos.color = Color.green;
-        switch (colliderConfig.type)
-        {
-            case E_ColliderType.None:
-                break;
-            case E_ColliderType.Rect:
-                Gizmos.DrawWireCube(colliderCenter, colliderConfig.boxSize);
-                break;
-            case E_ColliderType.Circle:
-                Gizmos.DrawWireSphere(colliderCenter, colliderConfig.radius);
-                break;
-        }
+        GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, colliderConfig, Color.yellow, Color.green);
     }
 }

@@ -10,16 +10,16 @@ public class LogicFrameTimer
 {
     public uint CurrentFrame { get; private set; } = 0;
 
-    public readonly float FrameInterval;        // 1f / fps (用于配置/转换)
-    public readonly double FrameIntervalSeconds; // 高精度版本
+    public float FrameInterval => (float)FrameIntervalSeconds; // 方便外部使用
+    public double FrameIntervalSeconds; // 高精度版本
 
-    private double _accumulatedTime = 0.0;
-    private bool _isRunning = true;
+
+    double _accumulatedTime = 0.0;
+    bool _isRunning = true;
 
     public LogicFrameTimer(int logicFps = 60)
     {
         if (logicFps <= 0) throw new ArgumentException("FPS must be positive");
-        FrameInterval = 1f / logicFps;
         FrameIntervalSeconds = 1.0 / logicFps;
     }
 

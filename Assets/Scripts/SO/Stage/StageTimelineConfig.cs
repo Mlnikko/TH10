@@ -34,8 +34,8 @@ public class EnemyWaveEntry
     [Tooltip("相对于关卡开始或上一节点结束的帧数偏移")]
     public int startFrameOffset;
 
-    [Tooltip("敌人Prefab的资源引用")]
-    public string enemyPrefabId;
+    [Tooltip("敌人配置引用")]
+    public string enemyConfigId;
 
     [Tooltip("生成数量")]
     public int count = 1;
@@ -59,7 +59,7 @@ public enum SpawnPattern { Line, Grid, Circle, Random, BossCenter }
 
 
 [CreateAssetMenu(fileName = "NewStageTimeline", menuName = "Configs/Stage/Stage Timeline Config")]
-public class StageTimelineConfig : GameConfig // 继承自你的基础GameConfig
+public class StageTimelineConfig : GameConfig
 {
     [Header("全局设置")]
     public string stageId; // 唯一标识，如 "Stage1_Normal"

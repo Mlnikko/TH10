@@ -479,28 +479,22 @@ MonoBehaviour:
     layer: 0
     mask: 0
     radius: 0
-    width: 0.3
-    height: 0.5
-    offsetX: 0
-    offsetY: 0.08
+    boxSize: {x: 0.3, y: 0.5}
+    offset: {x: 0, y: 0.08}
   hitColliderConfig:
     type: 2
     layer: 0
     mask: 0
     radius: 0.04
-    width: 0
-    height: 0
-    offsetX: 0
-    offsetY: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
   grazeColliderConfig:
     type: 2
     layer: 0
     mask: 0
     radius: 0.25
-    width: 0
-    height: 0
-    offsetX: 0
-    offsetY: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
 --- !u!1 &8978273608409045429
 GameObject:
   m_ObjectHideFlags: 0

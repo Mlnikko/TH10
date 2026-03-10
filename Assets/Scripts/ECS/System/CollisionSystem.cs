@@ -126,7 +126,7 @@ public class CollisionSystem : BaseSystem
 {
     readonly DeterministicGrid _grid;
 
-    public override void OnLogicTick(uint tick)
+    public override void OnLogicTick(uint currentframe)
     {
         if (_grid == null) return;
         Span<int> activeColliders = TempBuffers.CollisionActive;

@@ -6,7 +6,7 @@ using System;
 /// </summary>
 public class LifetimeSystem : BaseSystem
 {
-    public override void OnLogicTick(uint tick)
+    public override void OnLogicTick(uint currentframe)
     {
        
        

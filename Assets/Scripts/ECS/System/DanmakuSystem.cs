@@ -2,7 +2,7 @@ using System;
 
 public class DanmakuSystem : BaseSystem
 {
-    public override void OnLogicTick(uint tick)
+    public override void OnLogicTick(uint frame)
     {
         Span<int> danmakuIndices = TempBuffers.DanmakuIndices;
         int danmakuCount = EntityManager.GetEntities<CDanmaku>(danmakuIndices);
@@ -35,7 +35,7 @@ public class DanmakuSystem : BaseSystem
     {
        if(!GlobalBattleData.AreaData.IsPointInRecycleArea(position.x, position.y))
        {
-           EntityManager.AddComponent(entityIndex, new CPoolRecycle());
+           EntityManager.AddComponent(entityIndex, new CPoolRecycleTag());
         }
     }
 }

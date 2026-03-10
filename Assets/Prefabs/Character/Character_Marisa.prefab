@@ -331,20 +331,20 @@ MonoBehaviour:
     layer: 0
     mask: 0
     radius: 0
-    boxSize: {x: 0, y: 0}
-    offset: {x: 0, y: 0}
+    boxSize: {x: 0.3, y: 0.5}
+    offset: {x: 0, y: 0.08}
   hitColliderConfig:
     type: 2
     layer: 0
     mask: 0
-    radius: 0.1
+    radius: 0.04
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}
   grazeColliderConfig:
     type: 2
     layer: 0
     mask: 0
-    radius: 0.5
+    radius: 0.3
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}
 --- !u!1 &1678994016658262516

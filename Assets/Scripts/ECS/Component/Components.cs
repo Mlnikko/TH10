@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 /// <summary>
@@ -7,7 +8,6 @@ using UnityEngine;
 /// </summary>
 
 public interface IComponent { }
-
 
 /// <summary>
 /// 表现层GO同步组件，负责将ECS实体与Unity的GameObject进行关联，并通过Updater驱动表现更新。
@@ -18,57 +18,58 @@ public struct CGameObjectLink : IComponent
     public bool IsDirty; // 标记是否需要同步
 }
 
-public enum E_PresentationState : byte
-{
-    None = 0,       // 无操作
-    Spawn = 1,      // 需要创建 GameObject
-    Despawn = 2,    // 需要销毁/回收 GameObject
-    Update = 3      // (可选) 仅需要同步位置/旋转，不创建/销毁
-}
-
 /// <summary>
 /// 渲染系统使用的标记组件，标记实体需要在当前帧进行表现更新。系统会根据这个组件来决定哪些实体需要同步到GameObject。
 /// </summary>
-public struct CPoolGet : IComponent { }
+public struct CPoolGetTag : IComponent { }
 
-public struct CPoolRecycle : IComponent { }
+public struct CPoolRecycleTag : IComponent { }
 
-#region Base
+#region 基础组件
 
 public struct CPosition : IComponent
+{
+    public float x, y;
+    public CPosition(float x, float y)
     {
-        public float x, y;
-        public CPosition(float x, float y)
-        {
-            this.x = x;
-            this.y = y;
-        }
+        this.x = x;
+        this.y = y;
     }
+}
+
+public struct CRotation : IComponent
+{
+    public float rotZ;
+    public CRotation(float rotZ)
+    {
+        this.rotZ = rotZ;
+    }
+}
 
 public struct CVelocity : IComponent
+{
+    public float vx, vy;
+    public CVelocity(float vx, float vy)
     {
-        public float vx, vy;
-        public CVelocity(float vx, float vy)
-        {
-            this.vx = vx;
-            this.vy = vy;
-        }
+        this.vx = vx;
+        this.vy = vy;
     }
+}
 
 public struct CLifetime : IComponent
-    {
-        public uint spawnFrame;      // 实体创建时的逻辑帧号
-        public uint maxLifeFrames;   // 最大生存帧数
-    }
+{
+    public uint spawnFrame;      // 实体创建时的逻辑帧号
+    public uint maxLifeFrames;   // 最大生存帧数
+}
 
 #endregion
 
 #region 弹幕组件
 public enum DanmakuType
-    {
-        Normal,
-        Homing
-    }
+{
+    Normal,
+    Homing
+}
 
 public struct CDanmaku : IComponent
 {
@@ -83,17 +84,95 @@ public struct CDanmaku : IComponent
 #endregion
 
 #region 弹幕发射器组件
+[StructLayout(LayoutKind.Sequential)]
 public struct CDanmakuEmitter : IComponent
 {
-    public bool isEnabled;
-    public int cfgIndex;
+    // ================= 动态状态 (每帧变化) =================
+    public bool isEmitting;
     public uint lastFireFrame;
+    public float launchInterval;
 
-    public CDanmakuEmitter(bool isEnabled, int cfgIndex)
+    public EmitMode emitMode;           // Line, Arc
+    public DanmakuSelectMode selectMode; // First, Sequential, Random
+
+    // 弹幕选择器的状态机变量
+    public int sequentialIndex;
+    public uint randomSeed;
+
+    // ================= 通用参数 (预计算) =================
+    public float launchSpeed;
+    public float emitterPosOffsetX, emitterPosOffsetY;
+    public float emitterRotOffsetZ;
+
+    public float danmakuRotOffsetZ;
+
+    public int emitterCamp;
+
+    // ================= Line 模式专用 (预计算向量) =================
+    public float lineDirUnitX, lineDirUnitY;
+    public float lineDirPerpX, lineDirPerpY; // 垂直向量分量
+    public int lineCount;
+    public float lineSpacingHalf;       // 预计算 spacing * 0.5 或其他常数因子
+
+    // ================= Arc 模式专用 (预计算三角函数) =================
+    public int arcBulletCount;
+    public float arcRadius;
+    public float arcStartAngleRad;      // 起始角度 (弧度)
+    public float arcAngleStepRad;       // 预计算: (arcAngle / (count-1)) * Deg2Rad
+    public int arcDirectionSign;        // 1 或 -1，替代 clockwise 布尔判断
+
+    // 指向 SO 中的索引数组
+    public int[] danmakuCfgIndices;
+
+    // ================= 构造函数：负责“烘焙”逻辑 =================
+    public CDanmakuEmitter(DanmakuEmitterConfig soConfig)
     {
-        this.isEnabled = isEnabled;
-        this.cfgIndex = cfgIndex;
-        this.lastFireFrame = 0;
+        isEmitting = false;
+        lastFireFrame = 0;
+
+        launchInterval = soConfig.launchInterval;
+
+        sequentialIndex = 0;
+        randomSeed = 0; // 初始化种子，实际使用时需结合全局帧数或实体ID
+
+        // 行为模式
+        emitMode = soConfig.emitMode;
+        selectMode = soConfig.danmakuSelectMode;
+        launchSpeed = soConfig.launchSpeed;
+
+        emitterPosOffsetX = soConfig.emitterPosOffset.x;
+        emitterPosOffsetY = soConfig.emitterPosOffset.y;
+        emitterRotOffsetZ = soConfig.emitterRotOffsetZ;
+
+        danmakuRotOffsetZ = soConfig.danmakuRotOffsetZ;
+        emitterCamp = (int)soConfig.emitterCamp;
+
+        // --- Line 模式烘焙 ---
+        lineCount = soConfig.lineModeConfig.lineCount;
+        lineSpacingHalf = soConfig.lineModeConfig.lineSpacing * 0.5f; // 预计算常数
+
+        // 预计算单位向量和垂直向量 (原代码逻辑: offsetX = ... * dirY, offsetY = ... * -dirX)
+        Vector2 dir = soConfig.lineModeConfig.lineDirection.normalized;
+        lineDirUnitX = dir.x;
+        lineDirUnitY = dir.y;
+        lineDirPerpX = -dir.y; // 垂直向量 X
+        lineDirPerpY = dir.x;  // 垂直向量 Y
+
+        // --- Arc 模式烘焙 ---
+        arcBulletCount = soConfig.arcModeConfig.arcBulletCount;
+        arcRadius = soConfig.arcModeConfig.arcRadius;
+        arcDirectionSign = soConfig.arcModeConfig.arcClockwise ? 1 : -1;
+
+        // 角度转弧度，并预计算步长 (避免循环内除法)
+        float totalRad = soConfig.arcModeConfig.arcAngle * Mathf.Deg2Rad;
+        arcStartAngleRad = soConfig.arcModeConfig.arcStartAngle * Mathf.Deg2Rad;
+        if (soConfig.arcModeConfig.arcBulletCount > 1)
+            arcAngleStepRad = totalRad / (soConfig.arcModeConfig.arcBulletCount - 1);
+        else
+            arcAngleStepRad = 0f;
+
+        // 资源引用
+        danmakuCfgIndices = soConfig.danmakuCfgIndices ?? Array.Empty<int>();
     }
 }
 
@@ -138,14 +217,28 @@ public struct CCollider : IComponent
     // 相对偏移
     public float offsetX, offsetY;
 
-    // 脏标记
-    public bool isDirty;
-
     // Circle
     public float radius;
 
     // Rect
     public float width, height;
+
+    // 脏标记
+    public bool isDirty;
+
+    public CCollider(bool isActive, E_ColliderType type, E_ColliderLayer layer, E_ColliderLayer mask, float offsetX, float offsetY, float radius, float width, float height)
+    {
+        this.isActive = isActive;
+        this.type = type;
+        this.layer = layer;
+        this.mask = mask;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.radius = radius;
+        this.width = width;
+        this.height = height;
+        isDirty = false; // 默认未修改
+    }
 }
 #endregion
 
@@ -156,40 +249,23 @@ public struct CPlayer : IComponent
     public byte characterCfgIndex;   // 角色ID, 与角色配置表对应
     public byte weaponCfgIndex;      // 武器ID, 与武器配置表对应
 
-    public CPlayer(byte playerIndex, byte characterCfgIndex, byte weaponCfgIndex)
-    {
-        this.playerIndex = playerIndex;
-        this.characterCfgIndex = characterCfgIndex;
-        this.weaponCfgIndex = weaponCfgIndex;
-    }
-}
-
-// 玩家属性
-public struct CPlayerAttribute : IComponent
-{
-    public float moveSpeedPerFrame;      // e.g. 0.05f （= 3.0 / 60）
-    public float moveSlowSpeedPerFrame;  // e.g. 0.025f
+    public float moveSpeed;
+    public float moveSlowSpeed;
 
     public float hitRadius;       // 受击判定半径
     public float grazeRadius;     // 擦弹判定半径
-}
 
-public struct CPlayerRunTime : IComponent
-{
     public bool isSlowMode;       // 是否处于慢速模式
     public bool isShooting;       // 是否正在射击
     public bool isBombing;        // 是否正在使用炸弹
     public bool isInvincible;     // 是否无敌
 }
+
 #endregion
 
 #region Enemy
 public struct CEnemy : IComponent
 {
-    public ushort enemyId;       // 敌人ID
-    public float hp;              // 生命值
-    public float maxHp;           // 最大生命值
-    public float speed;           // 移动速度
-    public float hitRadius;       // 受击判定半径
+    public int cfgIndex;          // 配置索引, 与敌人配置表对应
 }
 #endregion

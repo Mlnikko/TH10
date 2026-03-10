@@ -21,6 +21,15 @@ public abstract class BaseSystem
             return World.EntityFactory;
         }
     }
+
+    protected LogicFrameTimer LogicFrameTimer
+    {
+        get
+        {
+            if (World == null) Logger.Critical("World is not initialized.");
+            return World.LogicFrameTimer;
+        }
+    }
     /// <summary>
     /// 系统是否启用（可动态开关）
     /// </summary>
@@ -66,7 +75,7 @@ public abstract class BaseSystem
     /// <summary>
     /// 逻辑帧更新（用于帧同步）
     /// </summary>
-    public virtual void OnLogicTick(uint tick) { }
+    public virtual void OnLogicTick(uint currentframe) { }
 
     /// <summary>
     /// 每帧更新（用于渲染、UI等）

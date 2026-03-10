@@ -91,9 +91,6 @@ public class InputManager : SingletonMono<InputManager>
     FrameInput[] _currentConsumedInputs;
     bool _isInitialized = false;
 
-    // 复用 StringBuilder 用于调试，避免 OnGUI 分配
-    private System.Text.StringBuilder _debugSb;
-
     protected override void OnSingletonInit()
     {
         base.OnSingletonInit();
@@ -108,7 +105,6 @@ public class InputManager : SingletonMono<InputManager>
         _inputFrames = new FrameInput[MAX_PLAYERS][];
         _latestReceivedFrame = new uint[MAX_PLAYERS];
         _currentConsumedInputs = new FrameInput[MAX_PLAYERS];
-        _debugSb = new System.Text.StringBuilder(128); // 预分配容量
 
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
@@ -282,22 +278,21 @@ public class InputManager : SingletonMono<InputManager>
         return _currentConsumedInputs[playerIndex];
     }
 
-    [SerializeField] bool _showDebugInput = false;
+    [SerializeField] bool _showDebugInput = true;
     GUIStyle _debugStyle;
+    // 复用 StringBuilder 用于调试，避免 OnGUI 分配
+    System.Text.StringBuilder _debugSb = new(128);
 
     GUIStyle DebugStyle
     {
         get
         {
-            if (_debugStyle == null)
-            {
-                _debugStyle = new GUIStyle(GUI.skin.label)
+            _debugStyle ??= new GUIStyle(GUI.skin.label)
                 {
                     fontSize = 14,
                     normal = { textColor = Color.white },
                     alignment = TextAnchor.UpperLeft
                 };
-            }
             return _debugStyle;
         }
     }

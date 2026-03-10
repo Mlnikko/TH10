@@ -99,16 +99,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 5755a258a3adb9846b569706f7ca88f3, type: 2}
   danmakuType: 0
-  poolSize: 200
+  poolSize: 9999
   localScale: {x: 1, y: 1}
   localRotation: {x: 0, y: 0, z: 90}
   sprite: {fileID: 1051418369, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
-  colliderType: 1
-  colliderLayer: 8
-  size: {x: 0.12, y: 0.16}
-  radius: 0
-  colliderOffset: {x: 0, y: 0.19}
   colliderConfig:
     type: 1
     layer: 0

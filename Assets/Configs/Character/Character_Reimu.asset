@@ -15,7 +15,7 @@ MonoBehaviour:
   configId: 
   characterPrefabId: character_reimu
   character: 1
-  description: "\u60A0\u95F2\u7684\u5DEB\u5973\n\u76F8\u5F53\u64C5\u957F\n\u5927\u8303\u56F4\u7684\u653B\u51FB"
+  description: "\u535A\u4E3D\u7075\u68A6"
   moveSpeed: 2
   moveSlowSpeed: 1
   moveBoxSize: {x: 0.3, y: 0.5}
@@ -25,27 +25,21 @@ MonoBehaviour:
     layer: 0
     mask: 0
     radius: 0
-    width: 0.3
-    height: 0.5
-    offsetX: 0
-    offsetY: 0.08
+    boxSize: {x: 0.3, y: 0.5}
+    offset: {x: 0, y: 0.08}
   hitRadius: 0.04
   hitColliderConfig:
     type: 2
     layer: 0
     mask: 0
     radius: 0.04
-    width: 0
-    height: 0
-    offsetX: 0
-    offsetY: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
   grazeRadius: 0.25
   grazeColliderConfig:
     type: 2
     layer: 0
     mask: 0
     radius: 0.25
-    width: 0
-    height: 0
-    offsetX: 0
-    offsetY: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}

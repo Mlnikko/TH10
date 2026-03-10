@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1450829607451033357}
   - component: {fileID: 2120049749566012503}
-  - component: {fileID: 4801490282356181558}
+  - component: {fileID: 4093755159246986462}
   m_Layer: 0
   m_Name: DME_Reimu_Main
   m_TagString: Untagged
@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 2268385660629314434}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.11, y: -0.96, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -74,18 +74,18 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.16, y: 0.16}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &4801490282356181558
+--- !u!114 &4093755159246986462
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,15 +94,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 2268385660629314434}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71971fac512de7048b631644cc0eddba, type: 3}
+  m_Script: {fileID: 11500000, guid: d08d1b86bed19a249a8e82c1a819c7c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   emitterConfig: {fileID: 11400000, guid: 35a834f408d757a468c1938fb9a1d7aa, type: 2}
   danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
   emitterType: 1
   emitterCamp: 1
-  launchPosOffset: {x: 0, y: 0}
-  launchRotOffset: {x: 0, y: 0, z: 0}
+  emitPosOffset: {x: 0, y: 0}
+  emitRotOffsetZ: 0
+  danmakuRotOffsetZ: 90
   launchAudio: 0
   launchInterval: 0.5
   launchSpeed: 0.5

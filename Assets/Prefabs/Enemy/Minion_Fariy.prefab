@@ -122,13 +122,11 @@ MonoBehaviour:
   enemyConfig: {fileID: 11400000, guid: bbb2c76c117338045854982ba0901625, type: 2}
   colliderConfig:
     type: 1
-    layer: 0
-    mask: 0
-    offsetX: 0
-    offsetY: 0
-    radius: 0.54
-    width: 0
-    height: 0
+    layer: 4
+    mask: 4
+    radius: 0
+    boxSize: {x: 0.12, y: 0.12}
+    offset: {x: 0, y: 0}
   enemyType: 1
-  maxHealth: 0
+  maxHealth: 100
   dieAudioName: 0

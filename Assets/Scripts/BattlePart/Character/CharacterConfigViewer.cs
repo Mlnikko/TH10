@@ -46,7 +46,6 @@ public class CharacterConfigViewer : MonoBehaviour
 
     public void SaveCharacterConfig()
     {
-        // 此方法仅用于 Editor 保存，运行时调用无效！
         if (characterConfig == null) return;
 
         characterConfig.character = characterName;
@@ -61,16 +60,8 @@ public class CharacterConfigViewer : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.green;
-        var moveBoxCenter = transform.position + new Vector3(moveColliderConfig.offset.x, moveColliderConfig.offset.y);
-        Gizmos.DrawWireCube(moveBoxCenter, new Vector3(moveColliderConfig.boxSize.x, moveColliderConfig.boxSize.y));
-
-        Gizmos.color = Color.white;
-        var hitSphereCenter = transform.position + new Vector3(hitColliderConfig.offset.x, hitColliderConfig.offset.y);
-        Gizmos.DrawSphere(hitSphereCenter, hitColliderConfig.radius);
-
-        Gizmos.color = Color.blue;
-        var grazeSphereCenter = transform.position + new Vector3(grazeColliderConfig.offset.x, grazeColliderConfig.offset.y);
-        Gizmos.DrawWireSphere(grazeSphereCenter, grazeColliderConfig.radius);
+        GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, moveColliderConfig, Color.cyan, Color.cyan);
+        GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, hitColliderConfig, Color.red, Color.red);
+        GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, grazeColliderConfig, Color.blue, Color.blue);
     }
 }

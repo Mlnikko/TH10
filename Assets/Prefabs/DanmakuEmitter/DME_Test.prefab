@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1450829607451033357}
   - component: {fileID: 2120049749566012503}
-  - component: {fileID: 4801490282356181558}
+  - component: {fileID: 5303273226228130426}
   m_Layer: 0
   m_Name: DME_Test
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &4801490282356181558
+--- !u!114 &5303273226228130426
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -94,15 +94,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 2268385660629314434}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 71971fac512de7048b631644cc0eddba, type: 3}
+  m_Script: {fileID: 11500000, guid: d08d1b86bed19a249a8e82c1a819c7c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   emitterConfig: {fileID: 11400000, guid: 56f905c7288be0e4abb006b80c2c5032, type: 2}
   danmakuConfig: {fileID: 11400000, guid: 5755a258a3adb9846b569706f7ca88f3, type: 2}
   emitterType: 1
   emitterCamp: 1
-  launchPosOffset: {x: 0, y: 0}
-  launchRotOffset: {x: 0, y: 0, z: 0}
+  emitPosOffset: {x: 0, y: 0}
+  emitRotOffsetZ: 0
+  danmakuRotOffsetZ: 90
+  lineModeConfig:
+    lineDirection: {x: 0, y: 1}
+    lineCount: 10
+    lineSpacing: 0.1
+  arcModeConfig:
+    arcStartAngle: 0
+    arcAngle: 0
+    arcRadius: 0
+    arcBulletCount: 0
+    arcClockwise: 0
   launchAudio: 0
-  launchInterval: 0.5
-  launchSpeed: 0.5
+  launchInterval: 0.01
+  launchSpeed: 0

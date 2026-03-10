@@ -15,6 +15,26 @@ public enum DanmakuSelectMode
     Random
 }
 
+[Serializable]
+public struct LineModeConfig
+{
+    public Vector2 lineDirection; // 替代 DirX/DirY
+    [Min(1)] public int lineCount;
+    [Min(0f)] public float lineSpacing;
+}
+
+[Serializable]
+public struct ArcModeConfig
+{
+    public float arcStartAngle;    // 起始角度（度）
+    public float arcAngle;      // 弧度范围（度）
+    public float arcRadius;        // 发射半径
+
+    [Min(0f)]
+    public int arcBulletCount;    // 弧线上子弹数
+    public bool arcClockwise;
+}
+
 
 [CreateAssetMenu(fileName = "NewDanmakuEmitterConfig", menuName = "Configs/DanmakuEmitterConfig")]
 public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
@@ -35,32 +55,31 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
 
     [Header("通用发射器参数")]
 
-    [Min(0f)] public float launchInterval = 0.5f;
+    [Min(0f)]
+    [Tooltip("发射间隔（秒）")]
+    public float launchInterval = 0.5f;
+
+    [Min(0f)]
     public float launchSpeed = 2f;
 
-    public Vector2 launchPosOffset = Vector2.zero;
-    public Vector3 launchRotOffset = Vector3.zero;
+    [Tooltip("发射器位置偏移（相对于生成点），用于调整发射器位置")]
+    public Vector2 emitterPosOffset = Vector2.zero;
+    [Tooltip("发射器旋转偏移（度），用于调整发射器朝向")]
+    public float emitterRotOffsetZ = 0;
+
+    [Tooltip("弹幕发射时的旋转偏移（度），用于调整弹幕朝向")]
+    public float danmakuRotOffsetZ = 90f;
 
     public EmitterCamp emitterCamp = EmitterCamp.Enemy;
     public AudioName audio_Fire = AudioName.None;
 
-    [Header("Line 发射器")]
+    [Header("Line Mode 参数")]
+    public LineModeConfig lineModeConfig;
 
-    [Tooltip("发射方向，会转换成单位向量使用")]
-    public Vector2 lineDirection = Vector2.up; // 替代 DirX/DirY
-    [Min(1)] public int lineCount = 1;
-    [Min(0f)] public float lineSpacing = 0.2f;
+    [Header("Arc Mode 参数")]
+    public ArcModeConfig arcModeConfig;
 
-
-    [Header("Arc 发射器")]
-    public float arcStartAngle = 0f;    // 起始角度（度）
-    public float arcAngle = 90f;      // 弧度范围（度）
-    public float arcRadius = 1f;        // 发射半径
-
-    [Min(0f)]
-    public int arcBulletCount = 5;    // 弧线上子弹数
-    public bool arcClockwise = true;
-
+#if UNITY_EDITOR
     void OnValidate()
     {
         if(!string.IsNullOrEmpty(emitterPrefabId))
@@ -75,6 +94,7 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
             }
         }
     }
+#endif
 
     public void ResolveReferences(GameResDB resDb)
     {

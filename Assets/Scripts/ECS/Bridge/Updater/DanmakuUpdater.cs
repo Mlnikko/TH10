@@ -15,7 +15,8 @@ public class DanmakuUpdater : IGameObjectUpdater
         if (_transform != null)
         {
             var pos = em.GetComponentSpan<CPosition>()[entity.Index];
-            _transform.position = new Vector3(pos.x, pos.y, 0);
+            var rot = em.GetComponentSpan<CRotation>()[entity.Index];
+            _transform.SetPositionAndRotation(new Vector3(pos.x, pos.y, 0), Quaternion.Euler(0, 0, rot.rotZ));
         }
     }
 }

@@ -1015,7 +1015,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bbb2c76c117338045854982ba0901625
-    m_Address: cfg_minionconfig
+    m_Address: cfg_minion_fariy
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

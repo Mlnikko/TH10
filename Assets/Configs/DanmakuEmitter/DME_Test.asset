@@ -19,16 +19,20 @@ MonoBehaviour:
   danmakuSelectMode: 0
   emitMode: 1
   launchInterval: 0.01
-  launchSpeed: 0.001
-  launchPosOffset: {x: 0, y: 0}
-  launchRotOffset: {x: 0, y: 0, z: 0}
+  launchIntervalFrames: 0
+  launchSpeed: 0
+  emitterPosOffset: {x: 0, y: 0}
+  emitterRotOffsetZ: 0
+  danmakuRotOffsetZ: 90
   emitterCamp: 1
   audio_Fire: 0
-  lineDirection: {x: 0, y: 1}
-  lineCount: 10
-  lineSpacing: 0.1
-  arcStartAngle: 0
-  arcAngle: 90
-  arcRadius: 1
-  arcBulletCount: 5
-  arcClockwise: 1
+  lineModeConfig:
+    lineDirection: {x: 0, y: 1}
+    lineCount: 10
+    lineSpacing: 0.1
+  arcModeConfig:
+    arcStartAngle: 0
+    arcAngle: 0
+    arcRadius: 0
+    arcBulletCount: 0
+    arcClockwise: 0

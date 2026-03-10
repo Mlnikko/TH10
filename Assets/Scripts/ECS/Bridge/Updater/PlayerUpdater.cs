@@ -35,7 +35,7 @@ public class PlayerUpdater : IGameObjectUpdater
         if (_animator != null)
         {
             ref readonly var velocity = ref em.GetComponentSpan<CVelocity>()[entity.Index];
-            ref readonly var playerRuntime = ref em.GetComponentSpan<CPlayerRunTime>()[entity.Index];
+            ref readonly var player = ref em.GetComponentSpan<CPlayer>()[entity.Index];
 
             // --- 方向动画 ---
             int currentDirection = velocity.vx > 0 ? 1 : (velocity.vx < 0 ? -1 : 0);
@@ -57,7 +57,7 @@ public class PlayerUpdater : IGameObjectUpdater
             }
 
             // --- 慢速模式特效图层 ---
-            bool isSlowMode = playerRuntime.isSlowMode;
+            bool isSlowMode = player.isSlowMode;
             if (isSlowMode != _lastIsSlowMode)
             {
                 _lastIsSlowMode = isSlowMode;

@@ -10,10 +10,10 @@ public interface IPoolable
 public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
 {
     // 【核心优化】直接使用数组！
-    // 下标 = prefabIndex。访问速度：CPU 指令级，无 Hash，无分配。
+    // 下标 = enemyPrefabIndex。访问速度：CPU 指令级，无 Hash，无分配。
     Queue<GameObject>[] _pools;
     Transform[] _poolRoots; // 每个池对应的父节点
-    // 反向映射：GameObject -> prefabIndex
+    // 反向映射：GameObject -> enemyPrefabIndex
     // 由于回收时只需要知道 index，这个 Dictionary 无法避免，但只在 Return 时用一次
     Dictionary<GameObject, int> _goToIndexMap;
 
@@ -29,7 +29,7 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
     /// <summary>
     /// 初始化池数组 (必须在 Warmup 之前调用)
     /// </summary>
-    /// <param name="maxIndex">最大的 prefabIndex 值</param>
+    /// <param name="maxIndex">最大的 enemyPrefabIndex 值</param>
     public void Initialize(int maxIndex)
     {
         if (_pools != null) return; // 防止重复初始化
@@ -56,7 +56,7 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
 
         if (prefabIndex < 0 || prefabIndex > _maxPrefabIndex)
         {
-            Logger.Error($"Invalid prefabIndex: {prefabIndex}. Max allowed: {_maxPrefabIndex}");
+            Logger.Error($"Invalid enemyPrefabIndex: {prefabIndex}. Max allowed: {_maxPrefabIndex}");
             return;
         }
 

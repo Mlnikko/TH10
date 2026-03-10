@@ -26,13 +26,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8381980051753028957}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.012, y: -1.325, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 0}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &749736288840741274
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -74,15 +74,15 @@ SpriteRenderer:
   m_SortingLayerID: 406419467
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -1690401657, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.16, y: 0.08}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &6946069122549587803
@@ -98,12 +98,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 79f68cadc6e72654c9af06f08903e3fa, type: 2}
-  danmakuType: 1
+  danmakuType: 0
+  poolSize: 100
   localScale: {x: 1, y: 1}
-  sprite: {fileID: -857190109, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  localRotation: {x: 0, y: 0, z: 0}
+  sprite: {fileID: -1690401657, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
-  colliderOffset: {x: 0, y: 0}
-  colliderType: 0
-  size: {x: 0, y: 0}
-  radius: 0
+  colliderConfig:
+    type: 0
+    layer: 0
+    mask: 0
+    radius: 0
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
   damage: 1

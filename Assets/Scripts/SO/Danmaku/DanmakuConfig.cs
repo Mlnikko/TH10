@@ -15,15 +15,14 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
     public DanmakuType danmakuType = DanmakuType.Normal;
 
     [Header("µ¯Ä»Transform")]
-    public Vector2 localScale = Vector2.one;
-    public Vector3 localRotation = Vector3.zero;
+    public float scale = 1f;
 
     [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
     public Sprite sprite = null;
     public Color color = Color.white;
 
     [Header("µ¯Ä»Åö×²Æ÷ÉèÖÃ")]
-    public ColliderConfig colliderConfig = new ColliderConfig();
+    public ColliderConfig colliderConfig = new();
 
     [Header("µ¯Ä»ÉËº¦")]
     public float damage = 1f;

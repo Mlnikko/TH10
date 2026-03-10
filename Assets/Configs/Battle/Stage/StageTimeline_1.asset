@@ -18,8 +18,8 @@ MonoBehaviour:
   stageBgmRef: 
   midStageWaves:
   - startFrameOffset: 0
-    enemyPrefabId: 
-    count: 0
+    enemyConfigId: Minion_Fariy
+    count: 1
     spawnPattern: 0
     spawnAreaSize: {x: 0, y: 0}
     spawnOffset: {x: 0, y: 0}

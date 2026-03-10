@@ -10,10 +10,12 @@ public class World
     readonly EntityManager _entityManager;
     readonly EntityFactory _entityFactory;
     readonly GameObjectBridge _gameObjectBridge;
+    readonly LogicFrameTimer _logicFrameTimer;
 
     public EntityFactory EntityFactory => _entityFactory;
     public EntityManager EntityManager => _entityManager;
     public GameObjectBridge GameObjectBridge => _gameObjectBridge;
+    public LogicFrameTimer LogicFrameTimer => _logicFrameTimer;
 
     public World()
     {
@@ -21,6 +23,7 @@ public class World
         _entityManager = new EntityManager();
         _entityFactory = new EntityFactory(_entityManager);
         _gameObjectBridge = new GameObjectBridge();
+        _logicFrameTimer = new LogicFrameTimer();
     }
 
     #region 添加系统
@@ -60,14 +63,14 @@ public class World
     #endregion
 
     #region 系统更新
-    public void LogicTick(uint currentTick)
+    public void LogicTick(uint currentframe)
     {
         for (int i = 0; i < _systems.Count; i++)
         {
             var sys = _systems[i];
             if (sys.Enabled)
             {
-                sys.OnLogicTick(currentTick);
+                sys.OnLogicTick(currentframe);
             }
         }
     }

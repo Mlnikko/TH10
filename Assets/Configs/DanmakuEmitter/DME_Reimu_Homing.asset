@@ -12,20 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DME_Reimu_Homing
   m_EditorClassIdentifier: 
-  emitterPrefabId: DM_Reimu_Homing
+  configId: 
+  emitterPrefabId: dm_reimu_homing
   danmakuConfigIds:
-  - DM_Reimu_Homing
+  - dm_reimu_homing
   danmakuSelectMode: 0
   emitMode: 1
   launchInterval: 0.5
+  launchIntervalFrames: 0
   launchSpeed: 2
-  launchPosOffset: {x: 0, y: 0}
-  launchRotOffset: {x: 0, y: 0, z: 0}
+  emitterPosOffset: {x: 0, y: 0}
+  emitterRotOffsetZ: 0
+  danmakuRotOffsetZ: 90
   emitterCamp: 2
   audio_Fire: 0
-  LineDirection: {x: 0, y: 1}
-  LineCount: 1
-  LineSpacing: 0.2
-  ArcAngle: 90
-  ArcBulletCount: 5
-  ArcClockwise: 1
+  lineModeConfig:
+    lineDirection: {x: 0, y: 1}
+    lineCount: 1
+    lineSpacing: 0
+  arcModeConfig:
+    arcStartAngle: 0
+    arcAngle: 0
+    arcRadius: 0
+    arcBulletCount: 0
+    arcClockwise: 0
