@@ -17,14 +17,7 @@ MonoBehaviour:
   targetFrameRate: 60
   stageBgmRef: 
   midStageWaves:
-  - startFrameOffset: 0
-    enemyConfigId: Minion_Fariy
-    count: 1
-    spawnPattern: 0
-    spawnAreaSize: {x: 0, y: 0}
-    spawnOffset: {x: 0, y: 0}
-    hpMultiplier: 0
-    waitForClear: 0
+  - {fileID: 11400000, guid: daf2be8bf9a30d646b7482c0cd40cd42, type: 2}
   hasMidBoss: 0
   midBossSpawnFrame: 3000
   midBossPrefabId: 

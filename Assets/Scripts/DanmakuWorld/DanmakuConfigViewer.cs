@@ -5,19 +5,19 @@ public class DanmakuConfigViewer : MonoBehaviour
 {
     public DanmakuConfig danmakuConfig;
 
-    [SerializeField] DanmakuType danmakuType;
+    [SerializeField] E_DanmakuType danmakuType;
 
-    [Header("µ¯Ä»³Ø´óĞ¡")]
+    [Header("å¼¹å¹•æ± å¤§å°")]
     [SerializeField] int poolSize;
 
-    [Header("µ¯Ä»Ëõ·Å")]
+    [Header("å¼¹å¹•ç¼©æ”¾")]
     [SerializeField] float scale;
 
-    [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
+    [Header("å¼¹å¹•æ¸²æŸ“è®¾ç½®")]
     [SerializeField] Sprite sprite;
     [SerializeField] Color color;
 
-    [Header("µ¯Ä»Åö×²Æ÷ÉèÖÃ")]
+    [Header("å¼¹å¹•ç¢°æ’å™¨è®¾ç½®")]
     [SerializeField] ColliderConfig colliderConfig;
 
     [SerializeField] float damage;
@@ -26,7 +26,7 @@ public class DanmakuConfigViewer : MonoBehaviour
     {
         if (danmakuConfig == null)
         {
-            Logger.Warn("µ¯Ä»ÅäÖÃÎÄ¼şÎ´ÉèÖÃ", LogTag.Config);
+            Logger.Warn("å¼¹å¹•é…ç½®æ–‡ä»¶æœªè®¾ç½®", LogTag.Config);
             return;
         }
 
@@ -43,14 +43,14 @@ public class DanmakuConfigViewer : MonoBehaviour
 
         damage = danmakuConfig.damage;
 
-        Logger.Debug($"µ¯Ä»ÅäÖÃÎÄ¼ş¼ÓÔØÍê³É: {danmakuConfig.name}");
+        Logger.Debug($"å¼¹å¹•é…ç½®æ–‡ä»¶åŠ è½½å®Œæˆ: {danmakuConfig.name}");
     }
 
     public void SaveDanmakuConfig()
     {
         if (danmakuConfig == null)
         {
-            Logger.Warn("µ¯Ä»ÅäÖÃÎÄ¼şÎ´ÉèÖÃ", LogTag.Config);
+            Logger.Warn("å¼¹å¹•é…ç½®æ–‡ä»¶æœªè®¾ç½®", LogTag.Config);
             return;
         }
         danmakuConfig.poolSize = poolSize;
@@ -65,7 +65,7 @@ public class DanmakuConfigViewer : MonoBehaviour
 
         danmakuConfig.damage = damage;
 
-        Logger.Debug($"µ¯Ä»ÅäÖÃÎÄ¼ş±£´æÍê³É: {danmakuConfig.name}");
+        Logger.Debug($"å¼¹å¹•é…ç½®æ–‡ä»¶ä¿å­˜å®Œæˆ: {danmakuConfig.name}");
     }
 
     public void PreviewDanmaku()
@@ -74,7 +74,7 @@ public class DanmakuConfigViewer : MonoBehaviour
 
         transform.localScale = Vector3.one * scale;
 
-        // Ô¤ÀÀäÖÈ¾
+        // é¢„è§ˆæ¸²æŸ“
         if (TryGetComponent<SpriteRenderer>(out var spriteRenderer))
         {
             spriteRenderer.sprite = sprite;

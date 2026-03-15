@@ -3,7 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GameResourceManifest", menuName = "Configs/Manifest/GameResourceManifest")]
 public class GameResourceManifest : ScriptableObject
 {
-    [Header("ÅäÖÃ - Configs")]
+    [Header("é…ç½® - Configs")]
     public string[] characterConfigIds = new string[0];
     public string[] enemyConfigIds = new string[0];
     public string[] weaponConfigIds = new string[0];
@@ -11,16 +11,16 @@ public class GameResourceManifest : ScriptableObject
     public string[] danmakuEmitterConfigIds = new string[0];
     public string battleAreaConfigId;
 
-    [Header("Ô¤ÖÆÌå - Prefabs")]
+    [Header("é¢„åˆ¶ä½“ - Prefabs")]
     public string[] characterPrefabIds = new string[0];
     public string[] enemyPrefabIds = new string[0];
     public string[] danmakuPrefabIds = new string[0];
     public string[] danmakuEmitterPrefabIds = new string[0];
     public string[] effectPrefabIds = new string[0];
 
-    [Header("ÌùÍ¼ - Textures")]
+    [Header("è´´å›¾ - Textures")]
     public string[] characterImages = new string[0];
 
-    [Header("Í¼¼¯ - Atlases")]
+    [Header("å›¾é›† - Atlases")]
     public string[] atlases = new string[0];
 }

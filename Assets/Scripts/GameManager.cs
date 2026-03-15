@@ -16,7 +16,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void SetApplicationFPS(E_FPSMode fPSMode, bool vsync)
     {
-        QualitySettings.vSyncCount = vsync ? 1 : 0; // 关闭垂直同步
+        QualitySettings.vSyncCount = vsync ? 1 : 0; // 鍏抽棴鍨傜洿鍚屾
         switch (fPSMode)
         {
             case E_FPSMode.NoLimit:

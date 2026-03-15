@@ -14,16 +14,16 @@ public class BattleAreaToolEditor : Editor
 
         GUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("Ô¤ÀÀÅäÖÃĞ§¹û"))
+        if (GUILayout.Button("é¢„è§ˆé…ç½®æ•ˆæœ"))
         {
             tool.LoadBattleAreaData();
         }
 
-        if (GUILayout.Button("±£´æµ±Ç°ÅäÖÃ"))
+        if (GUILayout.Button("ä¿å­˜å½“å‰é…ç½®"))
         {
             if (tool.battleAreaConfig == null)
             {
-                Logger.Warn("Î´Ö¸¶¨ BattleAreaConfig£¡");
+                Logger.Warn("æœªæŒ‡å®š BattleAreaConfigï¼");
                 return;
             }
 
@@ -31,7 +31,7 @@ public class BattleAreaToolEditor : Editor
             EditorUtility.SetDirty(tool.battleAreaConfig);
             AssetDatabase.SaveAssets();
 
-            Logger.Info($"Õ½¶·ÇøÓòÅäÖÃÒÑ¸üĞÂ£º{tool.battleAreaConfig.name}");
+            Logger.Info($"æˆ˜æ–—åŒºåŸŸé…ç½®å·²æ›´æ–°ï¼š{tool.battleAreaConfig.name}");
         }
 
         GUILayout.EndHorizontal();

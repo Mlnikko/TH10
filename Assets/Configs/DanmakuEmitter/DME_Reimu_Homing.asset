@@ -19,12 +19,11 @@ MonoBehaviour:
   danmakuSelectMode: 0
   emitMode: 1
   launchInterval: 0.5
-  launchIntervalFrames: 0
   launchSpeed: 2
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 90
-  emitterCamp: 2
+  emitterCamp: 1
   audio_Fire: 0
   lineModeConfig:
     lineDirection: {x: 0, y: 1}

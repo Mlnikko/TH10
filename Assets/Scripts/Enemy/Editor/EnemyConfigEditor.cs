@@ -14,35 +14,35 @@ public class EnemyConfigEditor : Editor
 
         GUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("¶ÁÈ¡²¢Ô¤ÀÀµĞÈËÅäÖÃ", GUILayout.Height(30)))
+        if (GUILayout.Button("è¯»å–å¹¶é¢„è§ˆæ•Œäººé…ç½®", GUILayout.Height(30)))
         {
             EnemyConfigViewer viewer = (EnemyConfigViewer)target;
             if(viewer.EnemyConfig == null)
             {
-                Logger.Warn("Î´Ö¸¶¨ EnemyConfig£¡");
+                Logger.Warn("æœªæŒ‡å®š EnemyConfigï¼");
                 return;
             }
             viewer.LoadEnemyConfig();
-            Logger.Info("µĞÈËÅäÖÃÒÑ¼ÓÔØ²¢Ô¤ÀÀ£¡");
+            Logger.Info("æ•Œäººé…ç½®å·²åŠ è½½å¹¶é¢„è§ˆï¼");
         }
 
-        if (GUILayout.Button("Ó¦ÓÃ²¢±£´æµ±Ç°ÅäÖÃ", GUILayout.Height(30)))
+        if (GUILayout.Button("åº”ç”¨å¹¶ä¿å­˜å½“å‰é…ç½®", GUILayout.Height(30)))
         {
             EnemyConfigViewer viewer = (EnemyConfigViewer)target;
             if(viewer.EnemyConfig == null)
             {
-                Logger.Warn("Î´Ö¸¶¨ EnemyConfig£¡");
+                Logger.Warn("æœªæŒ‡å®š EnemyConfigï¼");
                 return;
             }
             if (EditorUtility.DisplayDialog(
-           "È·ÈÏ±£´æ£¿",
-           "½«¸²¸Ç×Ê²ú",
-           "È·¶¨", "È¡Ïû"))
+           "ç¡®è®¤ä¿å­˜ï¼Ÿ",
+           "å°†è¦†ç›–èµ„äº§",
+           "ç¡®å®š", "å–æ¶ˆ"))
             {
                 viewer.SaveEnemyConfig();
                 EditorUtility.SetDirty(viewer.EnemyConfig);
                 AssetDatabase.SaveAssets();
-                Logger.Info("µĞÈËÅäÖÃÒÑ±£´æ£¡");
+                Logger.Info("æ•Œäººé…ç½®å·²ä¿å­˜ï¼");
             }
         }
 

@@ -4,23 +4,22 @@ public class DanmakuSystem : BaseSystem
 {
     public override void OnLogicTick(uint frame)
     {
-        Span<int> danmakuIndices = TempBuffers.DanmakuIndices;
-        int danmakuCount = EntityManager.GetEntities<CDanmaku>(danmakuIndices);
+        Span<int> indices = EntityManager.GetActiveIndices<CDanmaku>();
 
         var danmakus = EntityManager.GetComponentSpan<CDanmaku>();
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var velocities = EntityManager.GetComponentSpan<CVelocity>();
 
-        for (int i = 0; i < danmakuCount; i++)
+        for (int i = 0; i < indices.Length; i++)
         {
-            int entityIndex = danmakuIndices[i];
+            int idx = indices[i];
 
-            ref var danmaku = ref danmakus[entityIndex];
-            ref var position = ref positions[entityIndex];   
-            ref var velocity = ref velocities[entityIndex];
+            ref var danmaku = ref danmakus[idx];
+            ref var position = ref positions[idx];   
+            ref var velocity = ref velocities[idx];
 
             UpdateDanmakuPosition(ref position, ref velocity);
-            RecycleOutOfBoundsDanmaku(position, entityIndex);
+            RecycleOutOfBoundsDanmaku(position, idx);
         }
     }
     
@@ -30,7 +29,7 @@ public class DanmakuSystem : BaseSystem
         position.y += velocity.vy;
     }
 
-    // µ¯Ä»³¬³ö±ß½çºó»ØÊÕ
+    // å¼¹å¹•è¶…å‡ºè¾¹ç•ŒåŽå›žæ”¶
     void RecycleOutOfBoundsDanmaku(CPosition position, int entityIndex)
     {
        if(!GlobalBattleData.AreaData.IsPointInRecycleArea(position.x, position.y))

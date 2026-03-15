@@ -11,7 +11,7 @@ public class DanmakuUpdater : IGameObjectUpdater
 
     public void UpdateGameObject(in EntityManager em, Entity entity)
     {
-        // === Î»ÖÃ¸üĞÂ ===
+        // === ä½ç½®æ›´æ–° ===
         if (_transform != null)
         {
             var pos = em.GetComponentSpan<CPosition>()[entity.Index];

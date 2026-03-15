@@ -10,13 +10,13 @@ public class PlayerInfoItem : MonoBehaviour
 
     public void SetInfo(string name, bool isHost = false)
     {
-        playerNameText.text = isHost ? $"{name} (·¿Ö÷)" : name;
+        playerNameText.text = isHost ? $"{name} (æˆ¿ä¸»)" : name;
         hostIndicator.gameObject.SetActive(isHost);
     }
 
     public void SetEmpty(int slotIndex)
     {
-        playerNameText.text = $"Player {slotIndex + 1}£¨¿Õ£©";
+        playerNameText.text = $"Player {slotIndex + 1}ï¼ˆç©ºï¼‰";
         hostIndicator.gameObject.SetActive(false);
     }
 }

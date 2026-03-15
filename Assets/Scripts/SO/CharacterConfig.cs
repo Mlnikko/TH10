@@ -10,47 +10,43 @@ public enum E_Character : byte
 [CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Configs/CharacterConfig")]
 public class CharacterConfig : GameConfig, IReferenceResolver
 {
-    [Header("Ô¤ÖÆÌåÅäÖÃ")]
+    [Header("é¢„åˆ¶ä½“é…ç½®")]
     public string characterPrefabId;
     [NonSerialized]
     public int characterPrefabIndex = -1;
 
-    [Header("ĞÅÏ¢ÅäÖÃ")]
+    [Header("ä¿¡æ¯é…ç½®")]
     public E_Character character = E_Character.None;
 
     [TextArea(1, 5)]
     public string description;
 
-    [Header("ÒÆËÙÅäÖÃ")]
+    [Header("ç”Ÿå‘½é…ç½®")]
+    public int maxHealth;
+
+    [Header("ç§»é€Ÿé…ç½®")]
     public float moveSpeed;
     public float moveSlowSpeed;
 
-    [Header("ÒÆ¶¯Åö×²ÌåÉèÖÃ")]
-    public Vector2 moveBoxSize = new(0.3f, 0.5f);
-    public Vector2 moveBoxOffset = new(0, 0.08f);
+    [Header("ç§»åŠ¨ç¢°æ’ä½“è®¾ç½®")]
     public ColliderConfig moveColliderConfig;
 
-    [Header("ÊÜ»÷Åö×²ÌåÉèÖÃ")]
-    public float hitRadius = 0.1f;
+    [Header("å—å‡»ç¢°æ’ä½“è®¾ç½®")]
     public ColliderConfig hitColliderConfig;
 
-    [Header("²Áµ¯°ë¾¶")]
-    public float grazeRadius = 0.5f;
+    [Header("æ“¦å¼¹åŠå¾„")]
     public ColliderConfig grazeColliderConfig;
 
 #if UNITY_EDITOR
     void OnValidate()
     {
-        if (!string.IsNullOrEmpty(characterPrefabId))
-        {
-            characterPrefabId = characterPrefabId.ToLowerInvariant().Trim();
-        }
+        characterPrefabId = characterPrefabId.ToLowerInvariantTrimmed();
     }
 #endif
 
     public void ResolveReferences(GameResDB resDb)
     {
-        // 1. ½âÎö½ÇÉ«Ô¤ÖÆÌåË÷Òı
+        // 1. è§£æè§’è‰²é¢„åˆ¶ä½“ç´¢å¼•
         characterPrefabIndex = resDb.GetPrefabIndex(characterPrefabId);
         if (characterPrefabIndex == -1)
         {

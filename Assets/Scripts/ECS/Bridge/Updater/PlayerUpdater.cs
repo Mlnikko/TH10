@@ -14,7 +14,7 @@ public class PlayerUpdater : IGameObjectUpdater
         _transform = gameObject.transform;
         _animator = gameObject.GetComponent<Animator>();
 
-        // »º´æÍ¼²ãË÷Òı£¨±ÜÃâÃ¿Ö¡×Ö·û´®²éÕÒ£©
+        // ç¼“å­˜å›¾å±‚ç´¢å¼•ï¼ˆé¿å…æ¯å¸§å­—ç¬¦ä¸²æŸ¥æ‰¾ï¼‰
         _slowEffectLayerIndex = _animator.GetLayerIndex("Slow Effect");
         if (_slowEffectLayerIndex == -1)
         {
@@ -24,20 +24,20 @@ public class PlayerUpdater : IGameObjectUpdater
 
     public void UpdateGameObject(in EntityManager em, Entity entity)
     {
-        // === Î»ÖÃ¸üĞÂ ===
+        // === ä½ç½®æ›´æ–° ===
         if (_transform != null)
         {
             var pos = em.GetComponentSpan<CPosition>()[entity.Index];
             _transform.position = new Vector3(pos.x, pos.y, 0);
         }
 
-        // === ¶¯»­¸üĞÂ ===
+        // === åŠ¨ç”»æ›´æ–° ===
         if (_animator != null)
         {
             ref readonly var velocity = ref em.GetComponentSpan<CVelocity>()[entity.Index];
             ref readonly var player = ref em.GetComponentSpan<CPlayer>()[entity.Index];
 
-            // --- ·½Ïò¶¯»­ ---
+            // --- æ–¹å‘åŠ¨ç”» ---
             int currentDirection = velocity.vx > 0 ? 1 : (velocity.vx < 0 ? -1 : 0);
             if (currentDirection != _lastDirection)
             {
@@ -56,7 +56,7 @@ public class PlayerUpdater : IGameObjectUpdater
                 }
             }
 
-            // --- ÂıËÙÄ£Ê½ÌØĞ§Í¼²ã ---
+            // --- æ…¢é€Ÿæ¨¡å¼ç‰¹æ•ˆå›¾å±‚ ---
             bool isSlowMode = player.isSlowMode;
             if (isSlowMode != _lastIsSlowMode)
             {

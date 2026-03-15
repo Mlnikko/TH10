@@ -37,14 +37,15 @@ public class EntityFactory
             moveSpeed = characterConfig.moveSpeed,
             moveSlowSpeed = characterConfig.moveSlowSpeed,
 
-            hitRadius = characterConfig.hitRadius,
-            grazeRadius = characterConfig.grazeRadius,
+            hitRadius = characterConfig.hitColliderConfig.radius,
+            grazeRadius = characterConfig.grazeColliderConfig.radius,
 
             isShooting = false,
             isSlowMode = false,
             isBombing = false,
             isInvincible = false,
         });
+        _entityManager.AddComponent(e_player, new CHealth(characterConfig.maxHealth, characterConfig.maxHealth));
 
         foreach (var emitterIndex in weaponConfig.danmakuEmitterCfgIndices)
         {
@@ -67,7 +68,7 @@ public class EntityFactory
 
     public Entity CreateDanmaku(float posX, float posY, float rotZ, float velX, float velY, int danmakuCfgIndex)
     {
-        // ºÏ≤È≈‰÷√ «∑Ò¥Ê‘⁄
+        // Ê£ÄÊü•ÈÖçÁΩÆÊòØÂê¶Â≠òÂú®
         var danmakuCfg = GameResDB.Instance.GetConfig<DanmakuConfig>(danmakuCfgIndex);
 
         if (danmakuCfg == null)
@@ -84,7 +85,7 @@ public class EntityFactory
         _entityManager.AddComponent(e_danmaku, new CVelocity(velX, velY));
         _entityManager.AddComponent(e_danmaku, new CCollider(
             true,
-            danmakuCfg.colliderConfig.type,
+            danmakuCfg.colliderConfig.shape,
             danmakuCfg.colliderConfig.layer,
             danmakuCfg.colliderConfig.mask,
             danmakuCfg.colliderConfig.offset.x,
@@ -100,14 +101,14 @@ public class EntityFactory
     public Entity CreateEnemy(EnemyConfig enemyConfig, float posX, float posY)
     {
         Entity e_enemy = _entityManager.CreateEntity();
-        //_entityManager.AddComponent(e_enemy, new CEnemy(enemyConfig.enemyType));
+        _entityManager.AddComponent(e_enemy, new CEnemy{enemyCfgIndex = enemyConfig.emitterConfigIndex, currentHealth = enemyConfig.maxHealth});
         _entityManager.AddComponent(e_enemy, new CPosition(posX, posY));
         _entityManager.AddComponent(e_enemy, new CVelocity(0, 0));
         _entityManager.AddComponent(e_enemy, new CCollider
         {
             isActive = true,
             isDirty = false,
-            type = enemyConfig.colliderConfig.type,
+            type = enemyConfig.colliderConfig.shape,
             layer = enemyConfig.colliderConfig.layer,
             mask = enemyConfig.colliderConfig.mask,
             offsetX = enemyConfig.colliderConfig.offset.x,

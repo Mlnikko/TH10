@@ -16,14 +16,14 @@ MonoBehaviour:
   danmakuPrefabId: dm_reimu_homing
   poolSize: 100
   danmakuType: 0
-  localScale: {x: 1, y: 1}
-  localRotation: {x: 0, y: 0, z: 0}
+  scale: 1
   sprite: {fileID: -1690401657, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
   colliderConfig:
-    type: 0
-    layer: 0
-    mask: 0
+    isTrigger: 0
+    shape: 1
+    layer: 8
+    mask: 4
     radius: 0
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}

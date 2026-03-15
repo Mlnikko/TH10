@@ -29,7 +29,7 @@ public class MenuPanel : UIPanel
 
     void OnOnlineModeClicked()
     {
-        // 弹出二级选择窗口
+        // 寮瑰嚭浜岀骇閫夋嫨绐楀彛
         UIManager.Instance.ShowPanelAsync<OnlineModePanel>().Forget();
     }
 
@@ -40,7 +40,7 @@ public class MenuPanel : UIPanel
 
     void OnReplayClicked()
     {
-        // TODO: 回放系统
+        // TODO: 鍥炴斁绯荤粺
     }
 
     void OnQuitGameClicked()

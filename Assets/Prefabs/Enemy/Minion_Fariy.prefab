@@ -120,13 +120,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyConfig: {fileID: 11400000, guid: bbb2c76c117338045854982ba0901625, type: 2}
+  enemyType: 1
+  maxHealth: 100
   colliderConfig:
-    type: 1
+    isTrigger: 0
+    shape: 1
     layer: 4
-    mask: 4
+    mask: 10
     radius: 0
     boxSize: {x: 0.12, y: 0.12}
     offset: {x: 0, y: 0}
-  enemyType: 1
-  maxHealth: 100
   dieAudioName: 0

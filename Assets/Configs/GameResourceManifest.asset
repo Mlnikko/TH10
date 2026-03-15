@@ -15,7 +15,8 @@ MonoBehaviour:
   characterConfigIds:
   - character_marisa
   - character_reimu
-  enemyConfigIds: []
+  enemyConfigIds:
+  - minion_fariy
   weaponConfigIds:
   - weapon_marisa_0
   - weapon_marisa_1
@@ -29,6 +30,7 @@ MonoBehaviour:
   - dm_star_0
   - dm_test
   danmakuEmitterConfigIds:
+  - dme_enemy_base
   - dme_reimu_homing
   - dme_reimu_main
   - dme_test
@@ -36,7 +38,8 @@ MonoBehaviour:
   characterPrefabIds:
   - character_marisa
   - character_reimu
-  enemyPrefabIds: []
+  enemyPrefabIds:
+  - minion_fariy
   danmakuPrefabIds:
   - dm_reimu_homing
   - dm_reimu_main

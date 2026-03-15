@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -99,16 +100,6 @@ public static class TempBitSets
 }
 
 /// <summary>
-/// 组件容器：为每种组件类型维护独立的存储和状态位图。
-/// </summary>
-/// <typeparam name="T"></typeparam>
-internal static class ComponentStorage<T> where T : struct, IComponent
-{
-    public static readonly T[] Components = new T[EntityManager.MAX_ENTITIES];
-    public static readonly BitSet HasComponent = new (EntityManager.MAX_ENTITIES);
-}
-
-/// <summary>
 /// 预分配缓冲区：预分配常用的索引数组，避免每帧分配与过大数组导致的 GC 压力。
 /// </summary>
 public static class TempBuffers
@@ -190,52 +181,42 @@ public class EntityManager
     }
 
     // 根据索引获取实体
-    public Entity GetEntityByIndex(int index)
+    public Entity GetEntity(int index)
     {
         if (index < 0 || index >= MAX_ENTITIES || !_activeMask.Get(index))
             return Entity.Null;
         return Entity.FromIndexAndVersion(index, _versions[index]);
     }
 
-    // 泛型添加组件
+    #region AddComponent
     public void AddComponent<T>(Entity entity, in T component) where T : struct, IComponent
     {
         if (!IsValid(entity)) return;
-        int i = entity.Index;
-
-        ComponentStorage<T>.Components[i] = component;
-        ComponentStorage<T>.HasComponent.Set(i, true);
+        int index = entity.Index;
+        AddComponent<T>(index, component);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddComponent<T>(int index, in T component) where T : struct, IComponent
     {
-        // 合并检查：负数转 uint 后会变大，一次比较搞定范围 + 负数检查
-        if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index))
-            return;
-
-        ComponentStorage<T>.Components[index] = component;
-        ComponentStorage<T>.HasComponent.Set(index, true);
+        if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index)) return;
+        ComponentStorage<T>.Add(index, component); // 调用新的 Add
     }
+    #endregion
 
-    // 泛型移除组件
+    #region RemoveComponent
     public void RemoveComponent<T>(Entity entity) where T : struct, IComponent
     {
         if (!IsValid(entity)) return;
-        int i = entity.Index;
-        ComponentStorage<T>.Components[i] = default;
-        ComponentStorage<T>.HasComponent.Set(i, false);
+        int index = entity.Index;
+        RemoveComponent<T>(index);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RemoveComponent<T>(int index) where T : struct, IComponent
     {
-        if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index))
-            return;
-
-        ComponentStorage<T>.Components[index] = default;
-        ComponentStorage<T>.HasComponent.Set(index, false);
+        if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index)) return;
+        ComponentStorage<T>.Remove(index);
     }
+    #endregion
 
     public ref T GetComponent<T>(Entity entity) where T : struct, IComponent
     {
@@ -255,8 +236,8 @@ public class EntityManager
         return ComponentStorage<T>.Components.AsSpan();
     }
 
-    public int GetEntities<T>(Span<int> output) where T : struct, IComponent
+    public Span<int> GetActiveIndices<T>() where T : struct, IComponent
     {
-        return ComponentStorage<T>.HasComponent.GetSetBits(output);
+        return ComponentStorage<T>.GetActiveIndices();
     }
 }

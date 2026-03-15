@@ -1,19 +1,21 @@
+#if UNITY_EDITOR
+
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class EnemyConfigViewer : MonoBehaviour
 {
     public EnemyConfig EnemyConfig => enemyConfig;
-    [SerializeField] EnemyConfig enemyConfig;  
+    [SerializeField] EnemyConfig enemyConfig;
 
-    [Header("Åö×²ÉèÖÃ")]
-    [SerializeField] ColliderConfig colliderConfig;
-
-    [Header("µĞÈËÊôĞÔÉèÖÃ")]
+    [Header("æ•Œäººå±æ€§è®¾ç½®")]
     [SerializeField] EnemyType enemyType;
     [SerializeField] float maxHealth;
 
-    [Header("ÒôÆµ×ÊÔ´ÉèÖÃ")]
+    [Header("ç¢°æ’è®¾ç½®")]
+    [SerializeField] ColliderConfig colliderConfig;
+
+    [Header("éŸ³é¢‘èµ„æºè®¾ç½®")]
     [SerializeField] AudioName dieAudioName;
 
 
@@ -30,17 +32,16 @@ public class EnemyConfigViewer : MonoBehaviour
         enemyType = enemyConfig.enemyType;
         colliderConfig = enemyConfig.colliderConfig;
 
-        Logger.Debug("ÒÑ¼ÓÔØµĞÈËÅäÖÃ£º" + enemyConfig.name);
+        Logger.Debug("å·²åŠ è½½æ•Œäººé…ç½®ï¼š" + enemyConfig.name);
         
     }
 
     public void SaveEnemyConfig()
     {
-        // ´Ë·½·¨½öÓÃÓÚ Editor ±£´æ£¬ÔËĞĞÊ±µ÷ÓÃÎŞĞ§£¡
         if (enemyConfig == null) return;
         enemyConfig.enemyType = enemyType;
         enemyConfig.colliderConfig = colliderConfig;
-        Logger.Debug("ÒÑ±£´æµĞÈËÅäÖÃ£º" + enemyConfig.name);
+        Logger.Debug("å·²ä¿å­˜æ•Œäººé…ç½®ï¼š" + enemyConfig.name);
     }
 
     void OnDrawGizmosSelected()
@@ -50,3 +51,5 @@ public class EnemyConfigViewer : MonoBehaviour
         GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, colliderConfig, Color.yellow, Color.green);
     }
 }
+
+#endif

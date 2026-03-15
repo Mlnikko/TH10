@@ -4,34 +4,34 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewDanmakuConfig", menuName = "Configs/Danmaku")]
 public class DanmakuConfig : GameConfig , IReferenceResolver
 {
-    [Header("µ¯Ä»Ô¤ÖÆÌå")]
+    [Header("å¼¹å¹•é¢„åˆ¶ä½“")]
     public string danmakuPrefabId;
     [NonSerialized]
     public int danmakuPrefabIndex;
 
     public int poolSize = 100;
 
-    [Header("µ¯Ä»ÀàĞÍ")]
-    public DanmakuType danmakuType = DanmakuType.Normal;
+    [Header("å¼¹å¹•ç±»å‹")]
+    public E_DanmakuType danmakuType = E_DanmakuType.Normal;
 
-    [Header("µ¯Ä»Transform")]
+    [Header("å¼¹å¹•Transform")]
     public float scale = 1f;
 
-    [Header("µ¯Ä»äÖÈ¾ÉèÖÃ")]
+    [Header("å¼¹å¹•æ¸²æŸ“è®¾ç½®")]
     public Sprite sprite = null;
     public Color color = Color.white;
 
-    [Header("µ¯Ä»Åö×²Æ÷ÉèÖÃ")]
+    [Header("å¼¹å¹•ç¢°æ’å™¨è®¾ç½®")]
     public ColliderConfig colliderConfig = new();
 
-    [Header("µ¯Ä»ÉËº¦")]
+    [Header("å¼¹å¹•ä¼¤å®³")]
     public float damage = 1f;
 
-    [Header("µ¯Ä»×·×ÙÉèÖÃ")]
+    [Header("å¼¹å¹•è¿½è¸ªè®¾ç½®")]
     [HideInInspector] public float HomingTurnSpeed = 5f;
-    [HideInInspector] public LayerMask HomingTargetLayers = 1; // ÀıÈç Player ²ã
+    [HideInInspector] public LayerMask HomingTargetLayers = 1; // ä¾‹å¦‚ Player å±‚
 
-    [Header("µ¯Ä»ÔË¶¯ÉèÖÃ")]
+    [Header("å¼¹å¹•è¿åŠ¨è®¾ç½®")]
     public bool IsAccelerating = false;
     [HideInInspector] public float MaxSpeed = 10f;
     [HideInInspector] public float Acceleration = 2f;

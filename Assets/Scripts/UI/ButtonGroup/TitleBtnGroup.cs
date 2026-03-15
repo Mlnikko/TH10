@@ -4,7 +4,7 @@ public class TitleBtnGroup : ButtonGroupController
     protected override void OnGroupCancel()
     {
         base.OnGroupCancel();
-        // Ñ¡Ôñ×îºóÒ»¸ö°´Å¥
+        // é€‰æ‹©æœ€åä¸€ä¸ªæŒ‰é’®
         if(currentIndex != groupSize - 1)
         {
             SelectButton(groupSize - 1);

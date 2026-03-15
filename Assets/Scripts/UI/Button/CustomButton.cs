@@ -14,16 +14,16 @@ public class CustomButtonEvent
 
 public class CustomButton : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler, IPointerExitHandler
 {
-    [Header("按钮事件")]
+    [Header("鎸夐挳浜嬩欢")]
     public CustomButtonEvent[] buttonEvents;
 
-    [Header("缩放响应")]
+    [Header("缂╂斁鍝嶅簲")]
     [SerializeField] bool isScaleEnable = true;
     [SerializeField] float hoverScale = 1.05f;
     [SerializeField] float selectScale = 1.05f;
     [SerializeField] float scaleAnimDuration = 0.2f;
 
-    [Header("按钮音效")]
+    [Header("鎸夐挳闊虫晥")]
     [SerializeField] AudioName hoverSound;
     [SerializeField] AudioName unHoverSound;
     [SerializeField] AudioName selectSound;

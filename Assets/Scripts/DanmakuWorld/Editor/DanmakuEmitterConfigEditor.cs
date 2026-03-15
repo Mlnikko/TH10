@@ -13,17 +13,17 @@ public class DanmakuEmitterConfigEditor : Editor
 
         GUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("Ô¤ÀÀ·¢ÉäĞ§¹û", GUILayout.Height(30)))
+        if (GUILayout.Button("é¢„è§ˆå‘å°„æ•ˆæœ", GUILayout.Height(30)))
         {
             DanmakuEmitterConfigViewer viewer = (DanmakuEmitterConfigViewer)target;
             viewer.PreviewEmitterEffect();
         }
 
-        if (GUILayout.Button("±£´æµ±Ç°ÅäÖÃ", GUILayout.Height(30)))
+        if (GUILayout.Button("ä¿å­˜å½“å‰é…ç½®", GUILayout.Height(30)))
         {
             DanmakuEmitterConfigViewer viewer = (DanmakuEmitterConfigViewer)target;
 
-            if (EditorUtility.DisplayDialog("È·ÈÏ±£´æ£¿", "½«¸²¸Ç×Ê²ú", "È·¶¨", "È¡Ïû"))
+            if (EditorUtility.DisplayDialog("ç¡®è®¤ä¿å­˜ï¼Ÿ", "å°†è¦†ç›–èµ„äº§", "ç¡®å®š", "å–æ¶ˆ"))
             {
                 viewer.SaveEmitterConfig();
                 EditorUtility.SetDirty(viewer.emitterConfig);

@@ -6,23 +6,26 @@ public class CharacterConfigViewer : MonoBehaviour
 
     [SerializeField] CharacterConfig characterConfig;
 
-    [Header("ĞÅÏ¢ÅäÖÃ")]
+    [Header("ä¿¡æ¯é…ç½®")]
     [SerializeField] E_Character characterName;
 
     [TextArea(1, 5)]
     [SerializeField] string description;
 
-    [Header("ÒÆËÙÅäÖÃ")]
+    [Header("ç”Ÿå‘½é…ç½®")]
+    [SerializeField] int maxHealth;
+
+    [Header("ç§»é€Ÿé…ç½®")]
     [SerializeField] float speed;
     [SerializeField] float slowSpeed;
 
-    [Header("ÒÆ¶¯Åö×²ÌåÅäÖÃ")]
+    [Header("ç§»åŠ¨ç¢°æ’ä½“é…ç½®")]
     [SerializeField] ColliderConfig moveColliderConfig;
 
-    [Header("ÊÜ»÷Åö×²ÌåÅäÖÃ")]
+    [Header("å—å‡»ç¢°æ’ä½“é…ç½®")]
     [SerializeField] ColliderConfig hitColliderConfig;
 
-    [Header("²Áµ¯Åö×²ÌåÅäÖÃ")]
+    [Header("æ“¦å¼¹ç¢°æ’ä½“é…ç½®")]
     [SerializeField] ColliderConfig grazeColliderConfig;
 
     void Awake()
@@ -36,6 +39,9 @@ public class CharacterConfigViewer : MonoBehaviour
 
         characterName = characterConfig.character;
         description = characterConfig.description;
+
+        maxHealth = characterConfig.maxHealth;
+
         speed = characterConfig.moveSpeed;
         slowSpeed = characterConfig.moveSlowSpeed;
 
@@ -50,6 +56,9 @@ public class CharacterConfigViewer : MonoBehaviour
 
         characterConfig.character = characterName;
         characterConfig.description = description;
+
+        characterConfig.maxHealth = maxHealth;
+
         characterConfig.moveSpeed = speed;
         characterConfig.moveSlowSpeed = slowSpeed;
 

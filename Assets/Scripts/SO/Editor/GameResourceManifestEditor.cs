@@ -14,11 +14,11 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.weaponConfigIds),          ("/Configs/Weapon/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.danmakuConfigIds),         ("/Configs/Danmaku/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.danmakuEmitterConfigIds),  ("/Configs/DanmakuEmitter/", typeof(ScriptableObject)) },
-        { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/EnemyConfigViewer/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/Enemy/", typeof(ScriptableObject)) },
 
         // Prefabs
         { nameof(GameResourceManifest.characterPrefabIds),       ("/Prefabs/Character/", typeof(GameObject)) },
-        { nameof(GameResourceManifest.enemyPrefabIds),           ("/Prefabs/EnemyConfigViewer/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.enemyPrefabIds),           ("/Prefabs/Enemy/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuPrefabIds),         ("/Prefabs/Danmaku/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuEmitterPrefabIds),  ("/Prefabs/DanmakuEmitter/", typeof(GameObject)) },
         { nameof(GameResourceManifest.effectPrefabIds),          ("/Prefabs/Effect/", typeof(GameObject)) },
@@ -34,7 +34,7 @@ public class GameResourceManifestEditor : Editor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-        if (GUILayout.Button("×Ô¶¯Ê¶±ğÌî³ä×ÊÔ´ID"))
+        if (GUILayout.Button("è‡ªåŠ¨è¯†åˆ«å¡«å……èµ„æºID"))
             FillResources();
     }
 
@@ -49,7 +49,7 @@ public class GameResourceManifestEditor : Editor
             string folderPath = $"Assets{kvp.Value.folder}";
             System.Type assetType = kvp.Value.assetType;
 
-            // »ñÈ¡×Ö¶ÎµÄ SerializedProperty£¨ÓÃÓÚĞŞ¸ÄÊı×é£©
+            // è·å–å­—æ®µçš„ SerializedPropertyï¼ˆç”¨äºä¿®æ”¹æ•°ç»„ï¼‰
             SerializedProperty arrayProp = serializedObject.FindProperty(fieldName);
             if (arrayProp == null)
             {
@@ -57,7 +57,7 @@ public class GameResourceManifestEditor : Editor
                 continue;
             }
 
-            // Çå¿ÕÊı×é
+            // æ¸…ç©ºæ•°ç»„
             arrayProp.ClearArray();
 
             if (!Directory.Exists(folderPath))
@@ -66,7 +66,7 @@ public class GameResourceManifestEditor : Editor
                 continue;
             }
 
-            // ÅúÁ¿²éÕÒ×ÊÔ´
+            // æ‰¹é‡æŸ¥æ‰¾èµ„æº
             string[] guids = AssetDatabase.FindAssets($"t:{assetType.Name}", new[] { folderPath });
             var ids = new List<string>();
 
@@ -81,7 +81,7 @@ public class GameResourceManifestEditor : Editor
                     ids.Add(id);
             }
 
-            // ÌîÈë SerializedProperty
+            // å¡«å…¥ SerializedProperty
             arrayProp.arraySize = ids.Count;
             for (int i = 0; i < ids.Count; i++)
             {
@@ -92,6 +92,6 @@ public class GameResourceManifestEditor : Editor
         serializedObject.ApplyModifiedProperties();
         AssetDatabase.SaveAssets();
 
-        Logger.Debug("×ÊÔ´Çåµ¥×Ô¶¯Ìî³äÍê³É£¡£¨»ùÓÚ±âÆ½»¯×Ö¶Î¹æÔò£©", LogTag.Resource, manifest);
+        Logger.Debug("èµ„æºæ¸…å•è‡ªåŠ¨å¡«å……å®Œæˆï¼", LogTag.Resource, manifest);
     }
 }

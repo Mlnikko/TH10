@@ -13,20 +13,20 @@ public class DanmakuConfigEditor : Editor
 
         GUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("Ô¤ÀÀµ¯Ä»±íÏÖ", GUILayout.Height(30)))
+        if (GUILayout.Button("é¢„è§ˆå¼¹å¹•è¡¨ç°", GUILayout.Height(30)))
         {
             DanmakuConfigViewer viewer = (DanmakuConfigViewer)target;
             viewer.PreviewDanmaku();
         }
 
-        if (GUILayout.Button("±£´æµ¯Ä»ÅäÖÃ", GUILayout.Height(30)))
+        if (GUILayout.Button("ä¿å­˜å¼¹å¹•é…ç½®", GUILayout.Height(30)))
         {
             DanmakuConfigViewer viewer = (DanmakuConfigViewer)target;
 
             if (EditorUtility.DisplayDialog(
-            "È·ÈÏ±£´æ£¿",
-            "½«¸²¸Ç×Ê²ú",
-            "È·¶¨", "È¡Ïû"))
+            "ç¡®è®¤ä¿å­˜ï¼Ÿ",
+            "å°†è¦†ç›–èµ„äº§",
+            "ç¡®å®š", "å–æ¶ˆ"))
             {
                 viewer.SaveDanmakuConfig();
                 EditorUtility.SetDirty(viewer.danmakuConfig);

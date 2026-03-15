@@ -17,12 +17,12 @@ public enum E_Weapon : byte
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
 public class WeaponConfig : GameConfig , IReferenceResolver
 {
-    [Header("ÎäÆ÷ÅäÖÃ")]
+    [Header("æ­¦å™¨é…ç½®")]
     public E_Character characterID;
 
     public E_Weapon weaponID;
 
-    [Header("ÎäÆ÷·¢ÉäÆ÷ÅäÖÃ")]
+    [Header("æ­¦å™¨å‘å°„å™¨é…ç½®")]
     public string[] danmakuEmitterConfigIds;
     [NonSerialized]
     public int[] danmakuEmitterCfgIndices;

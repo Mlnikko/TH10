@@ -16,30 +16,30 @@ MonoBehaviour:
   characterPrefabId: character_reimu
   character: 1
   description: "\u535A\u4E3D\u7075\u68A6"
+  maxHealth: 1
   moveSpeed: 2
   moveSlowSpeed: 1
-  moveBoxSize: {x: 0.3, y: 0.5}
-  moveBoxOffset: {x: 0, y: 0}
   moveColliderConfig:
-    type: 1
-    layer: 0
+    isTrigger: 0
+    shape: 1
+    layer: 2
     mask: 0
     radius: 0
     boxSize: {x: 0.3, y: 0.5}
     offset: {x: 0, y: 0.08}
-  hitRadius: 0.04
   hitColliderConfig:
-    type: 2
-    layer: 0
-    mask: 0
+    isTrigger: 0
+    shape: 2
+    layer: 2
+    mask: 20
     radius: 0.04
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}
-  grazeRadius: 0.25
   grazeColliderConfig:
-    type: 2
-    layer: 0
-    mask: 0
+    isTrigger: 1
+    shape: 2
+    layer: 2
+    mask: 16
     radius: 0.25
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}

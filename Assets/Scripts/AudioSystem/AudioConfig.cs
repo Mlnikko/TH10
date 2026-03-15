@@ -35,9 +35,9 @@ public class AudioGroup
     [SerializeField] 
     string displayName;
 
-    [Header("ÒôÆµ·ÖÀà")]
+    [Header("éŸ³é¢‘åˆ†ç±»")]
     public E_AudioGroup audioGroup;
-    [Header("ÒôÆµÅäÖÃ±í")]
+    [Header("éŸ³é¢‘é…ç½®è¡¨")]
     public AudioData[] audioDatas;
 }
 
@@ -47,26 +47,26 @@ public class AudioData
     [SerializeField]
     string displayName;
 
-    [Header("ÒôÆµÃû³Æ")]
+    [Header("éŸ³é¢‘åç§°")]
     public AudioName audioName;
 
-    [Header("ÒôÆµ¼ô¼­")]
+    [Header("éŸ³é¢‘å‰ªè¾‘")]
     public AudioClip clip;
 
-    [Header("ÒôÆµ·Ö×é")]
+    [Header("éŸ³é¢‘åˆ†ç»„")]
     public AudioMixerGroup outPutGroup;
 
-    [Header("ÊÇ·ñ¾²Òô")]
+    [Header("æ˜¯å¦é™éŸ³")]
     public bool isMute;
 
-    [Header("ÒôÆµÒôÁ¿")]
+    [Header("éŸ³é¢‘éŸ³é‡")]
     [Range(0, 1)]
     public float volume;
 
-    [Header("ÒôÆµÊÇ·ñ¿ª¾Ö²¥·Å")]
+    [Header("éŸ³é¢‘æ˜¯å¦å¼€å±€æ’­æ”¾")]
     public bool isPlayOnAwake;
 
-    [Header("ÒôÆµÊÇ·ñÑ­»·²¥·Å")]
+    [Header("éŸ³é¢‘æ˜¯å¦å¾ªç¯æ’­æ”¾")]
     public bool isLoop;
 }
 

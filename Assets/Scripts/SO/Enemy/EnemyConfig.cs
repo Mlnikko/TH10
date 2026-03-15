@@ -17,20 +17,34 @@ public class EnemyConfig : GameConfig , IReferenceResolver
     public string enemyPrefabId;
     [NonSerialized] public int enemyPrefabIndex;
 
-    [Header("Åö×²Æ÷ÅäÖÃ")]
-    public ColliderConfig colliderConfig;
+    public string emitterConfigId;
+    [NonSerialized] public int emitterConfigIndex;
 
-    [Header("»ù´¡ÊôĞÔÅäÖÃ")]
-    public float MaxHealth;
+    [Header("åŸºç¡€å±æ€§é…ç½®")]
+    public int maxHealth;
+
+    [Header("ç¢°æ’å™¨é…ç½®")]
+    public ColliderConfig colliderConfig;
 
     public void ResolveReferences(GameResDB resDb)
     {
-        // 1. ½âÎö·¢ÉäÆ÷Ô¤ÖÆÌåË÷Òı
+        // 1. è§£æå‘å°„å™¨é¢„åˆ¶ä½“ç´¢å¼•
         enemyPrefabIndex = resDb.GetPrefabIndex(enemyPrefabId);
         if (enemyPrefabIndex == -1)
         {
             Logger.Warn(
-                $"[DanmakuEmitterConfig] Prefab not found: '{enemyPrefabId}' " +
+                $"[EnemyConfig] Prefab not found: '{enemyPrefabId}' " +
+                $"(configId: {configId})",
+                LogTag.Resource
+            );
+        }
+
+        // 2. è§£æå‘å°„å™¨é…ç½®ç´¢å¼•
+        emitterConfigIndex = resDb.GetConfigIndex(emitterConfigId);
+        if (emitterConfigIndex == -1)
+        {
+            Logger.Warn(
+                $"[EnemyConfig] Emitter config not found: '{emitterConfigId}' " +
                 $"(configId: {configId})",
                 LogTag.Resource
             );
@@ -40,8 +54,8 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 #if UNITY_EDITOR
     void OnValidate()
     {
-        if (!string.IsNullOrEmpty(enemyPrefabId))
-            enemyPrefabId = enemyPrefabId.ToLowerInvariant().Trim();
+        enemyPrefabId = enemyPrefabId.ToLowerInvariantTrimmed();
+        emitterConfigId = emitterConfigId.ToLowerInvariantTrimmed();
     }
 #endif
 }

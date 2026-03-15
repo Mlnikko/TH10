@@ -20,11 +20,11 @@ public struct RoomInfo
 
 public class RoomManager : SingletonMono<RoomManager>
 {
-    // ====== ÊÂ¼ş£¨UI ÓÃ£©======
+    // ====== äº‹ä»¶ï¼ˆUI ç”¨ï¼‰======
     //public event Action OnRoomCreated;
-    public event Action<RoomInfo> OnRoomInfoUpdated; // ·¿¼äĞÅÏ¢¸üĞÂÊÂ¼ş
+    public event Action<RoomInfo> OnRoomInfoUpdated; // æˆ¿é—´ä¿¡æ¯æ›´æ–°äº‹ä»¶
 
-    // ====== ×´Ì¬ ======
+    // ====== çŠ¶æ€ ======
     public RoomInfo? CurrentRoom { get; private set; }
     public bool IsInRoom => CurrentRoom.HasValue;
     public bool IsHost => NetworkManager.Instance.NetworkRole == NetworkRole.Host;
@@ -32,13 +32,13 @@ public class RoomManager : SingletonMono<RoomManager>
 
     public static byte LocalPlayerIndex;
 
-    // ====== ·¿¼ä²Ù×÷ ======
+    // ====== æˆ¿é—´æ“ä½œ ======
 
     public void CreateRoom(string hostName, ushort port = 7777, byte maxPlayers = 4)
     {
         if (IsInRoom) LeaveRoom();
 
-        // »ñÈ¡±¾»ú¾ÖÓòÍø IP
+        // è·å–æœ¬æœºå±€åŸŸç½‘ IP
         string localIP = NetworkTool.GetLocalIPAddress();
 
         CurrentRoom = new RoomInfo
@@ -51,7 +51,7 @@ public class RoomManager : SingletonMono<RoomManager>
             Port = port
         };
 
-        // Æô¶¯Ö÷»ú
+        // å¯åŠ¨ä¸»æœº
         NetworkManager.Instance.StartHost(port);
 
         Logger.Info($"Created: {CurrentRoom}", LogTag.Room);

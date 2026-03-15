@@ -32,10 +32,10 @@ public class EventManager : Singleton<EventManager>
 {
     Dictionary<E_Event, IEventInfo> eventDict = new();
 
-    #region 无参事件控制
+    #region 鏃犲弬浜嬩欢鎺у埗
     public void RegistEvent(E_Event name, UnityAction action)
     {
-        if (eventDict.ContainsKey(name)) //如果这个action已经注册过了
+        if (eventDict.ContainsKey(name)) //濡傛灉杩欎釜action宸茬粡娉ㄥ唽杩囦簡
             (eventDict[name] as EventInfo).action += action;
         else
             eventDict.Add(name, new EventInfo() { action = action });
@@ -55,10 +55,10 @@ public class EventManager : Singleton<EventManager>
 
     #endregion
 
-    #region 含参事件控制
+    #region 鍚弬浜嬩欢鎺у埗
     public void RegistEvent<T>(E_Event name, UnityAction<T> action)
     {
-        if (eventDict.ContainsKey(name)) //如果这个action已经注册过了
+        if (eventDict.ContainsKey(name)) //濡傛灉杩欎釜action宸茬粡娉ㄥ唽杩囦簡
             (eventDict[name] as EventInfo<T>).action += action;
         else
             eventDict.Add(name, new EventInfo<T>() { action = action });
