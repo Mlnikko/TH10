@@ -1394,6 +1394,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: daf2be8bf9a30d646b7482c0cd40cd42
+    m_Address: cfg_enemywave_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: bd11330accc092c41b0429724d54b4b3, type: 2}
   m_SchemaSet:

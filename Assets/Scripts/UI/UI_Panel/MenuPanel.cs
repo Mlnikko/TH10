@@ -1,5 +1,3 @@
-// MenuPanel.cs
-using UnityEngine;
 using UnityEngine.UI;
 
 public class MenuPanel : UIPanel
@@ -25,11 +23,11 @@ public class MenuPanel : UIPanel
     {
         UIManager.Instance.CloseAll();
         SceneLoader.LoadScene("BattleScene");
+        BattleManager.Instance.EnterBattleScene().Forget();
     }
 
     void OnOnlineModeClicked()
     {
-        // 弹出二级选择窗口
         UIManager.Instance.ShowPanelAsync<OnlineModePanel>().Forget();
     }
 

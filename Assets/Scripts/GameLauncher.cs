@@ -7,6 +7,7 @@ public class GameLauncher : MonoBehaviour
     void Awake()
     {
         _ = UIManager.Instance;
+        _ = InputManager.Instance;
 
         if (IngameDebugPanel != null && enableDebug)
         {

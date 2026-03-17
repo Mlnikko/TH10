@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -67,8 +66,6 @@ public class InputKeyCodeConfig
 
 #endregion
 
-// 移除不必要的引用，如 System.Collections.Generic (如果不再需要 Dictionary)
-
 public class InputManager : SingletonMono<InputManager>
 {
     const int MAX_PLAYERS = 4;
@@ -133,7 +130,6 @@ public class InputManager : SingletonMono<InputManager>
     }
 
     // --- 核心逻辑修改 ---
-
     public FrameInput RecordLocalInput(byte playerIndex, uint logicFrame)
     {
         if (!_isInitialized || playerIndex >= MAX_PLAYERS) return FrameInput.None;
@@ -218,7 +214,6 @@ public class InputManager : SingletonMono<InputManager>
     }
 
     // --- 就绪检查优化 ---
-
     public bool AreAllInputsReady(uint logicFrame, bool[] activePlayers)
     {
         if (!_isInitialized || activePlayers == null) return false;
@@ -246,7 +241,6 @@ public class InputManager : SingletonMono<InputManager>
         }
         return true;
     }
-
     public FrameInput GetInputForFrame(byte playerIndex, uint logicFrame)
     {
         if (!_isInitialized || playerIndex >= MAX_PLAYERS) return FrameInput.None;
@@ -266,9 +260,15 @@ public class InputManager : SingletonMono<InputManager>
         return FrameInput.None;
     }
 
-    // --- 【关键优化 3】彻底删除 CleanupOldFrames ---
-    // 不再需要！环形缓冲自动管理内存，旧数据直接被新数据覆盖。
-    // public void CleanupOldFrames(...) { ... } <--- 删掉它！
+
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F12))
+        {
+            UIManager.Instance.ToggleDebugPanelAsync().Forget();
+        }
+    }
 
     #region 调试显示优化
 

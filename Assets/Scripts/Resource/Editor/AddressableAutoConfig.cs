@@ -63,7 +63,7 @@ public static class AddressableAutoConfig
 
         EditorUtility.SetDirty(settings);
         AssetDatabase.SaveAssets();
-        Logger.Info($"已更新 {count} 个资源的 Addressable Key（带类型前缀）");
+        Logger.Info($"已更新 {count} 个资源的 Addressable Key");
     }
 
     static void ConfigureAssetsByType(string filter, string[] extensions, string prefix, AddressableAssetSettings settings, AddressableAssetGroup group, ref int totalCount, HashSet<string> allKeys)

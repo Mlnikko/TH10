@@ -44,27 +44,15 @@ public class BattleManager : SingletonMono<BattleManager>
     public bool isSinglePlayerMode;
 
     public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
-    public List<PlayerBattleData> allPlayerDatas = new();
+    public List<PlayerBattleData> allPlayerDatas = new(4);
 
     bool[] activePlayers = new bool[4];
 
     int TotalPlayers => allPlayerDatas.Count;
 
-    World battleWorld;
+    World _battleWorld;
 
-    protected override void OnSingletonInit()
-    {
-        InitBattleWorld();
-        WarmupDanmakuPool();
-    }
-
-    async void Start()
-    {
-        await PreloadBattleResourcesAsync();
-        UIManager.Instance.ShowPanelAsync<BattlePreparePanel>().Forget();
-    }
-
-    public async Task PreloadBattleResourcesAsync()
+    public async Task EnterBattleScene()
     {
         if (_isResourcesPreloaded) return;
         try
@@ -87,24 +75,25 @@ public class BattleManager : SingletonMono<BattleManager>
         {
             Logger.Critical("Error during battle resources preloading: ", LogTag.Battle);
         }
+        UIManager.Instance.ShowPanelAsync<BattlePreparePanel>().Forget();
     }
 
     #region 初始化
-    void InitBattleWorld()
+    void PerpareBattleWorld()
     {
-        battleWorld = new World();
+        _battleWorld = new World();
 
-        battleWorld.AddSystem<LifetimeSystem>();
+        _battleWorld.AddSystem<LifetimeSystem>();
 
-        battleWorld.AddSystem<CollisionSystem>();
+        _battleWorld.AddSystem<CollisionSystem>();
 
-        battleWorld.AddSystem<PlayerControlSystem>();
+        _battleWorld.AddSystem<PlayerControlSystem>();
 
-        battleWorld.AddSystem<DanmakuSystem>();
+        _battleWorld.AddSystem<DanmakuSystem>();
 
-        battleWorld.AddSystem<DanmakuEmitSystem>();
+        _battleWorld.AddSystem<DanmakuEmitSystem>();
 
-        battleWorld.AddSystem<PresentationSystem>();
+        _battleWorld.AddSystem<PresentationSystem>();
 
         Logger.Info("Battle ECS World initialized.");
     }
@@ -124,6 +113,16 @@ public class BattleManager : SingletonMono<BattleManager>
     #endregion
 
     #region 战斗启动调用
+
+    #region 怪物相关
+
+    public void AddEnemyTest(EnemyConfig enemyConfig, float posX, float posY)
+    {
+        _battleWorld.EntityFactory.CreateEnemy(enemyConfig, posX, posY);
+        Logger.Info($"Test enemy added at ({posX}, {posY}) with config index {enemyConfig.emitterConfigIndex}.");
+    }
+
+    #endregion
     public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] allPlayerDatas)
     {
         StartMutiPlayerBattle(startFrame, randomSeed, allPlayerDatas);
@@ -153,6 +152,9 @@ public class BattleManager : SingletonMono<BattleManager>
     public void StartSinglePlayerBattle()
     {
         isSinglePlayerMode = true;
+        EnterBattleScene().Forget();
+        PerpareBattleWorld();
+        WarmupDanmakuPool();
         GeneratePlayer();
         CurrentStatus = BattleStatus.InBattle;
     }
@@ -168,11 +170,15 @@ public class BattleManager : SingletonMono<BattleManager>
         {
             AddPlayerData(data);
         }
-
+    
+        EnterBattleScene().Forget();
         // 3. 生成角色（ECS 实体等）
+        PerpareBattleWorld();
+        WarmupDanmakuPool();
+
         GeneratePlayer();
 
-        battleWorld.LogicFrameTimer.ResetToFrame(startFrame);
+        _battleWorld.LogicFrameTimer.ResetToFrame(startFrame);
 
         // 5. 标记进入战斗
        
@@ -194,8 +200,15 @@ public class BattleManager : SingletonMono<BattleManager>
             return;
         }
 
-        foreach (var playerData in allPlayerDatas)
+        for (int i = 0; i < allPlayerDatas.Count; i++)
         {
+            var playerData = allPlayerDatas[i];
+
+            if(playerData.characterId == E_Character.None || playerData.weaponId == E_Weapon.None)
+            {
+                Logger.Error($"Invalid player data for player index {playerData.playerIndex}: characterId={playerData.characterId}, weaponId={playerData.weaponId}");
+                continue;
+            }
             InitializePlayerEntity(playerData);
         }
     }
@@ -203,23 +216,23 @@ public class BattleManager : SingletonMono<BattleManager>
     void InitializePlayerEntity(PlayerBattleData playerData)
     {
         var bornPos = GlobalBattleData.SpawnData.GetPlayerSpawnPos(playerData.playerIndex, TotalPlayers);
-
-        var e_Player = battleWorld.EntityFactory.CreatePlayer(playerData, bornPos.x, bornPos.y);
-        battleWorld.EntityManager.AddComponent(e_Player, new CPoolGetTag());
+        Logger.Debug($"Spawning player {playerData.playerIndex} at position ({bornPos.x}, {bornPos.y})");
+        var e_Player = _battleWorld.EntityFactory.CreatePlayer(playerData, bornPos.x, bornPos.y);
+        _battleWorld.EntityManager.AddComponent(e_Player, new CPoolGetTag());
     }
 
     void Update()
     {
-        if (battleWorld == null) return;
+        if (_battleWorld == null) return;
         if (CurrentStatus != BattleStatus.InBattle) return;
 
         // 累积时间（用于控制帧率）
-        battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
+        _battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
 
         // 【关键】只有时间到了，才尝试处理 CurrentFrame
-        if (battleWorld.LogicFrameTimer.CanAdvance()) // 即 accumulated >= frameInterval
+        if (_battleWorld.LogicFrameTimer.CanAdvance()) // 即 accumulated >= frameInterval
         {
-            uint frameToProcess = battleWorld.LogicFrameTimer.CurrentFrame;
+            uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
 
             FrameInput input = InputManager.Instance.RecordLocalInput(RoomManager.LocalPlayerIndex, frameToProcess);
 
@@ -232,13 +245,13 @@ public class BattleManager : SingletonMono<BattleManager>
             if (isSinglePlayerMode || InputManager.Instance.AreAllInputsReady(frameToProcess, activePlayers))
             {
                 // 执行逻辑
-                battleWorld.LogicTick(frameToProcess);
+                _battleWorld.LogicTick(frameToProcess);
 
                 // 推进到下一帧（现在 CurrentFrame 表示“下一个要处理的帧”）
-                battleWorld.LogicFrameTimer.AdvanceFrame(); // CurrentFrame++
+                _battleWorld.LogicFrameTimer.AdvanceFrame(); // CurrentFrame++
 
                 // 消耗时间
-                battleWorld.LogicFrameTimer.ConsumeFrameTime();
+                _battleWorld.LogicFrameTimer.ConsumeFrameTime();
 
                 // 清理旧输入
                 //InputManager.Instance.CleanupOldFrames(frameToProcess);
@@ -253,11 +266,11 @@ public class BattleManager : SingletonMono<BattleManager>
 
         }
 
-        battleWorld?.Update(Time.deltaTime);
+        _battleWorld?.Update(Time.deltaTime);
     }
 
     void LateUpdate()
     {
-        battleWorld?.LateUpdate(Time.deltaTime);
+        _battleWorld?.LateUpdate(Time.deltaTime);
     }
 }

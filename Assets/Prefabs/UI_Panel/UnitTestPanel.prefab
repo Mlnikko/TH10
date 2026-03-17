@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5491120777769240051}
   - component: {fileID: 3144053582589081449}
-  - component: {fileID: 2582147413064445111}
+  - component: {fileID: 1799716835270810106}
   m_Layer: 5
   m_Name: UnitTestPanel
   m_TagString: Untagged
@@ -46,7 +46,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1114266892376701199}
   m_CullTransparentMesh: 1
---- !u!114 &2582147413064445111
+--- !u!114 &1799716835270810106
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -58,6 +58,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f754b61cff3133b4da8ecd6345d02dbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  addEnemy_button: {fileID: 5168286685880677440}
+  enemyId_inputField: {fileID: 5788625979091134594}
 --- !u!1 &1523077911193374200
 GameObject:
   m_ObjectHideFlags: 0
@@ -141,7 +143,6 @@ GameObject:
   - component: {fileID: 5369487320815491322}
   - component: {fileID: 1036056578974962508}
   - component: {fileID: 5615058311945739399}
-  - component: {fileID: 8445584774197071028}
   m_Layer: 5
   m_Name: EnemyAdd
   m_TagString: Untagged
@@ -208,20 +209,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8445584774197071028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1579807812927136828}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01b40d2991629114cbc7705f3a2ac0b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  button: {fileID: 5168286685880677440}
-  inputField: {fileID: 5788625979091134594}
 --- !u!1 &1745712991473931728
 GameObject:
   m_ObjectHideFlags: 0
@@ -235,7 +222,7 @@ GameObject:
   - component: {fileID: 2701862163915317694}
   - component: {fileID: 5788625979091134594}
   m_Layer: 5
-  m_Name: InputField (TMP)
+  m_Name: EnemyId_InputField
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -565,7 +552,7 @@ GameObject:
   - component: {fileID: 8278112756165854062}
   - component: {fileID: 5168286685880677440}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Add_Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -951,13 +938,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
+  m_fontSize: 36
+  m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
