@@ -12,17 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb0659cc521f3714da71df64a0ef43b3, type: 3}
   m_Name: DM_Star_0
   m_EditorClassIdentifier: 
-  configId: 
   danmakuPrefabId: dm_star_0
   danmakuType: 0
-  localScale: {x: 1, y: 1}
-  sprite: {fileID: 0}
+  scale: 1
+  sprite: {fileID: 538519107, guid: 7f3eac5b9a58dc042a94467433e8c18d, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
-  colliderType: 0
-  colliderLayer: 1
-  colliderOffset: {x: 0, y: 0}
-  size: {x: 0, y: 0}
-  radius: 0
+  colliderConfig:
+    isTrigger: 0
+    shape: 2
+    layer: 16
+    mask: 2
+    radius: 0.04
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
   damage: 1
   HomingTurnSpeed: 5
   HomingTargetLayers:

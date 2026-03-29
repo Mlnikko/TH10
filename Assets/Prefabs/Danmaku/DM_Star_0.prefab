@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6221921395316810844}
   - component: {fileID: 9040115342852333779}
+  - component: {fileID: 2427604558605988081}
   m_Layer: 0
   m_Name: DM_Star_0
   m_TagString: Untagged
@@ -73,14 +74,40 @@ SpriteRenderer:
   m_SortingLayerID: 406419467
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: -1349712159, guid: 984f553d7043b73418103409ec53f2b7, type: 3}
+  m_Sprite: {fileID: 538519107, guid: 7f3eac5b9a58dc042a94467433e8c18d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.32, y: 0.32}
+  m_Size: {x: 0.16, y: 0.16}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &2427604558605988081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3665478407799394565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: facddd21413b71e44a6575bd31fb7e2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  danmakuConfig: {fileID: 11400000, guid: 002873001e15c764785b6acad369ab1e, type: 2}
+  danmakuType: 0
+  scale: 1
+  sprite: {fileID: 538519107, guid: 7f3eac5b9a58dc042a94467433e8c18d, type: 3}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  colliderConfig:
+    isTrigger: 0
+    shape: 2
+    layer: 16
+    mask: 2
+    radius: 0.04
+    boxSize: {x: 0, y: 0}
+    offset: {x: 0, y: 0}
+  damage: 1

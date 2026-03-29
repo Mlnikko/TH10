@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22ddf0ae737f94c43b414da0c727c7b6, type: 3}
+  m_Name: DefaultGlobalPool
+  m_EditorClassIdentifier: 
+  configId: 
+  poolCategories:
+  - categoryName: "\u73A9\u5BB6"
+    category: 0
+    entries:
+    - prefabId: character_reimu
+      maxCapacity: 1
+      defaultWarmupCount: 1
+      allowForceRecycle: 0
+    - prefabId: character_marisa
+      maxCapacity: 1
+      defaultWarmupCount: 1
+      allowForceRecycle: 0
+  - categoryName: "\u654C\u4EBA"
+    category: 1
+    entries:
+    - prefabId: minion_fariy
+      maxCapacity: 200
+      defaultWarmupCount: 50
+      allowForceRecycle: 0
+  - categoryName: "\u5F39\u5E55"
+    category: 2
+    entries:
+    - prefabId: dm_reimu_main
+      maxCapacity: 500
+      defaultWarmupCount: 300
+      allowForceRecycle: 0
+    - prefabId: dm_reimu_homing
+      maxCapacity: 500
+      defaultWarmupCount: 300
+      allowForceRecycle: 0

@@ -34,9 +34,8 @@ public enum SpawnPattern { Line, Grid, Circle, Random, BossCenter }
 public class StageTimelineConfig : GameConfig
 {
     [Header("全局设置")]
-    public string stageId; // 唯一标识，如 "Stage1_Normal"
+    public string stageId;
     public int targetFrameRate = 60; // 设计基准帧率
-    public string stageBgmRef; // 关卡背景音乐
 
     [Header("道中波次 (Mid-Stage Waves)")]
     [Tooltip("按 startFrameOffset 排序，系统在运行时会自动排序以防配置错误")]

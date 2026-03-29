@@ -5,12 +5,10 @@ using System.Runtime.InteropServices;
 public struct CollisionEvent
 {
     // 1. 核心索引 (8 字节)
-    public Entity EntityA;
-    public Entity EntityB;
+    public Entity EntityA, EntityB; // 碰撞双方实体ID
 
     // 2. 必要几何数据 (8 字节) - 用于计算特效位置/朝向/击退
-    public float ContactX;
-    public float ContactY;
+    public float ContactX, ContactY; // 碰撞点坐标
 
 #if UNITY_EDITOR
     public uint Frame; // 4 字节 - 仅编辑器用于调试
@@ -56,11 +54,12 @@ public class CollisionLogicSystem : BaseSystem
 
         var posComp = EntityManager.GetComponentSpan<CPosition>();
         var colComp = EntityManager.GetComponentSpan<CCollider>();
-        var danmakuComp = EntityManager.GetComponentSpan<CDanmaku>(); // 包含 ConfigID, OwnerID
+        var danmakuComp = EntityManager.GetComponentSpan<CDanmaku>();
         var healthComp = EntityManager.GetComponentSpan<CHealth>();
 
-       
-
-       
+        for(int i = 0; i < events.Length; i++)
+        {
+            ref var evt = ref events[i];
+        }
     }
 }

@@ -15,7 +15,7 @@ public class UnitTestPanel : UIPanel
 
     void OnAddEnemy()
     {
-        if(BattleManager.Instance.CurrentStatus != BattleStatus.InBattle)
+        if(BattleManager.Instance.CurrentStatus != E_BattleStatus.InBattle)
         {
             Logger.Warn("Cannot add enemy when not in battle.");
             return;

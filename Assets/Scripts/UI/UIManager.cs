@@ -162,18 +162,17 @@ public class UIManager : SingletonMono<UIManager>
 
     #region 调试面板
     const string UnitTestPanelPrefabName = "UnitTestPanel";
-    UIPanel _unitTestPanel; 
+    UIPanel _unitTestPanel;
     GameObject _unitTestPanelObj;
     /// <summary>
     /// 切换调试面板显示/隐藏
-    /// 绑定到快捷键 (~ 键)
     /// </summary>
     public async Task ToggleDebugPanelAsync()
     {
         if (_unitTestPanelObj == null)
         {
             GameObject prefab = await ResManager.Instance.LoadAsync<GameObject>(E_ResourceCategory.Prefab, UnitTestPanelPrefabName);
-            
+
             if (prefab == null)
             {
                 Debug.LogError("[UIManager] UnitTestPanel prefab not found!");
@@ -183,27 +182,27 @@ public class UIManager : SingletonMono<UIManager>
             // 2. 实例化
             _unitTestPanelObj = Instantiate(prefab, Canvas.transform);
             _unitTestPanelObj.name = "UnitTestPanel_Instance";
-            
+
             // 3. 获取组件并初始化
             _unitTestPanel = _unitTestPanelObj.GetComponent<UIPanel>();
             if (_unitTestPanel == null)
             {
                 _unitTestPanel = _unitTestPanelObj.AddComponent<UnitTestPanel>(); // 确保有脚本
             }
-            
-            // 4. 设置层级最高 (可选，防止被遮挡)
-            _unitTestPanelObj.transform.SetAsLastSibling(); 
-            
+
+            // 4. 设置层级最高
+            _unitTestPanelObj.transform.SetAsLastSibling();
+
             // 5. 初始化 (不传入 stack，不加入 activePanels 字典)
             _unitTestPanel.Initialize();
             _unitTestPanel.OnShow(null);
             _unitTestPanelObj.SetActive(false); // 默认隐藏，等待切换显示
         }
-        
+
         // 6. 切换显示状态
         bool isActive = _unitTestPanelObj.activeSelf;
         _unitTestPanelObj.SetActive(!isActive);
-        
+
         if (!isActive)
         {
             _unitTestPanel.OnShow(null); // 重新显示时刷新数据

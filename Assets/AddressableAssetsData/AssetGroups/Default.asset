@@ -202,43 +202,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b12674d14bb6f419783b196182d84714
-    m_Address: tex_blue checkerboard
+  - m_GUID: 8878f6aeee8f5456ba946015221cdc65
+    m_Address: tex_white question
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 473f10ee963b644f4bef41f2b5dcccc3
-    m_Address: tex_blue stripes
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4a4b973ee4fc740238c6360079c00a17
-    m_Address: tex_dark checkerboard
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c4ce27367278c4380a08bedcd3137ff1
-    m_Address: tex_dark stripes
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9fb04f65535cd47cd8c226d5249a6415
-    m_Address: tex_green checkerboard
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fd001d1555320480192a250126182e39
-    m_Address: tex_green stripes
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ec44aff29dad74095b976479ebc66af8
-    m_Address: tex_red checkerboard
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: af7fd3c28a4714137aa51a67d07709cf
-    m_Address: tex_red stripes
+  - m_GUID: 2485a46199e57482fb858f4c4982436b
+    m_Address: tex_white plus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -249,166 +219,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 338de845e320441e787608e5eb54ce36
     m_Address: tex_white stripes
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0d1cc1614df9a42d8aec0469b1e60a5e
-    m_Address: tex_blue circle button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7d0420c800f674185a20c5f8dd6d3be6
-    m_Address: tex_blue circle outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3c6eef88ff67043a3ab37af593f8620a
-    m_Address: tex_blue round button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5fa85b6040900479daac222f222158ff
-    m_Address: tex_blue round outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0b4d929628fb1451b84de65e27f0789d
-    m_Address: tex_blue rounded button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4ef3f5adb6c6d4226a87a50ae9eb8b91
-    m_Address: tex_blue rounded outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0cafdc2798ba044ad8c47e37dfe1f056
-    m_Address: tex_blue square button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6bc454c18443941b496e577e1eb93a67
-    m_Address: tex_blue square outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 78a0bf8f458524411bab8f762f983f77
-    m_Address: tex_dark circle button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 79008e6d026d84f94a594b62fa815314
-    m_Address: tex_dark circle outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8e354bd2437594e9bb376ffa06c9ff6b
-    m_Address: tex_dark round button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 40c84cb4693f74c73acdbe064b8d7000
-    m_Address: tex_dark round outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a80101232bdf848a38a10881ea870425
-    m_Address: tex_dark rounded button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1ed88a02cd6854e13bdcea1895d8dafe
-    m_Address: tex_dark rounded outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 28a56a91eea824a6595651bfd457e79e
-    m_Address: tex_dark square button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6c7b81f3c72974de19ac7027704d8f50
-    m_Address: tex_dark square outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9bf5fe38fdda04af29528c06a571c837
-    m_Address: tex_green circle button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9dc06b146dc694d3083c3ea4fb0079d2
-    m_Address: tex_green circle outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3702a3287128749ccbf7c9bd7c13c871
-    m_Address: tex_green round button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 40689eed5d9294eddb110e5b43f5bdff
-    m_Address: tex_green round outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 39a35d5e6ddab4e4da9ea5e72286253a
-    m_Address: tex_green rounded button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cc4159309963a4576864561a4f6d8d32
-    m_Address: tex_green rounded outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2a0d1dbd56dec40abb8138c0592c299a
-    m_Address: tex_green square button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d2d66a13291340f1acbb8bca320d151
-    m_Address: tex_green square outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7efd4168743fc4c218a9101148393244
-    m_Address: tex_red circle button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9933a3b8f6b6243229059924b14bc48c
-    m_Address: tex_red circle outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dca951feb01de487f97d842fbe9fb1f5
-    m_Address: tex_red round button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 543b3bfb0b8044678ab13fbe1b99886f
-    m_Address: tex_red round outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c1f270fc399274b49ababce4dfd30d10
-    m_Address: tex_red rounded button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1a6c2962623c74bc1ba317def2d16680
-    m_Address: tex_red rounded outline button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b63016ec16ac04cfbaf61580a21a4d5d
-    m_Address: tex_red square button
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 511ac66591df94f2490927beaa96acc5
-    m_Address: tex_red square outline button
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -452,186 +262,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac1796dcbf91c4ce9852cb0e516aa614
-    m_Address: tex_dark bars
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 60b3a0f5c4ccc42f7b8301ee4973f512
-    m_Address: tex_dark checkmark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e2673fc7391ff4256918cd4d93943a84
-    m_Address: tex_dark dots
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1b6ddff80fe8a40b38397ad0d29423c0
-    m_Address: tex_dark down arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: eb1fdf509ce5e41f18c2a9500ed4fea5
-    m_Address: tex_dark exclamation
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8c3c0166eb1b643f4a06a5354040bf33
-    m_Address: tex_dark gear
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 62903b20a9e7543f788f983367e44657
-    m_Address: tex_dark house
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 64962464d95374bec9ca01c28b3a54a2
-    m_Address: tex_dark info
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bf0f86f7c3dbe4c8eab456408a66edc1
-    m_Address: tex_dark left arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2955a694378af44dca80c7797d631fa4
-    m_Address: tex_dark minus
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7ea27d795133348878d46789b5fe4337
-    m_Address: tex_dark mute
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 41ffa33d53fb44752a17c9253186686f
-    m_Address: tex_dark pause
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ec64c286fac2449848bf69c46b4980d1
-    m_Address: tex_dark play
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8aba7b2c03e82491389e5d6705552b87
-    m_Address: tex_dark plus
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4011a12b3d33344f3964cfa65c962379
-    m_Address: tex_dark question
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7d83dc62e94b64eba9abcfd29451a40a
-    m_Address: tex_dark right arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cf48101c791c04974bbd765a063dab44
-    m_Address: tex_dark sound
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 819578eb43eda44b0b066a9a66e75363
-    m_Address: tex_dark up arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2cb5d8329fe554f84b289db2aac8dd93
-    m_Address: tex_dark x
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bb5a5f985a9db4957a0522f2fc7e0894
-    m_Address: tex_white bars
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bf28281279a5e479c8105c959d2268aa
-    m_Address: tex_white checkmark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e322a7a418040463fb053c543d2ea9fc
-    m_Address: tex_white dots
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac1ea26e75c8e47a08fbbfa39f286d29
-    m_Address: tex_white down arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 777beaf84bb8b41d4ae3fd993af441f3
-    m_Address: tex_white exclamation
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f55f75488890d4747835fc8299828fe7
-    m_Address: tex_white gear
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 05b85860d5cf649478cdd1a1ec3c95a7
-    m_Address: tex_white house
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 31109ff4e70d141018ad17620c1728db
-    m_Address: tex_white info
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a45ca74a8e3554df5862c1cc65fbc192
-    m_Address: tex_white left arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ff2a254658ad5427fbb6aa23e6c5ec95
-    m_Address: tex_white minus
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bc560b3b0ac724b68ad7810f7dcaad73
-    m_Address: tex_white mute
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f202d0535d8d34970abcfaa21aba2019
-    m_Address: tex_white pause
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4d100b612cc9d4bac8fee900296353ae
-    m_Address: tex_white play
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2485a46199e57482fb858f4c4982436b
-    m_Address: tex_white plus
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8878f6aeee8f5456ba946015221cdc65
-    m_Address: tex_white question
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 56b5445fb30cc460a8bdf929fc626bf9
-    m_Address: tex_white right arrow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e7ff8ffb2f30c4a898a73e447e53cc36
-    m_Address: tex_white sound
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e22d3a7dcdf3347a9bdbd9c26bf18385
     m_Address: tex_white up arrow
     m_ReadOnly: 0
@@ -642,73 +272,38 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 631806e346db9455e9f14819df36b7a9
-    m_Address: tex_blue input field
+  - m_GUID: e7ff8ffb2f30c4a898a73e447e53cc36
+    m_Address: tex_white sound
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f30f367f46e8043d28e148ddbdb619d7
-    m_Address: tex_dark input field
+  - m_GUID: 56b5445fb30cc460a8bdf929fc626bf9
+    m_Address: tex_white right arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c8f60bd04999c401fa9fd3dbbd0dbb51
-    m_Address: tex_green input field
+  - m_GUID: 777beaf84bb8b41d4ae3fd993af441f3
+    m_Address: tex_white exclamation
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9b7d83189e043421abd9b3bce627d152
-    m_Address: tex_red input field
+  - m_GUID: bf28281279a5e479c8105c959d2268aa
+    m_Address: tex_white checkmark
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac1ea26e75c8e47a08fbbfa39f286d29
+    m_Address: tex_white down arrow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e322a7a418040463fb053c543d2ea9fc
+    m_Address: tex_white dots
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f552135dd8b234310af7e8710d71ad48
     m_Address: tex_white input field
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 787cf6daf0d2d45a5b8f95a848d703b5
-    m_Address: tex_fade to black
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f842610c9b48c40c18c82ecc44966062
-    m_Address: tex_blue round inactive tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e6288fee0c38640ec9bae245aba978fb
-    m_Address: tex_blue round tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d00475e1c93c0468a96b7dd4d72003e0
-    m_Address: tex_dark round inactive tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 93c63e67306814d6486fd7bee93f4426
-    m_Address: tex_dark round tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d0e862efef437402cbac5561e0c41ccf
-    m_Address: tex_green round inactive tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7aae8e35187dc4abba6b5b5656e303f6
-    m_Address: tex_green round tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c5c88878883a3449b838351c70fe3608
-    m_Address: tex_red round inactive tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 006f88eb96b2444f7b0ca916c60fec9c
-    m_Address: tex_red round tab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -719,86 +314,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5ac0cae87edd146fea9dbf184c34a717
     m_Address: tex_white round tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cba7ce4a138bc4fa1be5ea62e1fc17b7
-    m_Address: tex_blue rounded switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b457806e19ef442229e0cd49418d1d92
-    m_Address: tex_blue rounded switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9aa581cf681c040a4a19e43d6bfbf78d
-    m_Address: tex_blue square switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4071528e8551d4ce6b9cd02607d1858d
-    m_Address: tex_blue square switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 58fb70e7b882b41b889205ead88b389f
-    m_Address: tex_dark rounded switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8b0b36ec102434636b1c95ff0e870fbc
-    m_Address: tex_dark rounded switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 10bf3731434a64a9a9e5d595c5245e7a
-    m_Address: tex_dark square switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c02de5852d43e4e23bc0a4b5cc266230
-    m_Address: tex_dark square switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 50286193103a74a07858afe56b85838c
-    m_Address: tex_green rounded switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d63f0731b37c4f8a92f30aed16fd0f0
-    m_Address: tex_green rounded switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 32bcd02d627c148168a2a603223ad80b
-    m_Address: tex_green square switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 080cf1c8b2e3243bd8caf2c7275f36d7
-    m_Address: tex_green square switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 68861e1744d114856b34bf45a409f326
-    m_Address: tex_red rounded switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0abaefb49cb9f499faaa0e59e90d7e58
-    m_Address: tex_red rounded switch on
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fdfa37b3878264042b15f7358338e199
-    m_Address: tex_red square switch off
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4dc189fcf51084765988e5b7bb8bed7e
-    m_Address: tex_red square switch on
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -822,43 +337,43 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7974d998bb2ae4cd9b79b452c60029f8
-    m_Address: tex_blue rounded window
+  - m_GUID: ff2a254658ad5427fbb6aa23e6c5ec95
+    m_Address: tex_white minus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 439d5b7b84deb4a9596236dfe5b9d797
-    m_Address: tex_blue square window
+  - m_GUID: bc560b3b0ac724b68ad7810f7dcaad73
+    m_Address: tex_white mute
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 82f94fe808b5341fd9566d544c5cb6c3
-    m_Address: tex_dark rounded window
+  - m_GUID: 4d100b612cc9d4bac8fee900296353ae
+    m_Address: tex_white play
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0c9c1783230404e3ea3930be66eab709
-    m_Address: tex_dark square window
+  - m_GUID: f55f75488890d4747835fc8299828fe7
+    m_Address: tex_white gear
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b79e5e858702844669f573cd10eb1ddf
-    m_Address: tex_green rounded window
+  - m_GUID: 31109ff4e70d141018ad17620c1728db
+    m_Address: tex_white info
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a2dc67863e77d4627ad3970d18ea41e3
-    m_Address: tex_green square window
+  - m_GUID: f202d0535d8d34970abcfaa21aba2019
+    m_Address: tex_white pause
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f79c91048c950436ca75cb699c7a34bc
-    m_Address: tex_red rounded window
+  - m_GUID: 05b85860d5cf649478cdd1a1ec3c95a7
+    m_Address: tex_white house
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 27a61c3d0bc70471fb85b08b1faf6251
-    m_Address: tex_red square window
+  - m_GUID: a45ca74a8e3554df5862c1cc65fbc192
+    m_Address: tex_white left arrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1009,8 +524,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 94372b37536c348c69ca263f84cda3f8
-    m_Address: cfg_montserrat-regular sdf
+  - m_GUID: bb5a5f985a9db4957a0522f2fc7e0894
+    m_Address: tex_white bars
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1396,6 +911,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: daf2be8bf9a30d646b7482c0cd40cd42
     m_Address: cfg_enemywave_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb6728bf3b8ddb94ca3bb52ac71b58f7
+    m_Address: cfg_stagepool_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5d4742312fd799468ad69c43aa7d879
+    m_Address: cfg_defaultglobalpool
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

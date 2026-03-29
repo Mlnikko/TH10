@@ -34,7 +34,7 @@ public class EnemyConfig : GameConfig , IReferenceResolver
         {
             Logger.Warn(
                 $"[EnemyConfig] Prefab not found: '{enemyPrefabId}' " +
-                $"(configId: {configId})",
+                $"(configId: {ConfigId})",
                 LogTag.Resource
             );
         }
@@ -45,7 +45,7 @@ public class EnemyConfig : GameConfig , IReferenceResolver
         {
             Logger.Warn(
                 $"[EnemyConfig] Emitter config not found: '{emitterConfigId}' " +
-                $"(configId: {configId})",
+                $"(configId: {ConfigId})",
                 LogTag.Resource
             );
         }

@@ -104,7 +104,7 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
         {
             Logger.Warn(
                 $"[DanmakuEmitterConfig] Prefab not found: '{emitterPrefabId}' " +
-                $"(configId: {configId})",
+                $"(configId: {ConfigId})",
                 LogTag.Resource
             );
         }
@@ -120,7 +120,7 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
                 {
                     Logger.Warn(
                         $"[DanmakuEmitterConfig] Danmaku config not found: '{danmakuConfigIds[i]}' " +
-                        $"(in emitter: {configId})",
+                        $"(in emitter: {ConfigId})",
                         LogTag.Resource
                     );
                 }

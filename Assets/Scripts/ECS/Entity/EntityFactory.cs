@@ -1,5 +1,4 @@
 using UnityEngine;
-
 public class EntityFactory
 {
     readonly EntityManager _entityManager;
@@ -23,8 +22,6 @@ public class EntityFactory
             Logger.Error($"CharacterConfig not found for Key: {characterId}");
             return Entity.Null;
         }
-
-        GameObjectPoolManager.Instance.WarmupPool(characterConfig.characterPrefabIndex, 1);
 
         _entityManager.AddComponent(e_player, new CPosition(posX, posY));
         _entityManager.AddComponent(e_player, new CVelocity(0, 0));
@@ -83,17 +80,18 @@ public class EntityFactory
         _entityManager.AddComponent(e_danmaku, new CPosition(posX, posY));
         _entityManager.AddComponent(e_danmaku, new CRotation(rotZ));
         _entityManager.AddComponent(e_danmaku, new CVelocity(velX, velY));
-        _entityManager.AddComponent(e_danmaku, new CCollider(
-            true,
-            danmakuCfg.colliderConfig.shape,
-            danmakuCfg.colliderConfig.layer,
-            danmakuCfg.colliderConfig.mask,
-            danmakuCfg.colliderConfig.offset.x,
-            danmakuCfg.colliderConfig.offset.y,
-            danmakuCfg.colliderConfig.radius,
-            danmakuCfg.colliderConfig.boxSize.x,
-            danmakuCfg.colliderConfig.boxSize.y
-            ));
+        _entityManager.AddComponent(e_danmaku, new CCollider
+        {
+            isActive = true,
+            shape = danmakuCfg.colliderConfig.shape,
+            layer = danmakuCfg.colliderConfig.layer,
+            mask = danmakuCfg.colliderConfig.mask,
+            offsetX = danmakuCfg.colliderConfig.offset.x,
+            offsetY = danmakuCfg.colliderConfig.offset.y,
+            radius = danmakuCfg.colliderConfig.radius,
+            width = danmakuCfg.colliderConfig.boxSize.x,
+            height = danmakuCfg.colliderConfig.boxSize.y
+        });
 
         return e_danmaku;
     }
@@ -101,14 +99,17 @@ public class EntityFactory
     public Entity CreateEnemy(EnemyConfig enemyConfig, float posX, float posY)
     {
         Entity e_enemy = _entityManager.CreateEntity();
-        _entityManager.AddComponent(e_enemy, new CEnemy{enemyCfgIndex = enemyConfig.emitterConfigIndex, currentHealth = enemyConfig.maxHealth});
+        var enemyCfgIndex = GameResDB.Instance.GetConfigIndex(enemyConfig.ConfigId);
+        _entityManager.AddComponent(e_enemy, new CEnemy{
+            enemyCfgIndex = enemyCfgIndex,
+            currentHealth = enemyConfig.maxHealth
+            });
         _entityManager.AddComponent(e_enemy, new CPosition(posX, posY));
         _entityManager.AddComponent(e_enemy, new CVelocity(0, 0));
         _entityManager.AddComponent(e_enemy, new CCollider
         {
             isActive = true,
-            isDirty = false,
-            type = enemyConfig.colliderConfig.shape,
+            shape = enemyConfig.colliderConfig.shape,
             layer = enemyConfig.colliderConfig.layer,
             mask = enemyConfig.colliderConfig.mask,
             offsetX = enemyConfig.colliderConfig.offset.x,

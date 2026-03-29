@@ -15,6 +15,7 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.danmakuConfigIds),         ("/Configs/Danmaku/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.danmakuEmitterConfigIds),  ("/Configs/DanmakuEmitter/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/Enemy/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.poolConfigIds),            ("/Configs/Pool/", typeof(ScriptableObject)) },
 
         // Prefabs
         { nameof(GameResourceManifest.characterPrefabIds),       ("/Prefabs/Character/", typeof(GameObject)) },

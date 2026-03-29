@@ -4,8 +4,7 @@ using System.Runtime.CompilerServices;
 /// <summary>
 /// 组件容器：为每种组件类型维护独立的存储和状态位图。
 /// </summary>
-/// <typeparam name="T"></typeparam>
-
+/// <typeparam name="T">组件</typeparam>
 internal static class ComponentStorage<T> where T : struct, IComponent
 {
     public static readonly T[] Components = new T[EntityManager.MAX_ENTITIES];
@@ -14,7 +13,6 @@ internal static class ComponentStorage<T> where T : struct, IComponent
     public static readonly int[] ActiveIndices = new int[EntityManager.MAX_ENTITIES];
     public static readonly int[] IndexInActiveList = new int[EntityManager.MAX_ENTITIES];
     public static int ActiveCount = 0;
-
 
     static ComponentStorage()
     {
@@ -25,7 +23,6 @@ internal static class ComponentStorage<T> where T : struct, IComponent
         }
     }
 
-    // === 修改 Add 逻辑 ===
     public static void Add(int index, in T component)
     {
         if ((uint)index >= EntityManager.MAX_ENTITIES) return;
@@ -47,7 +44,6 @@ internal static class ComponentStorage<T> where T : struct, IComponent
         ActiveCount++;
     }
 
-    // === 修改 Remove 逻辑 (关键优化) ===
     public static void Remove(int index)
     {
         if ((uint)index >= EntityManager.MAX_ENTITIES || !HasComponent.Get(index))
@@ -76,7 +72,6 @@ internal static class ComponentStorage<T> where T : struct, IComponent
         ActiveCount--;
     }
 
-    // === 极速遍历接口 ===
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Span<int> GetActiveIndices()
     {

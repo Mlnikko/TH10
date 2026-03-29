@@ -24,6 +24,8 @@ public class PresentationSystem : BaseSystem
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var danmakus = EntityManager.GetComponentSpan<CDanmaku>();
         var players = EntityManager.GetComponentSpan<CPlayer>();
+        var enemies = EntityManager.GetComponentSpan<CEnemy>();
+
         // 其他组件...
 
         for (int i = 0; i < indices.Length; i++)
@@ -56,12 +58,12 @@ public class PresentationSystem : BaseSystem
                     }
                 }
             }
-            else if(EntityManager.HasComponent<CPlayer>(entity))
+            else if (EntityManager.HasComponent<CPlayer>(entity))
             {
                 ref var player = ref players[entityIndex];
                 var config = GameResDB.Instance.GetConfig<CharacterConfig>(player.characterCfgIndex);
 
-                if(config != null)
+                if (config != null)
                 {
                     int prefabIndex = config.characterPrefabIndex;
                     go = GameObjectPoolManager.Instance.Get(prefabIndex);
@@ -74,10 +76,28 @@ public class PresentationSystem : BaseSystem
                 }
             }
 
+            else if (EntityManager.HasComponent<CEnemy>(entity))
+            {
+                ref var enemy = ref enemies[entityIndex];
+                var config = GameResDB.Instance.GetConfig<EnemyConfig>(enemy.enemyCfgIndex);
+
+                if (config != null)
+                {
+                    int prefabIndex = config.enemyPrefabIndex;
+                    go = GameObjectPoolManager.Instance.Get(prefabIndex);
+                    if (go != null)
+                    {
+                        go.transform.position = spawnPos;
+                        go.SetActive(true);
+                        updater = new EnemyUpdater(go);
+                    }
+                }
+            }
+
             if (go != null && updater != null)
             {
                 // 建立桥接：添加 CGameObjectLink，注册 Updater
-                World.GameObjectBridge.Link(entity, go, updater, EntityManager);           
+                World.GameObjectBridge.Link(entity, go, updater, EntityManager);
             }
             else
             {

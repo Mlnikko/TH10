@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public class DanmakuSystem : BaseSystem
 {
@@ -8,7 +9,9 @@ public class DanmakuSystem : BaseSystem
 
         var danmakus = EntityManager.GetComponentSpan<CDanmaku>();
         var positions = EntityManager.GetComponentSpan<CPosition>();
+        var rotations = EntityManager.GetComponentSpan<CRotation>();
         var velocities = EntityManager.GetComponentSpan<CVelocity>();
+        var colliders = EntityManager.GetComponentSpan<CCollider>();
 
         for (int i = 0; i < indices.Length; i++)
         {
@@ -16,9 +19,12 @@ public class DanmakuSystem : BaseSystem
 
             ref var danmaku = ref danmakus[idx];
             ref var position = ref positions[idx];   
+            ref var rotation = ref rotations[idx];
             ref var velocity = ref velocities[idx];
+            ref var collider = ref colliders[idx];
 
             UpdateDanmakuPosition(ref position, ref velocity);
+            UpdateDanmakuRotation(ref rotation, ref velocity);
             RecycleOutOfBoundsDanmaku(position, idx);
         }
     }
@@ -27,6 +33,11 @@ public class DanmakuSystem : BaseSystem
     {
         position.x += velocity.vx;
         position.y += velocity.vy;
+    }
+
+    void UpdateDanmakuRotation(ref CRotation rotation, ref CVelocity velocity)
+    {
+        rotation.angle = MathF.Atan2(velocity.vy, velocity.vx) * Mathf.Rad2Deg;
     }
 
     // 弹幕超出边界后回收

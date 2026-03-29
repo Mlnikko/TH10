@@ -103,7 +103,7 @@ public class DeterministicGrid
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static void GetBounds(float cx, float cy, in CCollider col, out float minX, out float minY, out float maxX, out float maxY)
     {
-        if (col.type == E_ColliderShape.Circle)
+        if (col.shape == E_ColliderShape.Circle)
         {
             minX = cx - col.radius;
             minY = cy - col.radius;

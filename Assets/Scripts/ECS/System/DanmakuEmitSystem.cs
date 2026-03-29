@@ -25,7 +25,7 @@ public class DanmakuEmitSystem : BaseSystem
                 continue;
             }
 
-            ProcessEmission(ref emitter, position.x, position.y, rotation.rotZ, currentFrame);
+            ProcessEmission(ref emitter, position.x, position.y, rotation.angle, currentFrame);
         }
     }
 

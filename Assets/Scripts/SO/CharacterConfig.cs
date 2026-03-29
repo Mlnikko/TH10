@@ -50,7 +50,7 @@ public class CharacterConfig : GameConfig, IReferenceResolver
         characterPrefabIndex = resDb.GetPrefabIndex(characterPrefabId);
         if (characterPrefabIndex == -1)
         {
-            Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {configId})", LogTag.Resource);
+            Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {ConfigId})", LogTag.Resource);
         }
     }
 }

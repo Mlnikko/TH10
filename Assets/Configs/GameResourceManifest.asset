@@ -34,6 +34,9 @@ MonoBehaviour:
   - dme_reimu_homing
   - dme_reimu_main
   - dme_test
+  poolConfigIds:
+  - defaultglobalpool
+  - stagepool_1
   battleAreaConfigId: defaultbattlearea
   characterPrefabIds:
   - character_marisa

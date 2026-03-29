@@ -9,8 +9,6 @@ public interface IPoolable
 
 public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
 {
-    // 【核心优化】直接使用数组！
-    // 下标 = enemyPrefabIndex。访问速度：CPU 指令级，无 Hash，无分配。
     Queue<GameObject>[] _pools;
     Transform[] _poolRoots; // 每个池对应的父节点
     // 反向映射：GameObject -> enemyPrefabIndex
@@ -44,7 +42,7 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
     }
 
     /// <summary>
-    /// 预热指定索引的池
+    /// 预热池
     /// </summary>
     public void WarmupPool(int prefabIndex, int count)
     {
@@ -90,7 +88,17 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
 
         Logger.Info($"Pool Warmed: Index[{prefabIndex}] x{count}");
     }
-
+    public void WarmupPool(string prefabId, int count)
+    {
+        int prefabIndex = GameResDB.Instance.GetPrefabIndex(prefabId);
+        if (prefabIndex < 0)
+        {
+            Logger.Error($"Invalid prefabId: {prefabId}. Cannot find index in GameResDB.");
+            return;
+        }
+        WarmupPool(prefabIndex, count);
+    }
+    
     void CreateAndEnqueue(int prefabIndex, GameObject prefab, Queue<GameObject> queue, Transform root)
     {
         var obj = Instantiate(prefab, root); // 直接指定父节点

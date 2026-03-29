@@ -60,7 +60,7 @@ public class WeaponConfig : GameConfig , IReferenceResolver
                 {
                     Logger.Warn(
                         $"[WeaponConfig] DanmakuEmitter config not found: '{emitterId}' " +
-                        $"(in weapon: {configId})",
+                        $"(in weapon: {ConfigId})",
                         LogTag.Resource
                     );
                 }

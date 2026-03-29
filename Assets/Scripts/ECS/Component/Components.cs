@@ -39,10 +39,13 @@ public struct CPosition : IComponent
 
 public struct CRotation : IComponent
 {
-    public float rotZ;
-    public CRotation(float rotZ)
+    /// <summary>
+    /// 旋转角度，单位为度
+    /// </summary>
+    public float angle;
+    public CRotation(float angle)
     {
-        this.rotZ = rotZ;
+        this.angle = angle;
     }
 }
 
@@ -54,12 +57,6 @@ public struct CVelocity : IComponent
         this.vx = vx;
         this.vy = vy;
     }
-}
-
-public struct CLifetime : IComponent
-{
-    public uint spawnFrame;      // 实体创建时的逻辑帧号
-    public uint maxLifeFrames;   // 最大生存帧数
 }
 
 #endregion
@@ -198,7 +195,7 @@ public struct CCollider : IComponent
     public bool isActive;
 
     // 碰撞体类型
-    public E_ColliderShape type;
+    public E_ColliderShape shape;
 
     // 碰撞层
     public E_ColliderLayer layer;
@@ -215,22 +212,8 @@ public struct CCollider : IComponent
     // Rect
     public float width, height;
 
-    // 脏标记
-    public bool isDirty;
-
-    public CCollider(bool isActive, E_ColliderShape type, E_ColliderLayer layer, E_ColliderLayer mask, float offsetX, float offsetY, float radius, float width, float height)
-    {
-        this.isActive = isActive;
-        this.type = type;
-        this.layer = layer;
-        this.mask = mask;
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
-        this.radius = radius;
-        this.width = width;
-        this.height = height;
-        isDirty = false; // 默认未修改
-    }
+    // // 脏标记
+    // public bool isDirty;
 }
 #endregion
 

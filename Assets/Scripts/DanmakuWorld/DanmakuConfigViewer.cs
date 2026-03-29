@@ -7,9 +7,6 @@ public class DanmakuConfigViewer : MonoBehaviour
 
     [SerializeField] E_DanmakuType danmakuType;
 
-    [Header("弹幕池大小")]
-    [SerializeField] int poolSize;
-
     [Header("弹幕缩放")]
     [SerializeField] float scale;
 
@@ -29,9 +26,6 @@ public class DanmakuConfigViewer : MonoBehaviour
             Logger.Warn("弹幕配置文件未设置", LogTag.Config);
             return;
         }
-
-        poolSize = danmakuConfig.poolSize;
-
         scale = danmakuConfig.scale;
 
         sprite = danmakuConfig.sprite;
@@ -53,7 +47,6 @@ public class DanmakuConfigViewer : MonoBehaviour
             Logger.Warn("弹幕配置文件未设置", LogTag.Config);
             return;
         }
-        danmakuConfig.poolSize = poolSize;
         danmakuConfig.scale = scale;
 
         danmakuConfig.sprite = sprite;

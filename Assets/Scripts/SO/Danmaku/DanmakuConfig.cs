@@ -9,8 +9,6 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
     [NonSerialized]
     public int danmakuPrefabIndex;
 
-    public int poolSize = 100;
-
     [Header("弹幕类型")]
     public E_DanmakuType danmakuType = E_DanmakuType.Normal;
 
@@ -51,7 +49,7 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
         {
             Logger.Warn(
                 $"[DanmakuConfig] Prefab not found: '{danmakuPrefabId}' " +
-                $"(configId: {configId})",
+                $"(configId: {ConfigId})",
                 LogTag.Resource
             );
         }

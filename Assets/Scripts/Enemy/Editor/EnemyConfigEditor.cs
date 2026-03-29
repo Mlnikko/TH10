@@ -1,6 +1,5 @@
 using UnityEditor;
 using UnityEngine;
-using static UnityEngine.GridBrushBase;
 
 [CustomEditor(typeof(EnemyConfigViewer), true)]
 public class EnemyConfigEditor : Editor
@@ -23,7 +22,6 @@ public class EnemyConfigEditor : Editor
                 return;
             }
             viewer.LoadEnemyConfig();
-            Logger.Info("敌人配置已加载并预览！");
         }
 
         if (GUILayout.Button("应用并保存当前配置", GUILayout.Height(30)))
@@ -42,7 +40,6 @@ public class EnemyConfigEditor : Editor
                 viewer.SaveEnemyConfig();
                 EditorUtility.SetDirty(viewer.EnemyConfig);
                 AssetDatabase.SaveAssets();
-                Logger.Info("敌人配置已保存！");
             }
         }
 

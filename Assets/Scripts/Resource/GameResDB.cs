@@ -103,6 +103,7 @@ public class GameResDB : Singleton<GameResDB>
             allConfigIds.AddRange(manifest.weaponConfigIds);
             allConfigIds.AddRange(manifest.danmakuConfigIds);
             allConfigIds.AddRange(manifest.danmakuEmitterConfigIds);
+            allConfigIds.AddRange(manifest.poolConfigIds);
 
             if (!string.IsNullOrEmpty(manifest.battleAreaConfigId))
                 allConfigIds.Add(manifest.battleAreaConfigId);

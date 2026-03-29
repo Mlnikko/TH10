@@ -16,7 +16,7 @@ MonoBehaviour:
   enemyType: 1
   enemyPrefabId: minion_fariy
   emitterConfigId: dme_enemy_base
-  maxHealth: 0
+  maxHealth: 100
   colliderConfig:
     isTrigger: 0
     shape: 1

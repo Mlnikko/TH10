@@ -16,7 +16,7 @@ public struct PlayerBattleData
     }
 }
 
-public enum BattleStatus
+public enum E_BattleStatus
 {
     Prepare,
     InBattle
@@ -43,7 +43,7 @@ public class BattleManager : SingletonMono<BattleManager>
 
     public bool isSinglePlayerMode;
 
-    public BattleStatus CurrentStatus { get; private set; } = BattleStatus.Prepare;
+    public E_BattleStatus CurrentStatus { get; private set; } = E_BattleStatus.Prepare;
     public List<PlayerBattleData> allPlayerDatas = new(4);
 
     bool[] activePlayers = new bool[4];
@@ -78,56 +78,59 @@ public class BattleManager : SingletonMono<BattleManager>
         UIManager.Instance.ShowPanelAsync<BattlePreparePanel>().Forget();
     }
 
-    #region 初始化
     void PerpareBattleWorld()
     {
         _battleWorld = new World();
-
-        _battleWorld.AddSystem<LifetimeSystem>();
-
         _battleWorld.AddSystem<CollisionSystem>();
-
+        _battleWorld.AddSystem<CollisionLogicSystem>();
         _battleWorld.AddSystem<PlayerControlSystem>();
-
         _battleWorld.AddSystem<DanmakuSystem>();
-
         _battleWorld.AddSystem<DanmakuEmitSystem>();
-
         _battleWorld.AddSystem<PresentationSystem>();
-
         Logger.Info("Battle ECS World initialized.");
     }
 
-    void WarmupDanmakuPool()
+    /// <summary>
+    /// 场景准备阶段，主要用于预加载资源、生成对象池等，确保进入战斗后能流畅运行
+    /// </summary>
+    void PrepareStage()
+    {
+        var globalPoolConfig = GameResDB.Instance.GetConfig<GlobalPoolConfig>("defaultglobalpool");
+        WarmupGlobalPools(globalPoolConfig);
+    }
+
+    void WarmupGlobalPools(GlobalPoolConfig globalPoolConfig)
     {
         int maxPrefabIndex = GameResDB.Instance.GetMaxPrefabIndex();
         GameObjectPoolManager.Instance.Initialize(maxPrefabIndex);
-
-        var danmakuCfgs = GameResDB.Instance.GetConfigs<DanmakuConfig>();
-        foreach (var config in danmakuCfgs)
+        
+        for(int i = 0; i < globalPoolConfig.poolCategories.Length; i++)
         {
-            GameObjectPoolManager.Instance.WarmupPool(config.danmakuPrefabIndex, config.poolSize);
+            var categoryGroup = globalPoolConfig.poolCategories[i];
+            for(int j = 0; j < categoryGroup.entries.Length; j++)
+            {
+                var entry = categoryGroup.entries[j];
+                GameObjectPoolManager.Instance.WarmupPool(entry.prefabId, entry.defaultWarmupCount);
+            }
         }
     }
-
-    #endregion
-
-    #region 战斗启动调用
 
     #region 怪物相关
 
     public void AddEnemyTest(EnemyConfig enemyConfig, float posX, float posY)
     {
-        _battleWorld.EntityFactory.CreateEnemy(enemyConfig, posX, posY);
+        var e_enemy = _battleWorld.EntityFactory.CreateEnemy(enemyConfig, posX, posY);
+        _battleWorld.EntityManager.AddComponent(e_enemy, new CPoolGetTag());
         Logger.Info($"Test enemy added at ({posX}, {posY}) with config index {enemyConfig.emitterConfigIndex}.");
     }
 
     #endregion
+
+    #region 战斗启动调用
     public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] allPlayerDatas)
     {
         StartMutiPlayerBattle(startFrame, randomSeed, allPlayerDatas);
     }
-
     public void StartMutiPlayerBattleForHost()
     {
         var allPlayerDatas = this.allPlayerDatas.ToArray();
@@ -154,9 +157,9 @@ public class BattleManager : SingletonMono<BattleManager>
         isSinglePlayerMode = true;
         EnterBattleScene().Forget();
         PerpareBattleWorld();
-        WarmupDanmakuPool();
+        PrepareStage();
         GeneratePlayer();
-        CurrentStatus = BattleStatus.InBattle;
+        CurrentStatus = E_BattleStatus.InBattle;
     }
 
     void StartMutiPlayerBattle(uint startFrame, uint randomSeed, PlayerBattleData[] playerDatas)
@@ -174,7 +177,7 @@ public class BattleManager : SingletonMono<BattleManager>
         EnterBattleScene().Forget();
         // 3. 生成角色（ECS 实体等）
         PerpareBattleWorld();
-        WarmupDanmakuPool();
+        PrepareStage();
 
         GeneratePlayer();
 
@@ -182,7 +185,7 @@ public class BattleManager : SingletonMono<BattleManager>
 
         // 5. 标记进入战斗
        
-        CurrentStatus = BattleStatus.InBattle;   
+        CurrentStatus = E_BattleStatus.InBattle;   
     }
     #endregion
 
@@ -224,7 +227,7 @@ public class BattleManager : SingletonMono<BattleManager>
     void Update()
     {
         if (_battleWorld == null) return;
-        if (CurrentStatus != BattleStatus.InBattle) return;
+        if (CurrentStatus != E_BattleStatus.InBattle) return;
 
         // 累积时间（用于控制帧率）
         _battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
