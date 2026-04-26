@@ -11,9 +11,4 @@ public class EnemyManager : SingletonMono<EnemyManager>
     {
 
     }
-
-    public void RemoveEnemy(EnemyConfigViewer enemy)
-    {
-        enemy.gameObject.SetActive(false);
-    }
 }

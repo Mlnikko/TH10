@@ -115,5 +115,5 @@ MonoBehaviour:
     arcBulletCount: 0
     arcClockwise: 0
   launchAudio: 0
-  launchInterval: 0.5
+  launchIntervalSeconds: 0.5
   launchSpeed: 2

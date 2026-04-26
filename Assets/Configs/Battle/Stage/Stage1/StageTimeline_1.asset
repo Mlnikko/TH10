@@ -12,20 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b806d7cd2f92f0141aed85bb94b584b6, type: 3}
   m_Name: StageTimeline_1
   m_EditorClassIdentifier: 
-  configId: 
   stageId: stage1
-  targetFrameRate: 60
   stageBgmRef: 
   midStageWaves:
   - {fileID: 11400000, guid: daf2be8bf9a30d646b7482c0cd40cd42, type: 2}
-  hasMidBoss: 0
-  midBossSpawnFrame: 3000
-  midBossPrefabId: 
-  hasMainBoss: 1
-  mainBossSpawnFrame: 7200
-  mainBossPrefabId: 
-  bossIntroDurationFrames: 180
-  bossPhases:
-  - {fileID: 11400000, guid: d6886bc29f47c7b4da5c70c7446e6d11, type: 2}
-  maxStageFrames: 14400
+  - {fileID: 11400000, guid: a80802e13ed611d4db4c10362b4317e7, type: 2}
+  - {fileID: 11400000, guid: 0c275b1d5f148fa42b7736b8ef306861, type: 2}
+  midBossEncounter: {fileID: 11400000, guid: 8083d34594dc92547af15705b91831a3, type: 2}
+  mainBossEncounter: {fileID: 11400000, guid: c0d1e2f30415263748596a7b8c9d0e1f, type: 2}
+  maxStageDurationSeconds: 240
   clearEffectPrefab: 

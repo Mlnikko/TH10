@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8642103312033731798}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 0}
   m_ConstrainProportionsScale: 1
@@ -99,16 +99,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 5755a258a3adb9846b569706f7ca88f3, type: 2}
   danmakuType: 0
-  poolSize: 9999
-  localScale: {x: 1, y: 1}
-  localRotation: {x: 0, y: 0, z: 90}
+  scale: 0
   sprite: {fileID: 1051418369, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
   colliderConfig:
-    type: 1
-    layer: 0
-    mask: 0
+    isTrigger: 0
+    shape: 1
+    layer: 8
+    mask: 4
     radius: 0
-    boxSize: {x: 0.12, y: 0.16}
-    offset: {x: 0, y: 0.19}
+    boxSize: {x: 0.16, y: 0.12}
+    offset: {x: 0.19, y: 0}
   damage: 1

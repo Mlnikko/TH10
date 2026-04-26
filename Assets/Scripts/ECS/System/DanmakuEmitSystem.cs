@@ -32,11 +32,8 @@ public class DanmakuEmitSystem : BaseSystem
     void ProcessEmission(ref CDanmakuEmitter emitter, float emitPosX, float emitPosY, float emitRotZ, uint currentFrame)
     {
         uint framesSinceLastFire = currentFrame - emitter.lastFireFrame;
-        // 1. 冷却检查 (纯整数)
-        if (framesSinceLastFire * LogicFrameTimer.FrameInterval < emitter.launchInterval)
-        {
+        if (emitter.launchCooldownFrames > 0 && framesSinceLastFire < (uint)emitter.launchCooldownFrames)
             return;
-        }
 
         // 2. 获取当前要发射的弹幕配置索引 (处理选择模式)
         int danmakuCfgIndex = GetSelectedBulletIndex(ref emitter);

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6bd98a2a33b0ed4292df5bde10f68a9, type: 3}
   m_Name: GameResourceManifest
   m_EditorClassIdentifier: 
+  gameCoreConfigId: gamecore
   characterConfigIds:
   - character_marisa
   - character_reimu
@@ -37,7 +38,9 @@ MonoBehaviour:
   poolConfigIds:
   - defaultglobalpool
   - stagepool_1
-  battleAreaConfigId: defaultbattlearea
+  stageTimelineConfigIds:
+  - stagetimeline_1
+  battleAreaConfigId: battlearea
   characterPrefabIds:
   - character_marisa
   - character_reimu

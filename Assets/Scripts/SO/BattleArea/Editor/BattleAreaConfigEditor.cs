@@ -1,14 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(BattleAreaTool))]
-public class BattleAreaToolEditor : Editor
+[CustomEditor(typeof(BattleAreaConfigViewer))]
+public class BattleAreaConfigEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
 
-        BattleAreaTool tool = (BattleAreaTool)target;
+        BattleAreaConfigViewer tool = (BattleAreaConfigViewer)target;
 
         EditorGUILayout.Space();
 

@@ -48,7 +48,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aaf3a19affdf5c2408060432e85d27f3
-    m_Address: cfg_defaultbattlearea
+    m_Address: cfg_battlearea
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -909,8 +909,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: daf2be8bf9a30d646b7482c0cd40cd42
-    m_Address: cfg_enemywave_1
+  - m_GUID: 0c275b1d5f148fa42b7736b8ef306861
+    m_Address: cfg_enemywave_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -921,6 +921,31 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f5d4742312fd799468ad69c43aa7d879
     m_Address: cfg_defaultglobalpool
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0d1e2f30415263748596a7b8c9d0e1f
+    m_Address: cfg_mainbossencounter
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8083d34594dc92547af15705b91831a3
+    m_Address: cfg_midbossencounter
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a80802e13ed611d4db4c10362b4317e7
+    m_Address: cfg_enemywave_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: daf2be8bf9a30d646b7482c0cd40cd42
+    m_Address: cfg_enemywave_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1e2f3a4b5c6478091a2b3c4d5e6f708
+    m_Address: cfg_gamecore
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

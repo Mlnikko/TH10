@@ -6,21 +6,17 @@ using System;
 /// - 提供 determinism 安全的时间推进
 /// - 支持暂停、重置、追赶控制
 /// </summary>
-public class LogicFrameTimer
+public class LogicFrameDriver
 {
     public uint CurrentFrame { get; private set; } = 0;
-
-    public float FrameInterval => (float)FrameIntervalSeconds; // 方便外部使用
     public double FrameIntervalSeconds; // 高精度版本
-
-
     double _accumulatedTime = 0.0;
     bool _isRunning = true;
 
-    public LogicFrameTimer(int logicFps = 60)
+    public LogicFrameDriver(uint logicFPS = 60)
     {
-        if (logicFps <= 0) throw new ArgumentException("FPS must be positive");
-        FrameIntervalSeconds = 1.0 / logicFps;
+        if (logicFPS <= 0) throw new ArgumentException("FPS must be positive");
+        FrameIntervalSeconds = 1.0 / logicFPS;
     }
 
     /// <summary>

@@ -35,8 +35,8 @@ public class DanmakuEmitterConfigViewer : MonoBehaviour
     [Header("发射音效")]
     [SerializeField] AudioName launchAudio;
 
-    [Header("发射间隔")]
-    [SerializeField] float launchInterval;
+    [Header("发射间隔（秒；帧率见 GameCoreConfig / LogicFrameDriver）")]
+    [SerializeField] float launchIntervalSeconds;
 
     [Header("发射速度")]
     [SerializeField] float launchSpeed;
@@ -59,7 +59,7 @@ public class DanmakuEmitterConfigViewer : MonoBehaviour
         lineModeConfig = emitterConfig.lineModeConfig;
         arcModeConfig = emitterConfig.arcModeConfig;
 
-        launchInterval = emitterConfig.launchInterval;
+        launchIntervalSeconds = emitterConfig.launchIntervalSeconds;
         launchSpeed = emitterConfig.launchSpeed;
         launchAudio = emitterConfig.audio_Fire;
         
@@ -87,7 +87,7 @@ public class DanmakuEmitterConfigViewer : MonoBehaviour
         emitterConfig.lineModeConfig = lineModeConfig;
         emitterConfig.arcModeConfig = arcModeConfig;
 
-        emitterConfig.launchInterval = launchInterval;
+        emitterConfig.launchIntervalSeconds = launchIntervalSeconds;
         emitterConfig.launchSpeed = launchSpeed;
         emitterConfig.audio_Fire = launchAudio;
       

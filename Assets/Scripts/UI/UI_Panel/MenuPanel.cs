@@ -1,3 +1,4 @@
+using UnityEngine; 
 using UnityEngine.UI;
 
 public class MenuPanel : UIPanel
@@ -46,7 +47,7 @@ public class MenuPanel : UIPanel
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
-        Application.Quit();
+        UnityEngine.Application.Quit();
 #endif
     }
 

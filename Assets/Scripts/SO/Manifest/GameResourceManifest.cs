@@ -10,7 +10,8 @@ public class GameResourceManifest : ScriptableObject
     public string[] danmakuConfigIds = new string[0];
     public string[] danmakuEmitterConfigIds = new string[0];
     public string[] poolConfigIds = new string[0];
-    public string battleAreaConfigId;
+    public string[] stageTimelineConfigIds = new string[0];
+    public string battleAreaConfigId = "battlearea";
 
     [Header("预制体 - Prefabs")]
     public string[] characterPrefabIds = new string[0];

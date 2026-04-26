@@ -105,5 +105,5 @@ MonoBehaviour:
   emitRotOffsetZ: 0
   danmakuRotOffsetZ: 90
   launchAudio: 0
-  launchInterval: 0.5
+  launchIntervalSeconds: 0.05
   launchSpeed: 0.5

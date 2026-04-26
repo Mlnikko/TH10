@@ -1,5 +1,3 @@
-#if UNITY_EDITOR
-
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
@@ -51,5 +49,3 @@ public class EnemyConfigViewer : MonoBehaviour
         GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, colliderConfig, Color.yellow, Color.green);
     }
 }
-
-#endif

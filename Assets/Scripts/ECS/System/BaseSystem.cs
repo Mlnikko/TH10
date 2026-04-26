@@ -22,7 +22,7 @@ public abstract class BaseSystem
         }
     }
 
-    protected LogicFrameTimer LogicFrameTimer
+    protected LogicFrameDriver LogicFrameTimer
     {
         get
         {

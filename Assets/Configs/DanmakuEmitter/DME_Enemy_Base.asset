@@ -18,7 +18,7 @@ MonoBehaviour:
   - dm_test
   danmakuSelectMode: 0
   emitMode: 1
-  launchInterval: 5
+  launchIntervalSeconds: 5
   launchSpeed: 1
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0

@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22ddf0ae737f94c43b414da0c727c7b6, type: 3}
   m_Name: DefaultGlobalPool
   m_EditorClassIdentifier: 
-  configId: 
   poolCategories:
   - categoryName: "\u73A9\u5BB6"
     category: 0
@@ -43,3 +42,7 @@ MonoBehaviour:
       maxCapacity: 500
       defaultWarmupCount: 300
       allowForceRecycle: 0
+    - prefabId: dm_test
+      maxCapacity: 5000
+      defaultWarmupCount: 5000
+      allowForceRecycle: 1

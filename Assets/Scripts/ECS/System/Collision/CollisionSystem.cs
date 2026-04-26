@@ -12,6 +12,8 @@ public class CollisionSystem : BaseSystem
 
     public override void OnLogicTick(uint currentframe)
     {
+        CollisionEventBuffer.Clear();
+
         if (_grid == null) return;
         Span<int> activeColliders = TempBuffers.CollisionActive;
         Span<int> queryResults = TempBuffers.CollisionQuery;

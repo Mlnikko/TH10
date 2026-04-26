@@ -83,7 +83,8 @@ public struct CDanmakuEmitter : IComponent
     // ================= 动态状态 (每帧变化) =================
     public bool isEmitting;
     public uint lastFireFrame;
-    public float launchInterval;
+    /// <summary>两次发射之间至少间隔的逻辑帧数；0 表示无间隔（由 <see cref="DanmakuEmitterConfig"/> 在加载时烘焙）。</summary>
+    public int launchCooldownFrames;
 
     public EmitMode emitMode;           // Line, Arc
     public DanmakuSelectMode selectMode; // First, Sequential, Random
@@ -123,7 +124,7 @@ public struct CDanmakuEmitter : IComponent
         isEmitting = false;
         lastFireFrame = 0;
 
-        launchInterval = soConfig.launchInterval;
+        launchCooldownFrames = soConfig.launchCooldownFrames;
 
         sequentialIndex = 0;
         randomSeed = 0; // 初始化种子，实际使用时需结合全局帧数或实体ID
@@ -238,8 +239,10 @@ public struct CPlayer : IComponent
     public byte characterCfgIndex;   // 角色ID, 与角色配置表对应
     public byte weaponCfgIndex;      // 武器ID, 与武器配置表对应
 
-    public float moveSpeed;
-    public float moveSlowSpeed;
+    /// <summary>通常移速：世界单位 / 逻辑帧（由 <see cref="EntityFactory.CreatePlayer"/> 从配置「单位/秒」换算，逻辑系统不再乘 FrameInterval）。</summary>
+    public float moveDistancePerFrame;
+    /// <summary>低速移速：世界单位 / 逻辑帧。</summary>
+    public float moveSlowDistancePerFrame;
 
     public float hitRadius;       // 受击判定半径
     public float grazeRadius;     // 擦弹判定半径

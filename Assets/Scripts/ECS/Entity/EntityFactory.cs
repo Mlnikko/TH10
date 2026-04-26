@@ -2,6 +2,7 @@ using UnityEngine;
 public class EntityFactory
 {
     readonly EntityManager _entityManager;
+
     public EntityFactory(EntityManager entityManager)
     {
         _entityManager = entityManager;
@@ -24,6 +25,7 @@ public class EntityFactory
         }
 
         _entityManager.AddComponent(e_player, new CPosition(posX, posY));
+        _entityManager.AddComponent(e_player, new CRotation(0));
         _entityManager.AddComponent(e_player, new CVelocity(0, 0));
         _entityManager.AddComponent(e_player, new CPlayer()
         {
@@ -31,8 +33,8 @@ public class EntityFactory
             characterCfgIndex = (byte)playerBattleData.characterId,
             weaponCfgIndex = (byte)playerBattleData.weaponId,
 
-            moveSpeed = characterConfig.moveSpeed,
-            moveSlowSpeed = characterConfig.moveSlowSpeed,
+            moveDistancePerFrame = characterConfig.moveDistancePerFrame,
+            moveSlowDistancePerFrame = characterConfig.moveSlowDistancePerFrame,
 
             hitRadius = characterConfig.hitColliderConfig.radius,
             grazeRadius = characterConfig.grazeColliderConfig.radius,
@@ -52,10 +54,6 @@ public class EntityFactory
                 Logger.Error($"DanmakuEmitter configuration not found for index {emitterIndex}.");
                 return Entity.Null;
             }
-
-            _entityManager.AddComponent(e_player, new CPosition(posX, posY));
-            _entityManager.AddComponent(e_player, new CRotation(0));
-            _entityManager.AddComponent(e_player, new CVelocity(0, 0));
             _entityManager.AddComponent(e_player, new CDanmakuEmitter(emitterCfg));
         }
 
@@ -96,16 +94,18 @@ public class EntityFactory
         return e_danmaku;
     }
 
-    public Entity CreateEnemy(EnemyConfig enemyConfig, float posX, float posY)
+    public Entity CreateEnemy(EnemyConfig enemyConfig, float posX, float posY, float hpMultiplier = 1f)
     {
         Entity e_enemy = _entityManager.CreateEntity();
         var enemyCfgIndex = GameResDB.Instance.GetConfigIndex(enemyConfig.ConfigId);
+        int hp = Mathf.Max(1, Mathf.RoundToInt(enemyConfig.maxHealth * hpMultiplier));
         _entityManager.AddComponent(e_enemy, new CEnemy{
             enemyCfgIndex = enemyCfgIndex,
-            currentHealth = enemyConfig.maxHealth
+            currentHealth = hp
             });
         _entityManager.AddComponent(e_enemy, new CPosition(posX, posY));
         _entityManager.AddComponent(e_enemy, new CVelocity(0, 0));
+        _entityManager.AddComponent(e_enemy, new CRotation(0));
         _entityManager.AddComponent(e_enemy, new CCollider
         {
             isActive = true,

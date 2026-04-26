@@ -17,7 +17,7 @@ MonoBehaviour:
   - dm_reimu_main
   danmakuSelectMode: 0
   emitMode: 1
-  launchInterval: 0.05
+  launchIntervalSeconds: 0.05
   launchSpeed: 0.5
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0

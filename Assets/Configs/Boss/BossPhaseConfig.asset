@@ -15,8 +15,8 @@ MonoBehaviour:
   configId: 
   phaseName: 
   triggerType: 0
-  triggerFrameOffset: 0
+  triggerTimeSeconds: 0
   triggerHpPercent: 0
   spellCardId: 
-  durationFrames: -1
+  durationSeconds: -1
   bgmRef: 

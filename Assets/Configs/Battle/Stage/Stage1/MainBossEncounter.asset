@@ -9,15 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf7cf63d299ca734894940ad2531302f, type: 3}
-  m_Name: EnemyWave_1
+  m_Script: {fileID: 11500000, guid: af25f20fbfa52374a9411d816f16b049, type: 3}
+  m_Name: MainBossEncounter
   m_EditorClassIdentifier: 
-  configId: 
-  startFrameOffset: 0
-  enemyConfigId: minion_fariy
-  count: 1
-  spawnPattern: 0
-  spawnAreaSize: {x: 10, y: 5}
+  enabled: 1
+  spawnTimeSeconds: 120
+  enemyConfigId: 
   spawnOffset: {x: 0, y: 0}
-  hpMultiplier: 1
-  waitForClear: 0
+  yHeightNorm: 0.5
+  bossIntroDurationSeconds: 3
+  bossPhases: []

@@ -5,13 +5,20 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.U2D;
 
+ /// <summary>
+/// 在所有资源注册完成后，解析内部字符串 ID 到全局索引
+/// </summary>
 public interface IReferenceResolver
 {
-    /// <summary>
-    /// 在所有资源注册完成后，解析内部字符串 ID 到全局索引
-    /// </summary>
-    /// <param name="resDb">提供查询其他资源索引的能力</param>
     void ResolveReferences(GameResDB resDb);
+}
+
+/// <summary>
+/// 将「秒」等时间语义字段烘焙为逻辑帧。
+/// </summary>
+public interface ILogicTimingBake
+{
+    void BakeLogicTiming(uint logicFPS);
 }
 
 
@@ -108,6 +115,9 @@ public class GameResDB : Singleton<GameResDB>
             if (!string.IsNullOrEmpty(manifest.battleAreaConfigId))
                 allConfigIds.Add(manifest.battleAreaConfigId);
 
+            if (manifest.stageTimelineConfigIds != null && manifest.stageTimelineConfigIds.Length > 0)
+                allConfigIds.AddRange(manifest.stageTimelineConfigIds);
+
             var configAssets = await LoadAssetsAsync<GameConfig>(allConfigIds, E_ResourceCategory.Config);
             _configRegistry.Initialize(configAssets, allConfigIds);
 
@@ -147,7 +157,7 @@ public class GameResDB : Singleton<GameResDB>
             _atlasRegistry.Initialize(atlasAssets, atlasIds);
         }
 
-        ResolveReferences();
+        InitConfig();
 
         IsInitialized = true;
         Logger.Info("GameResDB initialized successfully.", LogTag.Resource);
@@ -175,18 +185,19 @@ public class GameResDB : Singleton<GameResDB>
     }
 
     /// <summary>
-    /// 配置索引编制，把配置中的string类型ID转换为运行时int索引
+    /// 1. 配置索引编制，把配置中的string类型ID转换为运行时int索引
+    /// 2. 秒->帧转换
     /// </summary>
-    void ResolveReferences()
+    void InitConfig()
     {
         int configCount = _configRegistry.Count;
         for (int i = 0; i < configCount; i++)
         {
             var cfg = _configRegistry.GetByIndex(i);
             if (cfg is IReferenceResolver resolver)
-            {
                 resolver.ResolveReferences(this);
-            }
+            if (cfg is ILogicTimingBake timingBake)
+                timingBake.BakeLogicTiming(GameManager.logicFPS);
         }
     }
 

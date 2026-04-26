@@ -10,20 +10,20 @@ public class World
     readonly EntityManager _entityManager;
     readonly EntityFactory _entityFactory;
     readonly GameObjectBridge _gameObjectBridge;
-    readonly LogicFrameTimer _logicFrameTimer;
+    readonly LogicFrameDriver _logicFrameTimer;
 
     public EntityFactory EntityFactory => _entityFactory;
     public EntityManager EntityManager => _entityManager;
     public GameObjectBridge GameObjectBridge => _gameObjectBridge;
-    public LogicFrameTimer LogicFrameTimer => _logicFrameTimer;
+    public LogicFrameDriver LogicFrameTimer => _logicFrameTimer;
 
     public World()
     {
         _systems = new List<BaseSystem>();
         _entityManager = new EntityManager();
+        _logicFrameTimer = new LogicFrameDriver(GameManager.logicFPS);
         _entityFactory = new EntityFactory(_entityManager);
         _gameObjectBridge = new GameObjectBridge();
-        _logicFrameTimer = new LogicFrameTimer();
     }
 
     #region 添加系统
@@ -43,6 +43,19 @@ public class World
     {
         system.Initialize(this);
         _systems.Add(system);
+    }
+
+    /// <summary>
+    /// 按注册顺序查找已添加的系统（找不到时返回 null）。
+    /// </summary>
+    public T GetSystem<T>() where T : BaseSystem
+    {
+        for (int i = 0; i < _systems.Count; i++)
+        {
+            if (_systems[i] is T match)
+                return match;
+        }
+        return null;
     }
     #endregion
 

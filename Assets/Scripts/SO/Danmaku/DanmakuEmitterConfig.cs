@@ -37,7 +37,7 @@ public struct ArcModeConfig
 
 
 [CreateAssetMenu(fileName = "NewDanmakuEmitterConfig", menuName = "Configs/DanmakuEmitterConfig")]
-public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
+public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("发射器预制体")]
     public string emitterPrefabId;
@@ -56,8 +56,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
     [Header("通用发射器参数")]
 
     [Min(0f)]
-    [Tooltip("发射间隔（秒）")]
-    public float launchInterval = 0.5f;
+    [Tooltip("发射间隔（秒）；在 ILogicTimingBake.BakeLogicTiming 中烘焙为 launchCooldownFrames")]
+    public float launchIntervalSeconds = 0.5f;
+
+    [NonSerialized] public int launchCooldownFrames;
 
     [Min(0f)]
     public float launchSpeed = 2f;
@@ -130,5 +132,13 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver
         {
             danmakuCfgIndices = Array.Empty<int>();
         }
+    }
+
+    public void BakeLogicTiming(uint logicFPS)
+    {
+        if (launchIntervalSeconds <= 0f)
+            launchCooldownFrames = 0;
+        else
+            launchCooldownFrames = Mathf.Max(1, Mathf.RoundToInt(launchIntervalSeconds * logicFPS));
     }
 }

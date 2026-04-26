@@ -23,14 +23,13 @@ public class PlayerControlSystem : BaseSystem
             player.isShooting = input.Shoot;
             player.isBombing = input.Bomb;
 
-            // 根据速度模式选择移动速度
-            float speed = input.SlowMode ? player.moveSlowSpeed : player.moveSpeed;
-            float dx = input.MoveHorizontal * speed * LogicFrameTimer.FrameInterval;
-            float dy = input.MoveVertical * speed * LogicFrameTimer.FrameInterval;
+            float distancePerFrame = input.SlowMode ? player.moveSlowDistancePerFrame : player.moveDistancePerFrame;
+            float dx = input.MoveHorizontal * distancePerFrame;
+            float dy = input.MoveVertical * distancePerFrame;
 
             ref var vel = ref velocities[idx];
-            vel.vx = input.MoveHorizontal * speed;
-            vel.vy = input.MoveVertical * speed;
+            vel.vx = input.MoveHorizontal * distancePerFrame;
+            vel.vy = input.MoveVertical * distancePerFrame;
 
             ref var pos = ref positions[idx];
             pos.x += dx;

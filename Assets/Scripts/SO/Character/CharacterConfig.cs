@@ -8,7 +8,7 @@ public enum E_Character : byte
 }
 
 [CreateAssetMenu(fileName = "NewCharacterConfig", menuName = "Configs/CharacterConfig")]
-public class CharacterConfig : GameConfig, IReferenceResolver
+public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("预制体配置")]
     public string characterPrefabId;
@@ -26,7 +26,12 @@ public class CharacterConfig : GameConfig, IReferenceResolver
 
     [Header("移速配置")]
     public float moveSpeed;
+    [NonSerialized]
+    public float moveDistancePerFrame;
+
     public float moveSlowSpeed;
+    [NonSerialized]
+    public float moveSlowDistancePerFrame;
 
     [Header("移动碰撞体设置")]
     public ColliderConfig moveColliderConfig;
@@ -52,5 +57,11 @@ public class CharacterConfig : GameConfig, IReferenceResolver
         {
             Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {ConfigId})", LogTag.Resource);
         }
+    }
+
+    public void BakeLogicTiming(uint logicFPS)
+    {
+        moveDistancePerFrame = moveSpeed / logicFPS;
+        moveSlowDistancePerFrame = moveSlowSpeed / logicFPS;
     }
 }
