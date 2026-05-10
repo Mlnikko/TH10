@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 /// <summary>
 /// 逻辑帧上根据 <see cref="CEnemyMovement"/> 写入 <see cref="CPosition"/>（东方系可配置轨迹）。
@@ -32,15 +31,23 @@ public class EnemyMovementSystem : BaseSystem
             pos.x = nx;
             pos.y = ny;
 
-            Entity entity = EntityManager.GetEntity(idx);
-            if (!EntityManager.IsValid(entity) || !EntityManager.HasComponent<CRotation>(entity))
-                continue;
-
-            if (vel.vx * vel.vx + vel.vy * vel.vy > 1e-8f)
-            {
-                ref var rot = ref EntityManager.GetComponent<CRotation>(entity);
-                rot.angle = Mathf.Atan2(vel.vy, vel.vx) * Mathf.Rad2Deg;
-            }
+            TryRecycleEnemyOutOfRecycleArea(idx, nx, ny);
         }
+    }
+
+    /// <summary>与 <see cref="DanmakuSystem"/> 相同：超出 <see cref="GlobalBattleData.AreaData"/> 回收区则挂 <see cref="CPoolRecycleTag"/>，由 <see cref="PresentationSystem"/> 回收表现并销毁实体。</summary>
+    void TryRecycleEnemyOutOfRecycleArea(int entityIndex, float x, float y)
+    {
+        if (!GlobalBattleData.IsInitialized)
+            return;
+
+        Entity entity = EntityManager.GetEntity(entityIndex);
+        if (!EntityManager.IsValid(entity) || !EntityManager.HasComponent<CEnemy>(entity))
+            return;
+        if (EntityManager.HasComponent<CNoOffscreenRecycleTag>(entity))
+            return;
+
+        if (!GlobalBattleData.AreaData.IsPointInRecycleArea(x, y))
+            EntityManager.AddComponent(entityIndex, new CPoolRecycleTag());
     }
 }

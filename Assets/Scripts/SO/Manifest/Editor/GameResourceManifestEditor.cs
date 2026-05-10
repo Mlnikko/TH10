@@ -15,6 +15,7 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.danmakuConfigIds),         ("/Configs/Danmaku/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.danmakuEmitterConfigIds),  ("/Configs/DanmakuEmitter/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/Enemy/", typeof(ScriptableObject)) },
+        { nameof(GameResourceManifest.dropItemConfigIds),        ("/Configs/DropItem/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.poolConfigIds),            ("/Configs/Pool/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.stageTimelineConfigIds),   ("/Configs/Battle/Stage/", typeof(StageTimelineConfig)) },
 
@@ -24,6 +25,7 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.danmakuPrefabIds),         ("/Prefabs/Danmaku/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuEmitterPrefabIds),  ("/Prefabs/DanmakuEmitter/", typeof(GameObject)) },
         { nameof(GameResourceManifest.effectPrefabIds),          ("/Prefabs/Effect/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.dropItemPrefabIds),        ("/Prefabs/DropItem/", typeof(GameObject)) },
 
         // Atlases
         { nameof(GameResourceManifest.atlases),                  ("/Art/Atlas/", typeof(SpriteAtlas)) },

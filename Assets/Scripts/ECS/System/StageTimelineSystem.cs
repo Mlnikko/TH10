@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -208,6 +209,16 @@ public class StageTimelineSystem : BaseSystem
                 continue;
             if (EnemyMovementBaking.TryBakeFromWave(wave, currentFrame, p.x, p.y, i, EntityManager, out var motion))
                 EntityManager.AddComponent(e, motion);
+
+            if (wave.waveDropMode != E_WaveDropOverrideMode.UseEnemyConfig)
+            {
+                EntityManager.AddComponent(e, new CEnemyDeathLoot
+                {
+                    waveDropMode = wave.waveDropMode,
+                    waveDropCfgIndices = wave.waveDropOnDeathCfgIndices ?? Array.Empty<int>()
+                });
+            }
+
             EntityManager.AddComponent(e, new CPoolGetTag());
             if (wave.waitForClear)
                 _clearWatchEntities.Add(e);
@@ -375,7 +386,10 @@ public class StageTimelineSystem : BaseSystem
         Vector2 pos = area.Center + encounter.spawnOffset + new Vector2(0f, area.Height * encounter.yHeightNorm);
         _midBossEntity = EntityFactory.CreateEnemy(cfg, pos.x, pos.y, 1f);
         if (!_midBossEntity.IsNull)
+        {
+            EntityManager.AddComponent(_midBossEntity, new CNoOffscreenRecycleTag());
             EntityManager.AddComponent(_midBossEntity, new CPoolGetTag());
+        }
         _midBossSpawned = true;
     }
 
@@ -400,7 +414,10 @@ public class StageTimelineSystem : BaseSystem
         Vector2 pos = area.Center + encounter.spawnOffset + new Vector2(0f, area.Height * encounter.yHeightNorm);
         _mainBossEntity = EntityFactory.CreateEnemy(cfg, pos.x, pos.y, 1f);
         if (!_mainBossEntity.IsNull)
+        {
+            EntityManager.AddComponent(_mainBossEntity, new CNoOffscreenRecycleTag());
             EntityManager.AddComponent(_mainBossEntity, new CPoolGetTag());
+        }
 
         _mainBossSpawned = true;
 

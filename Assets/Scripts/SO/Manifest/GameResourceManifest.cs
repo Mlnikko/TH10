@@ -9,6 +9,8 @@ public class GameResourceManifest : ScriptableObject
     public string[] weaponConfigIds = new string[0];
     public string[] danmakuConfigIds = new string[0];
     public string[] danmakuEmitterConfigIds = new string[0];
+    /// <summary>掉落物配置（ConfigId，如 drop_point）。</summary>
+    public string[] dropItemConfigIds = new string[0];
     public string[] poolConfigIds = new string[0];
     public string[] stageTimelineConfigIds = new string[0];
     public string battleAreaConfigId = "battlearea";
@@ -19,6 +21,12 @@ public class GameResourceManifest : ScriptableObject
     public string[] danmakuPrefabIds = new string[0];
     public string[] danmakuEmitterPrefabIds = new string[0];
     public string[] effectPrefabIds = new string[0];
+
+    /// <summary>
+    /// 掉落物专用预制体 id（小写）。<see cref="DropItemConfig.pickupPrefabId"/> 应使用此处或其它预制体数组中已登记的 id；
+    /// 若与弹幕等共用同一预制体，只需在其中一侧数组登记即可（加载时会去重）。
+    /// </summary>
+    public string[] dropItemPrefabIds = new string[0];
 
     [Header("贴图 - Textures")]
     public string[] characterImages = new string[0];

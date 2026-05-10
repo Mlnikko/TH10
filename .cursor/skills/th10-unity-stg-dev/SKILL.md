@@ -1,6 +1,6 @@
 ---
 name: th10-unity-stg-dev
-description: 高效开发 TH10 Unity STG 弹幕项目。用于在本仓库中编辑玩法、ECS 系统、帧同步联机、Addressables 资源、ScriptableObject 配置、对象池、战斗流程、弹幕、敌人、UI 或 UTP 网络相关内容。
+description: 指导在 TH10 仓库中开发东方风 STG 弹幕与 2–4 人帧同步联机。涵盖自制轻量 ECS（非 DOTS）、表现桥接、Addressables/GameResDB、ScriptableObject 配置、UTP 消息、关卡时间轴、弹幕系统、对象池与 UI。在用户修改 Assets/Scripts、战斗逻辑、网络或资源配置时使用。
 ---
 
 # TH10 Unity STG 开发
@@ -11,15 +11,71 @@ description: 高效开发 TH10 Unity STG 弹幕项目。用于在本仓库中编
 
 - STG/弹幕战斗逻辑、玩家/敌人行为、碰撞、发射器或关卡时间轴。
 - `Assets/Scripts/ECS` 下的自制轻量 ECS + OOP 桥接架构。
-- 2-4 人帧同步、输入收集、房间流程或 UTP 消息。
+- 2–4 人帧同步、输入收集、房间流程或 UTP 消息。
 - Addressables、`GameResourceManifest`、`GameResDB`、ScriptableObject 配置资产或对象池。
 - UI 面板、战斗准备流程或场景启动。
 
 除非用户明确要求其他语言，否则始终使用简体中文回复。
 
+## 项目背景与技术栈
+
+- **定位**：Unity 开发的东方 Project 类纵轴/弹幕 STG；核心玩法数据驱动，强调可复现的逻辑帧。
+- **运行时架构**：自制 **ECS（实体–组件–系统）** 承载确定性战斗逻辑；**MonoBehaviour / GameObject** 负责渲染、动画、UI、音频与非确定性侧载；二者通过 `GameObjectBridge` 与 `IGameObjectUpdater` 同步。
+- **联机**：**锁步帧同步**（非预测回滚）。逻辑帧率由 `GameManager.logicFPS`（默认 60）与 `LogicFrameDriver` 驱动；`BattleManager.Update` 在多人模式下收集并广播输入，待 `InputManager.AreAllInputsReady` 后再调用 `World.LogicTick`。
+- **资源**：**Addressables** 加载与分组；运行时热点访问走 **`GameResDB`** 索引（配置、预制体 id 等）。
+- **网络**：**Unity Transport (UTP)** 自建协议；消息为实现 `INetworkMessage` 的结构体（见 `NetworkMessages.cs`）。未使用 Netcode for GameObjects。
+- **数据**：以继承 **`GameConfig`** 的 **ScriptableObject** 为主；字符串资源 id 可通过 **`IReferenceResolver`** 在 `GameResDB.ResolveReferences()` 中解析为索引。
+
+### Unity 包与工具（`Packages/manifest.json`）
+
+| 类别 | 包 |
+|------|-----|
+| 资源 | `com.unity.addressables` 1.21.21 |
+| 网络 | `com.unity.transport` 2.3.0 |
+| UI/文本 | `com.unity.ugui` 1.0.0，`com.unity.textmeshpro` 3.0.9 |
+| 其他常用 | `com.unity.timeline` 1.7.7，`com.unity.feature.2d` 2.0.1，`com.unity.visualscripting` 1.9.4 |
+| 编辑器 | Rider / Visual Studio 集成，`com.unity.test-framework` |
+
+异步加载使用 **`System.Threading.Tasks`**；fire-and-forget 使用 **`AsyncHelper.Forget`**（非 UniTask）。
+
+## 架构鸟瞰
+
+```mermaid
+flowchart TB
+  subgraph ecs [确定性 ECS World]
+    EM[EntityManager / EntityFactory]
+    Sys[BaseSystem.OnLogicTick]
+    EM --- Sys
+  end
+  subgraph bridge [表现桥接]
+    GOB[GameObjectBridge / IGameObjectUpdater]
+  end
+  subgraph presentation [表现层 MonoBehaviour]
+    UI[UIManager / Panels]
+    Pool[GameObjectPoolManager]
+  end
+  subgraph data [数据与资源]
+    SO[GameConfig SO]
+    AAB[Addressables]
+    DB[GameResDB]
+  end
+  subgraph net [网络 UTP]
+    NM[NetworkManager]
+    IM[InputManager / RoomManager]
+  end
+  SO --> DB
+  AAB --> DB
+  IM --> NM
+  BattleMgr[BattleManager] --> ecs
+  BattleMgr --> IM
+  BattleMgr --> UI
+  Sys --> GOB
+  GOB --> Pool
+```
+
 ## 项目地图
 
-- `Assets/Scripts/ECS`：自制 ECS 核心。`World` 持有 `EntityManager`、`EntityFactory`、`GameObjectBridge`、`LogicFrameTimer` 和已注册的 `BaseSystem` 实例。
+- `Assets/Scripts/ECS`：自制 ECS 核心。`World` 持有 `EntityManager`、`EntityFactory`、`GameObjectBridge`、`LogicFrameDriver` 和已注册的 `BaseSystem` 实例。
 - `Assets/Scripts/BattlePart`：战斗入口、逻辑帧推进、战斗区域工具、玩家生成流程。
 - `Assets/Scripts/SO`：基于 `GameConfig` 的 ScriptableObject 配置类。
 - `Assets/Scripts/Resource`：Addressables 封装、清单加载、运行时索引化资源数据库。
@@ -34,7 +90,7 @@ description: 高效开发 TH10 Unity STG 弹幕项目。用于在本仓库中编
 修改行为前，先阅读最接近的入口文件：
 
 - 启动/资源初始化：`Assets/Scripts/GameLauncher.cs`、`Assets/Scripts/Resource/ResManager.cs`、`Assets/Scripts/Resource/GameResDB.cs`。
-- 战斗循环/帧同步：`Assets/Scripts/BattlePart/BattleManager.cs`、`Assets/Scripts/BattlePart/LogicTickDriver.cs`。
+- 战斗循环/帧同步：`Assets/Scripts/BattlePart/BattleManager.cs`、`Assets/Scripts/BattlePart/LogicFrameDriver.cs`。
 - ECS 契约：`Assets/Scripts/ECS/World.cs`、`Assets/Scripts/ECS/Component/Components.cs`、`Assets/Scripts/ECS/System/`、`Assets/Scripts/ECS/Entity/EntityFactory.cs`。
 - 表现桥接：`Assets/Scripts/ECS/Bridge/GameObjectBridge.cs`、`Assets/Scripts/ECS/Bridge/Updater/`。
 - 弹幕：`Assets/Scripts/ECS/System/DanmakuSystem.cs`、`Assets/Scripts/ECS/System/DanmakuEmitSystem.cs`、`Assets/Scripts/SO/Danmaku/`。
@@ -43,6 +99,19 @@ description: 高效开发 TH10 Unity STG 弹幕项目。用于在本仓库中编
 - 对象池：`Assets/Scripts/Pool/GameObjectPoolManager.cs`、`Assets/Scripts/SO/Pool/GlobalPoolConfig.cs`、`Assets/Scripts/SO/Pool/StagePoolConfig.cs`。
 - UI 流程：`Assets/Scripts/UI/UIManager.cs`、`Assets/Scripts/UI/UI_Panel/`。
 
+## 战斗 ECS 系统注册顺序（参考）
+
+`BattleManager.CreateBattleWorld()` 中的顺序即为当前默认管线；变更顺序会影响碰撞、输入、时间轴与表现：
+
+1. `StageTimelineSystem`
+2. `EnemyMovementSystem`
+3. `CollisionSystem`
+4. `CollisionLogicSystem`
+5. `PlayerControlSystem`
+6. `DanmakuSystem`
+7. `DanmakuEmitSystem`
+8. `PresentationSystem`
+
 ## 架构规则
 
 - 将此项目视为自制 ECS，而不是 Unity DOTS。`EntityManager`、`Entity`、`IComponent` 和 `BaseSystem` 都是项目内类型。
@@ -50,7 +119,7 @@ description: 高效开发 TH10 Unity STG 弹幕项目。用于在本仓库中编
 - 尽量不要把 Unity `Transform`、预制体激活、UI 和视觉同步放入确定性逻辑。表现层使用 `OnUpdate`、`OnLateUpdate`、`GameObjectBridge` 和 `IGameObjectUpdater`。
 - ECS 数据应作为实现 `IComponent` 的 `struct` 组件添加。遵循已有命名，例如 `CPosition`、`CVelocity`、`CDanmaku`、`CDanmakuEmitter`、`CPlayer`、`CEnemy`、`CCollider`。
 - 使用 `CPoolGetTag`、`CPoolRecycleTag` 等标签组件，通过现有系统请求预制体创建/回收。
-- 新系统按 `BattleManager.PerpareBattleWorld()` 所在位置和顺序模式注册。注意：系统顺序会影响碰撞、输入、关卡时间轴、子弹发射和表现。
+- 新系统按 `BattleManager.CreateBattleWorld()` 所在位置和顺序模式注册。注意：系统顺序会影响碰撞、输入、关卡时间轴、子弹发射和表现。
 - 对于帧同步，避免在 `OnLogicTick` 中使用非确定性逻辑：不要使用 `Time.deltaTime`、墙钟时间、Unity 物理回调、无序字典迭代来做玩法决策，也不要使用未同步的随机源。
 - 如果战斗逻辑需要随机性，应绑定到战斗流程中已有的共享种子/帧/实体状态，而不是本地运行时状态。
 

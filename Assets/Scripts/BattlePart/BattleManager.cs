@@ -30,11 +30,25 @@ public static class GlobalBattleData
 
     public static bool IsInitialized { get; private set; }
 
+    /// <summary>当前战斗会话得分（切关/重开战斗时由 <see cref="BattleManager.BootstrapBattleSession"/> 重置）。</summary>
+    public static int SessionScore { get; private set; }
+
     public static void Initialize(BattleAreaConfig config)
     {
         AreaData = config.battleAreaData;
         SpawnData = config.playerSpawnData;
         IsInitialized = true;
+    }
+
+    public static void ResetBattleSessionStats()
+    {
+        SessionScore = 0;
+    }
+
+    public static void AddSessionScore(int delta)
+    {
+        if (delta <= 0) return;
+        SessionScore += delta;
     }
 }
 
@@ -165,6 +179,7 @@ public class BattleManager : SingletonMono<BattleManager>
         _battleWorld = new World();
         _battleWorld.AddSystem<StageTimelineSystem>();
         _battleWorld.AddSystem<EnemyMovementSystem>();
+        _battleWorld.AddSystem<DropItemSystem>();
         _battleWorld.AddSystem<CollisionSystem>();
         _battleWorld.AddSystem<CollisionLogicSystem>();
         _battleWorld.AddSystem<PlayerControlSystem>();
@@ -180,6 +195,7 @@ public class BattleManager : SingletonMono<BattleManager>
     void BootstrapBattleSession(uint logicStartFrame)
     {
         CurrentStatus = E_BattleStatus.Prepare;
+        GlobalBattleData.ResetBattleSessionStats();
         DisposeBattleWorld();
         PrepareBattleInfrastructure();
         CreateBattleWorld();

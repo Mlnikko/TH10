@@ -27,7 +27,7 @@ public struct LineModeConfig
 public struct ArcModeConfig
 {
     public float arcStartAngle;    // 起始角度（度）
-    public float arcAngle;      // 弧度范围（度）
+    public float arcAngle;      // 扇形展开角（度）
     public float arcRadius;        // 发射半径
 
     [Min(0f)]
@@ -66,10 +66,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
 
     [Tooltip("发射器位置偏移（相对于生成点），用于调整发射器位置")]
     public Vector2 emitterPosOffset = Vector2.zero;
-    [Tooltip("发射器旋转偏移（度），用于调整发射器朝向")]
+    [Tooltip("发射器旋转偏移（度）；实例化为 CDanmakuEmitter 时烘焙为弧度 emitterRotOffsetRad，发射逻辑不再做 Deg2Rad")]
     public float emitterRotOffsetZ = 0;
 
-    [Tooltip("弹幕发射时的旋转偏移（度），用于调整弹幕朝向")]
+    [Tooltip("弹幕生成时的旋转偏移（度）；烘焙为 danmakuRotOffsetRad")]
     public float danmakuRotOffsetZ = 90f;
 
     public EmitterCamp emitterCamp = EmitterCamp.Enemy;

@@ -25,11 +25,12 @@ public class DanmakuEmitSystem : BaseSystem
                 continue;
             }
 
-            ProcessEmission(ref emitter, position.x, position.y, rotation.angle, currentFrame);
+            float emitRotRad = rotation.angleRad + emitter.emitterRotOffsetRad;
+            ProcessEmission(ref emitter, position.x, position.y, emitRotRad, currentFrame);
         }
     }
 
-    void ProcessEmission(ref CDanmakuEmitter emitter, float emitPosX, float emitPosY, float emitRotZ, uint currentFrame)
+    void ProcessEmission(ref CDanmakuEmitter emitter, float emitPosX, float emitPosY, float emitRotRad, uint currentFrame)
     {
         uint framesSinceLastFire = currentFrame - emitter.lastFireFrame;
         if (emitter.launchCooldownFrames > 0 && framesSinceLastFire < (uint)emitter.launchCooldownFrames)
@@ -43,10 +44,10 @@ public class DanmakuEmitSystem : BaseSystem
         switch (emitter.emitMode)
         {
             case EmitMode.Line:
-                EmitLineOptimized(ref emitter, emitPosX, emitPosY, emitRotZ, danmakuCfgIndex);
+                EmitLineOptimized(ref emitter, emitPosX, emitPosY, emitRotRad, danmakuCfgIndex);
                 break;
             case EmitMode.Arc:
-                EmitArcOptimized(ref emitter, emitPosX, emitPosY, emitRotZ, danmakuCfgIndex);
+                EmitArcOptimized(ref emitter, emitPosX, emitPosY, emitRotRad, danmakuCfgIndex);
                 break;
             case EmitMode.None:
                 Logger.Warn("发射器发射模式为None! 请检查配置");
@@ -78,7 +79,7 @@ public class DanmakuEmitSystem : BaseSystem
         return -1;
     }
 
-    void EmitLineOptimized(ref CDanmakuEmitter e, float emitPosX, float emitPosY, float emitRotZ, int cfgIndex)
+    void EmitLineOptimized(ref CDanmakuEmitter e, float emitPosX, float emitPosY, float emitRotRad, int cfgIndex)
     {
         // 1. 提取局部变量
         float baseDirX = e.lineDirUnitX; // 配置中的基准方向 (通常是 1, 0)
@@ -93,9 +94,9 @@ public class DanmakuEmitSystem : BaseSystem
         float offY = e.emitterPosOffsetY;
 
         // 【关键】预先计算发射器旋转的 Sin/Cos，避免循环内重复计算
-        float emitRad = emitRotZ * Mathf.Deg2Rad;
-        float cosR = Mathf.Cos(emitRad);
-        float sinR = Mathf.Sin(emitRad);
+        float cosR = Mathf.Cos(emitRotRad);
+        float sinR = Mathf.Sin(emitRotRad);
+        float spawnRotRad = e.danmakuRotOffsetRad;
 
         for (int i = 0; i < e.lineCount; i++)
         {
@@ -106,10 +107,10 @@ public class DanmakuEmitSystem : BaseSystem
             float localOffX = basePerpX * factor;
             float localOffY = basePerpY * factor;
 
-            // 3. 【核心修改】将“基准方向”和“偏移向量”都旋转 emitRad
+            // 3. 【核心修改】将“基准方向”和“偏移向量”都旋转 emitRotRad
 
             // A. 旋转后的发射方向 (速度方向)
-            // dir = rotate(baseDir, emitRad)
+            // dir = rotate(baseDir, emitRotRad)
             float finalDirX = baseDirX * cosR - baseDirY * sinR;
             float finalDirY = baseDirX * sinR + baseDirY * cosR;
 
@@ -134,13 +135,11 @@ public class DanmakuEmitSystem : BaseSystem
             float velX = finalDirX * speed;
             float velY = finalDirY * speed;
 
-            float spawnRotOffsetZ = e.danmakuRotOffsetZ; // 直接让弹幕面向飞行方向
-
-            SpawnDanmaku(spawnX, spawnY, spawnRotOffsetZ, velX, velY, cfgIndex);
+            SpawnDanmaku(spawnX, spawnY, spawnRotRad, velX, velY, cfgIndex);
         }
     }
 
-    void EmitArcOptimized(ref CDanmakuEmitter e, float emitPosX, float emitPosY, float emitRotZ, int cfgIndex)
+    void EmitArcOptimized(ref CDanmakuEmitter e, float emitPosX, float emitPosY, float emitRotRad, int cfgIndex)
     {
         // 提取局部变量
         float startRad = e.arcStartAngleRad; // 相对于发射器前方的起始角 (例如 -45 度)
@@ -151,24 +150,23 @@ public class DanmakuEmitSystem : BaseSystem
         float offY = e.emitterPosOffsetY;
         int count = e.arcBulletCount;
 
-        float emitRad = emitRotZ * Mathf.Deg2Rad;
-        // 预计算发射器偏移的旋转 (如果 offX/Y 不为 0)
-        float cosR = Mathf.Cos(emitRad);
-        float sinR = Mathf.Sin(emitRad);
+        float cosR = Mathf.Cos(emitRotRad);
+        float sinR = Mathf.Sin(emitRotRad);
 
         // 旋转发射器中心偏移 (Gun Offset)
         float rotatedOffX = offX * cosR - offY * sinR;
         float rotatedOffY = offX * sinR + offY * cosR;
-            
+        float danmakuRotOffRad = e.danmakuRotOffsetRad;
+
         for (int i = 0; i < count; i++)
         {
             // 【关键修改】基础角度 + 发射器自身旋转
-            float angle = emitRad + startRad + (stepRad * i);
+            float angle = emitRotRad + startRad + (stepRad * i);
 
             float cos = Mathf.Cos(angle);
             float sin = Mathf.Sin(angle);
 
-            // 计算相对于圆心的偏移 (这是世界空间的偏移，因为 angle 已经包含了 emitRad)
+            // 计算相对于圆心的偏移（世界空间；angle 已含发射器朝向 emitRotRad）
             float offsetX = cos * radius;
             float offsetY = sin * radius;
 
@@ -176,21 +174,20 @@ public class DanmakuEmitSystem : BaseSystem
             float spawnX = emitPosX + rotatedOffX + offsetX;
             float spawnY = emitPosY + rotatedOffY + offsetY;
 
-            // 弹幕本身的旋转：发射器角度 + 弹幕自身的角度偏移
-            float spawnRotOffsetZ = angle + e.danmakuRotOffsetZ; // 直接让弹幕面向飞行方向
+            float spawnRotRad = angle + danmakuRotOffRad;
 
             // 速度方向就是当前角度方向
             float velX = cos * speed;
             float velY = sin * speed;
 
             // 弹幕旋转：通常等于其飞行角度
-            SpawnDanmaku(spawnX, spawnY, spawnRotOffsetZ, velX, velY, cfgIndex);
+            SpawnDanmaku(spawnX, spawnY, spawnRotRad, velX, velY, cfgIndex);
         }
     }
 
-    void SpawnDanmaku(float posX, float posY, float rotZ ,float velX, float velY, int cfgIndex)
+    void SpawnDanmaku(float posX, float posY, float rotationRad, float velX, float velY, int cfgIndex)
     {
-        Entity e_danmaku = EntityFactory.CreateDanmaku(posX, posY, rotZ, velX, velY, cfgIndex);
+        Entity e_danmaku = EntityFactory.CreateDanmaku(posX, posY, rotationRad, velX, velY, cfgIndex);
         EntityManager.AddComponent(e_danmaku, new CPoolGetTag());
     }
 }

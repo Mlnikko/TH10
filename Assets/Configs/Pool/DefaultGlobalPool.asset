@@ -46,3 +46,14 @@ MonoBehaviour:
       maxCapacity: 5000
       defaultWarmupCount: 5000
       allowForceRecycle: 1
+  - categoryName: "\u6389\u843D\u7269"
+    category: 3
+    entries:
+    - prefabId: drop_pr_s
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: drop_pt_s
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0

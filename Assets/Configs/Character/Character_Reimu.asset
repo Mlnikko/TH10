@@ -31,7 +31,7 @@ MonoBehaviour:
     isTrigger: 0
     shape: 2
     layer: 2
-    mask: 20
+    mask: 52
     radius: 0.04
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}

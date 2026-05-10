@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6bd98a2a33b0ed4292df5bde10f68a9, type: 3}
   m_Name: GameResourceManifest
   m_EditorClassIdentifier: 
-  gameCoreConfigId: gamecore
   characterConfigIds:
   - character_marisa
   - character_reimu
@@ -35,6 +34,9 @@ MonoBehaviour:
   - dme_reimu_homing
   - dme_reimu_main
   - dme_test
+  dropItemConfigIds:
+  - drop_pr_s
+  - drop_pt_s
   poolConfigIds:
   - defaultglobalpool
   - stagepool_1
@@ -56,6 +58,9 @@ MonoBehaviour:
   - dme_reimu_main
   - dme_test
   effectPrefabIds: []
+  dropItemPrefabIds:
+  - drop_pr_s
+  - drop_pt_s
   characterImages:
   - character_marisa
   - character_reimu

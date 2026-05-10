@@ -8,7 +8,7 @@ public class EnemyConfigViewer : MonoBehaviour
 
     [Header("敌人属性设置")]
     [SerializeField] EnemyType enemyType;
-    [SerializeField] float maxHealth;
+    [SerializeField] int maxHealth;
 
     [Header("碰撞设置")]
     [SerializeField] ColliderConfig colliderConfig;
@@ -28,6 +28,7 @@ public class EnemyConfigViewer : MonoBehaviour
         if (enemyConfig == null) return;
 
         enemyType = enemyConfig.enemyType;
+        maxHealth = enemyConfig.maxHealth;
         colliderConfig = enemyConfig.colliderConfig;
 
         Logger.Debug("已加载敌人配置：" + enemyConfig.name);
@@ -38,6 +39,7 @@ public class EnemyConfigViewer : MonoBehaviour
     {
         if (enemyConfig == null) return;
         enemyConfig.enemyType = enemyType;
+        enemyConfig.maxHealth = maxHealth;
         enemyConfig.colliderConfig = colliderConfig;
         Logger.Debug("已保存敌人配置：" + enemyConfig.name);
     }

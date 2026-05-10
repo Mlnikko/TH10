@@ -18,5 +18,17 @@ MonoBehaviour:
   spawnPattern: 0
   spawnAreaSize: {x: 10, y: 5}
   spawnOffset: {x: 0, y: 0}
+  movementData:
+    rid: -2
+  useDefaultDescentIfNoMovement: 1
+  defaultDescentSpeedPerFrame: 0.06
   hpMultiplier: 1
   waitForClear: 0
+  waveDropMode: 1
+  waveDropOnDeathConfigIds:
+  - drop_pt_s
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

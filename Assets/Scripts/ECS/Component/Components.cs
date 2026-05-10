@@ -25,6 +25,11 @@ public struct CPoolGetTag : IComponent { }
 
 public struct CPoolRecycleTag : IComponent { }
 
+/// <summary>
+/// 跳过「超出弹幕回收区则实体销毁」逻辑（如道中/关底 Boss）；与普通敌人共用 <see cref="CPoolRecycleTag"/> 回收管线以外的豁免。
+/// </summary>
+public struct CNoOffscreenRecycleTag : IComponent { }
+
 #region 基础组件
 
 public struct CPosition : IComponent
@@ -40,12 +45,12 @@ public struct CPosition : IComponent
 public struct CRotation : IComponent
 {
     /// <summary>
-    /// 旋转角度，单位为度
+    /// 绕 Z 轴旋转角，单位为弧度（逻辑层统一弧度；表现层再乘 Mathf.Rad2Deg 得到欧拉角度数）。
     /// </summary>
-    public float angle;
-    public CRotation(float angle)
+    public float angleRad;
+    public CRotation(float angleRad)
     {
-        this.angle = angle;
+        this.angleRad = angleRad;
     }
 }
 
@@ -74,6 +79,19 @@ public struct CDanmaku : IComponent
     }
 }
 
+/// <summary>
+/// 掉落物逻辑实体；配置索引指向 <see cref="DropItemConfig"/>。
+/// </summary>
+public struct CDropItem : IComponent
+{
+    public int cfgIndex;
+
+    public CDropItem(int cfgIndex)
+    {
+        this.cfgIndex = cfgIndex;
+    }
+}
+
 #endregion
 
 #region 弹幕发射器组件
@@ -96,9 +114,10 @@ public struct CDanmakuEmitter : IComponent
     // ================= 通用参数 (预计算) =================
     public float launchSpeed;
     public float emitterPosOffsetX, emitterPosOffsetY;
-    public float emitterRotOffsetZ;
-
-    public float danmakuRotOffsetZ;
+    /// <summary>发射器旋转偏移（弧度）；由 <see cref="DanmakuEmitterConfig.emitterRotOffsetZ"/>（度）在构造时烘焙。</summary>
+    public float emitterRotOffsetRad;
+    /// <summary>弹幕生成时的旋转偏移（弧度）；由 <see cref="DanmakuEmitterConfig.danmakuRotOffsetZ"/>（度）在构造时烘焙。</summary>
+    public float danmakuRotOffsetRad;
 
     public int emitterCamp;
 
@@ -136,9 +155,8 @@ public struct CDanmakuEmitter : IComponent
 
         emitterPosOffsetX = soConfig.emitterPosOffset.x;
         emitterPosOffsetY = soConfig.emitterPosOffset.y;
-        emitterRotOffsetZ = soConfig.emitterRotOffsetZ;
-
-        danmakuRotOffsetZ = soConfig.danmakuRotOffsetZ;
+        emitterRotOffsetRad = soConfig.emitterRotOffsetZ * Mathf.Deg2Rad;
+        danmakuRotOffsetRad = soConfig.danmakuRotOffsetZ * Mathf.Deg2Rad;
         emitterCamp = (int)soConfig.emitterCamp;
 
         // --- Line 模式烘焙 ---
@@ -251,6 +269,9 @@ public struct CPlayer : IComponent
     public bool isShooting;       // 是否正在射击
     public bool isBombing;        // 是否正在使用炸弹
     public bool isInvincible;     // 是否无敌
+
+    /// <summary>P 道具 / 火力拾取累计（由 <see cref="DropItemPickupEffects"/> 写入）。</summary>
+    public int powerOrbs;
 }
 
 #endregion
@@ -260,6 +281,16 @@ public struct CEnemy : IComponent
 {
     public int enemyCfgIndex;          // 配置索引, 与敌人配置表对应
     public int currentHealth;            // 当前生命值
+}
+
+/// <summary>
+/// 由时间轴波次写入：覆盖或追加该敌人的死亡掉落（见 <see cref="E_WaveDropOverrideMode"/>）。
+/// </summary>
+public struct CEnemyDeathLoot : IComponent
+{
+    public E_WaveDropOverrideMode waveDropMode;
+    /// <summary>烘焙后的 DropItemConfig 索引；Replace/Append 时使用。</summary>
+    public int[] waveDropCfgIndices;
 }
 #endregion
 

@@ -944,8 +944,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1e2f3a4b5c6478091a2b3c4d5e6f708
-    m_Address: cfg_gamecore
+  - m_GUID: aabbccddee11223344556677889900aa
+    m_Address: cfg_drop_pr_s
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca871ea02d320904382476df4f37ec13
+    m_Address: prefab_drop_pr_s
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20c0d8edcb734e143ac356e544c97d6f
+    m_Address: prefab_battlepanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a53cd15a47c01e34dabd913552447846
+    m_Address: prefab_drop_pt_s
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99a4a050de160774f8c3c1428aeaa7fc
+    m_Address: cfg_drop_pt_s
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -110,6 +110,8 @@ public class GameResDB : Singleton<GameResDB>
             allConfigIds.AddRange(manifest.weaponConfigIds);
             allConfigIds.AddRange(manifest.danmakuConfigIds);
             allConfigIds.AddRange(manifest.danmakuEmitterConfigIds);
+            if (manifest.dropItemConfigIds != null && manifest.dropItemConfigIds.Length > 0)
+                allConfigIds.AddRange(manifest.dropItemConfigIds);
             allConfigIds.AddRange(manifest.poolConfigIds);
 
             if (!string.IsNullOrEmpty(manifest.battleAreaConfigId))
@@ -136,6 +138,7 @@ public class GameResDB : Singleton<GameResDB>
             allPrefabIds.AddRange(manifest.danmakuPrefabIds);
             allPrefabIds.AddRange(manifest.danmakuEmitterPrefabIds);
             allPrefabIds.AddRange(manifest.effectPrefabIds);
+            AppendPrefabIdsDistinct(allPrefabIds, manifest.dropItemPrefabIds);
 
             // 预加载（可选）
             await ResManager.Instance.PreloadAsync<GameObject>(E_ResourceCategory.Prefab, allPrefabIds);
@@ -161,6 +164,21 @@ public class GameResDB : Singleton<GameResDB>
 
         IsInitialized = true;
         Logger.Info("GameResDB initialized successfully.", LogTag.Resource);
+    }
+
+    static void AppendPrefabIdsDistinct(List<string> list, string[] ids)
+    {
+        if (ids == null || ids.Length == 0)
+            return;
+        for (int i = 0; i < ids.Length; i++)
+        {
+            string raw = ids[i];
+            if (string.IsNullOrWhiteSpace(raw))
+                continue;
+            string id = raw.Trim();
+            if (!list.Contains(id))
+                list.Add(id);
+        }
     }
 
     async Task<List<T>> LoadAssetsAsync<T>(IReadOnlyList<string> ids, E_ResourceCategory category) where T : UnityEngine.Object

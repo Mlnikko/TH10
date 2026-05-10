@@ -37,7 +37,7 @@ public class DanmakuSystem : BaseSystem
 
     void UpdateDanmakuRotation(ref CRotation rotation, ref CVelocity velocity)
     {
-        rotation.angle = MathF.Atan2(velocity.vy, velocity.vx) * Mathf.Rad2Deg;
+        rotation.angleRad = MathF.Atan2(velocity.vy, velocity.vx);
     }
 
     // 弹幕超出边界后回收

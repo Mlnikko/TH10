@@ -42,12 +42,9 @@ public class CollisionSystem : BaseSystem
             ref readonly var pos = ref positions[e];
             ref readonly var rot = ref rotations[e];
 
-            // --- 修改点：处理度数转弧度 ---
-            
-            // 1. 将度数转换为弧度
-            float angleRad = rot.angle * MathF.PI / 180f;
-            
-            // 2. 预计算 Sin 和 Cos
+            float angleRad = rot.angleRad;
+
+            // 预计算 Sin 和 Cos
             float cos = MathF.Cos(angleRad);
             float sin = MathF.Sin(angleRad);
 
@@ -69,11 +66,10 @@ public class CollisionSystem : BaseSystem
             int i = activeColliders[iIdx];
             ref readonly var colA = ref colliders[i];
 
-            // --- 修改点：查询时也使用同样的旋转逻辑 ---
             ref readonly var posA = ref positions[i];
             ref readonly var rotA = ref rotations[i];
-            
-            float angleARad = rotA.angle * MathF.PI / 180f;
+
+            float angleARad = rotA.angleRad;
             float cosA = MathF.Cos(angleARad);
             float sinA = MathF.Sin(angleARad);
 
@@ -91,8 +87,7 @@ public class CollisionSystem : BaseSystem
                 ref readonly var posB = ref positions[j];
                 ref readonly var rotB = ref rotations[j];
 
-                // --- 修改点：获取 B 的弧度 ---
-                float angleBRad = rotB.angle * MathF.PI / 180f;
+                float angleBRad = rotB.angleRad;
                 float cosB = MathF.Cos(angleBRad);
                 float sinB = MathF.Sin(angleBRad);
 

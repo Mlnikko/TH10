@@ -121,7 +121,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyConfig: {fileID: 11400000, guid: bbb2c76c117338045854982ba0901625, type: 2}
   enemyType: 1
-  maxHealth: 100
+  maxHealth: 3
   colliderConfig:
     isTrigger: 0
     shape: 1

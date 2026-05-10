@@ -1,5 +1,19 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+
+/// <summary>
+/// 时间轴波次对「敌人死亡掉落」的覆盖方式（相对 <see cref="EnemyConfig.dropOnDeathCfgIndices"/>）。
+/// </summary>
+public enum E_WaveDropOverrideMode : byte
+{
+    /// <summary>仅使用敌人配置上的掉落列表。</summary>
+    UseEnemyConfig = 0,
+    /// <summary>忽略敌人配置，仅使用本波次 <see cref="EnemyWaveConfig.waveDropOnDeathConfigIds"/>。</summary>
+    Replace = 1,
+    /// <summary>敌人配置与本波次列表合并掉落（先敌配置后波次）。</summary>
+    Append = 2,
+}
 
 [CreateAssetMenu(fileName = "NewEnemyWave", menuName = "Configs/Stage/EnemyWaveConfig")]
 public class EnemyWaveConfig : GameConfig, ILogicTimingBake
@@ -44,10 +58,54 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
     [Tooltip("是否等待此波次全灭后才继续后续逻辑 (仅用于特定脚本控制，时间线通常自动推进)")]
     public bool waitForClear = false;
 
+    [Header("击杀掉落（时间轴）")]
+    [Tooltip("相对敌人默认掉落的覆盖策略；由关卡时间轴 ResolveReferences 烘焙 waveDropOnDeathCfgIndices")]
+    public E_WaveDropOverrideMode waveDropMode = E_WaveDropOverrideMode.UseEnemyConfig;
+
+    [Tooltip("本波次掉落（DropItemConfig 的 ConfigId）；UseEnemyConfig 时忽略")]
+    public string[] waveDropOnDeathConfigIds = Array.Empty<string>();
+
+    [NonSerialized]
+    public int[] waveDropOnDeathCfgIndices = Array.Empty<int>();
+
+    /// <summary>由 <see cref="StageTimelineConfig.ResolveReferences"/> 调用。</summary>
+    public void ResolveDropReferences(GameResDB resDb)
+    {
+        if (waveDropMode == E_WaveDropOverrideMode.UseEnemyConfig
+            || waveDropOnDeathConfigIds == null
+            || waveDropOnDeathConfigIds.Length == 0)
+        {
+            waveDropOnDeathCfgIndices = Array.Empty<int>();
+            return;
+        }
+
+        var list = new List<int>(waveDropOnDeathConfigIds.Length);
+        for (int i = 0; i < waveDropOnDeathConfigIds.Length; i++)
+        {
+            string id = waveDropOnDeathConfigIds[i];
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+            int idx = resDb.GetConfigIndex(id.ToLowerInvariantTrimmed());
+            if (idx >= 0)
+                list.Add(idx);
+            else
+                Logger.Warn($"[EnemyWaveConfig] DropItemConfig not found: '{id}' (wave asset: {name})", LogTag.Resource);
+        }
+        waveDropOnDeathCfgIndices = list.ToArray();
+    }
+
 #if UNITY_EDITOR
     void OnValidate()
     {
         enemyConfigId = enemyConfigId.ToLowerInvariantTrimmed();
+        if (waveDropOnDeathConfigIds != null)
+        {
+            for (int i = 0; i < waveDropOnDeathConfigIds.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(waveDropOnDeathConfigIds[i]))
+                    waveDropOnDeathConfigIds[i] = waveDropOnDeathConfigIds[i].ToLowerInvariantTrimmed();
+            }
+        }
     }
 #endif
 }

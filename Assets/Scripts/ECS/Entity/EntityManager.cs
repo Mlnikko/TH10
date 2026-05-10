@@ -7,6 +7,10 @@ using System.Collections.Generic;
 public static class TempBitSets
 {
     public static readonly BitSet Collision = new(EntityManager.MAX_ENTITIES);
+    /// <summary>本逻辑帧内已结算过「击中敌人」的玩家弹幕实体索引，防止同一帧重复命中。</summary>
+    public static readonly BitSet PlayerDanmakuHitConsumed = new(EntityManager.MAX_ENTITIES);
+    /// <summary>本逻辑帧内已被拾取的掉落物实体索引，防止同一帧重复触发效果。</summary>
+    public static readonly BitSet DropItemPickupConsumed = new(EntityManager.MAX_ENTITIES);
 }
 
 /// <summary>

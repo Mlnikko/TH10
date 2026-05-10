@@ -24,7 +24,7 @@ public class UIManager : SingletonMono<UIManager>
                 canvas.sortingOrder = 0;
 
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920, 1080);
+                scaler.referenceResolution = new Vector2(1280, 960);
                 scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
 
                 if (FindObjectOfType<EventSystem>() == null)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewStageTimeline", menuName = "Configs/Stage/Stage Timeline Config")]
-public class StageTimelineConfig : GameConfig, ILogicTimingBake
+public class StageTimelineConfig : GameConfig, ILogicTimingBake, IReferenceResolver
 {
     [Header("全局设置")]
     public string stageId;
@@ -30,6 +30,17 @@ public class StageTimelineConfig : GameConfig, ILogicTimingBake
     [NonSerialized] public int maxStageLogicFrames;
 
     public string clearEffectPrefab;
+
+    public void ResolveReferences(GameResDB resDb)
+    {
+        if (midStageWaves == null)
+            return;
+        for (int i = 0; i < midStageWaves.Count; i++)
+        {
+            if (midStageWaves[i] != null)
+                midStageWaves[i].ResolveDropReferences(resDb);
+        }
+    }
 
     public void BakeLogicTiming(uint logicFPS)
     {

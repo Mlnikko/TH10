@@ -43,8 +43,21 @@ public class EntityFactory
             isSlowMode = false,
             isBombing = false,
             isInvincible = false,
+            powerOrbs = 0,
         });
         _entityManager.AddComponent(e_player, new CHealth(characterConfig.maxHealth, characterConfig.maxHealth));
+        _entityManager.AddComponent(e_player, new CCollider
+        {
+            isActive = true,
+            shape = characterConfig.hitColliderConfig.shape,
+            layer = characterConfig.hitColliderConfig.layer,
+            mask = characterConfig.hitColliderConfig.mask,
+            offsetX = characterConfig.hitColliderConfig.offset.x,
+            offsetY = characterConfig.hitColliderConfig.offset.y,
+            radius = characterConfig.hitColliderConfig.radius,
+            width = characterConfig.hitColliderConfig.boxSize.x,
+            height = characterConfig.hitColliderConfig.boxSize.y,
+        });
 
         foreach (var emitterIndex in weaponConfig.danmakuEmitterCfgIndices)
         {
@@ -61,7 +74,8 @@ public class EntityFactory
         return e_player;
     }
 
-    public Entity CreateDanmaku(float posX, float posY, float rotZ, float velX, float velY, int danmakuCfgIndex)
+    /// <param name="rotationRad">弹幕逻辑旋转（弧度），与 <see cref="CRotation.angleRad"/> 一致。</param>
+    public Entity CreateDanmaku(float posX, float posY, float rotationRad, float velX, float velY, int danmakuCfgIndex)
     {
         // 检查配置是否存在
         var danmakuCfg = GameResDB.Instance.GetConfig<DanmakuConfig>(danmakuCfgIndex);
@@ -76,7 +90,7 @@ public class EntityFactory
 
         _entityManager.AddComponent(e_danmaku, new CDanmaku(danmakuCfgIndex));
         _entityManager.AddComponent(e_danmaku, new CPosition(posX, posY));
-        _entityManager.AddComponent(e_danmaku, new CRotation(rotZ));
+        _entityManager.AddComponent(e_danmaku, new CRotation(rotationRad));
         _entityManager.AddComponent(e_danmaku, new CVelocity(velX, velY));
         _entityManager.AddComponent(e_danmaku, new CCollider
         {
@@ -119,5 +133,38 @@ public class EntityFactory
             height = enemyConfig.colliderConfig.boxSize.y,
         });
         return e_enemy;
+    }
+
+    /// <summary>
+    /// 生成掉落物 ECS 实体（匀速下落由 <see cref="CVelocity"/> 表示）；表现层需另行 <see cref="CPoolGetTag"/>。
+    /// </summary>
+    public Entity CreateDropItem(int dropCfgIndex, float posX, float posY)
+    {
+        var cfg = GameResDB.Instance.GetConfig<DropItemConfig>(dropCfgIndex);
+        if (cfg == null)
+        {
+            Logger.Error($"DropItemConfig not found for index {dropCfgIndex}.");
+            return Entity.Null;
+        }
+
+        Entity e = _entityManager.CreateEntity();
+        _entityManager.AddComponent(e, new CDropItem(dropCfgIndex));
+        _entityManager.AddComponent(e, new CPosition(posX, posY));
+        _entityManager.AddComponent(e, new CRotation(0));
+        float vy = -cfg.fallDistancePerFrame;
+        _entityManager.AddComponent(e, new CVelocity(0f, vy));
+        _entityManager.AddComponent(e, new CCollider
+        {
+            isActive = true,
+            shape = cfg.colliderConfig.shape,
+            layer = cfg.colliderConfig.layer,
+            mask = cfg.colliderConfig.mask,
+            offsetX = cfg.colliderConfig.offset.x,
+            offsetY = cfg.colliderConfig.offset.y,
+            radius = cfg.colliderConfig.radius,
+            width = cfg.colliderConfig.boxSize.x,
+            height = cfg.colliderConfig.boxSize.y,
+        });
+        return e;
     }
 }

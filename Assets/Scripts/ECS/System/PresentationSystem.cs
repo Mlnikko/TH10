@@ -22,6 +22,7 @@ public class PresentationSystem : BaseSystem
         if (indices.Length == 0) return;
 
         var positions = EntityManager.GetComponentSpan<CPosition>();
+        var drops = EntityManager.GetComponentSpan<CDropItem>();
         var danmakus = EntityManager.GetComponentSpan<CDanmaku>();
         var players = EntityManager.GetComponentSpan<CPlayer>();
         var enemies = EntityManager.GetComponentSpan<CEnemy>();
@@ -40,7 +41,29 @@ public class PresentationSystem : BaseSystem
             IGameObjectUpdater updater = null;
 
             // --- 根据实体类型决定生成什么 ---
-            if (EntityManager.HasComponent<CDanmaku>(entity) && entityIndex < danmakus.Length)
+            if (EntityManager.HasComponent<CDropItem>(entity) && entityIndex < drops.Length)
+            {
+                ref var drop = ref drops[entityIndex];
+                var dropCfg = GameResDB.Instance.GetConfig<DropItemConfig>(drop.cfgIndex);
+
+                if (dropCfg != null && dropCfg.pickupPrefabIndex >= 0)
+                {
+                    go = GameObjectPoolManager.Instance.Get(dropCfg.pickupPrefabIndex);
+                    if (go != null)
+                    {
+                        go.transform.position = spawnPos;
+                        go.SetActive(true);
+                        if (dropCfg.pickupSprite != null)
+                        {
+                            var sr = go.GetComponentInChildren<SpriteRenderer>();
+                            if (sr != null)
+                                sr.sprite = dropCfg.pickupSprite;
+                        }
+                        updater = new DropItemUpdater(go);
+                    }
+                }
+            }
+            else if (EntityManager.HasComponent<CDanmaku>(entity) && entityIndex < danmakus.Length)
             {
                 ref var danmaku = ref danmakus[entityIndex];
                 var config = GameResDB.Instance.GetConfig<DanmakuConfig>(danmaku.cfgIndex);

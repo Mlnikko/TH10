@@ -16,7 +16,7 @@ public class EnemyUpdater : IGameObjectUpdater
         {
             var pos = em.GetComponentSpan<CPosition>()[entity.Index];
             var rot = em.GetComponentSpan<CRotation>()[entity.Index];
-            _transform.SetPositionAndRotation(new Vector3(pos.x, pos.y, 0), Quaternion.Euler(0, 0, rot.angle));
+            _transform.SetPositionAndRotation(new Vector3(pos.x, pos.y, 0), Quaternion.Euler(0, 0, rot.angleRad * Mathf.Rad2Deg));
         }
     }
 }

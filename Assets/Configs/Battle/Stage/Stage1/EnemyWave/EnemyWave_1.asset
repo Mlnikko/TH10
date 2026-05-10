@@ -19,13 +19,24 @@ MonoBehaviour:
   spawnAreaSize: {x: 10, y: 5}
   spawnOffset: {x: 0, y: 0}
   movementData:
-    rid: -2
+    rid: 3645173576225259520
   useDefaultDescentIfNoMovement: 1
   defaultDescentSpeedPerFrame: 0.06
   hpMultiplier: 1
   waitForClear: 0
+  waveDropMode: 1
+  waveDropOnDeathConfigIds:
+  - drop_pr_s
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    - rid: 3645173576225259520
+      type: {class: StaticMovementData, ns: , asm: Assembly-CSharp}
+      data:
+        type: 0
+        durationSeconds: -1
+        speed: 0.12
+        amplitude: 0.25
+        frequency: 0.08
+        direction: {x: 0, y: -1}
+        bezierPoints: []
