@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -44,32 +45,157 @@ public class UIManager : SingletonMono<UIManager>
 
     readonly Stack<UIPanel> panelStack = new();
     readonly Dictionary<string, UIPanel> activePanels = new();
+    /// <summary>同类型面板尚未完成的打开任务，用于合并并发 ShowPanelAsync，避免重复 Instantiate。</summary>
+    readonly Dictionary<string, Task<UIPanel>> _inflightPanelOpens = new();
+    readonly object _panelOpenSync = new();
+
+    UIPanelRegistry _registryCachedForLookup;
+    Dictionary<string, UIPanelRegistryEntry> _registryEntryByPanelKey;
+
+    UIPanelRegistry ResolveRegistry()
+    {
+        try
+        {
+            return ResManager.Instance?.Manifest?.uiPanelRegistry;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    void EnsureRegistryLookup()
+    {
+        var reg = ResolveRegistry();
+        if (ReferenceEquals(reg, _registryCachedForLookup) && _registryEntryByPanelKey != null)
+            return;
+        _registryCachedForLookup = reg;
+        _registryEntryByPanelKey = new Dictionary<string, UIPanelRegistryEntry>(StringComparer.Ordinal);
+        if (reg?.entries == null)
+            return;
+        foreach (var e in reg.entries)
+        {
+            if (e == null || string.IsNullOrWhiteSpace(e.panelScriptTypeName))
+                continue;
+            _registryEntryByPanelKey[e.panelScriptTypeName.Trim()] = e;
+        }
+    }
+
+    bool TryGetRegistryEntry(string panelKey, out UIPanelRegistryEntry entry)
+    {
+        EnsureRegistryLookup();
+        entry = null;
+        return _registryEntryByPanelKey != null && _registryEntryByPanelKey.TryGetValue(panelKey, out entry);
+    }
+
+    /// <summary>
+    /// 显式 <paramref name="prefabResourceIdOverride"/> 优先；否则使用 Manifest 注册表中的 prefab id；再否则使用面板类名。
+    /// </summary>
+    string ResolvePrefabLoadId(string panelKey, string prefabResourceIdOverride)
+    {
+        if (!string.IsNullOrEmpty(prefabResourceIdOverride))
+            return prefabResourceIdOverride;
+        if (TryGetRegistryEntry(panelKey, out var e) && !string.IsNullOrEmpty(e.prefabResourceId))
+            return e.prefabResourceId;
+        return panelKey;
+    }
+
+    void ApplyPresentationPolicy(UIPanel panel, string panelKey)
+    {
+        if (panel == null)
+            return;
+        if (TryGetRegistryEntry(panelKey, out var e) && e.exclusiveFullscreen)
+            panel.transform.SetAsLastSibling();
+    }
+
+    bool ShouldDestroyInstanceWhenClosed(string panelKey)
+    {
+        if (!TryGetRegistryEntry(panelKey, out var e))
+            return true;
+        return e.destroyInstanceWhenClosed;
+    }
+
+    void RemovePanelFromStack(UIPanel panel)
+    {
+        if (panel == null || panelStack.Count == 0)
+            return;
+        var tempStack = new Stack<UIPanel>();
+        while (panelStack.Count > 0)
+        {
+            var top = panelStack.Pop();
+            if (top != panel)
+                tempStack.Push(top);
+        }
+        while (tempStack.Count > 0)
+            panelStack.Push(tempStack.Pop());
+    }
 
     /// <summary>
     /// 异步显示面板（返回 Task，支持 await）
     /// </summary>
     /// <param name="prefabResourceId">
-    /// Addressables 资源名（不含 prefab_ 前缀），默认与面板类型名一致；
-    /// 例如战斗面板预制体登记为 prefab_battlepanel 时传入 <c>"battlepanel"</c>。
+    /// Addressables 资源 id（不含 prefab_ 前缀）；若为空则使用 <see cref="GameResourceManifest.uiPanelRegistry"/> 中的配置，
+    /// 再无则与面板类型名一致（经 Addressables 键规则小写化）。
     /// </param>
     public async Task<T> ShowPanelAsync<T>(object data = null, string prefabResourceId = null) where T : UIPanel
     {
         string panelKey = typeof(T).Name;
 
-        // 如果已激活，直接返回（不重新实例化）
-        if (activePanels.TryGetValue(panelKey, out var existing) && existing != null && existing.gameObject.activeSelf)
+        lock (_panelOpenSync)
         {
-            existing.OnShow(data);
-            return (T)existing;
+            // 1. 已缓存（含仅隐藏）：直接显示，避免重复 Addressables 加载
+            if (activePanels.TryGetValue(panelKey, out var cached) && cached != null)
+            {
+                cached.gameObject.SetActive(true);
+                cached.OnShow(data);
+                PushToStack(cached);
+                ApplyPresentationPolicy(cached, panelKey);
+                return (T)cached;
+            }
         }
 
+        Task<UIPanel> openTask;
+        bool iRegisteredInflight = false;
+        lock (_panelOpenSync)
+        {
+            if (_inflightPanelOpens.TryGetValue(panelKey, out var existingTask))
+                openTask = existingTask;
+            else
+            {
+                openTask = OpenPanelTaskAsync<T>(data, prefabResourceId, panelKey);
+                _inflightPanelOpens[panelKey] = openTask;
+                iRegisteredInflight = true;
+            }
+        }
+
+        try
+        {
+            UIPanel result = await openTask;
+            return result as T;
+        }
+        finally
+        {
+            if (iRegisteredInflight)
+            {
+                lock (_panelOpenSync)
+                {
+                    // 仅注册方在任务结束后移除；其它等待方共享同一 Task
+                    if (_inflightPanelOpens.TryGetValue(panelKey, out var t) && ReferenceEquals(t, openTask))
+                        _inflightPanelOpens.Remove(panelKey);
+                }
+            }
+        }
+    }
+
+    async Task<UIPanel> OpenPanelTaskAsync<T>(object data, string prefabResourceId, string panelKey) where T : UIPanel
+    {
         if (ResManager.Instance == null)
         {
             Logger.Error("[UIManager] ResManager.Instance 为空，无法加载面板预制体。", LogTag.UI);
             return null;
         }
 
-        string loadId = string.IsNullOrEmpty(prefabResourceId) ? panelKey : prefabResourceId;
+        string loadId = ResolvePrefabLoadId(panelKey, prefabResourceId);
         GameObject prefab = await ResManager.Instance.LoadAsync<GameObject>(E_ResourceCategory.Prefab, loadId);
         if (prefab == null)
         {
@@ -77,16 +203,29 @@ public class UIManager : SingletonMono<UIManager>
             return null;
         }
 
-        var canvasTransform = Canvas != null ? Canvas.transform : null;
+        Transform canvasTransform = Canvas != null ? Canvas.transform : null;
         if (canvasTransform == null)
         {
             Logger.Error("[UIManager] Canvas 未就绪，无法实例化面板。", LogTag.UI);
             return null;
         }
 
-        // 显示面板
-        var panel = InternalShowPanel<T>(prefab, data, canvasTransform);
-        return panel;
+        lock (_panelOpenSync)
+        {
+            // 加载期间可能已被其它逻辑放入字典（极少）；再次命中缓存则不再 Instantiate
+            if (activePanels.TryGetValue(panelKey, out var cached) && cached != null)
+            {
+                cached.gameObject.SetActive(true);
+                cached.OnShow(data);
+                PushToStack(cached);
+                ApplyPresentationPolicy(cached, panelKey);
+                return cached;
+            }
+        }
+
+        var shown = InternalShowPanel<T>(prefab, data, canvasTransform);
+        ApplyPresentationPolicy(shown, panelKey);
+        return shown;
     }
 
     T InternalShowPanel<T>(GameObject prefab, object data, Transform parent) where T : UIPanel
@@ -126,6 +265,7 @@ public class UIManager : SingletonMono<UIManager>
         return panel;
     }
 
+
     void PushToStack(UIPanel panel)
     {
         if (panelStack.Count > 0 && panelStack.Peek() == panel) return;
@@ -145,24 +285,20 @@ public class UIManager : SingletonMono<UIManager>
     public void ClosePanel<T>() where T : UIPanel
     {
         string name = typeof(T).Name;
-        if (activePanels.TryGetValue(name, out var panel) && panel != null)
+        if (!activePanels.TryGetValue(name, out var panel) || panel == null)
+            return;
+
+        RemovePanelFromStack(panel);
+
+        if (ShouldDestroyInstanceWhenClosed(name))
         {
             Destroy(panel.gameObject);
             activePanels.Remove(name);
-            // 从栈中移除
-            var tempStack = new Stack<UIPanel>();
-            while (panelStack.Count > 0)
-            {
-                var top = panelStack.Pop();
-                if (top != panel)
-                {
-                    tempStack.Push(top);
-                }
-            }
-            while (tempStack.Count > 0)
-            {
-                panelStack.Push(tempStack.Pop());
-            }
+        }
+        else
+        {
+            panel.gameObject.SetActive(false);
+            panel.OnHide();
         }
     }
 
@@ -193,6 +329,10 @@ public class UIManager : SingletonMono<UIManager>
         }
         activePanels.Clear();
         panelStack.Clear();
+        lock (_panelOpenSync)
+        {
+            _inflightPanelOpens.Clear();
+        }
     }
 
 

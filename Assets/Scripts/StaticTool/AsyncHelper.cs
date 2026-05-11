@@ -13,10 +13,10 @@ public static class AsyncHelper
     {
         if (task == null) return;
 
-        // 如果任务已完成且有异常，立即抛出（便于调试）
+        // 如果任务已完成且有异常，立即记录（便于调试与日志聚合）
         if (task.IsFaulted)
         {
-            Debug.LogException(task.Exception);
+            LogTaskFault(task.Exception);
             return;
         }
 
@@ -32,7 +32,18 @@ public static class AsyncHelper
         }
         catch (Exception ex)
         {
+            Logger.Error($"[Async] Fire-and-forget 任务异常: {ex.Message}", LogTag.Misc);
             Debug.LogException(ex);
         }
+    }
+
+    static void LogTaskFault(AggregateException aggregate)
+    {
+        Exception ex = aggregate?.GetBaseException() ?? aggregate;
+        Logger.Error($"[Async] Fire-and-forget 任务已完成且失败: {ex?.Message ?? aggregate?.ToString()}", LogTag.Misc);
+        if (aggregate != null)
+            Debug.LogException(aggregate);
+        else if (ex != null)
+            Debug.LogException(ex);
     }
 }

@@ -33,4 +33,8 @@ public class GameResourceManifest : ScriptableObject
 
     [Header("图集 - Atlases")]
     public string[] atlases = new string[0];
+
+    [Header("UI")]
+    /// <summary>面板默认预制体 id、关闭策略与层级；未命中条目时仍按类名推断 prefab 地址。</summary>
+    public UIPanelRegistry uiPanelRegistry;
 }

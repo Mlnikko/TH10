@@ -242,7 +242,7 @@ public class BattleManager : SingletonMono<BattleManager>
                 return;
             }
 
-            var panel = await UIManager.Instance.ShowPanelAsync<BattleUIPanel>(null, PrefabIdBattlePanel);
+            var panel = await UIManager.Instance.ShowPanelAsync<BattleUIPanel>();
             if (panel == null)
                 Logger.Error($"[Battle] BattleUIPanel 未创建成功，请检查 prefab_{PrefabIdBattlePanel} 与 UIManager 日志。", LogTag.UI);
         }

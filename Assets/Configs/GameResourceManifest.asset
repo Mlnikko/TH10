@@ -70,3 +70,4 @@ MonoBehaviour:
   - danmaku
   - fairy
   - weapon
+  uiPanelRegistry: {fileID: 11400000, guid: 0746ebbea28e2574d9259595331f2f94, type: 2}
