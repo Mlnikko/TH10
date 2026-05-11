@@ -37,15 +37,16 @@ internal class ResourceRegistry<T> where T : UnityEngine.Object
 
         _idToIndex = new Dictionary<string, int>(ids.Count);
 
-        // 从 0 开始编制资源索引
+        // 从 0 开始编制资源索引（键均为 NormalizeResourceId 结果）
         for (int i = 0; i < ids.Count; i++)
         {
-            if (string.IsNullOrEmpty(ids[i]))
+            string key = StringHelper.NormalizeResourceId(ids[i]);
+            if (string.IsNullOrEmpty(key))
                 continue;
-            if (_idToIndex.ContainsKey(ids[i]))
-                Logger.Error($"Duplicate resource ID: {ids[i]}", LogTag.Resource);
+            if (_idToIndex.ContainsKey(key))
+                Logger.Error($"Duplicate resource ID: {key}", LogTag.Resource);
             else
-                _idToIndex[ids[i]] = i;
+                _idToIndex[key] = i;
         }
     }
 
@@ -53,8 +54,11 @@ internal class ResourceRegistry<T> where T : UnityEngine.Object
     internal T GetByIndex(int index) =>
         (uint)index < (uint)_assets.Length ? _assets[index] : null;
 
-    internal int GetIndexById(string id) =>
-        !string.IsNullOrEmpty(id) && _idToIndex.TryGetValue(id, out int idx) ? idx : -1;
+    internal int GetIndexById(string id)
+    {
+        string key = StringHelper.NormalizeResourceId(id);
+        return !string.IsNullOrEmpty(key) && _idToIndex.TryGetValue(key, out int idx) ? idx : -1;
+    }
 
     internal T GetById(string id)
     {
@@ -105,20 +109,19 @@ public class GameResDB : Singleton<GameResDB>
         // —————— 加载 Configs ——————
         {
             var allConfigIds = new List<string>();
-            allConfigIds.AddRange(manifest.characterConfigIds);
-            allConfigIds.AddRange(manifest.enemyConfigIds);
-            allConfigIds.AddRange(manifest.weaponConfigIds);
-            allConfigIds.AddRange(manifest.danmakuConfigIds);
-            allConfigIds.AddRange(manifest.danmakuEmitterConfigIds);
-            if (manifest.dropItemConfigIds != null && manifest.dropItemConfigIds.Length > 0)
-                allConfigIds.AddRange(manifest.dropItemConfigIds);
-            allConfigIds.AddRange(manifest.poolConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.characterConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.enemyConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.weaponConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.danmakuConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.danmakuEmitterConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.dropItemConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.poolConfigIds);
 
-            if (!string.IsNullOrEmpty(manifest.battleAreaConfigId))
-                allConfigIds.Add(manifest.battleAreaConfigId);
+            string battleAreaId = StringHelper.NormalizeResourceId(manifest.battleAreaConfigId);
+            if (!string.IsNullOrEmpty(battleAreaId))
+                allConfigIds.Add(battleAreaId);
 
-            if (manifest.stageTimelineConfigIds != null && manifest.stageTimelineConfigIds.Length > 0)
-                allConfigIds.AddRange(manifest.stageTimelineConfigIds);
+            AppendNormalizedIds(allConfigIds, manifest.stageTimelineConfigIds);
 
             var configAssets = await LoadAssetsAsync<GameConfig>(allConfigIds, E_ResourceCategory.Config);
             _configRegistry.Initialize(configAssets, allConfigIds);
@@ -133,11 +136,11 @@ public class GameResDB : Singleton<GameResDB>
         // —————— 加载 Prefabs ——————
         {
             var allPrefabIds = new List<string>();
-            allPrefabIds.AddRange(manifest.characterPrefabIds);
-            allPrefabIds.AddRange(manifest.enemyPrefabIds);
-            allPrefabIds.AddRange(manifest.danmakuPrefabIds);
-            allPrefabIds.AddRange(manifest.danmakuEmitterPrefabIds);
-            allPrefabIds.AddRange(manifest.effectPrefabIds);
+            AppendNormalizedIds(allPrefabIds, manifest.characterPrefabIds);
+            AppendNormalizedIds(allPrefabIds, manifest.enemyPrefabIds);
+            AppendNormalizedIds(allPrefabIds, manifest.danmakuPrefabIds);
+            AppendNormalizedIds(allPrefabIds, manifest.danmakuEmitterPrefabIds);
+            AppendNormalizedIds(allPrefabIds, manifest.effectPrefabIds);
             AppendPrefabIdsDistinct(allPrefabIds, manifest.dropItemPrefabIds);
 
             // 预加载（可选）
@@ -148,14 +151,16 @@ public class GameResDB : Singleton<GameResDB>
 
         // —————— 加载 Textures ——————
         {
-            var textureIds = new List<string>(manifest.characterImages);
+            var textureIds = new List<string>();
+            AppendNormalizedIds(textureIds, manifest.characterImages);
             var textureAssets = await LoadAssetsAsync<Texture2D>(textureIds, E_ResourceCategory.Texture);
             _textureRegistry.Initialize(textureAssets, textureIds);
         }
 
         // —————— 加载 Atlases ——————
         {
-            var atlasIds = new List<string>(manifest.atlases);
+            var atlasIds = new List<string>();
+            AppendNormalizedIds(atlasIds, manifest.atlases);
             var atlasAssets = await LoadAssetsAsync<SpriteAtlas>(atlasIds, E_ResourceCategory.Atlas);
             _atlasRegistry.Initialize(atlasAssets, atlasIds);
         }
@@ -166,16 +171,27 @@ public class GameResDB : Singleton<GameResDB>
         Logger.Info("GameResDB initialized successfully.", LogTag.Resource);
     }
 
+    static void AppendNormalizedIds(List<string> dest, string[] items)
+    {
+        if (items == null || items.Length == 0)
+            return;
+        for (int i = 0; i < items.Length; i++)
+        {
+            string id = StringHelper.NormalizeResourceId(items[i]);
+            if (!string.IsNullOrEmpty(id))
+                dest.Add(id);
+        }
+    }
+
     static void AppendPrefabIdsDistinct(List<string> list, string[] ids)
     {
         if (ids == null || ids.Length == 0)
             return;
         for (int i = 0; i < ids.Length; i++)
         {
-            string raw = ids[i];
-            if (string.IsNullOrWhiteSpace(raw))
+            string id = StringHelper.NormalizeResourceId(ids[i]);
+            if (string.IsNullOrEmpty(id))
                 continue;
-            string id = raw.Trim();
             if (!list.Contains(id))
                 list.Add(id);
         }

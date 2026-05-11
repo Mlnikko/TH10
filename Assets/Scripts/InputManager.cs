@@ -270,7 +270,7 @@ public class InputManager : SingletonMono<InputManager>
         }
     }
 
-    #region 调试显示优化
+    #region 调试显示（Canvas / TMP，避免 OnGUI 重绘）
 
     public FrameInput GetDebugInput(byte playerIndex)
     {
@@ -278,50 +278,57 @@ public class InputManager : SingletonMono<InputManager>
         return _currentConsumedInputs[playerIndex];
     }
 
-    [SerializeField] bool _showDebugInput = true;
-    GUIStyle _debugStyle;
-    // 复用 StringBuilder 用于调试，避免 OnGUI 分配
-    System.Text.StringBuilder _debugSb = new(128);
+    [SerializeField]
+    [Tooltip("在 UIManager 的 UICanvas 上用 TextMeshPro 显示各玩家最近消费输入；关闭时不创建/隐藏 HUD。")]
+    bool _showDebugInput = true;
 
-    GUIStyle DebugStyle
+    InputDebugHud _inputDebugHud;
+    readonly System.Text.StringBuilder _debugSb = new(256);
+
+    void LateUpdate()
     {
-        get
-        {
-            _debugStyle ??= new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = 14,
-                    normal = { textColor = Color.white },
-                    alignment = TextAnchor.UpperLeft
-                };
-            return _debugStyle;
-        }
+        RefreshInputDebugHud();
     }
 
-    void OnGUI()
+    void RefreshInputDebugHud()
     {
-        if (!_showDebugInput || !_isInitialized) return;
+        if (!_isInitialized || !_showDebugInput)
+        {
+            if (_inputDebugHud != null)
+                _inputDebugHud.SetVisible(false);
+            return;
+        }
 
-        GUILayout.BeginArea(new Rect(10, 10, 350, 200));
-        GUILayout.Space(8);
+        if (UIManager.Instance == null || UIManager.Instance.Canvas == null)
+        {
+            if (_inputDebugHud != null)
+                _inputDebugHud.SetVisible(false);
+            return;
+        }
 
+        _inputDebugHud ??= InputDebugHud.GetOrCreate(UIManager.Instance.Canvas.transform);
+        if (_inputDebugHud == null)
+            return;
+
+        _inputDebugHud.SetVisible(true);
+
+        _debugSb.Clear();
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
             var inp = GetDebugInput((byte)i);
-
-            // 【优化】使用 StringBuilder 复用，避免每帧生成字符串
-            _debugSb.Clear();
+            if (i == 0)
+                _debugSb.Append("<color=#88ffff>");
+            else
+                _debugSb.Append("<color=#ffff88>");
             _debugSb.Append("P").Append(i).Append(" (F").Append(inp.frame).Append("): ");
-            _debugSb.Append("H:").Append(inp.MoveHorizontal).Append(" V:").Append(inp.MoveVertical).Append(" ");
+            _debugSb.Append("H:").Append(inp.MoveHorizontal).Append(" V:").Append(inp.MoveVertical).Append(' ');
             _debugSb.Append(inp.Shoot ? "Z " : "· ");
             _debugSb.Append(inp.Bomb ? "X " : "· ");
             _debugSb.Append(inp.SlowMode ? "SLOW" : "FAST");
-
-            GUI.color = (i == 0) ? Color.cyan : Color.yellow;
-            GUILayout.Label(_debugSb.ToString(), DebugStyle);
+            _debugSb.Append("</color>\n");
         }
 
-        GUI.color = Color.white;
-        GUILayout.EndArea();
+        _inputDebugHud.SetDebugText(_debugSb);
     }
 
     #endregion

@@ -125,7 +125,12 @@ public class UIPanelRegistryEditor : Editor
             }
 
             string typeName = panelType.Name;
-            string prefabId = Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
+            string prefabId = StringHelper.NormalizeResourceId(Path.GetFileNameWithoutExtension(path));
+            if (string.IsNullOrEmpty(prefabId))
+            {
+                Logger.Warn($"[UIPanelRegistry] 跳过（预制体文件名为空）：{path}", LogTag.Resource);
+                continue;
+            }
 
             if (prefabIdOwners.TryGetValue(prefabId, out string otherPath))
             {

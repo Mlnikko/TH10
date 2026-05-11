@@ -94,10 +94,10 @@ public class UIManager : SingletonMono<UIManager>
     string ResolvePrefabLoadId(string panelKey, string prefabResourceIdOverride)
     {
         if (!string.IsNullOrEmpty(prefabResourceIdOverride))
-            return prefabResourceIdOverride;
+            return StringHelper.NormalizeResourceId(prefabResourceIdOverride);
         if (TryGetRegistryEntry(panelKey, out var e) && !string.IsNullOrEmpty(e.prefabResourceId))
-            return e.prefabResourceId;
-        return panelKey;
+            return StringHelper.NormalizeResourceId(e.prefabResourceId);
+        return StringHelper.NormalizeResourceId(panelKey);
     }
 
     void ApplyPresentationPolicy(UIPanel panel, string panelKey)

@@ -18,13 +18,12 @@ public static class ResHelper
 {
     public static string GetAddressableKey(E_ResourceCategory resCategory, string resourceName)
     {
-        if (string.IsNullOrWhiteSpace(resourceName))
+        string id = StringHelper.NormalizeResourceId(resourceName);
+        if (string.IsNullOrEmpty(id))
             throw new ArgumentException("Resource resId cannot be null or empty.", nameof(resourceName));
 
         var prefix = GetPrefixForResType(resCategory);
-
-        // 全小写，与 AddressableAutoConfig / Manifest 完全一致
-        return $"{prefix}_{resourceName}".ToLowerInvariant();
+        return $"{prefix}_{id}";
     }
 
     public static string GetPrefixForResType(E_ResourceCategory resCategory)

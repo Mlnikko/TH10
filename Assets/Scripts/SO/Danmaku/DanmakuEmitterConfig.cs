@@ -85,14 +85,14 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     void OnValidate()
     {
         if(!string.IsNullOrEmpty(emitterPrefabId))
-            emitterPrefabId = emitterPrefabId.ToLowerInvariant().Trim();
+            emitterPrefabId = StringHelper.NormalizeResourceId(emitterPrefabId);
 
         if(danmakuConfigIds != null)
         {
             for (int i = 0; i < danmakuConfigIds.Length; i++)
             {
                 if (!string.IsNullOrEmpty(danmakuConfigIds[i]))
-                    danmakuConfigIds[i] = danmakuConfigIds[i].ToLowerInvariant().Trim();
+                    danmakuConfigIds[i] = StringHelper.NormalizeResourceId(danmakuConfigIds[i]);
             }
         }
     }

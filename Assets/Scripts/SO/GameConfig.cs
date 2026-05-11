@@ -30,7 +30,7 @@ public struct ColliderConfig
 public abstract class GameConfig : ScriptableObject
 {
     [HideInInspector]
-    public string ConfigId => name.ToLowerInvariantTrimmed();
+    public string ConfigId => StringHelper.NormalizeResourceId(name);
 
     [NonSerialized]
     public int configIndex = -1;

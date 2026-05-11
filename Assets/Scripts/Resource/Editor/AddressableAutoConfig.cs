@@ -89,7 +89,7 @@ public static class AddressableAutoConfig
             try
             {
                 string baseName = Path.GetFileNameWithoutExtension(path);
-                string key = $"{prefix}_{baseName}".ToLowerInvariant();
+                string key = $"{prefix}_{StringHelper.NormalizeResourceId(baseName)}";
 
                 if (allKeys.Contains(key))
                 {

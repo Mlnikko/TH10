@@ -45,7 +45,7 @@ public class UIPanelRegistry : ScriptableObject
             if (!string.IsNullOrEmpty(e.panelScriptTypeName))
                 e.panelScriptTypeName = e.panelScriptTypeName.Trim();
             if (!string.IsNullOrEmpty(e.prefabResourceId))
-                e.prefabResourceId = e.prefabResourceId.Trim().ToLowerInvariant();
+                e.prefabResourceId = StringHelper.NormalizeResourceId(e.prefabResourceId);
         }
     }
 #endif

@@ -164,6 +164,44 @@ public class NetworkManager : SingletonMono<NetworkManager>
         PingTest();
     }
 
+    NetworkStatusHud _networkStatusHud;
+
+    void LateUpdate()
+    {
+        RefreshNetworkStatusHud();
+    }
+
+    void RefreshNetworkStatusHud()
+    {
+        if (m_netRole == NetworkRole.None)
+        {
+            if (_networkStatusHud != null)
+                _networkStatusHud.SetVisible(false);
+            return;
+        }
+
+        if (UIManager.Instance == null || UIManager.Instance.Canvas == null)
+        {
+            if (_networkStatusHud != null)
+                _networkStatusHud.SetVisible(false);
+            return;
+        }
+
+        _networkStatusHud ??= NetworkStatusHud.GetOrCreate(UIManager.Instance.Canvas.transform);
+        if (_networkStatusHud == null)
+            return;
+
+        _networkStatusHud.SetVisible(true);
+
+        string statusText;
+        if (m_netRole == NetworkRole.Client)
+            statusText = $"[CLIENT]\nRTT: {(CurrentRTT >= 0 ? CurrentRTT.ToString("F0") + " ms" : "—")}";
+        else
+            statusText = "[HOST]";
+
+        _networkStatusHud.SetStatusText(statusText);
+    }
+
     void ProcessIncoming(NetworkConnection conn)
     {
         if (!conn.IsCreated) return;
@@ -405,37 +443,4 @@ public class NetworkManager : SingletonMono<NetworkManager>
     private uint m_PendingPingId = 0;
     private float m_PingSentTime = 0f;
     #endregion
-
-    void OnGUI()
-    {
-        if (NetworkRole == NetworkRole.None) return;
-
-        string statusText = "";
-        if (NetworkRole == NetworkRole.Client)
-        {
-            statusText = $"[CLIENT]\nRTT: {(CurrentRTT >= 0 ? CurrentRTT.ToString("F0") + " ms" : "—")}";
-        }
-        else if (NetworkRole == NetworkRole.Host)
-        {
-            statusText = "[HOST]";
-        }
-
-        GUIStyle style = new(GUI.skin.box)
-        {
-            fontSize = 12,
-            normal = { textColor = Color.white },
-            alignment = TextAnchor.UpperLeft
-        };
-
-        // 计算右上角位置：X = 屏幕宽度 - 宽度 - 右边距
-        float width = 150f;
-        float height = 60f;
-        float rightMargin = 10f;
-        float topMargin = 10f;
-        Rect rect = new Rect(Screen.width - width - rightMargin, topMargin, width, height);
-
-        GUILayout.BeginArea(rect);
-        GUILayout.Box(statusText, style);
-        GUILayout.EndArea();
-    }
 }

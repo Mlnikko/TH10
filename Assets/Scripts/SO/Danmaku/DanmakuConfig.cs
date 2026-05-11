@@ -38,7 +38,7 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
     void OnValidate()
     {
         if (!string.IsNullOrEmpty(danmakuPrefabId))
-            danmakuPrefabId = danmakuPrefabId.ToLowerInvariant().Trim();
+            danmakuPrefabId = StringHelper.NormalizeResourceId(danmakuPrefabId);
     }
 #endif
 

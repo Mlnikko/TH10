@@ -12,8 +12,8 @@ public class EntityFactory
     {
         Entity e_player = _entityManager.CreateEntity();
 
-        string characterId = playerBattleData.characterId.ToString().ToLowerInvariant();
-        string weaponId = playerBattleData.weaponId.ToString().ToLowerInvariant();
+        string characterId = StringHelper.NormalizeResourceId(playerBattleData.characterId.ToString());
+        string weaponId = StringHelper.NormalizeResourceId(playerBattleData.weaponId.ToString());
 
         var characterConfig = GameResDB.Instance.GetConfig<CharacterConfig>(characterId);
         var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(weaponId);

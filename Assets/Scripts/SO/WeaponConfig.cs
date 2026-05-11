@@ -39,7 +39,7 @@ public class WeaponConfig : GameConfig , IReferenceResolver
             {
                 if (!string.IsNullOrEmpty(danmakuEmitterConfigIds[i]))
                 {
-                    danmakuEmitterConfigIds[i] = danmakuEmitterConfigIds[i].ToLowerInvariant().Trim();
+                    danmakuEmitterConfigIds[i] = StringHelper.NormalizeResourceId(danmakuEmitterConfigIds[i]);
                 }
             }
         }
@@ -53,7 +53,7 @@ public class WeaponConfig : GameConfig , IReferenceResolver
             danmakuEmitterCfgIndices = new int[danmakuEmitterConfigIds.Length];
             for (int i = 0; i < danmakuEmitterConfigIds.Length; i++)
             {
-                string emitterId = danmakuEmitterConfigIds[i].ToLowerInvariant();
+                string emitterId = StringHelper.NormalizeResourceId(danmakuEmitterConfigIds[i]);
                 danmakuEmitterCfgIndices[i] = resDb.GetConfigIndex(emitterId);
 
                 if (danmakuEmitterCfgIndices[i] == -1)

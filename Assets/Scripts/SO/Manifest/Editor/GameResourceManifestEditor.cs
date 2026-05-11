@@ -80,7 +80,9 @@ public class GameResourceManifestEditor : Editor
                 if (string.IsNullOrEmpty(assetPath)) continue;
 
                 string fileName = Path.GetFileNameWithoutExtension(assetPath);
-                string id = fileName.ToLowerInvariant();
+                string id = StringHelper.NormalizeResourceId(fileName);
+                if (string.IsNullOrEmpty(id))
+                    continue;
                 if (!ids.Contains(id))
                     ids.Add(id);
             }
