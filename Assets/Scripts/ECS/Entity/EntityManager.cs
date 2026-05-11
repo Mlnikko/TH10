@@ -7,6 +7,8 @@ using System.Collections.Generic;
 public static class TempBitSets
 {
     public static readonly BitSet Collision = new(EntityManager.MAX_ENTITIES);
+    /// <summary>插入网格时是否使用了玩家弹幕扫掠 AABB；查询阶段复用 <see cref="TempBuffers.CollisionSweptAabb"/>，避免重复粗测计算。</summary>
+    public static readonly BitSet CollisionSweptBroadphase = new(EntityManager.MAX_ENTITIES);
     /// <summary>本逻辑帧内已结算过「击中敌人」的玩家弹幕实体索引，防止同一帧重复命中。</summary>
     public static readonly BitSet PlayerDanmakuHitConsumed = new(EntityManager.MAX_ENTITIES);
     /// <summary>本逻辑帧内已被拾取的掉落物实体索引，防止同一帧重复触发效果。</summary>
@@ -24,6 +26,12 @@ public static class TempBuffers
     public static readonly int[] CollisionIndices = new int[16384]; // 64KB
     public static readonly int[] CollisionActive = new int[16384];   // 用于收集活跃碰撞体
     public static readonly int[] CollisionQuery = new int[16384];   // 用于网格查询结果
+
+    /// <summary>与 <see cref="TempBitSets.CollisionSweptBroadphase"/> 配套，按实体索引存储扫掠粗测 AABB。</summary>
+    public static readonly float[] CollisionSweptAabbMinX = new float[EntityManager.MAX_ENTITIES];
+    public static readonly float[] CollisionSweptAabbMinY = new float[EntityManager.MAX_ENTITIES];
+    public static readonly float[] CollisionSweptAabbMaxX = new float[EntityManager.MAX_ENTITIES];
+    public static readonly float[] CollisionSweptAabbMaxY = new float[EntityManager.MAX_ENTITIES];
 }
 
 public class EntityManager

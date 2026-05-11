@@ -23,6 +23,25 @@ public enum E_BattleStatus
     InBattle
 }
 
+/// <summary>战斗 HUD 只读快照（供 UI 轮询）。</summary>
+public readonly struct BattleHudSnapshot
+{
+    public readonly int Score;
+    public readonly int HiScore;
+    public readonly int HealthCurrent;
+    public readonly int HealthMax;
+    public readonly int PowerOrbs;
+
+    public BattleHudSnapshot(int score, int hiScore, int healthCurrent, int healthMax, int powerOrbs)
+    {
+        Score = score;
+        HiScore = hiScore;
+        HealthCurrent = healthCurrent;
+        HealthMax = healthMax;
+        PowerOrbs = powerOrbs;
+    }
+}
+
 public static class GlobalBattleData
 {
     public static BattleAreaData AreaData { get; private set; }
@@ -203,6 +222,71 @@ public class BattleManager : SingletonMono<BattleManager>
         TryBeginStageTimeline();
         GeneratePlayer();
         CurrentStatus = E_BattleStatus.InBattle;
+        ShowBattleUIPanelFireAndForget();
+    }
+
+    const string PrefabIdBattlePanel = "battlepanel";
+
+    void ShowBattleUIPanelFireAndForget()
+    {
+        _ = ShowBattleUIPanelAsync();
+    }
+
+    async Task ShowBattleUIPanelAsync()
+    {
+        try
+        {
+            if (UIManager.Instance == null)
+            {
+                Logger.Error("[Battle] UIManager.Instance 为空，无法打开 BattleUIPanel。", LogTag.UI);
+                return;
+            }
+
+            var panel = await UIManager.Instance.ShowPanelAsync<BattleUIPanel>(null, PrefabIdBattlePanel);
+            if (panel == null)
+                Logger.Error($"[Battle] BattleUIPanel 未创建成功，请检查 prefab_{PrefabIdBattlePanel} 与 UIManager 日志。", LogTag.UI);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[Battle] Failed to open BattleUIPanel (prefab_{PrefabIdBattlePanel}): {ex.Message}", LogTag.UI);
+        }
+    }
+
+    /// <summary>供战斗 UI 读取本地玩家（或单机首位玩家）血量、火力道具与会话分。</summary>
+    public bool TryGetBattleHudSnapshot(out BattleHudSnapshot snap)
+    {
+        snap = default;
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        int score = GlobalBattleData.SessionScore;
+        int hi = PlayerPrefs.GetInt("BattleHiScore", 0);
+
+        var em = _battleWorld.EntityManager;
+        Span<int> playerIndices = em.GetActiveIndices<CPlayer>();
+        if (playerIndices.Length == 0)
+        {
+            snap = new BattleHudSnapshot(score, hi, 0, 0, 0);
+            return true;
+        }
+
+        int chosen = playerIndices[0];
+        byte localIdx = RoomManager.LocalPlayerIndex;
+        for (int i = 0; i < playerIndices.Length; i++)
+        {
+            int idx = playerIndices[i];
+            ref readonly var p = ref em.GetComponentSpan<CPlayer>()[idx];
+            if (p.playerIndex == localIdx)
+            {
+                chosen = idx;
+                break;
+            }
+        }
+
+        ref readonly var pl = ref em.GetComponentSpan<CPlayer>()[chosen];
+        ref readonly var hp = ref em.GetComponentSpan<CHealth>()[chosen];
+        snap = new BattleHudSnapshot(score, hi, hp.currentHealth, hp.maxHealth, pl.powerOrbs);
+        return true;
     }
 
     void TryBeginStageTimeline()

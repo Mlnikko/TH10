@@ -48,24 +48,48 @@ public class UIManager : SingletonMono<UIManager>
     /// <summary>
     /// 异步显示面板（返回 Task，支持 await）
     /// </summary>
-    public async Task<T> ShowPanelAsync<T>(object data = null) where T : UIPanel
+    /// <param name="prefabResourceId">
+    /// Addressables 资源名（不含 prefab_ 前缀），默认与面板类型名一致；
+    /// 例如战斗面板预制体登记为 prefab_battlepanel 时传入 <c>"battlepanel"</c>。
+    /// </param>
+    public async Task<T> ShowPanelAsync<T>(object data = null, string prefabResourceId = null) where T : UIPanel
     {
         string panelKey = typeof(T).Name;
 
         // 如果已激活，直接返回（不重新实例化）
         if (activePanels.TryGetValue(panelKey, out var existing) && existing != null && existing.gameObject.activeSelf)
         {
+            existing.OnShow(data);
             return (T)existing;
         }
 
-        GameObject prefab = await ResManager.Instance.LoadAsync<GameObject>(E_ResourceCategory.Prefab, panelKey);
+        if (ResManager.Instance == null)
+        {
+            Logger.Error("[UIManager] ResManager.Instance 为空，无法加载面板预制体。", LogTag.UI);
+            return null;
+        }
+
+        string loadId = string.IsNullOrEmpty(prefabResourceId) ? panelKey : prefabResourceId;
+        GameObject prefab = await ResManager.Instance.LoadAsync<GameObject>(E_ResourceCategory.Prefab, loadId);
+        if (prefab == null)
+        {
+            Logger.Error($"[UIManager] 预制体加载结果为 null：prefab_{loadId}", LogTag.UI);
+            return null;
+        }
+
+        var canvasTransform = Canvas != null ? Canvas.transform : null;
+        if (canvasTransform == null)
+        {
+            Logger.Error("[UIManager] Canvas 未就绪，无法实例化面板。", LogTag.UI);
+            return null;
+        }
 
         // 显示面板
-        var panel = InternalShowPanel<T>(prefab, data);
+        var panel = InternalShowPanel<T>(prefab, data, canvasTransform);
         return panel;
     }
 
-    T InternalShowPanel<T>(GameObject prefab, object data) where T : UIPanel
+    T InternalShowPanel<T>(GameObject prefab, object data, Transform parent) where T : UIPanel
     {
         string name = typeof(T).Name;
 
@@ -79,8 +103,20 @@ public class UIManager : SingletonMono<UIManager>
         }
 
         // 创建新实例
-        GameObject go = Instantiate(prefab, Canvas.transform);
+        GameObject go = Instantiate(prefab, parent);
+        if (go == null)
+        {
+            Logger.Error($"[UIManager] Instantiate 失败：{prefab.name}", LogTag.UI);
+            return null;
+        }
+
         T panel = go.GetComponent<T>() ?? go.AddComponent<T>();
+        if (panel == null)
+        {
+            Logger.Error($"[UIManager] 面板缺少组件 {typeof(T).Name}：{go.name}", LogTag.UI);
+            Destroy(go);
+            return null;
+        }
 
         panel.Initialize();
         panel.OnShow(data);

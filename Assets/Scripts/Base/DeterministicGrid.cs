@@ -63,12 +63,40 @@ public class DeterministicGrid
     }
 
     /// <summary>
+    /// 将实体插入到该轴对齐包围盒覆盖的所有格子（用于扫掠粗测等）。
+    /// </summary>
+    public void InsertAABB(int entity, float minX, float minY, float maxX, float maxY)
+    {
+        int minCellX = WorldToCellX(minX);
+        int maxCellX = WorldToCellX(maxX);
+        int minCellY = WorldToCellY(minY);
+        int maxCellY = WorldToCellY(maxY);
+
+        for (int x = minCellX; x <= maxCellX; x++)
+        {
+            if ((uint)x >= (uint)_gridWidth) continue;
+            for (int y = minCellY; y <= maxCellY; y++)
+            {
+                if ((uint)y >= (uint)_gridHeight) continue;
+                _cells[y * _gridWidth + x].Add(entity);
+            }
+        }
+    }
+
+    /// <summary>
     /// 查询与指定碰撞体可能相交的所有实体（去重、升序）
     /// </summary>
     public int Query(float cx, float cy, in CCollider col, Span<int> outputBuffer, BitSet tempSet)
     {
         GetBounds(cx, cy, col, out float minX, out float minY, out float maxX, out float maxY);
+        return QueryAABB(minX, minY, maxX, maxY, outputBuffer, tempSet);
+    }
 
+    /// <summary>
+    /// 查询轴对齐包围盒覆盖范围内的格子（用于高速物体扫掠粗测等）。
+    /// </summary>
+    public int QueryAABB(float minX, float minY, float maxX, float maxY, Span<int> outputBuffer, BitSet tempSet)
+    {
         int minCellX = WorldToCellX(minX);
         int maxCellX = WorldToCellX(maxX);
         int minCellY = WorldToCellY(minY);
