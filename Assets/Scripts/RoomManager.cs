@@ -128,6 +128,16 @@ public class RoomManager : SingletonMono<RoomManager>
     public void HandleEnterBattleScene()
     {
         UIManager.Instance.CloseAll();
-        SceneLoader.LoadScene("BattleScene");
+        SceneLoader.LoadScene("BattleScene", success =>
+        {
+            if (!success)
+            {
+                Logger.Error("Failed to load BattleScene.", LogTag.Room);
+                return;
+            }
+
+            // 与 MenuPanel 单机流程一致：进入战斗场景后打开角色/武器准备面板
+            BattleManager.Instance.EnterBattleScene().Forget();
+        });
     }
 }

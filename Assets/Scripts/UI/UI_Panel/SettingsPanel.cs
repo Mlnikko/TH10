@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,127 +8,147 @@ public enum SettingCategory
     Graphics,
     Audio,
     Controls,
-    Other
 }
 
-public interface ISettingPanel
+[Serializable]
+public class SettingCategoryEntry
 {
-    void ApplyChanges(); // 可选：立即应用 or 等待“应用”按钮
+    public SettingCategory category;
+    public Button categoryButton;
+    public SettingsSubPanelBase subPanel;
 }
 
-public abstract class SettingSubPanel : UIPanel, ISettingPanel
-{
-    public virtual void ApplyChanges() { }
-}
-
-public class GraphicsPanel : SettingSubPanel
-{
-    // 图形设置实现
-}
-
-public class AudioPanel : SettingSubPanel
-{
-    // 音频设置实现
-}
-
-public class ControlsPanel : SettingSubPanel
-{
-    // 控制设置实现
-}
-
-public class OtherSettingsPanel : SettingSubPanel
-{
-    // 其他设置实现
-}
-
+/// <summary>
+/// 分类按钮与子面板均在 SettingsPanel 预制体中预先摆放（子面板默认禁用），运行时只切换显示。
+/// </summary>
 public class SettingsPanel : UIPanel
 {
-    [Header("References")]
-    [SerializeField] Transform contentArea;
-    [SerializeField] GameObject categoryButtonPrefab;
-    [SerializeField] Transform categoryListContent;
     [SerializeField] Button returnButton;
+    [SerializeField] SettingCategoryEntry[] categories;
 
-    // 面板缓存（避免重复 Instantiate）
-    Dictionary<SettingCategory, SettingSubPanel> _panelCache = new();
     SettingCategory _currentCategory = SettingCategory.Graphics;
-
-    // 面板类型映射（可替换为 ScriptableObject 配置）
-    static readonly Dictionary<SettingCategory, Type> PanelTypeMap = new()
-    {
-        { SettingCategory.Graphics, typeof(GraphicsPanel) },
-        { SettingCategory.Audio, typeof(AudioPanel) },
-        { SettingCategory.Controls, typeof(ControlsPanel) },
-        { SettingCategory.Other, typeof(OtherSettingsPanel) }
-    };
+    bool _initialized;
 
     public override void Initialize()
     {
         base.Initialize();
-        returnButton.onClick.AddListener(() => UIManager.Instance.GoBack());
-        CreateCategoryButtons();
-        ShowCategory(_currentCategory);
-    }
+        if (_initialized) return;
+        _initialized = true;
 
-    void CreateCategoryButtons()
-    {
-        foreach (SettingCategory category in Enum.GetValues(typeof(SettingCategory)))
+        if (returnButton != null)
+            returnButton.onClick.AddListener(() => UIManager.Instance.GoBack());
+
+        if (categories == null) return;
+
+        foreach (var entry in categories)
         {
-            var btnObj = Instantiate(categoryButtonPrefab, categoryListContent);
-            var btn = btnObj.GetComponent<Button>();
-            var text = btnObj.GetComponentInChildren<TMP_Text>();
+            if (entry == null) continue;
 
-            text.text = category.ToString();
-            var localCat = category; // 避免闭包陷阱
-            btn.onClick.AddListener(() => ShowCategory(localCat));
-        }
-    }
-
-    void ShowCategory(SettingCategory category)
-    {
-        // 隐藏当前面板
-        if (_panelCache.TryGetValue(_currentCategory, out var current))
-        {
-            current.OnHide();
-        }
-
-        _currentCategory = category;
-
-        // 获取或创建新面板
-        if (!_panelCache.TryGetValue(category, out var panel))
-        {
-            if (!PanelTypeMap.TryGetValue(category, out Type panelType))
-                return;
-
-            var prefab = Resources.Load<GameObject>($"UI/Settings/{panelType.Name}");
-            if (prefab == null)
+            if (entry.subPanel != null)
             {
-                Logger.Error($"Missing prefab for {panelType.Name}", LogTag.UI);
-                return;
+                entry.subPanel.Initialize();
+                entry.subPanel.gameObject.SetActive(false);
             }
 
-            var instance = Instantiate(prefab, contentArea);
-            panel = instance.GetComponent<SettingSubPanel>();
-            panel.Initialize();
-            _panelCache[category] = panel;
-        }
+            if (entry.categoryButton != null)
+            {
+                var localCat = entry.category;
+                entry.categoryButton.onClick.AddListener(() => ShowCategory(localCat));
 
-        panel.OnShow();
+                var text = entry.categoryButton.GetComponentInChildren<TMP_Text>();
+                if (text != null)
+                    text.text = GetCategoryDisplayName(entry.category);
+            }
+        }
     }
 
-    // 可选：全局“应用”按钮调用
-    public void OnApplyAllClicked()
+    public override void OnShow(object data = null)
     {
-        foreach (var panel in _panelCache.Values)
-        {
-            panel.ApplyChanges();
-        }
-        // 可触发事件：OnSettingsApplied
+        base.OnShow(data);
+        if (!_initialized)
+            Initialize();
+
+        GameSettingsService.Instance.EnsureLoaded();
+        ShowCategory(_currentCategory);
     }
 
     public override void OnHide()
     {
         base.OnHide();
-        // 可选择是否销毁缓存（通常保留以加速下次打开）
+        GameSettingsService.Instance.Save();
+
+        var current = GetSubPanel(_currentCategory);
+        if (current != null)
+            current.OnHide();
+
+        HideAllSubPanels();
+    }
+
+    void ShowCategory(SettingCategory category)
+    {
+        var previous = GetSubPanel(_currentCategory);
+        if (previous != null)
+        {
+            previous.OnHide();
+            previous.gameObject.SetActive(false);
+        }
+
+        _currentCategory = category;
+
+        var panel = GetSubPanel(category);
+        if (panel == null)
+        {
+            Logger.Error($"SettingsPanel: 未绑定分类 {category} 的子面板。", LogTag.UI);
+            return;
+        }
+
+        panel.gameObject.SetActive(true);
+        panel.OnShow();
+        RefreshCategoryButtonHighlight(category);
+    }
+
+    void HideAllSubPanels()
+    {
+        if (categories == null) return;
+        foreach (var entry in categories)
+        {
+            if (entry?.subPanel != null)
+                entry.subPanel.gameObject.SetActive(false);
+        }
+    }
+
+    SettingsSubPanelBase GetSubPanel(SettingCategory category)
+    {
+        if (categories == null) return null;
+        foreach (var entry in categories)
+        {
+            if (entry != null && entry.category == category)
+                return entry.subPanel;
+        }
+        return null;
+    }
+
+    void RefreshCategoryButtonHighlight(SettingCategory active)
+    {
+        if (categories == null) return;
+        foreach (var entry in categories)
+        {
+            if (entry?.categoryButton == null) continue;
+            bool selected = entry.category == active;
+            var colors = entry.categoryButton.colors;
+            colors.normalColor = selected ? new Color(0.85f, 0.95f, 1f) : Color.white;
+            entry.categoryButton.colors = colors;
+        }
+    }
+
+    static string GetCategoryDisplayName(SettingCategory category)
+    {
+        return category switch
+        {
+            SettingCategory.Graphics => "图形",
+            SettingCategory.Audio => "音频",
+            SettingCategory.Controls => "控制",
+            _ => category.ToString(),
+        };
     }
 }

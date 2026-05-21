@@ -25,6 +25,12 @@ public class AudioManager : SingletonMono<AudioManager>
         if(audioMixer == null) audioMixer = Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
 
         InitAudioManager();
+
+        if (GameSettingsService.Instance != null)
+        {
+            GameSettingsService.Instance.EnsureLoaded();
+            ApplySettings(GameSettingsService.Instance.Data);
+        }
     }  
 
     void Start()
@@ -208,21 +214,37 @@ public class AudioManager : SingletonMono<AudioManager>
         audioSource.volume = startVolume;
     }
 
-    public void SetMasterVolume(float value)
+    public void ApplySettings(GameSettingsData settings)
     {
-        float volume = Mathf.Lerp(minVolume, maxVolume, value / 10);
-        audioMixer.SetFloat("MasterVolume", volume); // 确保参数名称与音频混合器中的相匹配
+        if (settings == null || audioMixer == null) return;
+
+        ApplyChannelVolume("MasterVolume", settings.masterVolume, settings.masterMuted);
+        ApplyChannelVolume("UIVolume", settings.uiVolume, settings.uiMuted);
+        ApplyChannelVolume("BGMVolume", settings.bgmVolume, settings.bgmMuted);
+        ApplyChannelVolume("SFXVolume", settings.sfxVolume, settings.sfxMuted);
     }
 
-    public void SetBGMVolume(float value)
+    void ApplyChannelVolume(string exposedParameter, float slider0To10, bool muted)
     {
-        float volume = Mathf.Lerp(minVolume, maxVolume, value / 10);
-        audioMixer.SetFloat("BGMVolume", volume); // 确保参数名称与音频混合器中的相匹配
+        if (muted)
+            SetMixerVolumeDb(exposedParameter, minVolume);
+        else
+            SetMixerVolumeDb(exposedParameter, VolumeSliderToDb(slider0To10));
     }
 
-    public void SetSFXVolume(float value)
+    public void SetMasterVolume(float value) => ApplyChannelVolume("MasterVolume", value, muted: false);
+    public void SetUIVolume(float value) => ApplyChannelVolume("UIVolume", value, muted: false);
+    public void SetBGMVolume(float value) => ApplyChannelVolume("BGMVolume", value, muted: false);
+    public void SetSFXVolume(float value) => ApplyChannelVolume("SFXVolume", value, muted: false);
+
+    static float VolumeSliderToDb(float slider0To10)
     {
-        float volume = Mathf.Lerp(minVolume, maxVolume, value / 10);
-        audioMixer.SetFloat("SFXVolume", volume); // 确保参数名称与音频混合器中的相匹配
+        return Mathf.Lerp(minVolume, maxVolume, Mathf.Clamp01(slider0To10 / 10f));
+    }
+
+    void SetMixerVolumeDb(string exposedParameter, float volumeDb)
+    {
+        if (audioMixer == null || string.IsNullOrEmpty(exposedParameter)) return;
+        audioMixer.SetFloat(exposedParameter, volumeDb);
     }
 }

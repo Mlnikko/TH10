@@ -9,6 +9,7 @@ public class GameLauncher : MonoBehaviour
         _ = GameManager.Instance;
         _ = UIManager.Instance;
         _ = InputManager.Instance;
+        _ = GameSettingsService.Instance;
 
         if (IngameDebugPanel != null && enableDebug)
         {
@@ -20,6 +21,9 @@ public class GameLauncher : MonoBehaviour
     {
         await ResManager.Instance.InitializeAsync();
         await GameResDB.Instance.InitializeAsync();
+
+        GameSettingsService.Instance.Load();
+        GameSettingsService.Instance.ApplyAll();
 
         bool sceneLoaded = await SceneLoader.LoadSceneAsync("TitleScene");
 

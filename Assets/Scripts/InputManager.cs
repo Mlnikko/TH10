@@ -76,7 +76,7 @@ public class InputManager : SingletonMono<InputManager>
     const int BUFFER_SIZE = 256;
     const int BUFFER_MASK = BUFFER_SIZE - 1; // 用于快速取模
 
-    InputKeyCodeConfig _inputKeyCodeCfg;
+    InputKeyCodeConfig _inputKeyCodeCfg = new();
 
     // 【关键优化 2】改用二维数组代替 Dictionary 数组
     // _inputFrames[playerIndex][frame % BUFFER_SIZE]
@@ -94,9 +94,29 @@ public class InputManager : SingletonMono<InputManager>
         InitializeForGame();
     }
 
+    public InputKeyCodeConfig KeyConfig => _inputKeyCodeCfg;
+
+    public void ApplyKeyConfig(InputKeyCodeConfig config)
+    {
+        if (config == null) return;
+        _inputKeyCodeCfg.moveLeft = config.moveLeft;
+        _inputKeyCodeCfg.moveRight = config.moveRight;
+        _inputKeyCodeCfg.moveUp = config.moveUp;
+        _inputKeyCodeCfg.moveDown = config.moveDown;
+        _inputKeyCodeCfg.shoot = config.shoot;
+        _inputKeyCodeCfg.bomb = config.bomb;
+        _inputKeyCodeCfg.slow = config.slow;
+        _inputKeyCodeCfg.pause = config.pause;
+    }
+
     public void InitializeForGame()
     {
-        _inputKeyCodeCfg = new InputKeyCodeConfig();
+        if (GameSettingsService.Instance != null)
+            GameSettingsService.Instance.EnsureLoaded();
+        if (GameSettingsService.Instance != null)
+            ApplyKeyConfig(GameSettingsService.Instance.Data.keyBindings);
+        else
+            _inputKeyCodeCfg = new InputKeyCodeConfig();
 
         // 初始化环形缓冲
         _inputFrames = new FrameInput[MAX_PLAYERS][];
