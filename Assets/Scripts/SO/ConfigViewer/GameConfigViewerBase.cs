@@ -16,6 +16,9 @@ public abstract class GameConfigViewerBase : MonoBehaviour
     /// <summary>编辑器中加载后刷新 Sprite 等 Scene 表现（默认无操作）。</summary>
     protected virtual void ApplyEditorPreview() { }
 
+    /// <summary>停止编辑器预览（Player 构建中为空实现，子类仅在 <c>#if UNITY_EDITOR</c> 内重写）。</summary>
+    protected virtual void StopEditorPreviews() { }
+
 #if UNITY_EDITOR
     public void SyncFromConfigInEditor()
     {
@@ -25,8 +28,6 @@ public abstract class GameConfigViewerBase : MonoBehaviour
         LoadFromConfig();
         ApplyEditorPreview();
     }
-
-    protected virtual void StopEditorPreviews() { }
 
     [UnityEditor.InitializeOnLoadMethod]
     static void RegisterPrefabStageHook()

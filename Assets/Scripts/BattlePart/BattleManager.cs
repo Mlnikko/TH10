@@ -46,6 +46,7 @@ public static class GlobalBattleData
 {
     public static BattleAreaData AreaData { get; private set; }
     public static PlayerSpawnData SpawnData { get; private set; }
+    public static DropItemCollectData DropItemCollectData { get; private set; }
 
     public static bool IsInitialized { get; private set; }
 
@@ -56,6 +57,7 @@ public static class GlobalBattleData
     {
         AreaData = config.battleAreaData;
         SpawnData = config.playerSpawnData;
+        DropItemCollectData = config.dropItemCollectData;
         IsInitialized = true;
     }
 
@@ -69,6 +71,17 @@ public static class GlobalBattleData
         if (delta <= 0) return;
         SessionScore += delta;
     }
+
+#if UNITY_EDITOR
+    /// <summary>编辑器 ConfigViewer 预览结束后还原战斗区全局状态。</summary>
+    public static void ResetForEditorPreview()
+    {
+        AreaData = default;
+        SpawnData = default;
+        DropItemCollectData = default;
+        IsInitialized = false;
+    }
+#endif
 }
 
 /// <summary>
@@ -88,6 +101,8 @@ public class BattleManager : SingletonMono<BattleManager>
     int TotalPlayers => allPlayerDatas.Count;
 
     World _battleWorld;
+
+    public World ActiveBattleWorld => _battleWorld;
 
     readonly BattlePrepareCharacterRegistry _prepareCharacterRegistry = new();
 
@@ -398,9 +413,12 @@ public class BattleManager : SingletonMono<BattleManager>
         _battleWorld.AddSystem<CollisionSystem>();
         _battleWorld.AddSystem<CollisionLogicSystem>();
         _battleWorld.AddSystem<PlayerControlSystem>();
+        _battleWorld.AddSystem<DropItemCollectSystem>();
+        _battleWorld.AddSystem<DropItemMagnetSystem>();
         _battleWorld.AddSystem<DanmakuSystem>();
         _battleWorld.AddSystem<DanmakuEmitSystem>();
         _battleWorld.AddSystem<PresentationSystem>();
+        _battleWorld.AddSystem<PresentationPoseSystem>();
         Logger.Info("Battle ECS World initialized.");
     }
 
@@ -597,6 +615,7 @@ public class BattleManager : SingletonMono<BattleManager>
 
         _battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
 
+        bool logicStalled = false;
         if (_battleWorld.LogicFrameTimer.CanAdvance())
         {
             uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
@@ -612,12 +631,16 @@ public class BattleManager : SingletonMono<BattleManager>
                 _battleWorld.LogicFrameTimer.AdvanceFrame();
                 _battleWorld.LogicFrameTimer.ConsumeFrameTime();
             }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             else
+            {
+                logicStalled = true;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Logger.Debug($"[Frame {frameToProcess}] Time ready but inputs not ready.");
 #endif
+            }
         }
 
+        _battleWorld.SetPresentationLogicStalled(logicStalled);
         _battleWorld.Update(Time.deltaTime);
     }
 

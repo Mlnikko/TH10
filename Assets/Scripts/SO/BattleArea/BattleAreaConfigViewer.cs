@@ -59,6 +59,9 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
     [Header("玩家出生点数据")]
     [SerializeField] PlayerSpawnData playerSpawnData;
 
+    [Header("道具吸收")]
+    [SerializeField] DropItemCollectData dropItemCollectData;
+
     public void LoadBattleAreaData() => LoadFromConfig();
 
     public override void LoadFromConfig()
@@ -70,6 +73,7 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
         }
         battleAreaData = battleAreaConfig.battleAreaData;
         playerSpawnData = battleAreaConfig.playerSpawnData;
+        dropItemCollectData = battleAreaConfig.dropItemCollectData;
     }
 
     public void SaveBattleAreaData()
@@ -78,6 +82,7 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
         {
             battleAreaConfig.battleAreaData = battleAreaData;   
             battleAreaConfig.playerSpawnData = playerSpawnData;
+            battleAreaConfig.dropItemCollectData = dropItemCollectData;
         }
     }
 
@@ -97,6 +102,16 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
             0
         );
         Gizmos.DrawWireCube(battleAreaData.Center, recycleSize);
+
+        // === 道具吸收线（青色）===
+        if (battleAreaData.Height > 0f)
+        {
+            float lineY = dropItemCollectData.GetCollectLineY(in battleAreaData);
+            Gizmos.color = Color.cyan;
+            Vector3 lineLeft = new Vector3(battleAreaData.Left, lineY, 0f);
+            Vector3 lineRight = new Vector3(battleAreaData.Right, lineY, 0f);
+            Gizmos.DrawLine(lineLeft, lineRight);
+        }
 
         // === 特殊基准点：SpawnRootPos（黄色，更大）===
         Gizmos.color = Color.yellow;

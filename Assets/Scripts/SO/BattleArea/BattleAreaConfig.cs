@@ -6,4 +6,5 @@ public class BattleAreaConfig : GameConfig
 {
     public BattleAreaData battleAreaData = BattleAreaData.Default;
     public PlayerSpawnData playerSpawnData;
+    public DropItemCollectData dropItemCollectData = DropItemCollectData.Default;
 }

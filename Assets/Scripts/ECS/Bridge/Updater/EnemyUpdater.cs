@@ -11,12 +11,10 @@ public class EnemyUpdater : IGameObjectUpdater
 
     public void UpdateGameObject(in EntityManager em, Entity entity)
     {
-        // === 位置更新 ===
-        if (_transform != null)
+        if (_transform != null
+            && PresentationUpdaterHelper.TryGetDisplayTransform(em, entity, out float x, out float y, out _))
         {
-            var pos = em.GetComponentSpan<CPosition>()[entity.Index];
-            var rot = em.GetComponentSpan<CRotation>()[entity.Index];
-            _transform.SetPositionAndRotation(new Vector3(pos.x, pos.y, 0), Quaternion.Euler(0, 0, rot.angleRad * Mathf.Rad2Deg));
+            _transform.position = new Vector3(x, y, 0);
         }
     }
 }

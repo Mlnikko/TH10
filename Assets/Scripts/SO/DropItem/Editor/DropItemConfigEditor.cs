@@ -30,7 +30,7 @@ public class DropItemConfigEditor : Editor
 
         if (viewer.IsPreviewingDropMotion)
         {
-            EditorGUILayout.HelpBox("正在预览掉落运动… 按逻辑帧模拟上抛与下落。", MessageType.Info);
+            EditorGUILayout.HelpBox("正在预览掉落运动… 上升阶段自转，到最高点后归零并开始下落。", MessageType.Info);
             if (GUILayout.Button("停止运动预览", GUILayout.Height(24)))
                 viewer.StopPreviewDropMotion();
         }

@@ -60,4 +60,22 @@ public class LogicFrameDriver
     public bool IsRunning => _isRunning;
 
     public double GetAccumulatedTime() => _accumulatedTime;
+
+    /// <summary>当前逻辑帧内已过时间比例 [0, 1]；用于 pos + velocity×α 的帧内平滑。</summary>
+    public float GetRenderAlpha()
+    {
+        if (FrameIntervalSeconds <= 0.0)
+            return 1f;
+        double alpha = _accumulatedTime / FrameIntervalSeconds;
+        return (float)(alpha < 1.0 ? alpha : 1.0);
+    }
+
+    /// <summary>超出单帧间隔的累积时间比例（锁步等待远程输入时用于本地预测）。</summary>
+    public float GetOvershootAlpha()
+    {
+        if (FrameIntervalSeconds <= 0.0)
+            return 0f;
+        double t = _accumulatedTime / FrameIntervalSeconds;
+        return (float)(t > 1.0 ? t - 1.0 : 0.0);
+    }
 }

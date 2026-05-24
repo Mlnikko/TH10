@@ -112,20 +112,6 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         Logger.Debug("成功保存发射器配置" + emitterConfig.name, LogTag.Config);
     }
 
-    public void PreviewEmitterEffect()
-    {
-#if UNITY_EDITOR
-        StartPreviewEmitter();
-#else
-        LoadEmitterConfig();
-#endif
-    }
-
-#if UNITY_EDITOR
-    public bool IsPreviewingEmitter => _previewActive;
-
-    protected override void StopEditorPreviews() => StopPreviewEmitter();
-
     void SyncViewerFieldsToConfig()
     {
         if (emitterConfig == null)
@@ -141,8 +127,24 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         emitterConfig.launchIntervalSeconds = launchIntervalSeconds;
         emitterConfig.launchSpeed = launchSpeed;
         emitterConfig.audio_Fire = launchAudio;
-        emitterConfig.BakeLogicTiming(LogicFramePreviewClock.GetLogicFps());
+
+        uint logicFps = GameManager.logicFPS > 0 ? GameManager.logicFPS : 60u;
+        emitterConfig.BakeLogicTiming(logicFps);
     }
+
+    public void PreviewEmitterEffect()
+    {
+#if UNITY_EDITOR
+        StartPreviewEmitter();
+#else
+        LoadEmitterConfig();
+#endif
+    }
+
+#if UNITY_EDITOR
+    public bool IsPreviewingEmitter => _previewActive;
+
+    protected override void StopEditorPreviews() => StopPreviewEmitter();
 
     public void StartPreviewEmitter()
     {

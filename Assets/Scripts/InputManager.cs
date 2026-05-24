@@ -150,6 +150,23 @@ public class InputManager : SingletonMono<InputManager>
     }
 
     // --- 核心逻辑修改 ---
+    /// <summary>采样当前键位（不写环形缓冲），供表现层本地预测使用。</summary>
+    public FrameInput SampleLocalInput(byte playerIndex, uint logicFrame)
+    {
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS)
+            return FrameInput.None;
+
+        return FrameInput.Create(
+            logicFrame,
+            playerIndex,
+            (sbyte)(Input.GetKey(_inputKeyCodeCfg.moveRight) ? 1 : Input.GetKey(_inputKeyCodeCfg.moveLeft) ? -1 : 0),
+            (sbyte)(Input.GetKey(_inputKeyCodeCfg.moveUp) ? 1 : Input.GetKey(_inputKeyCodeCfg.moveDown) ? -1 : 0),
+            Input.GetKey(_inputKeyCodeCfg.shoot),
+            Input.GetKey(_inputKeyCodeCfg.bomb),
+            Input.GetKey(_inputKeyCodeCfg.slow),
+            Input.anyKey);
+    }
+
     public FrameInput RecordLocalInput(byte playerIndex, uint logicFrame)
     {
         if (!_isInitialized || playerIndex >= MAX_PLAYERS) return FrameInput.None;
@@ -166,16 +183,7 @@ public class InputManager : SingletonMono<InputManager>
             return existing;
         }
 
-        var input = FrameInput.Create(
-            logicFrame,
-            playerIndex,
-            (sbyte)(Input.GetKey(_inputKeyCodeCfg.moveRight) ? 1 : Input.GetKey(_inputKeyCodeCfg.moveLeft) ? -1 : 0),
-            (sbyte)(Input.GetKey(_inputKeyCodeCfg.moveUp) ? 1 : Input.GetKey(_inputKeyCodeCfg.moveDown) ? -1 : 0),
-            Input.GetKey(_inputKeyCodeCfg.shoot),
-            Input.GetKey(_inputKeyCodeCfg.bomb),
-            Input.GetKey(_inputKeyCodeCfg.slow),
-            Input.anyKey
-        );
+        var input = SampleLocalInput(playerIndex, logicFrame);
 
         // 直接写入，自动覆盖 BUFFER_SIZE 之前的旧数据 (零 GC!)
         _inputFrames[playerIndex][index] = input;

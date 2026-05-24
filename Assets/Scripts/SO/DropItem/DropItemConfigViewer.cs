@@ -23,6 +23,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
     [SerializeField] float initialUpSpeed;
     [SerializeField] float fallGravity;
     [SerializeField] float maxFallSpeed;
+    [SerializeField] float riseSpinDegreesPerSecond;
 
     [Header("碰撞")]
     [SerializeField] ColliderConfig colliderConfig;
@@ -42,9 +43,11 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
     bool _previewMotionActive;
     Vector3 _previewSpawnWorldPos;
+    Quaternion _previewSpawnWorldRot;
     CDropItemMotion _previewMotion;
     LogicFramePreviewRunner _previewClock;
     float _previewOffsetY;
+    float _previewAngleRad;
     Vector3[] _previewPathPoints;
     int _previewPathCount;
     const int MaxPreviewPathPoints = 512;
@@ -65,6 +68,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
         initialUpSpeed = dropItemConfig.initialUpSpeed;
         fallGravity = dropItemConfig.fallGravity;
         maxFallSpeed = dropItemConfig.maxFallSpeed;
+        riseSpinDegreesPerSecond = dropItemConfig.riseSpinDegreesPerSecond;
         colliderConfig = dropItemConfig.colliderConfig;
         dropKind = dropItemConfig.dropKind;
         effectAmount = dropItemConfig.effectAmount;
@@ -85,6 +89,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
         dropItemConfig.initialUpSpeed = initialUpSpeed;
         dropItemConfig.fallGravity = fallGravity;
         dropItemConfig.maxFallSpeed = maxFallSpeed;
+        dropItemConfig.riseSpinDegreesPerSecond = riseSpinDegreesPerSecond;
         dropItemConfig.colliderConfig = colliderConfig;
         dropItemConfig.dropKind = dropKind;
         dropItemConfig.effectAmount = effectAmount;
@@ -97,8 +102,6 @@ public class DropItemConfigViewer : GameConfigViewerBase
     }
 
     protected override void ApplyEditorPreview() => ApplyDropItemSprite();
-
-    protected override void StopEditorPreviews() => StopPreviewDropMotion();
 
     void ApplyDropItemSprite()
     {
@@ -115,6 +118,8 @@ public class DropItemConfigViewer : GameConfigViewerBase
 #if UNITY_EDITOR
     public bool IsPreviewingDropMotion => _previewMotionActive;
 
+    protected override void StopEditorPreviews() => StopPreviewDropMotion();
+
     void SyncViewerFieldsToConfig()
     {
         if (dropItemConfig == null)
@@ -125,6 +130,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
         dropItemConfig.initialUpSpeed = initialUpSpeed;
         dropItemConfig.fallGravity = fallGravity;
         dropItemConfig.maxFallSpeed = maxFallSpeed;
+        dropItemConfig.riseSpinDegreesPerSecond = riseSpinDegreesPerSecond;
         dropItemConfig.colliderConfig = colliderConfig;
         dropItemConfig.dropKind = dropKind;
         dropItemConfig.effectAmount = effectAmount;
@@ -148,7 +154,9 @@ public class DropItemConfigViewer : GameConfigViewerBase
         _previewClock = LogicFramePreviewClock.CreateRealTimeSession(previewMotionDuration, fps);
         _previewClock.Reset();
         _previewOffsetY = 0f;
+        _previewAngleRad = 0f;
         _previewSpawnWorldPos = transform.position;
+        _previewSpawnWorldRot = transform.rotation;
 
         BakePreviewPath(fps);
 
@@ -168,7 +176,9 @@ public class DropItemConfigViewer : GameConfigViewerBase
         EditorApplication.update -= OnEditorPreviewMotionUpdate;
 
         transform.position = _previewSpawnWorldPos;
+        transform.rotation = _previewSpawnWorldRot;
         _previewOffsetY = 0f;
+        _previewAngleRad = 0f;
 
         SceneView.RepaintAll();
     }
@@ -192,9 +202,17 @@ public class DropItemConfigViewer : GameConfigViewerBase
         }
 
         for (int i = 0; i < steps; i++)
+        {
+            bool wasRising = _previewMotion.vyPerFrame > 0f;
             _previewOffsetY += DropItemMotionSimulator.StepVertical(ref _previewMotion);
 
+            var rotation = new CRotation(_previewAngleRad);
+            DropItemMotionSimulator.StepAscentRotation(wasRising, in _previewMotion, ref rotation);
+            _previewAngleRad = rotation.angleRad;
+        }
+
         transform.position = _previewSpawnWorldPos + new Vector3(0f, _previewOffsetY, 0f);
+        transform.rotation = _previewSpawnWorldRot * Quaternion.Euler(0f, 0f, _previewAngleRad * Mathf.Rad2Deg);
         if (steps > 0)
             SceneView.RepaintAll();
     }

@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f221291003a01340b1b9d5c4d8d1a29, type: 3}
   m_Name: BattleArea
   m_EditorClassIdentifier: 
-  ConfigId: DefaultBattleArea
   battleAreaData:
     Width: 4
     Height: 5
@@ -22,3 +21,7 @@ MonoBehaviour:
   playerSpawnData:
     SpawnRootPos: {x: 0, y: -2}
     HOffsetPerPlayer: 1
+  dropItemCollectData:
+    collectZoneHeight: 1
+    magnetSpeed: 5
+    magnetPickupRadius: 0.08

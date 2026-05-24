@@ -203,27 +203,6 @@ public class CollisionLogicSystem : BaseSystem
 
     void TryApplyDropPickup(Entity dropEntity, Entity playerEntity, Span<CCollider> colliders)
     {
-        if (!EntityManager.IsValid(dropEntity) || !EntityManager.IsValid(playerEntity))
-            return;
-        if (!EntityManager.HasComponent<CDropItem>(dropEntity) || !EntityManager.HasComponent<CPlayer>(playerEntity))
-            return;
-
-        int di = dropEntity.Index;
-        ref readonly var dropCol = ref colliders[di];
-        if (dropCol.layer != E_ColliderLayer.Item)
-            return;
-
-        if (TempBitSets.DropItemPickupConsumed.Get(di))
-            return;
-
-        ref readonly var dropComp = ref EntityManager.GetComponentSpan<CDropItem>()[di];
-        var cfg = GameResDB.Instance.GetConfig<DropItemConfig>(dropComp.cfgIndex);
-        if (cfg == null)
-            return;
-
-        DropItemPickupEffects.Apply(in cfg, EntityManager, playerEntity);
-
-        TempBitSets.DropItemPickupConsumed.Set(di, true);
-        EntityManager.AddComponent(di, new CPoolRecycleTag());
+        DropItemPickup.TryCollisionPickup(EntityManager, dropEntity, playerEntity, colliders);
     }
 }

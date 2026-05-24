@@ -56,6 +56,9 @@ public class GameObjectBridge
             IsDirty = true
         });
 
+        em.AddComponent(entity, new CPresentationPose());
+        PresentationMotion.InitializePoseFromEntity(em, entity);
+
         //// 添加EntityLinkBehaviour（GO销毁时通知ECS）
         //var link = go.GetComponent<EntityLinkBehaviour>();
         //if (link == null) link = go.AddComponent<EntityLinkBehaviour>();
@@ -70,9 +73,12 @@ public class GameObjectBridge
         }
 
         // 1. 移除 ECS 组件
-        if (em.IsValid(entity) && em.HasComponent<CGameObjectLink>(entity))
+        if (em.IsValid(entity))
         {
-            em.RemoveComponent<CGameObjectLink>(entity);
+            if (em.HasComponent<CGameObjectLink>(entity))
+                em.RemoveComponent<CGameObjectLink>(entity);
+            if (em.HasComponent<CPresentationPose>(entity))
+                em.RemoveComponent<CPresentationPose>(entity);
         }
 
         // 2. 清除映射

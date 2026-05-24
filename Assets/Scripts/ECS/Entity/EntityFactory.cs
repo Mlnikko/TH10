@@ -24,14 +24,33 @@ public class EntityFactory
             return Entity.Null;
         }
 
+        if (weaponConfig == null)
+        {
+            Logger.Error($"WeaponConfig not found for Key: {weaponId}");
+            return Entity.Null;
+        }
+
+        int characterCfgIndex = GameResDB.Instance.GetConfigIndex(characterId);
+        int weaponCfgIndex = GameResDB.Instance.GetConfigIndex(weaponId);
+        if (characterCfgIndex < 0 || characterCfgIndex > byte.MaxValue)
+        {
+            Logger.Error($"CharacterConfig index invalid for Key: {characterId} (index={characterCfgIndex})");
+            return Entity.Null;
+        }
+        if (weaponCfgIndex < 0 || weaponCfgIndex > byte.MaxValue)
+        {
+            Logger.Error($"WeaponConfig index invalid for Key: {weaponId} (index={weaponCfgIndex})");
+            return Entity.Null;
+        }
+
         _entityManager.AddComponent(e_player, new CPosition(posX, posY));
         _entityManager.AddComponent(e_player, new CRotation(0));
         _entityManager.AddComponent(e_player, new CVelocity(0, 0));
         _entityManager.AddComponent(e_player, new CPlayer()
         {
             playerIndex = playerBattleData.playerIndex,
-            characterCfgIndex = (byte)playerBattleData.characterId,
-            weaponCfgIndex = (byte)playerBattleData.weaponId,
+            characterCfgIndex = (byte)characterCfgIndex,
+            weaponCfgIndex = (byte)weaponCfgIndex,
 
             moveDistancePerFrame = characterConfig.moveDistancePerFrame,
             moveSlowDistancePerFrame = characterConfig.moveSlowDistancePerFrame,
@@ -132,6 +151,18 @@ public class EntityFactory
             width = enemyConfig.colliderConfig.boxSize.x,
             height = enemyConfig.colliderConfig.boxSize.y,
         });
+
+        if (enemyConfig.emitterConfigIndex >= 0)
+        {
+            var emitterCfg = GameResDB.Instance.GetConfig<DanmakuEmitterConfig>(enemyConfig.emitterConfigIndex);
+            if (emitterCfg != null)
+            {
+                var emitter = new CDanmakuEmitter(emitterCfg);
+                emitter.isEmitting = true;
+                _entityManager.AddComponent(e_enemy, emitter);
+            }
+        }
+
         return e_enemy;
     }
 

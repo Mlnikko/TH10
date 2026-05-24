@@ -17,6 +17,11 @@ public class World
     public GameObjectBridge GameObjectBridge => _gameObjectBridge;
     public LogicFrameDriver LogicFrameTimer => _logicFrameTimer;
 
+    /// <summary>本渲染帧逻辑是否因等待远程输入而停滞（用于本地玩家表现预测）。</summary>
+    public bool IsPresentationLogicStalled { get; private set; }
+
+    public void SetPresentationLogicStalled(bool stalled) => IsPresentationLogicStalled = stalled;
+
     public World()
     {
         _systems = new List<BaseSystem>();

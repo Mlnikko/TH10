@@ -19,6 +19,17 @@ public struct CGameObjectLink : IComponent
 }
 
 /// <summary>
+/// 逻辑帧之间的表现插值快照（由 <see cref="PresentationPoseSystem"/> 在每逻辑帧末更新）。
+/// </summary>
+public struct CPresentationPose : IComponent
+{
+    public float prevX, prevY;
+    public float currX, currY;
+    public float prevAngleRad, currAngleRad;
+    public bool hasSnapshot;
+}
+
+/// <summary>
 /// 渲染系统使用的标记组件，标记实体需要在当前帧进行表现更新。系统会根据这个组件来决定哪些实体需要同步到GameObject。
 /// </summary>
 public struct CPoolGetTag : IComponent { }
@@ -100,6 +111,21 @@ public struct CDropItemMotion : IComponent
     public float vyPerFrame;
     public float gravityPerFrame;
     public float maxFallPerFrame;
+    /// <summary>上升阶段每逻辑帧自转弧度（由 <see cref="DropItemConfig"/> 烘焙）。</summary>
+    public float spinRadPerFrame;
+}
+
+/// <summary>
+/// 道具吸收线激活后，掉落物被吸引飞向目标(同距取实体索引较小)的吸收区玩家。
+/// </summary>
+public struct CDropItemMagnet : IComponent
+{
+    public int targetPlayerEntityIndex;
+
+    public CDropItemMagnet(int targetPlayerEntityIndex)
+    {
+        this.targetPlayerEntityIndex = targetPlayerEntityIndex;
+    }
 }
 
 #endregion
@@ -264,8 +290,8 @@ public struct CHealth : IComponent
 public struct CPlayer : IComponent
 {
     public byte playerIndex;   // 玩家ID
-    public byte characterCfgIndex;   // 角色ID, 与角色配置表对应
-    public byte weaponCfgIndex;      // 武器ID, 与武器配置表对应
+    public byte characterCfgIndex;   // GameResDB 中 CharacterConfig 的运行时索引（非 E_Character 枚举值）
+    public byte weaponCfgIndex;      // GameResDB 中 WeaponConfig 的运行时索引（非 E_Weapon 枚举值）
 
     /// <summary>通常移速：世界单位 / 逻辑帧（由 <see cref="EntityFactory.CreatePlayer"/> 从配置「单位/秒」换算，逻辑系统不再乘 FrameInterval）。</summary>
     public float moveDistancePerFrame;

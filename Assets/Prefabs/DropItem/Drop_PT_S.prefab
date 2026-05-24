@@ -103,6 +103,7 @@ MonoBehaviour:
   initialUpSpeed: 3
   fallGravity: 0.1
   maxFallSpeed: 1
+  riseSpinDegreesPerSecond: 720
   colliderConfig:
     isTrigger: 0
     shape: 2
