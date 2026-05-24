@@ -15,7 +15,8 @@ public class BattleAreaConfigEditor : Editor
         if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.battleAreaConfig, "BattleAreaConfig"))
             return;
 
-        ConfigViewerEditorUI.DrawPrefabSyncHint("双击进入预制体编辑后自动同步；Scene 视图选中物体可查看 Gizmo。");
+        ConfigViewerEditorUI.DrawPrefabSyncHint(
+            "双击进入预制体编辑后自动同步；Scene 视图选中物体可查看 Gizmo。调节 GridCellSize 时可见淡绿色碰撞网格。");
         ConfigViewerEditorUI.DrawSaveButton(
             viewer.battleAreaConfig,
             () =>

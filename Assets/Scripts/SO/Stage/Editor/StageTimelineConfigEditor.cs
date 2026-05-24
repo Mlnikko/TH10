@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ public class StageTimelineConfigEditor : Editor
         var viewer = (StageTimelineConfigViewer)target;
 
         ConfigViewerEditorUI.DrawSeparator();
-        EditorGUILayout.LabelField("关卡时间轴预览", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("关卡时间轴预览（仅编辑器）", EditorStyles.boldLabel);
 
         if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.stageTimelineConfig, "StageTimelineConfig"))
             return;
@@ -20,37 +21,28 @@ public class StageTimelineConfigEditor : Editor
         {
             EditorGUILayout.HelpBox(StageTimelinePreviewRuntime.PlayModeRequiredMessage, MessageType.Warning);
         }
+        else if (!StageTimelinePreviewRuntime.CanPreview)
+        {
+            EditorGUILayout.HelpBox(StageTimelinePreviewRuntime.InBattleBlockedMessage, MessageType.Warning);
+        }
         else if (viewer.IsPreviewBootstrapping || StageTimelinePreviewRuntime.IsLoading)
         {
-            EditorGUILayout.HelpBox("正在初始化预览运行时（Addressables / GameResDB / 对象池）…", MessageType.Info);
-        }
-        else if (!StageTimelinePreviewRuntime.IsReady)
-        {
-            string err = StageTimelinePreviewRuntime.LastError;
-            EditorGUILayout.HelpBox(
-                string.IsNullOrEmpty(err)
-                    ? "预览运行时未就绪。进入 Play 后会自动加载；也可点击下方按钮重试。"
-                    : $"预览初始化失败：{err}",
-                MessageType.Warning);
+            EditorGUILayout.HelpBox("正在加载预览资源…", MessageType.Info);
         }
         else
         {
             ConfigViewerEditorUI.DrawPrefabSyncHint(
-                "Play 模式下按逻辑帧驱动 StageTimeline / 敌人运动 / 弹幕发射。请指定 BattleAreaConfig，或留空使用 Manifest 中的战斗区。");
+                "手动预览 StageTimeline，使用独立 ECS World，不影响正常进战流程。请指定 BattleAreaConfig 或留空使用 Manifest。");
         }
 
         EditorGUI.BeginDisabledGroup(
-            !Application.isPlaying
+            !StageTimelinePreviewRuntime.CanPreview
             || viewer.IsPreviewBootstrapping
             || StageTimelinePreviewRuntime.IsLoading
             || viewer.IsPreviewingTimeline);
 
-        if (GUILayout.Button(
-                StageTimelinePreviewRuntime.IsReady ? "预览关卡时间轴" : "加载预览资源",
-                GUILayout.Height(28)))
-        {
+        if (GUILayout.Button("预览关卡时间轴", GUILayout.Height(28)))
             viewer.RequestPreviewStageTimeline();
-        }
 
         EditorGUI.EndDisabledGroup();
 
@@ -65,3 +57,4 @@ public class StageTimelineConfigEditor : Editor
         }
     }
 }
+#endif

@@ -316,8 +316,8 @@ MonoBehaviour:
     Width: 4
     Height: 5
     Center: {x: 0, y: 0}
-    GridCellSize: 1
-    DanmakuRecycleMargin: {x: 0.5, y: 0.5}
+    GridCellSize: 0.25
+    GO_RecycleMargin: {x: 0.5, y: 0.5}
   playerSpawnData:
     SpawnRootPos: {x: 0, y: -2}
     HOffsetPerPlayer: 1
@@ -325,6 +325,7 @@ MonoBehaviour:
     collectZoneHeight: 1
     magnetSpeed: 5
     magnetPickupRadius: 0.08
+  drawCollisionGrid: 1
 --- !u!1 &822744647
 GameObject:
   m_ObjectHideFlags: 0

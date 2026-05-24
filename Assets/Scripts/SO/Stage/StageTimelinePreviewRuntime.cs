@@ -1,79 +1,71 @@
+#if UNITY_EDITOR
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
-/// 战斗场景直连 Play 时的 StageTimeline 预览运行时：异步初始化 GameResDB / 对象池 / GlobalBattleData。
-/// 不依赖 <see cref="GameLauncher"/> 或正式进战流程。
+/// StageTimeline 编辑器预览辅助：仅在 Inspector 手动点击时加载资源，不参与运行时逻辑。
 /// </summary>
 public static class StageTimelinePreviewRuntime
 {
-    enum LoadState
-    {
-        Idle,
-        Loading,
-        Ready,
-        Failed
-    }
-
-    static LoadState _state = LoadState.Idle;
+    static bool _loading;
     static string _lastError;
-    static Task _loadTask;
+    static bool _previewOwnedGlobalBattleData;
 
-    public const string PlayModeRequiredMessage = "请先点击 Unity 编辑器上方的「运行」，进入 Play 模式后再预览。";
+    public const string PlayModeRequiredMessage = "请先进入 Play 模式后再预览。";
 
-    public static bool IsReady => _state == LoadState.Ready;
-    public static bool IsLoading => _state == LoadState.Loading;
+    public const string InBattleBlockedMessage = "战斗进行中已禁用预览，避免影响正常游戏流程。";
+
+    public static bool IsLoading => _loading;
     public static string LastError => _lastError;
 
-    public static bool IsPlayModeReady =>
-        Application.isPlaying && IsReady;
+    public static bool CanPreview =>
+        Application.isPlaying && !IsInActiveBattle;
 
-    public static Task EnsureReadyAsync(BattleAreaConfig battleAreaConfig = null)
+    static bool IsInActiveBattle =>
+        BattleManager.Instance != null
+        && BattleManager.Instance.CurrentStatus == E_BattleStatus.InBattle;
+
+    public static Task EnsureReadyAsync(BattleAreaConfig battleAreaConfig)
     {
         if (!Application.isPlaying)
             return Task.FromException(new InvalidOperationException(PlayModeRequiredMessage));
 
-        if (_state == LoadState.Ready)
+        if (IsInActiveBattle)
+            return Task.FromException(new InvalidOperationException(InBattleBlockedMessage));
+
+        if (GameResDB.IsInitialized)
             return Task.CompletedTask;
 
-        if (_state == LoadState.Loading && _loadTask != null)
-            return _loadTask;
-
-        _state = LoadState.Loading;
-        _lastError = null;
-        _loadTask = LoadInternalAsync(battleAreaConfig);
-        return _loadTask;
+        return LoadGameResDbAsync();
     }
 
-    static async Task LoadInternalAsync(BattleAreaConfig battleAreaConfig)
+    static async Task LoadGameResDbAsync()
     {
+        if (_loading)
+            return;
+
+        _loading = true;
+        _lastError = null;
         try
         {
             _ = GameManager.Instance;
-
-            if (!GameResDB.IsInitialized)
-            {
-                await ResManager.Instance.InitializeAsync().ConfigureAwait(true);
-                await GameResDB.Instance.InitializeAsync().ConfigureAwait(true);
-            }
-
-            WarmupObjectPools();
-            TryApplyGlobalBattleData(battleAreaConfig);
-
-            _state = LoadState.Ready;
-            Logger.Info("[StageTimelinePreview] 预览运行时就绪（GameResDB + 对象池）。", LogTag.Config);
+            await ResManager.Instance.InitializeAsync().ConfigureAwait(true);
+            await GameResDB.Instance.InitializeAsync().ConfigureAwait(true);
+            WarmupObjectPoolsIfNeeded();
         }
         catch (Exception ex)
         {
-            _state = LoadState.Failed;
             _lastError = ex.Message;
-            Logger.Error($"[StageTimelinePreview] 初始化失败: {ex.Message}", LogTag.Config);
             throw;
+        }
+        finally
+        {
+            _loading = false;
         }
     }
 
-    static void WarmupObjectPools()
+    static void WarmupObjectPoolsIfNeeded()
     {
         _ = GameObjectPoolManager.Instance;
 
@@ -98,14 +90,33 @@ public static class StageTimelinePreviewRuntime
         }
     }
 
-    static void TryApplyGlobalBattleData(BattleAreaConfig battleAreaConfig)
+    public static bool TryApplyPreviewBattleArea(BattleAreaConfig battleAreaConfig, out string error)
     {
+        error = null;
+        var resolved = ResolveBattleAreaConfig(battleAreaConfig);
+        if (resolved == null)
+        {
+            error = "未指定 BattleAreaConfig，且无法从 Manifest 解析战斗区。";
+            return false;
+        }
+
         if (GlobalBattleData.IsInitialized)
+            return true;
+
+        GlobalBattleData.Initialize(resolved);
+        _previewOwnedGlobalBattleData = true;
+        return true;
+    }
+
+    public static void ReleasePreviewBattleAreaIfOwned()
+    {
+        if (!_previewOwnedGlobalBattleData)
             return;
 
-        var resolved = ResolveBattleAreaConfig(battleAreaConfig);
-        if (resolved != null)
-            GlobalBattleData.Initialize(resolved);
+        if (GlobalBattleData.IsInitialized)
+            GlobalBattleData.ResetForEditorPreview();
+
+        _previewOwnedGlobalBattleData = false;
     }
 
     public static BattleAreaConfig ResolveBattleAreaConfig(BattleAreaConfig explicitConfig)
@@ -131,23 +142,15 @@ public static class StageTimelinePreviewRuntime
             return false;
         }
 
-        if (_state == LoadState.Loading)
+        if (IsInActiveBattle)
         {
-            error = "预览资源加载中，请稍候…";
+            error = InBattleBlockedMessage;
             return false;
         }
 
-        if (_state == LoadState.Failed)
+        if (!GameResDB.IsInitialized)
         {
-            error = string.IsNullOrEmpty(_lastError)
-                ? "预览运行时初始化失败。"
-                : _lastError;
-            return false;
-        }
-
-        if (_state != LoadState.Ready || !GameResDB.IsInitialized)
-        {
-            error = "预览运行时未就绪。";
+            error = "GameResDB 未就绪。";
             return false;
         }
 
@@ -161,25 +164,21 @@ public static class StageTimelinePreviewRuntime
         return true;
     }
 
-#if UNITY_EDITOR
+    public static void ResetSession()
+    {
+        _loading = false;
+        _lastError = null;
+        _previewOwnedGlobalBattleData = false;
+    }
+
     [UnityEditor.InitializeOnLoadMethod]
     static void RegisterPlayModeReset()
     {
-        UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-        UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-    }
-
-    static void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
-    {
-        if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
-            ResetSession();
-    }
-#endif
-
-    public static void ResetSession()
-    {
-        _state = LoadState.Idle;
-        _lastError = null;
-        _loadTask = null;
+        UnityEditor.EditorApplication.playModeStateChanged += state =>
+        {
+            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+                ResetSession();
+        };
     }
 }
+#endif

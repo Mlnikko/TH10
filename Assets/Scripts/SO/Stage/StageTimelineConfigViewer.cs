@@ -1,14 +1,13 @@
 using System;
-using System.Threading.Tasks;
 using UnityEngine;
 
 #if UNITY_EDITOR
+using System.Threading.Tasks;
 using UnityEditor;
 #endif
 
 /// <summary>
-/// 战斗场景编辑器：挂载后可在 Play 模式预览 <see cref="StageTimelineConfig"/> 的出怪、运动与弹幕发射。
-/// 从战斗场景直连 Play 时会由 <see cref="StageTimelinePreviewRuntime"/> 自行初始化 GameResDB，不依赖 GameLauncher。
+/// 战斗场景编辑器工具：Play 模式下手动预览 <see cref="StageTimelineConfig"/>，不参与正式游戏流程。
 /// </summary>
 public class StageTimelineConfigViewer : GameConfigViewerBase
 {
@@ -33,7 +32,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     World _previewWorld;
     StageTimelineSystem _timelineSystem;
     uint _previewLogicFrame;
-    bool _globalBattleDataWasInitialized;
 #endif
 
     public void LoadStageTimelineConfig() => LoadFromConfig();
@@ -53,15 +51,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     public bool IsPreviewingTimeline => _previewActive;
     public bool IsPreviewBootstrapping => _previewBootstrapping;
 
-    public static bool CanPreviewInEditor => StageTimelinePreviewRuntime.IsPlayModeReady;
-
     protected override void StopEditorPreviews() => StopPreviewTimeline();
-
-    void Start()
-    {
-        if (Application.isPlaying)
-            StageTimelinePreviewRuntime.EnsureReadyAsync(battleAreaConfig).Forget();
-    }
 
     void OnEnable()
     {
@@ -84,9 +74,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     void OnEditorInspectorRefresh()
     {
-        if (!Application.isPlaying)
-            return;
-
         if (_previewBootstrapping || StageTimelinePreviewRuntime.IsLoading)
             RepaintActiveInspector();
     }
@@ -94,14 +81,13 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     static void RepaintActiveInspector()
     {
         var tracker = ActiveEditorTracker.sharedTracker;
-        if (tracker == null || tracker.activeEditors == null)
+        if (tracker?.activeEditors == null)
             return;
 
         for (int i = 0; i < tracker.activeEditors.Length; i++)
         {
-            var editor = tracker.activeEditors[i];
-            if (editor != null && editor.target is StageTimelineConfigViewer)
-                editor.Repaint();
+            if (tracker.activeEditors[i]?.target is StageTimelineConfigViewer)
+                tracker.activeEditors[i].Repaint();
         }
     }
 
@@ -112,13 +98,13 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
         if (stageTimelineConfig == null)
         {
-            Logger.Warn("[StageTimelineConfigViewer] 未指定 StageTimelineConfig，无法预览。", LogTag.Config);
+            Logger.Warn("[StageTimelineConfigViewer] 未指定 StageTimelineConfig。", LogTag.Config);
             return;
         }
 
-        if (!Application.isPlaying)
+        if (!StageTimelinePreviewRuntime.CanPreview)
         {
-            Logger.Warn($"[StageTimelineConfigViewer] {StageTimelinePreviewRuntime.PlayModeRequiredMessage}", LogTag.Config);
+            Logger.Warn("[StageTimelineConfigViewer] 当前不可预览（需 Play 模式且非战斗中）。", LogTag.Config);
             return;
         }
 
@@ -130,11 +116,11 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         {
             if (generation != _bootstrapGeneration || this == null)
                 return;
-            _ = BeginBootstrapAndPreviewAsync(generation);
+            _ = BeginPreviewAsync(generation);
         };
     }
 
-    async Task BeginBootstrapAndPreviewAsync(int generation)
+    async Task BeginPreviewAsync(int generation)
     {
         try
         {
@@ -148,6 +134,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             if (!StageTimelinePreviewRuntime.TryValidateForPreview(battleAreaConfig, out string error))
             {
                 Logger.Warn($"[StageTimelineConfigViewer] {error}", LogTag.Config);
+                return;
+            }
+
+            if (!StageTimelinePreviewRuntime.TryApplyPreviewBattleArea(battleAreaConfig, out string areaError))
+            {
+                Logger.Warn($"[StageTimelineConfigViewer] {areaError}", LogTag.Config);
                 return;
             }
 
@@ -165,15 +157,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     void StartPreviewTimelineCore()
     {
-        if (this == null || stageTimelineConfig == null)
-            return;
-
-        if (!TryApplyBattleAreaForPreview(out string areaError))
-        {
-            Logger.Warn($"[StageTimelineConfigViewer] {areaError}", LogTag.Config);
-            return;
-        }
-
         BakeTimelineForPreview();
 
         _previewWorld = CreatePreviewWorld();
@@ -190,9 +173,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         EditorApplication.update -= OnEditorPreviewUpdate;
         EditorApplication.update += OnEditorPreviewUpdate;
 
-        Logger.Info(
-            $"[StageTimelineConfigViewer] 关卡预览开始（{fps} 逻辑FPS，约 {duration:F1}s）。",
-            LogTag.Config);
+        Logger.Info($"[StageTimelineConfigViewer] 预览开始（{fps} FPS，约 {duration:F1}s）。", LogTag.Config);
     }
 
     public void StopPreviewTimeline()
@@ -216,10 +197,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             _previewWorld = null;
         }
 
-        if (!_globalBattleDataWasInitialized && GlobalBattleData.IsInitialized)
-            GlobalBattleData.ResetForEditorPreview();
-
-        _globalBattleDataWasInitialized = false;
+        StageTimelinePreviewRuntime.ReleasePreviewBattleAreaIfOwned();
         SceneView.RepaintAll();
     }
 
@@ -230,21 +208,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         if (stageTimelineConfig != null && stageTimelineConfig.maxStageDurationSeconds > 0f)
             return stageTimelineConfig.maxStageDurationSeconds;
         return 60f;
-    }
-
-    bool TryApplyBattleAreaForPreview(out string error)
-    {
-        error = null;
-        var areaConfig = StageTimelinePreviewRuntime.ResolveBattleAreaConfig(battleAreaConfig);
-        if (areaConfig == null)
-        {
-            error = "未指定 BattleAreaConfig，且无法从 Manifest 解析战斗区。";
-            return false;
-        }
-
-        _globalBattleDataWasInitialized = GlobalBattleData.IsInitialized;
-        GlobalBattleData.Initialize(areaConfig);
-        return true;
     }
 
     void BakeTimelineForPreview()

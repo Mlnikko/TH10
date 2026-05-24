@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 public class DeterministicGrid
 {
-    readonly int _cellSize; // 格子边长（像素或单位）
+    readonly float _cellSize;
     readonly float _worldMinX, _worldMinY;
     readonly int _gridWidth, _gridHeight;
     readonly List<int>[] _cells;
@@ -13,8 +13,8 @@ public class DeterministicGrid
     {
         _cellSize = battleAreaData.GridCellSize;
 
-        // 直接使用 BattleAreaData 提供的“总尺寸”和“世界原点”
-        _gridWidth = battleAreaData.GridColumns;   // 已含安全边距 + 向上取整
+        // 直接使用 BattleAreaData 提供的网格布局（与战斗区 Width/Height 对齐）
+        _gridWidth = battleAreaData.GridColumns;
         _gridHeight = battleAreaData.GridRows;
 
         _worldMinX = battleAreaData.GridWorldOrigin.x;

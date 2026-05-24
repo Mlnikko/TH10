@@ -62,6 +62,10 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
     [Header("道具吸收")]
     [SerializeField] DropItemCollectData dropItemCollectData;
 
+    [Header("Scene 可视化")]
+    [Tooltip("按 GridCellSize 绘制碰撞加速网格（与 DeterministicGrid 一致），便于调节格子大小")]
+    [SerializeField] bool drawCollisionGrid = true;
+
     public void LoadBattleAreaData() => LoadFromConfig();
 
     public override void LoadFromConfig()
@@ -97,11 +101,14 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
         // === 回收边界（红色）===
         Gizmos.color = Color.red;
         Vector3 recycleSize = new Vector3(
-            battleAreaData.Width + battleAreaData.DanmakuRecycleMargin.x * 2f,
-            battleAreaData.Height + battleAreaData.DanmakuRecycleMargin.y * 2f,
+            battleAreaData.Width + battleAreaData.GO_RecycleMargin.x * 2f,
+            battleAreaData.Height + battleAreaData.GO_RecycleMargin.y * 2f,
             0
         );
         Gizmos.DrawWireCube(battleAreaData.Center, recycleSize);
+
+        if (drawCollisionGrid)
+            DrawCollisionGridGizmo(in battleAreaData);
 
         // === 道具吸收线（青色）===
         if (battleAreaData.Height > 0f)
@@ -123,6 +130,35 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
         {
             Vector2 spawnPos = playerSpawnData.GetPlayerSpawnPos(i, 4); // 明确按 4 人预览
             Gizmos.DrawSphere(new Vector3(spawnPos.x, spawnPos.y, 0), 0.1f);
+        }
+    }
+
+    void DrawCollisionGridGizmo(in BattleAreaData area)
+    {
+        float cell = area.GridCellSize;
+        if (cell < 0.01f)
+            return;
+        float originX = area.GridWorldOrigin.x;
+        float originY = area.GridWorldOrigin.y;
+        float maxX = area.GridMaxX;
+        float maxY = area.GridMaxY;
+        int cols = area.GridColumns;
+        int rows = area.GridRows;
+        if (cols <= 0 || rows <= 0)
+            return;
+
+        Gizmos.color = new Color(0.45f, 0.85f, 0.45f, 0.45f);
+
+        for (int c = 0; c <= cols; c++)
+        {
+            float x = originX + c * cell;
+            Gizmos.DrawLine(new Vector3(x, originY, 0f), new Vector3(x, maxY, 0f));
+        }
+
+        for (int r = 0; r <= rows; r++)
+        {
+            float y = originY + r * cell;
+            Gizmos.DrawLine(new Vector3(originX, y, 0f), new Vector3(maxX, y, 0f));
         }
     }
 }
