@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
+  m_Name: DME_Reimu_Red
+  m_EditorClassIdentifier: 
+  emitterPrefabId: dme_reimu_red
+  danmakuConfigIds:
+  - dm_reimu_red
+  danmakuSelectMode: 0
+  emitMode: 1
+  launchIntervalSeconds: 0.05
+  launchSpeed: 30
+  emitterPosOffset: {x: 0, y: 0}
+  emitterRotOffsetZ: 0
+  danmakuRotOffsetZ: 90
+  emitterCamp: 1
+  audio_Fire: 0
+  lineModeConfig:
+    lineDirection: {x: 0, y: 1}
+    lineCount: 2
+    lineSpacing: 0.25
+  arcModeConfig:
+    arcStartAngle: 0
+    arcAngle: 0
+    arcRadius: 0
+    arcBulletCount: 0
+    arcClockwise: 0

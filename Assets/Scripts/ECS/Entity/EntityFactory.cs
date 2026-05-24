@@ -63,6 +63,8 @@ public class EntityFactory
             isBombing = false,
             isInvincible = false,
             powerOrbs = 0,
+            primaryEmitterEntityIndex = -1,
+            primaryEmitterConfigVariant = 0,
         });
         _entityManager.AddComponent(e_player, new CHealth(characterConfig.maxHealth, characterConfig.maxHealth));
         _entityManager.AddComponent(e_player, new CCollider
@@ -78,19 +80,95 @@ public class EntityFactory
             height = characterConfig.hitColliderConfig.boxSize.y,
         });
 
-        foreach (var emitterIndex in weaponConfig.danmakuEmitterCfgIndices)
-        {
-            var emitterCfg = GameResDB.Instance.GetConfig<DanmakuEmitterConfig>(emitterIndex);
-            if (emitterCfg == null)
-            {
-                Logger.Error($"DanmakuEmitter configuration not found for index {emitterIndex}.");
-                return Entity.Null;
-            }
-            _entityManager.AddComponent(e_player, new CDanmakuEmitter(emitterCfg));
-        }
+        int playerEntityIndex = e_player.Index;
+        int primaryEmitterEntityIndex = CreatePlayerWeaponEmitters(
+            playerEntityIndex,
+            weaponConfig,
+            posX,
+            posY);
+
+        ref var playerComponent = ref _entityManager.GetComponent<CPlayer>(e_player);
+        playerComponent.primaryEmitterEntityIndex = primaryEmitterEntityIndex;
 
         Logger.Info($"Player {playerBattleData.playerIndex} ({playerBattleData.characterId}) initialized successfully.", LogTag.Battle);
         return e_player;
+    }
+
+    int CreatePlayerWeaponEmitters(int ownerPlayerEntityIndex, WeaponConfig weaponConfig, float posX, float posY)
+    {
+        int primaryEmitterEntityIndex = -1;
+
+        int primaryCfgIndex = weaponConfig.ResolvePrimaryEmitterCfgIndex(slowMode: false);
+        if (primaryCfgIndex >= 0)
+        {
+            primaryEmitterEntityIndex = CreateWeaponEmitterEntity(
+                ownerPlayerEntityIndex,
+                primaryCfgIndex,
+                weaponConfig.primaryEmitters.normal.slotOffset,
+                E_WeaponEmitterSlotRole.Primary,
+                secondarySlotIndex: 0,
+                posX,
+                posY);
+        }
+
+        var secondaryIndices = weaponConfig.secondaryEmitterCfgIndices;
+        var secondarySlots = weaponConfig.secondaryEmitters.slots;
+        if (secondaryIndices != null && secondarySlots != null)
+        {
+            int count = Mathf.Min(secondaryIndices.Length, secondarySlots.Length);
+            for (int i = 0; i < count; i++)
+            {
+                if (secondaryIndices[i] < 0)
+                    continue;
+
+                CreateWeaponEmitterEntity(
+                    ownerPlayerEntityIndex,
+                    secondaryIndices[i],
+                    secondarySlots[i].slotOffset,
+                    E_WeaponEmitterSlotRole.Secondary,
+                    (byte)i,
+                    posX,
+                    posY);
+            }
+        }
+
+        return primaryEmitterEntityIndex;
+    }
+
+    int CreateWeaponEmitterEntity(
+        int ownerPlayerEntityIndex,
+        int emitterCfgIndex,
+        Vector2 slotOffset,
+        E_WeaponEmitterSlotRole role,
+        byte secondarySlotIndex,
+        float posX,
+        float posY)
+    {
+        var emitterCfg = GameResDB.Instance.GetConfig<DanmakuEmitterConfig>(emitterCfgIndex);
+        if (emitterCfg == null)
+        {
+            Logger.Error($"DanmakuEmitter configuration not found for index {emitterCfgIndex}.");
+            return -1;
+        }
+
+        Entity e_emitter = _entityManager.CreateEntity();
+        _entityManager.AddComponent(e_emitter, new CPosition(posX, posY));
+        _entityManager.AddComponent(e_emitter, new CRotation(0));
+
+        var emitter = new CDanmakuEmitter(emitterCfg);
+        emitter.emitterPosOffsetX += slotOffset.x;
+        emitter.emitterPosOffsetY += slotOffset.y;
+        _entityManager.AddComponent(e_emitter, emitter);
+        _entityManager.AddComponent(e_emitter, new CPlayerEmitterOwnership
+        {
+            ownerPlayerEntityIndex = ownerPlayerEntityIndex,
+            role = role,
+            secondarySlotIndex = secondarySlotIndex,
+            slotOffsetX = slotOffset.x,
+            slotOffsetY = slotOffset.y,
+        });
+
+        return e_emitter.Index;
     }
 
     /// <param name="rotationRad">弹幕逻辑旋转（弧度），与 <see cref="CRotation.angleRad"/> 一致。</param>

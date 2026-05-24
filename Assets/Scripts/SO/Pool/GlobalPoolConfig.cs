@@ -14,6 +14,7 @@ public enum E_PoolCategory
 [Serializable]
 public class GlobalPoolEntry
 {
+    [PoolPrefabId]
     public string prefabId;
 
     [Tooltip("全局允许的最大对象池上限")]
@@ -39,4 +40,25 @@ public class PoolCategoryGroup
 public class GlobalPoolConfig : GameConfig
 {
     public PoolCategoryGroup[] poolCategories;
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (poolCategories == null)
+            return;
+
+        for (int i = 0; i < poolCategories.Length; i++)
+        {
+            var entries = poolCategories[i].entries;
+            if (entries == null)
+                continue;
+
+            for (int j = 0; j < entries.Length; j++)
+            {
+                if (!string.IsNullOrEmpty(entries[j].prefabId))
+                    entries[j].prefabId = StringHelper.NormalizeResourceId(entries[j].prefabId);
+            }
+        }
+    }
+#endif
 }

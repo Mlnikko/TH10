@@ -10,16 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
-  m_Name: DME_Reimu_Homing
+  m_Name: DME_Reimu_Blue
   m_EditorClassIdentifier: 
-  configId: 
-  emitterPrefabId: dm_reimu_homing
+  emitterPrefabId: dme_reimu_blue
   danmakuConfigIds:
-  - dm_reimu_homing
+  - dm_reimu_blue
   danmakuSelectMode: 0
   emitMode: 1
-  launchIntervalSeconds: 0.5
-  launchSpeed: 120
+  launchIntervalSeconds: 0.05
+  launchSpeed: 30
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 90

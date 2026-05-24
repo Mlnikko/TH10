@@ -308,6 +308,22 @@ public struct CPlayer : IComponent
 
     /// <summary>P 道具 / 火力拾取累计（由 <see cref="DropItemPickupEffects"/> 写入）。</summary>
     public int powerOrbs;
+
+    /// <summary>主发射器子实体索引；无发射器时为 -1。</summary>
+    public int primaryEmitterEntityIndex;
+
+    /// <summary>主发射器当前配置变体：0 通常 / 1 低速。</summary>
+    public byte primaryEmitterConfigVariant;
+}
+
+/// <summary>挂在玩家武器发射子实体上，用于同步位置与射击状态。</summary>
+public struct CPlayerEmitterOwnership : IComponent
+{
+    public int ownerPlayerEntityIndex;
+    public E_WeaponEmitterSlotRole role;
+    public byte secondarySlotIndex;
+    public float slotOffsetX;
+    public float slotOffsetY;
 }
 
 #endregion

@@ -23,7 +23,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f71a12f69b46e1d418028435f48d1cbb
-    m_Address: cfg_weapon_reimu_2
+    m_Address: cfg_weapon_reimu_pink
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -33,12 +33,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4de346eab560c424bb2c0f88ea7da36f
-    m_Address: cfg_weapon_reimu_1
+    m_Address: cfg_weapon_reimu_red
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d209723abf2f3724189acc6a22b21478
-    m_Address: cfg_weapon_reimu_0
+    m_Address: cfg_weapon_reimu_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -63,7 +63,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c27335b6dbc1a1f4dba5b818f7fd1cce
-    m_Address: cfg_dme_reimu_homing
+    m_Address: cfg_dme_reimu_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -83,7 +83,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79f68cadc6e72654c9af06f08903e3fa
-    m_Address: cfg_dm_reimu_homing
+    m_Address: cfg_dm_reimu_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -403,7 +403,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 16ec59042b78ee34fa89c09c8e8b319e
-    m_Address: prefab_dm_reimu_homing
+    m_Address: prefab_dm_reimu_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -418,7 +418,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 802840e8e27e2074c99245aa3174458e
-    m_Address: prefab_dme_reimu_homing
+    m_Address: prefab_dme_reimu_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -494,11 +494,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 391be5df5ef62f345bb76a1051c04da7
     m_Address: Plugins/IngameDebugConsole/Prefabs/DebugLogItem
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ea4f45f1433c2404197edc445210b679
-    m_Address: Plugins/ParadoxNotion/NodeCanvas/Modules/DialogueTrees/DialogueGUI/@DialogueUGUI
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -974,13 +969,48 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4430e3bad709edb408a115c6c377ef29
-    m_Address: cfg_bt_boss_stage1
+  - m_GUID: dceb54a82fc506c439a327d3d8a71cf7
+    m_Address: cfg_gamesettingsconfig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dceb54a82fc506c439a327d3d8a71cf7
-    m_Address: cfg_gamesettingsconfig
+  - m_GUID: b2dd2ba844c304b4e9d78df42b293a98
+    m_Address: cfg_dme_reimu_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5d303c0f37cd0140b941ac3df1472cd
+    m_Address: cfg_dme_reimu_pink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c617decf754eb5d4bb0d4227d86b64da
+    m_Address: cfg_dm_reimu_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9d6200cc0db5714e956c0e621d51728
+    m_Address: cfg_dm_reimu_pink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f6783c4c8afe9547b94b637e9293ca6
+    m_Address: prefab_dm_reimu_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b624a3a27047dc49992c558a888ac48
+    m_Address: prefab_dm_reimu_pink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1fac62fe9338dd4cbf729365b418520
+    m_Address: prefab_dme_reimu_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 508691782c2c5ad4db2bb141614ccffa
+    m_Address: prefab_dme_reimu_pink
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

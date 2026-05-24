@@ -5,6 +5,7 @@ using UnityEngine;
 public class DanmakuConfig : GameConfig , IReferenceResolver
 {
     [Header("弹幕预制体")]
+    [Tooltip("预制体 Id（小写）；Inspector 中从 GameResourceManifest / Prefabs/Danmaku 下拉选择")]
     public string danmakuPrefabId;
     [NonSerialized]
     public int danmakuPrefabIndex;

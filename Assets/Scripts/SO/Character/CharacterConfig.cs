@@ -18,6 +18,13 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     [Header("信息配置")]
     public E_Character character = E_Character.None;
 
+    [Header("可选武器")]
+    [Tooltip("该角色可选的 WeaponConfig ConfigId 列表")]
+    public string[] weaponConfigIds = Array.Empty<string>();
+
+    [NonSerialized]
+    public int[] weaponCfgIndices = Array.Empty<int>();
+
     [TextArea(1, 5)]
     public string description;
 
@@ -48,16 +55,53 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     void OnValidate()
     {
         characterPrefabId = characterPrefabId.ToLowerInvariantTrimmed();
+        NormalizeWeaponConfigIds();
+    }
+
+    static void NormalizeWeaponConfigIds(ref string[] ids)
+    {
+        if (ids == null)
+            return;
+
+        for (int i = 0; i < ids.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(ids[i]))
+                ids[i] = StringHelper.NormalizeResourceId(ids[i]);
+        }
+    }
+
+    void NormalizeWeaponConfigIds()
+    {
+        NormalizeWeaponConfigIds(ref weaponConfigIds);
     }
 #endif
 
     public void ResolveReferences(GameResDB resDb)
     {
-        // 1. 解析角色预制体索引
         characterPrefabIndex = resDb.GetPrefabIndex(characterPrefabId);
         if (characterPrefabIndex == -1)
         {
             Logger.Warn($"[CharacterConfig] Prefab not found for ID: '{characterPrefabId}' (configId: {ConfigId})", LogTag.Resource);
+        }
+
+        if (weaponConfigIds != null && weaponConfigIds.Length > 0)
+        {
+            weaponCfgIndices = new int[weaponConfigIds.Length];
+            for (int i = 0; i < weaponConfigIds.Length; i++)
+            {
+                string weaponId = StringHelper.NormalizeResourceId(weaponConfigIds[i]);
+                weaponCfgIndices[i] = resDb.GetConfigIndex(weaponId);
+                if (weaponCfgIndices[i] == -1)
+                {
+                    Logger.Warn(
+                        $"[CharacterConfig] WeaponConfig not found: '{weaponId}' (character: {ConfigId})",
+                        LogTag.Resource);
+                }
+            }
+        }
+        else
+        {
+            weaponCfgIndices = Array.Empty<int>();
         }
     }
 

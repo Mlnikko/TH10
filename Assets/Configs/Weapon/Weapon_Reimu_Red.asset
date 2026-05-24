@@ -10,11 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b1624a18d887774459c5d78881f0331f, type: 3}
-  m_Name: Weapon_Reimu_2
+  m_Name: Weapon_Reimu_Red
   m_EditorClassIdentifier: 
-  configId: 
-  characterID: 1
-  weaponID: 12
-  danmakuEmitterConfigIds:
-  - dme_test
+  weaponID: 11
+  primaryEmitters:
+    normal:
+      danmakuEmitterConfigId: 
+      slotOffset: {x: 0, y: 0}
+    slowModeDanmakuEmitterConfigId: 
+  secondaryEmitters:
+    slots: []
   description: 
+  danmakuEmitterConfigIds: []

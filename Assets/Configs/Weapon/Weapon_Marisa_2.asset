@@ -13,7 +13,12 @@ MonoBehaviour:
   m_Name: Weapon_Marisa_2
   m_EditorClassIdentifier: 
   configId: 
-  characterID: 2
   weaponID: 22
-  danmakuEmitterConfigIds: []
+  primaryEmitters:
+    normal:
+      danmakuEmitterConfigId: 
+      slotOffset: {x: 0, y: 0}
+    slowModeDanmakuEmitterConfigId: 
+  secondaryEmitters:
+    slots: []
   description: 

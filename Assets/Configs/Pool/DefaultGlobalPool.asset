@@ -38,10 +38,18 @@ MonoBehaviour:
       maxCapacity: 500
       defaultWarmupCount: 300
       allowForceRecycle: 0
-    - prefabId: dm_reimu_homing
+    - prefabId: dm_reimu_red
+      maxCapacity: 1000
+      defaultWarmupCount: 500
+      allowForceRecycle: 1
+    - prefabId: dm_reimu_blue
       maxCapacity: 500
-      defaultWarmupCount: 300
-      allowForceRecycle: 0
+      defaultWarmupCount: 500
+      allowForceRecycle: 1
+    - prefabId: dm_reimu_pink
+      maxCapacity: 500
+      defaultWarmupCount: 500
+      allowForceRecycle: 1
     - prefabId: dm_test
       maxCapacity: 5000
       defaultWarmupCount: 5000

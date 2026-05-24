@@ -19,14 +19,17 @@ public class WeaponSelectionUI : MonoBehaviour
     public void Initialize(WeaponConfig config, System.Action onSelect)
     {
         this.onSelect = onSelect;
-        nameLabel.text = config.description;
+        nameLabel.text = string.IsNullOrEmpty(config.description) ? config.ConfigId : config.description;
         weaponId = config.weaponID;
 
-        var sprite = GameResDB.Instance.GetSpriteFromAtlas("weapon", weaponId.ToString().ToLowerInvariant());
+        string spriteId = config.ConfigId;
+        var sprite = GameResDB.Instance.GetSpriteFromAtlas("weapon", spriteId);
 
-        if(sprite == null)
+        if (sprite == null)
         {
-            Logger.Warn($"Weapon icon sprite not found for configId: {weaponId}");
+            Logger.Warn(
+                $"Weapon icon sprite not found: '{spriteId}' (weapon config: {config.ConfigId})",
+                LogTag.Resource);
         }
 
         iconImage.sprite = sprite;

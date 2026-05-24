@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -82,7 +82,7 @@ SpriteRenderer:
   m_Size: {x: 0.16, y: 0.16}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &4093755159246986462
@@ -98,7 +98,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   emitterConfig: {fileID: 11400000, guid: 35a834f408d757a468c1938fb9a1d7aa, type: 2}
-  danmakuConfig: {fileID: 11400000, guid: 462e9767835d93841b90124df5562395, type: 2}
   emitterType: 1
   emitterCamp: 1
   emitPosOffset: {x: 0, y: 0}
@@ -116,7 +115,7 @@ MonoBehaviour:
     arcClockwise: 0
   launchAudio: 0
   launchIntervalSeconds: 0.05
-  launchSpeed: 0.5
+  launchSpeed: 30
   previewDuration: 5
   previewBulletLifetime: 3
   drawPreviewSpawnGizmos: 1

@@ -98,7 +98,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   emitterConfig: {fileID: 11400000, guid: 56f905c7288be0e4abb006b80c2c5032, type: 2}
-  danmakuConfig: {fileID: 11400000, guid: 5755a258a3adb9846b569706f7ca88f3, type: 2}
   emitterType: 1
   emitterCamp: 1
   emitPosOffset: {x: 0, y: 0}

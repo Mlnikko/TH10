@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1624a18d887774459c5d78881f0331f, type: 3}
   m_Name: Weapon_Marisa_0
   m_EditorClassIdentifier: 
-  characterID: 2
   weaponID: 20
-  danmakuEmitterConfigIds:
-  - dme_reimu_main
+  primaryEmitters:
+    normal:
+      danmakuEmitterConfigId: dme_reimu_main
+      slotOffset: {x: 0, y: 0}
+    slowModeDanmakuEmitterConfigId: 
+  secondaryEmitters:
+    slots: []
   description: 

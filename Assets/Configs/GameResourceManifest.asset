@@ -21,18 +21,22 @@ MonoBehaviour:
   - weapon_marisa_0
   - weapon_marisa_1
   - weapon_marisa_2
-  - weapon_reimu_0
-  - weapon_reimu_1
-  - weapon_reimu_2
+  - weapon_reimu_blue
+  - weapon_reimu_pink
+  - weapon_reimu_red
   danmakuConfigIds:
-  - dm_reimu_homing
+  - dm_reimu_blue
   - dm_reimu_main
+  - dm_reimu_pink
+  - dm_reimu_red
   - dm_star_0
   - dm_test
   danmakuEmitterConfigIds:
   - dme_enemy_base
-  - dme_reimu_homing
+  - dme_reimu_blue
   - dme_reimu_main
+  - dme_reimu_pink
+  - dme_reimu_red
   - dme_test
   dropItemConfigIds:
   - drop_pr_s
@@ -49,13 +53,17 @@ MonoBehaviour:
   enemyPrefabIds:
   - minion_fariy
   danmakuPrefabIds:
-  - dm_reimu_homing
+  - dm_reimu_blue
   - dm_reimu_main
+  - dm_reimu_pink
+  - dm_reimu_red
   - dm_star_0
   - dm_test
   danmakuEmitterPrefabIds:
-  - dme_reimu_homing
+  - dme_reimu_blue
   - dme_reimu_main
+  - dme_reimu_pink
+  - dme_reimu_red
   - dme_test
   effectPrefabIds: []
   dropItemPrefabIds:

@@ -47,11 +47,13 @@ public struct ArcModeConfig
 public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("发射器预制体")]
+    [Tooltip("预制体 Id（小写）；Inspector 中从 GameResourceManifest / Prefabs/DanmakuEmitter 下拉选择")]
     public string emitterPrefabId;
     [NonSerialized]
     public int emitterPrefabIndex;
 
     [Header("装填弹幕配置")]
+    [Tooltip("DanmakuConfig 的 ConfigId（小写）；Inspector 中从 Manifest / Configs/Danmaku 下拉选择")]
     public string[] danmakuConfigIds;
     [NonSerialized]
     public int[] danmakuCfgIndices;

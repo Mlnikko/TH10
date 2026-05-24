@@ -10,11 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb0659cc521f3714da71df64a0ef43b3, type: 3}
-  m_Name: DM_Reimu_Homing
+  m_Name: DM_Reimu_Pink
   m_EditorClassIdentifier: 
-  configId: 
-  danmakuPrefabId: dm_reimu_homing
-  poolSize: 100
+  danmakuPrefabId: dm_reimu_pink
   danmakuType: 0
   scale: 1
   sprite: {fileID: -1690401657, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
@@ -25,7 +23,7 @@ MonoBehaviour:
     layer: 8
     mask: 4
     radius: 0
-    boxSize: {x: 0, y: 0}
+    boxSize: {x: 0.16, y: 0.06}
     offset: {x: 0, y: 0}
   damage: 1
   HomingTurnSpeed: 5

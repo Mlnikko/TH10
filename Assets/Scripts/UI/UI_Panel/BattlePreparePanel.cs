@@ -45,34 +45,49 @@ public class BattlePreparePanel : UIPanel
         characterWeaponsMap.Clear();
 
         var allCharacterCfgIds = ResManager.Instance.Manifest.characterConfigIds;
-        var allWeaponIds = ResManager.Instance.Manifest.weaponConfigIds;
         foreach (var cid in allCharacterCfgIds)
         {
             var charCfg = GameResDB.Instance.GetConfig<CharacterConfig>(cid);
-            if (charCfg != null)
-                characterConfigs.Add(charCfg);
-        }
-
-        foreach (var wid in allWeaponIds)
-        {
-            var weaponCfg = GameResDB.Instance.GetConfig<WeaponConfig>(wid);
-            if (weaponCfg == null)
-            {
-                Logger.Warn("WeaponConfig not found for ID: " + wid);
+            if (charCfg == null)
                 continue;
-            }
-            var charId = weaponCfg.characterID;
 
-            if (charId == E_Character.None)
+            characterConfigs.Add(charCfg);
+
+            if (charCfg.character == E_Character.None)
             {
-                Logger.Warn($"WeaponConfig {weaponCfg.weaponID} has invalid characterID: {charId}");
+                Logger.Warn($"[BattlePrepare] CharacterConfig '{cid}' has no E_Character.", LogTag.Battle);
                 continue;
             }
 
-            if (!characterWeaponsMap.ContainsKey(charId))
-                characterWeaponsMap[charId] = new List<WeaponConfig> { weaponCfg };
-            else
-                characterWeaponsMap[charId].Add(weaponCfg);
+            var weapons = new List<WeaponConfig>();
+            if (charCfg.weaponConfigIds != null)
+            {
+                for (int i = 0; i < charCfg.weaponConfigIds.Length; i++)
+                {
+                    string weaponCfgId = charCfg.weaponConfigIds[i];
+                    if (string.IsNullOrEmpty(weaponCfgId))
+                        continue;
+
+                    var weaponCfg = GameResDB.Instance.GetConfig<WeaponConfig>(weaponCfgId);
+                    if (weaponCfg == null)
+                    {
+                        Logger.Warn(
+                            $"[BattlePrepare] WeaponConfig not found: '{weaponCfgId}' (character: {cid})",
+                            LogTag.Battle);
+                        continue;
+                    }
+
+                    weapons.Add(weaponCfg);
+                }
+            }
+
+            if (weapons.Count == 0)
+            {
+                Logger.Warn($"[BattlePrepare] Character '{cid}' has no valid weaponConfigIds.", LogTag.Battle);
+                continue;
+            }
+
+            characterWeaponsMap[charCfg.character] = weapons;
         }
     }
 

@@ -11,7 +11,6 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
     [Header("配置文件")]
     public DanmakuEmitterConfig emitterConfig;
-    public DanmakuConfig danmakuConfig;
 
     [Header("发射器类型")]
     [SerializeField] EmitMode emitterType;
@@ -35,7 +34,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     [Header("发射音效")]
     [SerializeField] AudioName launchAudio;
 
-    [Header("发射间隔（秒；帧率见 GameCoreConfig / LogicFrameDriver）")]
+    [Header("发射间隔（秒）")]
     [SerializeField] float launchIntervalSeconds;
 
     [Header("发射速度")]
@@ -56,6 +55,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     int _previewBulletLifetimeFrames;
     uint _previewLastFireFrame;
     CDanmakuEmitter _previewEmitter;
+    int _previewSequentialBulletIndex;
     readonly List<DanmakuEmitterSpawnMath.SpawnSample> _lastBurstSamples = new();
     readonly List<PreviewBullet> _previewBullets = new();
     GameObject _previewRoot;
@@ -171,7 +171,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         if (danmaku == null || danmaku.sprite == null)
         {
             Logger.Warn(
-                "[DanmakuEmitterConfigViewer] 未找到预览用 DanmakuConfig 或 Sprite，请在 Viewer 上指定 danmakuConfig。",
+                "[DanmakuEmitterConfigViewer] 未找到预览用 DanmakuConfig 或 Sprite，请检查 emitterConfig.danmakuConfigIds。",
                 LogTag.Config);
             return;
         }
@@ -180,6 +180,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         _previewClock = LogicFramePreviewClock.CreateLogicFrameSession(previewDuration, fps);
         _previewClock.Reset();
         _previewLastFireFrame = 0;
+        _previewSequentialBulletIndex = 0;
         _previewBulletLifetimeFrames = LogicFramePreviewClock.SecondsToLogicFrames(previewBulletLifetime, fps);
         _previewEmitter = BuildEmitterFromViewerFields();
         _previewActive = true;
@@ -355,17 +356,52 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
     DanmakuConfig ResolvePreviewDanmakuConfig()
     {
-        if (danmakuConfig != null)
-            return danmakuConfig;
-
-        if (emitterConfig?.danmakuConfigIds == null || emitterConfig.danmakuConfigIds.Length == 0)
-            return null;
-
-        string id = emitterConfig.danmakuConfigIds[0];
+        string id = ResolvePreviewDanmakuConfigId();
         if (string.IsNullOrEmpty(id))
             return null;
 
         return ConfigViewerAssetLookup.FindDanmakuConfig(id);
+    }
+
+    string ResolvePreviewDanmakuConfigId()
+    {
+        if (emitterConfig?.danmakuConfigIds == null || emitterConfig.danmakuConfigIds.Length == 0)
+            return null;
+
+        string[] ids = emitterConfig.danmakuConfigIds;
+        return emitterConfig.danmakuSelectMode switch
+        {
+            DanmakuSelectMode.Sequential => PickSequentialPreviewDanmakuId(ids),
+            DanmakuSelectMode.Random => PickFirstNonEmptyId(ids),
+            _ => PickFirstNonEmptyId(ids),
+        };
+    }
+
+    string PickSequentialPreviewDanmakuId(string[] ids)
+    {
+        for (int attempt = 0; attempt < ids.Length; attempt++)
+        {
+            int idx = (_previewSequentialBulletIndex + attempt) % ids.Length;
+            string id = ids[idx];
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                _previewSequentialBulletIndex = idx + 1;
+                return id;
+            }
+        }
+
+        return null;
+    }
+
+    static string PickFirstNonEmptyId(string[] ids)
+    {
+        for (int i = 0; i < ids.Length; i++)
+        {
+            if (!string.IsNullOrWhiteSpace(ids[i]))
+                return ids[i];
+        }
+
+        return null;
     }
 
     CDanmakuEmitter BuildEmitterFromViewerFields()
@@ -381,6 +417,14 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         temp.launchIntervalSeconds = launchIntervalSeconds;
         temp.launchSpeed = launchSpeed;
         temp.audio_Fire = launchAudio;
+        if (emitterConfig != null)
+        {
+            temp.danmakuSelectMode = emitterConfig.danmakuSelectMode;
+            temp.danmakuConfigIds = emitterConfig.danmakuConfigIds != null
+                ? (string[])emitterConfig.danmakuConfigIds.Clone()
+                : System.Array.Empty<string>();
+        }
+
         temp.BakeLogicTiming(LogicFramePreviewClock.GetLogicFps());
 
         var emitter = new CDanmakuEmitter(temp);

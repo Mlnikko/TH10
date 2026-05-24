@@ -130,7 +130,7 @@ public class CollisionSystem : BaseSystem
 
                 CollisionEventBuffer.Add(evt);
 #if UNITY_EDITOR
-                Logger.Info($"[Collision] Detected collision between Entity {evt.EntityA} and Entity {evt.EntityB} at ({evt.ContactX}, {evt.ContactY}) on frame {currentframe}", LogTag.Collision);
+                // Logger.Info($"[Collision] Detected collision between Entity {evt.EntityA} and Entity {evt.EntityB} at ({evt.ContactX}, {evt.ContactY}) on frame {currentframe}", LogTag.Collision);
 #endif
             }
         }

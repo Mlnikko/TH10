@@ -15,6 +15,10 @@ MonoBehaviour:
   configId: 
   characterPrefabId: character_reimu
   character: 1
+  weaponConfigIds:
+  - weapon_reimu_blue
+  - weapon_reimu_red
+  - weapon_reimu_pink
   description: "\u535A\u4E3D\u7075\u68A6"
   maxHealth: 1
   moveSpeed: 2

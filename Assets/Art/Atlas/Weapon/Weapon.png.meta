@@ -320,7 +320,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: weapon_reimu_1
+      name: weapon_reimu_red
       rect:
         serializedVersion: 2
         x: 51
@@ -341,7 +341,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: weapon_reimu_0
+      name: weapon_reimu_blue
       rect:
         serializedVersion: 2
         x: 51
@@ -362,7 +362,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: weapon_reimu_2
+      name: weapon_reimu_pink
       rect:
         serializedVersion: 2
         x: 51
@@ -535,9 +535,9 @@ TextureImporter:
       weapon_name_light_10: 1122747051
       weapon_name_light_11: 1954790659
       weapon_name_light_12: 935597931
-      weapon_reimu_0: -131469108
-      weapon_reimu_1: -1636802297
-      weapon_reimu_2: -1419846392
+      weapon_reimu_blue: -131469108
+      weapon_reimu_pink: -1419846392
+      weapon_reimu_red: -1636802297
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
