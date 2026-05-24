@@ -15,6 +15,7 @@ public enum MessageId : byte
     StartGame,
 
     BattleReady,
+    BattlePrepareCancel,
     BattleStart
 }
 
@@ -191,6 +192,23 @@ public struct BattleReadyMSG : INetworkMessage
         playerBattleData.playerIndex = reader.ReadByte();
         playerBattleData.characterId = (E_Character)reader.ReadByte();
         playerBattleData.weaponId = (E_Weapon)reader.ReadByte();
+    }
+}
+
+public struct BattlePrepareCancelMSG : INetworkMessage
+{
+    public byte playerIndex;
+
+    public MessageId Id => MessageId.BattlePrepareCancel;
+
+    public void Serialize(ref DataStreamWriter writer)
+    {
+        writer.WriteByte(playerIndex);
+    }
+
+    public void Deserialize(ref DataStreamReader reader)
+    {
+        playerIndex = reader.ReadByte();
     }
 }
 

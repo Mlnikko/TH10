@@ -5,9 +5,10 @@ using UnityEngine.UI;
 
 public class CharacterSelectionUI : MonoBehaviour
 {
-    public TMP_Text nameLabel;
-    public Image iconImage;
-    public Button selectButton;
+    [SerializeField] TMP_Text playerId;
+    [SerializeField] TMP_Text nameLabel;
+    [SerializeField] Image iconImage;
+    [SerializeField] Button selectButton;
     public E_Character characterName;
 
     Action onSelect;
@@ -32,14 +33,41 @@ public class CharacterSelectionUI : MonoBehaviour
         }
 
         iconImage.sprite = sprite;
+        SetOccupyingPlayerId(null);
+    }
+
+    /// <summary>显示已确认准备并锁定该角色的玩家（如 P1）；无则隐藏。</summary>
+    public void SetOccupyingPlayerId(byte? playerIndex)
+    {
+        if (playerId == null)
+            return;
+
+        if (!playerIndex.HasValue)
+        {
+            playerId.gameObject.SetActive(false);
+            return;
+        }
+
+        playerId.gameObject.SetActive(true);
+        playerId.text = $"P{playerIndex.Value + 1}";
     }
 
     public void SetSelected(bool selected)
     {
-        // 假设有一个 "Selected" 状态颜色
         var color = selected ? Color.yellow : Color.white;
         nameLabel.color = color;
-        // 或者启用/禁用某个高亮 Texture
+    }
+
+    public void SetInteractable(bool interactable)
+    {
+        if (selectButton != null)
+            selectButton.interactable = interactable;
+    }
+
+    public void SetTakenByOther(bool takenByOther)
+    {
+        if (nameLabel == null) return;
+        nameLabel.color = takenByOther ? new Color(0.55f, 0.55f, 0.55f, 1f) : Color.white;
     }
 
     public void OnClick()

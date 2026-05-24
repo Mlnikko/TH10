@@ -35,9 +35,13 @@ public class GameObjectBridge
     /// </summary>
     public void Link(Entity entity, GameObject go, IGameObjectUpdater updater, EntityManager em)
     {
-        if (_entityToGO.ContainsKey(entity))
+        if (_entityToGO.TryGetValue(entity, out GameObject existingGo))
         {
-            Logger.Warn($"Entity {entity.Index} already linked to a GameObject");
+            Logger.Warn(
+                $"{EntityPresentationDiagnostics.FormatEntity(entity)} already linked to GO '{existingGo.name}'. "
+                + $"new GO='{go.name}'",
+                LogTag.Pool,
+                existingGo);
             return;
         }
 

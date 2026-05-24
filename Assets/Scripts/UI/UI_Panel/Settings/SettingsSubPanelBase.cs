@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public abstract class SettingsSubPanelBase : UIPanel
 {
     protected GameSettingsService Settings => GameSettingsService.Instance;

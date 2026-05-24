@@ -335,9 +335,27 @@ public class NetworkManager : SingletonMono<NetworkManager>
                 {
                     var msg = new BattleReadyMSG();
                     msg.Deserialize(ref stream);
-                    
-                    BattleManager.Instance.AddPlayerData(msg.playerBattleData);
+
+                    if (m_netRole == NetworkRole.Host)
+                        BattleManager.Instance.HostReceiveClientPrepareReady(msg.playerBattleData);
+                    else
+                        BattleManager.Instance.ClientApplyPrepareReadyBroadcast(msg.playerBattleData);
+
                     Logger.Info($"Received BattleReady from PlayerIndex: {msg.playerBattleData.playerIndex}", LogTag.Net);
+                    break;
+                }
+
+            case MessageId.BattlePrepareCancel:
+                {
+                    var msg = new BattlePrepareCancelMSG();
+                    msg.Deserialize(ref stream);
+
+                    if (m_netRole == NetworkRole.Host)
+                        BattleManager.Instance.HostReceiveClientPrepareCancel(msg.playerIndex);
+                    else
+                        BattleManager.Instance.ClientApplyPrepareCancelBroadcast(msg.playerIndex);
+
+                    Logger.Info($"Received BattlePrepareCancel from PlayerIndex: {msg.playerIndex}", LogTag.Net);
                     break;
                 }
 

@@ -100,7 +100,7 @@ MonoBehaviour:
   emitterConfig: {fileID: 11400000, guid: c27335b6dbc1a1f4dba5b818f7fd1cce, type: 2}
   danmakuConfig: {fileID: 11400000, guid: 79f68cadc6e72654c9af06f08903e3fa, type: 2}
   emitterType: 1
-  emitterCamp: 2
+  emitterCamp: 1
   emitPosOffset: {x: 0, y: 0}
   emitRotOffsetZ: 0
   danmakuRotOffsetZ: 90
@@ -117,3 +117,6 @@ MonoBehaviour:
   launchAudio: 0
   launchIntervalSeconds: 0.5
   launchSpeed: 2
+  previewDuration: 5
+  previewBulletLifetime: 3
+  drawPreviewSpawnGizmos: 1

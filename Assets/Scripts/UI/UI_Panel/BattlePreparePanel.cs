@@ -14,26 +14,25 @@ public class BattlePreparePanel : UIPanel
     [SerializeField] GameObject characterItemPrefab;
     [SerializeField] GameObject weaponItemPrefab;
     [SerializeField] Button confirmBtn;
-    [SerializeField] TMP_Text confirmCountdownText;
+    [SerializeField] TMP_Text statusText;
 
-    [SerializeField] GameObject lastCountdown;
-    [SerializeField] TMP_Text lastCountdownText;
+    [Header("Phase Timing (seconds)")]
+    [SerializeField] float selectionPhaseDuration = 15f;
+    [SerializeField] float readyPhaseDuration = 5f;
 
-    float confirmCountdownDuration = 10f;
-    float lastCountdownDuration = 3f;
-    const string ConfirmCountdownKey = "BattlePrepare_ConfirmCountdown";
-    const string LastCountdownKey = "BattlePrepare_LastCountdown";
+    const string PrepareTimelineKey = "BattlePrepare_Timeline";
 
-    // 数据缓存
-    List<CharacterConfig> characterConfigs = new();
-    Dictionary<E_Character, List<WeaponConfig>> characterWeaponsMap = new();
+    readonly List<CharacterConfig> characterConfigs = new();
+    readonly Dictionary<E_Character, List<WeaponConfig>> characterWeaponsMap = new();
 
     E_Character selectedCharacterId;
     E_Weapon selectedWeaponId;
 
-    // 当前 UI Item 缓存（用于高亮管理）
-    List<CharacterSelectionUI> characterItems = new();
-    List<WeaponSelectionUI> weaponItems = new();
+    readonly List<CharacterSelectionUI> characterItems = new();
+    readonly List<WeaponSelectionUI> weaponItems = new();
+
+    bool _phaseSelectionLocked;
+    bool _localReadyLocked;
 
     public override void Initialize()
     {
@@ -42,18 +41,17 @@ public class BattlePreparePanel : UIPanel
 
     void ReadConfig()
     {
+        characterConfigs.Clear();
+        characterWeaponsMap.Clear();
+
         var allCharacterCfgIds = ResManager.Instance.Manifest.characterConfigIds;
         var allWeaponIds = ResManager.Instance.Manifest.weaponConfigIds;
         foreach (var cid in allCharacterCfgIds)
         {
             var charCfg = GameResDB.Instance.GetConfig<CharacterConfig>(cid);
             if (charCfg != null)
-            {
                 characterConfigs.Add(charCfg);
-            }
         }
-
-        characterWeaponsMap.Clear();
 
         foreach (var wid in allWeaponIds)
         {
@@ -65,91 +63,364 @@ public class BattlePreparePanel : UIPanel
             }
             var charId = weaponCfg.characterID;
 
-            if(charId == E_Character.None)
+            if (charId == E_Character.None)
             {
                 Logger.Warn($"WeaponConfig {weaponCfg.weaponID} has invalid characterID: {charId}");
                 continue;
             }
 
             if (!characterWeaponsMap.ContainsKey(charId))
-            {
                 characterWeaponsMap[charId] = new List<WeaponConfig> { weaponCfg };
-            }
             else
-            {
                 characterWeaponsMap[charId].Add(weaponCfg);
-            }
         }
     }
 
     public override void OnShow(object data = null)
     {
         base.OnShow(data);
-        confirmBtn.onClick.AddListener(OnConfirmed);
+        confirmBtn.onClick.AddListener(OnConfirmClicked);
+        var battle = BattleManager.Instance;
+        battle.OnPrepareCharacterLocked += HandlePrepareCharacterLocked;
+        battle.OnPrepareCharacterReleased += HandlePrepareCharacterReleased;
 
-        lastCountdown.SetActive(false);
+        selectedCharacterId = E_Character.None;
+        selectedWeaponId = E_Weapon.None;
+        _phaseSelectionLocked = false;
+        _localReadyLocked = false;
+
+        ClearWeaponListUi();
+        UpdateConfirmButtonLabel();
         RefreshCharacterList();
+        SetSelectionInteractable(true);
+        SetStatusText($"请选择你的角色与符卡（{Mathf.CeilToInt(selectionPhaseDuration)}s）");
 
-        // 启动确认倒计时
-        CoroutineManager.Instance.StartWithKey(ConfirmCountdownKey, ConfirmCountdownRoutine());
+        CoroutineManager.Instance.StartWithKey(PrepareTimelineKey, PrepareTimelineRoutine());
     }
 
     public override void OnHide()
     {
         base.OnHide();
-        confirmBtn.onClick.RemoveListener(OnConfirmed);
-        CoroutineManager.Instance.StopByKey(ConfirmCountdownKey);
-        CoroutineManager.Instance.StopByKey(LastCountdownKey);
+        confirmBtn.onClick.RemoveListener(OnConfirmClicked);
+        if (BattleManager.Instance != null)
+        {
+            BattleManager.Instance.OnPrepareCharacterLocked -= HandlePrepareCharacterLocked;
+            BattleManager.Instance.OnPrepareCharacterReleased -= HandlePrepareCharacterReleased;
+        }
+        CoroutineManager.Instance.StopByKey(PrepareTimelineKey);
     }
 
-    IEnumerator ConfirmCountdownRoutine()
+    void HandlePrepareCharacterLocked(byte playerIndex, E_Character characterId)
+    {
+        if (playerIndex == RoomManager.LocalPlayerIndex
+            && NetworkManager.Instance.NetworkRole == NetworkRole.Client)
+        {
+            _localReadyLocked = true;
+            ApplyLocalReadyUiState();
+        }
+
+        RefreshCharacterAvailability();
+    }
+
+    void HandlePrepareCharacterReleased(byte playerIndex)
+    {
+        if (playerIndex == RoomManager.LocalPlayerIndex)
+        {
+            _localReadyLocked = false;
+            if (!_phaseSelectionLocked)
+                ApplyLocalSelectionEditableState();
+        }
+
+        RefreshCharacterAvailability();
+    }
+
+    IEnumerator PrepareTimelineRoutine()
     {
         float elapsed = 0f;
-        while (elapsed < confirmCountdownDuration)
+        while (elapsed < selectionPhaseDuration)
         {
             elapsed += Time.deltaTime;
-
-            if (confirmCountdownText != null)
-            {
-                int remaining = Mathf.CeilToInt(confirmCountdownDuration - elapsed);
-                confirmCountdownText.text = $"{remaining}s";
-            }
-
+            int remaining = Mathf.CeilToInt(selectionPhaseDuration - elapsed);
+            UpdateSelectionPhaseUi(remaining);
             yield return null;
         }
 
-        // 超时，自动确认
-        OnConfirmed();
-    }
+        EnterReadyPhase();
 
-    IEnumerator LastConfirmCountdownRoutine()
-    {
-        float elapsed = 0f;
-        while (elapsed < lastCountdownDuration)
+        elapsed = 0f;
+        while (elapsed < readyPhaseDuration)
         {
             elapsed += Time.deltaTime;
-
-            if (lastCountdownText != null)
-            {
-                int remaining = Mathf.CeilToInt(lastCountdownDuration - elapsed);
-                lastCountdownText.text = $"战斗准备: {remaining}s!";
-            }
-
+            int remaining = Mathf.CeilToInt(readyPhaseDuration - elapsed);
+            UpdateReadyPhaseUi(remaining);
             yield return null;
         }
 
-        // 超时，自动确认
-        OnLastCountdownEnd();
+        OnPrepareTimelineComplete();
+    }
+
+    void UpdateSelectionPhaseUi(int remainingSeconds)
+    {
+        SetStatusText($"请选择你的角色与符卡（{remainingSeconds}s）");
+    }
+
+    void UpdateReadyPhaseUi(int remainingSeconds)
+    {
+        SetStatusText($"即将进入战斗（{remainingSeconds}s）");
+    }
+
+    void SetStatusText(string text)
+    {
+        if (statusText != null)
+            statusText.text = text;
+    }
+
+    void EnterReadyPhase()
+    {
+        if (!_localReadyLocked)
+            TryAssignRandomCharacterAndSubmit();
+
+        _phaseSelectionLocked = true;
+        SetSelectionInteractable(false);
+
+        if (confirmBtn != null)
+            confirmBtn.interactable = false;
+
+        if (_localReadyLocked)
+            SetStatusText("已确认，等待开战…");
+        else
+            SetStatusText("选择已锁定，等待开战…");
+
+        Logger.Info("[BattlePrepare] Selection phase ended; entering ready phase.", LogTag.Battle);
+    }
+
+    void OnConfirmClicked()
+    {
+        if (_phaseSelectionLocked)
+            return;
+
+        if (_localReadyLocked)
+        {
+            CancelLocalPrepareReady();
+            return;
+        }
+
+        if (selectedCharacterId == E_Character.None || selectedWeaponId == E_Weapon.None)
+        {
+            Logger.Warn("[BattlePrepare] 请先选择角色和武器。", LogTag.Battle);
+            return;
+        }
+
+        if (!TrySubmitPrepareReady())
+            return;
+
+        if (NetworkManager.Instance.NetworkRole != NetworkRole.Client)
+        {
+            _localReadyLocked = true;
+            ApplyLocalReadyUiState();
+        }
+
+        Logger.Info("[BattlePrepare] Prepare ready submitted.", LogTag.Battle);
+    }
+
+    void CancelLocalPrepareReady()
+    {
+        byte localIndex = RoomManager.LocalPlayerIndex;
+
+        switch (NetworkManager.Instance.NetworkRole)
+        {
+            case NetworkRole.None:
+                BattleManager.Instance.RemovePreparePlayerData(localIndex);
+                break;
+            case NetworkRole.Host:
+                BattleManager.Instance.HostSubmitPrepareCancel(localIndex);
+                break;
+            case NetworkRole.Client:
+                NetworkManager.Instance.SendToHost(new BattlePrepareCancelMSG { playerIndex = localIndex });
+                Logger.Info("[BattlePrepare] Prepare cancel sent to host.", LogTag.Battle);
+                return;
+        }
+
+        Logger.Info("[BattlePrepare] Prepare ready cancelled.", LogTag.Battle);
+    }
+
+    void ApplyLocalReadyUiState()
+    {
+        SetLocalSelectionLocked(true);
+        UpdateConfirmButtonLabel();
+        RefreshCharacterAvailability();
+    }
+
+    void ApplyLocalSelectionEditableState()
+    {
+        SetLocalSelectionLocked(false);
+        UpdateConfirmButtonLabel();
+        SetSelectionInteractable(true);
+    }
+
+    bool TrySubmitPrepareReady()
+    {
+        if (selectedCharacterId == E_Character.None || selectedWeaponId == E_Weapon.None)
+            return false;
+
+        var playerBattleData = new PlayerBattleData(
+            RoomManager.LocalPlayerIndex,
+            selectedCharacterId,
+            selectedWeaponId);
+
+        switch (NetworkManager.Instance.NetworkRole)
+        {
+            case NetworkRole.None:
+                BattleManager.Instance.SetOrUpdatePlayerData(playerBattleData);
+                return true;
+
+            case NetworkRole.Host:
+                return BattleManager.Instance.HostSubmitPrepareReady(playerBattleData);
+
+            case NetworkRole.Client:
+                NetworkManager.Instance.SendToHost(new BattleReadyMSG
+                {
+                    playerBattleData = playerBattleData,
+                });
+                return true;
+        }
+
+        return false;
+    }
+
+    void TryAssignRandomCharacterAndSubmit()
+    {
+        byte localIndex = RoomManager.LocalPlayerIndex;
+        var battle = BattleManager.Instance;
+
+        var available = characterConfigs
+            .Where(c => c != null
+                && c.character != E_Character.None
+                && battle.IsPrepareCharacterAvailable(c.character, localIndex))
+            .ToList();
+
+        if (available.Count == 0)
+        {
+            Logger.Warn("[BattlePrepare] No available character for random assign.", LogTag.Battle);
+            return;
+        }
+
+        var shuffled = available.OrderBy(_ => UnityEngine.Random.value).ToList();
+        foreach (var cfg in shuffled)
+        {
+            ApplyCharacterSelectionLocal(cfg.character);
+            if (selectedWeaponId == E_Weapon.None)
+                continue;
+            if (TrySubmitPrepareReady())
+            {
+                _localReadyLocked = true;
+                Logger.Info($"[BattlePrepare] Random assigned character {cfg.character}.", LogTag.Battle);
+                return;
+            }
+            selectedCharacterId = E_Character.None;
+            selectedWeaponId = E_Weapon.None;
+        }
+
+        Logger.Warn("[BattlePrepare] Random assign failed after retries.", LogTag.Battle);
+    }
+
+    void UpdateConfirmButtonLabel()
+    {
+        if (confirmBtn == null) return;
+
+        var label = confirmBtn.GetComponentInChildren<TMP_Text>();
+        if (label == null) return;
+
+        if (_phaseSelectionLocked)
+            label.text = "已锁定";
+        else if (_localReadyLocked)
+            label.text = "取消准备";
+        else
+            label.text = "确认准备";
+    }
+
+    void SetSelectionInteractable(bool interactable)
+    {
+        bool canEdit = interactable && !_phaseSelectionLocked && !_localReadyLocked;
+
+        if (canEdit)
+            RefreshCharacterAvailability();
+        else
+        {
+            foreach (var item in characterItems)
+            {
+                item.SetInteractable(false);
+                item.SetTakenByOther(false);
+            }
+        }
+
+        foreach (var item in weaponItems)
+            item.SetInteractable(canEdit && selectedCharacterId != E_Character.None);
+
+        if (confirmBtn != null)
+            confirmBtn.interactable = !_phaseSelectionLocked;
+    }
+
+    void SetLocalSelectionLocked(bool locked)
+    {
+        foreach (var item in characterItems)
+            item.SetInteractable(!locked && !_phaseSelectionLocked);
+        foreach (var item in weaponItems)
+            item.SetInteractable(!locked && !_phaseSelectionLocked && selectedCharacterId != E_Character.None);
+    }
+
+    void RefreshCharacterAvailability()
+    {
+        byte localIndex = RoomManager.LocalPlayerIndex;
+        var battle = BattleManager.Instance;
+
+        foreach (var item in characterItems)
+        {
+            bool isOwnSelection = item.characterName == selectedCharacterId;
+            bool lockedByOtherReady = battle.IsMultiplayerPrepare
+                && !isOwnSelection
+                && !battle.IsPrepareCharacterAvailable(item.characterName, localIndex);
+            bool canPick = !_phaseSelectionLocked
+                && !_localReadyLocked
+                && !lockedByOtherReady;
+
+            item.SetInteractable(canPick);
+            item.SetTakenByOther(lockedByOtherReady);
+            item.SetSelected(isOwnSelection && selectedCharacterId != E_Character.None);
+
+            byte? occupyingPlayer = null;
+            if (battle.TryGetPrepareCharacterLocker(item.characterName, out byte lockerIndex))
+                occupyingPlayer = lockerIndex;
+            item.SetOccupyingPlayerId(occupyingPlayer);
+        }
+    }
+
+    void OnPrepareTimelineComplete()
+    {
+        CoroutineManager.Instance.StopByKey(PrepareTimelineKey);
+
+        UIManager.Instance.ClosePanel<BattlePreparePanel>();
+
+        switch (NetworkManager.Instance.NetworkRole)
+        {
+            case NetworkRole.Host:
+                BattleManager.Instance.StartMutiPlayerBattleForHost();
+                break;
+            case NetworkRole.Client:
+                break;
+            case NetworkRole.None:
+                BattleManager.Instance.StartSinglePlayerBattle();
+                break;
+        }
     }
 
     void RefreshCharacterList()
     {
-        foreach (var item in characterItems) 
+        foreach (var item in characterItems)
             Destroy(item.gameObject);
 
         characterItems.Clear();
 
-        // 创建新的角色项
         foreach (var config in characterConfigs)
         {
             if (config == null) continue;
@@ -167,31 +438,24 @@ public class BattlePreparePanel : UIPanel
             characterItems.Add(item);
         }
 
-        // 如果尚未选择角色，默认选中第一个有效角色
-        if (selectedCharacterId == E_Character.None && characterConfigs.Count > 0)
-        {
-            var firstValid = characterConfigs.FirstOrDefault(c => c != null && c.character != E_Character.None);
-            if (firstValid != null)
-            {
-                OnCharacterSelected(firstValid.character);
-            }
-        }
+        RefreshCharacterAvailability();
+    }
+
+    void ClearWeaponListUi()
+    {
+        foreach (var item in weaponItems)
+            Destroy(item.gameObject);
+        weaponItems.Clear();
     }
 
     void RefreshWeaponList()
     {
-        // 清除旧的武器项
-        foreach (var item in weaponItems)
-            Destroy(item.gameObject);
-        weaponItems.Clear();
+        ClearWeaponListUi();
 
-        if (selectedCharacterId == E_Character.None || !characterWeaponsMap.TryGetValue(selectedCharacterId, out var weapons))
-        {
-            // 没有选中角色或该角色无武器，清空列表
+        if (selectedCharacterId == E_Character.None
+            || !characterWeaponsMap.TryGetValue(selectedCharacterId, out var weapons))
             return;
-        }
 
-        // 创建武器项
         foreach (var wcfg in weapons)
         {
             var go = Instantiate(weaponItemPrefab, weaponListContent);
@@ -204,115 +468,62 @@ public class BattlePreparePanel : UIPanel
             }
 
             item.Initialize(wcfg, () => OnWeaponSelected(wcfg.weaponID));
+            item.SetInteractable(!_phaseSelectionLocked && !_localReadyLocked);
             weaponItems.Add(item);
         }
 
-        // 默认选中第一个武器（如果当前未选或已失效）
-        if (selectedWeaponId == E_Weapon.None || !weapons.Any(w => w.weaponID == selectedWeaponId))
+        if (weapons.Count > 0)
         {
-            if (weapons.Count > 0)
-            {
-                OnWeaponSelected(weapons[0].weaponID);
-            }
-            else
-            {
-                selectedWeaponId = E_Weapon.None; // 安全兜底
-            }
+            selectedWeaponId = weapons[0].weaponID;
+            foreach (var item in weaponItems)
+                item.SetSelected(item.weaponId == selectedWeaponId);
         }
-    }
-
-    void ClearSelection()
-    {
-        selectedCharacterId = E_Character.None;
-        selectedWeaponId = E_Weapon.None;
-
-        // 取消所有高亮（假设 CharacterSelectionUI/WeaponSelectionUI 有 SetSelected(bool) 方法）
-        foreach (var item in characterItems)
-            item.SetSelected(false);
-        foreach (var item in weaponItems)
-            item.SetSelected(false);
+        else
+        {
+            selectedWeaponId = E_Weapon.None;
+        }
     }
 
     void OnCharacterSelected(E_Character characterId)
     {
-        // 避免无意义刷新
-        if (selectedCharacterId == characterId) return;
+        if (_phaseSelectionLocked || _localReadyLocked || selectedCharacterId == characterId)
+            return;
 
-        // 更新选中状态
+        if (!BattleManager.Instance.IsPrepareCharacterAvailable(characterId, RoomManager.LocalPlayerIndex))
+        {
+            Logger.Warn($"[BattlePrepare] Character {characterId} is locked by another ready player.", LogTag.Battle);
+            return;
+        }
+
+        ApplyCharacterSelectionLocal(characterId);
+        Logger.Info($"Selected Character: {selectedCharacterId}");
+    }
+
+    void ApplyCharacterSelectionLocal(E_Character characterId)
+    {
         selectedCharacterId = characterId;
+        selectedWeaponId = E_Weapon.None;
 
-        // 高亮选中的角色
         foreach (var item in characterItems)
             item.SetSelected(item.characterName == characterId);
 
-        // 刷新武器列表（因为不同角色可用武器不同）
         RefreshWeaponList();
-
-        Logger.Info($"Selected Character: {selectedCharacterId}");
+        RefreshCharacterAvailability();
     }
 
     void OnWeaponSelected(E_Weapon weaponId)
     {
-        if (selectedWeaponId == weaponId) return;
+        if (_phaseSelectionLocked || _localReadyLocked || selectedWeaponId == weaponId)
+            return;
+
+        if (selectedCharacterId == E_Character.None)
+            return;
 
         selectedWeaponId = weaponId;
 
-        // 高亮选中的武器
         foreach (var item in weaponItems)
             item.SetSelected(item.weaponId == weaponId);
 
         Logger.Info($"Selected Weapon: {selectedWeaponId}");
-    }
-
-    void OnConfirmed()
-    {
-        CoroutineManager.Instance.StopByKey(ConfirmCountdownKey);
-
-        lastCountdown.SetActive(true);
-        CoroutineManager.Instance.StartWithKey(LastCountdownKey, LastConfirmCountdownRoutine());
-        
-
-        var playerBattleData = new PlayerBattleData
-        (
-            RoomManager.LocalPlayerIndex,
-            selectedCharacterId,
-            selectedWeaponId
-        );
-
-        switch(NetworkManager.Instance.NetworkRole)
-        {
-            case NetworkRole.Host:
-                BattleManager.Instance.AddPlayerData(playerBattleData);
-                break;
-            case NetworkRole.Client:
-                NetworkManager.Instance.SendToHost(new BattleReadyMSG
-                {
-                    playerBattleData = playerBattleData,
-                });
-                break;
-            case NetworkRole.None:
-                BattleManager.Instance.AddPlayerData(playerBattleData);
-                break;
-        }
-    }
-
-    void OnLastCountdownEnd()
-    {
-        CoroutineManager.Instance.StopCoroutine(LastCountdownKey);
-
-        UIManager.Instance.ClosePanel<BattlePreparePanel>();
-
-        switch (NetworkManager.Instance.NetworkRole)
-        {
-            case NetworkRole.Host:       
-                BattleManager.Instance.StartMutiPlayerBattleForHost();
-                break;
-            case NetworkRole.Client:
-                
-                break;
-            case NetworkRole.None:
-                BattleManager.Instance.StartSinglePlayerBattle();
-                break;
-        }
     }
 }

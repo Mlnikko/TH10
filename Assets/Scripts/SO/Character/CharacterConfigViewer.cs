@@ -1,7 +1,9 @@
 using UnityEngine;
 
-public class CharacterConfigViewer : MonoBehaviour
+public class CharacterConfigViewer : GameConfigViewerBase
 {
+    protected override bool HasAssignedConfig => characterConfig != null;
+
     public CharacterConfig CharacterConfig => characterConfig;
 
     [SerializeField] CharacterConfig characterConfig;
@@ -28,14 +30,12 @@ public class CharacterConfigViewer : MonoBehaviour
     [Header("擦弹碰撞体配置")]
     [SerializeField] ColliderConfig grazeColliderConfig;
 
-    void Awake()
-    {
-        LoadCharacterConfig();
-    }
+    public void LoadCharacterConfig() => LoadFromConfig();
 
-    public void LoadCharacterConfig()
+    public override void LoadFromConfig()
     {
-        if(characterConfig == null) return;
+        if (characterConfig == null)
+            return;
 
         characterName = characterConfig.character;
         description = characterConfig.description;

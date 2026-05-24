@@ -39,6 +39,7 @@ public class PresentationSystem : BaseSystem
 
             GameObject go = null;
             IGameObjectUpdater updater = null;
+            string failureReason = null;
 
             // --- 根据实体类型决定生成什么 ---
             if (EntityManager.HasComponent<CDropItem>(entity) && entityIndex < drops.Length)
@@ -46,10 +47,16 @@ public class PresentationSystem : BaseSystem
                 ref var drop = ref drops[entityIndex];
                 var dropCfg = GameResDB.Instance.GetConfig<DropItemConfig>(drop.cfgIndex);
 
-                if (dropCfg != null && dropCfg.pickupPrefabIndex >= 0)
+                if (dropCfg == null)
+                    failureReason = $"DropItemConfig not found (cfgIndex={drop.cfgIndex})";
+                else if (dropCfg.pickupPrefabIndex < 0)
+                    failureReason = $"invalid pickupPrefabIndex ({dropCfg.pickupPrefabIndex}), prefabId='{dropCfg.pickupPrefabId}'";
+                else
                 {
                     go = GameObjectPoolManager.Instance.Get(dropCfg.pickupPrefabIndex);
-                    if (go != null)
+                    if (go == null)
+                        failureReason = $"pool Get returned null ({EntityPresentationDiagnostics.FormatPrefab(dropCfg.pickupPrefabIndex)})";
+                    else
                     {
                         go.transform.position = spawnPos;
                         go.SetActive(true);
@@ -68,16 +75,24 @@ public class PresentationSystem : BaseSystem
                 ref var danmaku = ref danmakus[entityIndex];
                 var config = GameResDB.Instance.GetConfig<DanmakuConfig>(danmaku.cfgIndex);
 
-                if (config != null)
+                if (config == null)
+                    failureReason = $"DanmakuConfig not found (cfgIndex={danmaku.cfgIndex})";
+                else
                 {
                     int prefabIndex = config.danmakuPrefabIndex;
-                    go = GameObjectPoolManager.Instance.Get(prefabIndex); // 假设这是你的池管理器
-
-                    if (go != null)
+                    if (prefabIndex < 0)
+                        failureReason = $"invalid danmakuPrefabIndex ({prefabIndex}), prefabId='{config.danmakuPrefabId}'";
+                    else
                     {
-                        go.transform.position = spawnPos;
-                        go.SetActive(true);
-                        updater = new DanmakuUpdater(go);
+                        go = GameObjectPoolManager.Instance.Get(prefabIndex);
+                        if (go == null)
+                            failureReason = $"pool Get returned null ({EntityPresentationDiagnostics.FormatPrefab(prefabIndex)})";
+                        else
+                        {
+                            go.transform.position = spawnPos;
+                            go.SetActive(true);
+                            updater = new DanmakuUpdater(go);
+                        }
                     }
                 }
             }
@@ -86,35 +101,56 @@ public class PresentationSystem : BaseSystem
                 ref var player = ref players[entityIndex];
                 var config = GameResDB.Instance.GetConfig<CharacterConfig>(player.characterCfgIndex);
 
-                if (config != null)
+                if (config == null)
+                    failureReason = $"CharacterConfig not found (cfgIndex={player.characterCfgIndex})";
+                else
                 {
                     int prefabIndex = config.characterPrefabIndex;
-                    go = GameObjectPoolManager.Instance.Get(prefabIndex);
-                    if (go != null)
+                    if (prefabIndex < 0)
+                        failureReason = $"invalid characterPrefabIndex ({prefabIndex}), prefabId='{config.characterPrefabId}'";
+                    else
                     {
-                        go.transform.position = spawnPos;
-                        go.SetActive(true);
-                        updater = new PlayerUpdater(go);
+                        go = GameObjectPoolManager.Instance.Get(prefabIndex);
+                        if (go == null)
+                            failureReason = $"pool Get returned null ({EntityPresentationDiagnostics.FormatPrefab(prefabIndex)})";
+                        else
+                        {
+                            go.transform.position = spawnPos;
+                            go.SetActive(true);
+                            updater = new PlayerUpdater(go);
+                        }
                     }
                 }
             }
-
             else if (EntityManager.HasComponent<CEnemy>(entity))
             {
                 ref var enemy = ref enemies[entityIndex];
                 var config = GameResDB.Instance.GetConfig<EnemyConfig>(enemy.enemyCfgIndex);
 
-                if (config != null)
+                if (config == null)
+                    failureReason = $"EnemyConfig not found (cfgIndex={enemy.enemyCfgIndex})";
+                else
                 {
                     int prefabIndex = config.enemyPrefabIndex;
-                    go = GameObjectPoolManager.Instance.Get(prefabIndex);
-                    if (go != null)
+                    if (prefabIndex < 0)
+                        failureReason = $"invalid enemyPrefabIndex ({prefabIndex}), prefabId='{config.enemyPrefabId}'";
+                    else
                     {
-                        go.transform.position = spawnPos;
-                        go.SetActive(true);
-                        updater = new EnemyUpdater(go);
+                        go = GameObjectPoolManager.Instance.Get(prefabIndex);
+                        if (go == null)
+                            failureReason = $"pool Get returned null ({EntityPresentationDiagnostics.FormatPrefab(prefabIndex)})";
+                        else
+                        {
+                            go.transform.position = spawnPos;
+                            go.SetActive(true);
+                            updater = new EnemyUpdater(go);
+                        }
                     }
                 }
+            }
+            else
+            {
+                failureReason = "entity has no presentation component (DropItem/Danmaku/Player/Enemy)";
             }
 
             if (go != null && updater != null)
@@ -124,8 +160,12 @@ public class PresentationSystem : BaseSystem
             }
             else
             {
-                Logger.Error($"Failed to spawn presentation for Entity {entity.Index}");
-                // 可选：如果失败，是否保留 CPoolGetTag 下一帧重试？通常直接移除防止死循环
+                if (failureReason == null)
+                    failureReason = go != null ? "updater is null" : "spawn preconditions not met";
+                Logger.Error(
+                    EntityPresentationDiagnostics.FormatSpawnFailure(EntityManager, entity, failureReason),
+                    LogTag.Pool,
+                    go);
             }
 
             EntityManager.RemoveComponent<CPoolGetTag>(entity);
@@ -160,7 +200,10 @@ public class PresentationSystem : BaseSystem
             }
             else
             {
-                Logger.Warn($"Entity {entity.Index} marked for despawn but has no CGameObjectLink.");
+                Logger.Warn(
+                    $"{EntityPresentationDiagnostics.FormatEntity(entity)} marked for despawn but has no CGameObjectLink. "
+                    + EntityPresentationDiagnostics.DescribePresentationContext(EntityManager, entityIndex),
+                    LogTag.Pool);
             }
 
             // 3. 清理标记组件

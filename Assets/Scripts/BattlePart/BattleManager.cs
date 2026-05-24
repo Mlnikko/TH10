@@ -49,7 +49,7 @@ public static class GlobalBattleData
 
     public static bool IsInitialized { get; private set; }
 
-    /// <summary>当前战斗会话得分（切关/重开战斗时由 <see cref="BattleManager.BootstrapBattleSession"/> 重置）。</summary>
+    /// <summary>当前战斗会话得分（切关/重开战斗时由 <see cref="BattleManager.BeginBattleSession"/> 重置）。</summary>
     public static int SessionScore { get; private set; }
 
     public static void Initialize(BattleAreaConfig config)
@@ -71,117 +71,316 @@ public static class GlobalBattleData
     }
 }
 
+/// <summary>
+/// 战斗会话入口：进场景 + 准备 UI + ECS 开战均由此类编排。
+/// </summary>
 public class BattleManager : SingletonMono<BattleManager>
 {
-    /// <summary>是否已通过 Addressables 至少加载过一次战斗区（避免重复下载）；开战时仍会按需从 GameResDB 同步。</summary>
-    bool _battleAreaPreloadedFromAddressables;
+    public const string BattleSceneName = "BattleScene";
 
     public bool isSinglePlayerMode;
 
     public E_BattleStatus CurrentStatus { get; private set; } = E_BattleStatus.Prepare;
     public List<PlayerBattleData> allPlayerDatas = new(4);
 
-    bool[] activePlayers = new bool[4];
+    readonly bool[] _activePlayers = new bool[4];
 
     int TotalPlayers => allPlayerDatas.Count;
 
     World _battleWorld;
 
-    [Header("关卡时间线")]
-    [Tooltip("StageTimelineConfig 的 ConfigId（SO 文件名小写）；运行时从 GameResDB 取，未进库则走 Addressables cfg_*")]
-    [SerializeField] string _activeStageTimelineConfigId = "stagetimeline_1";
+    readonly BattlePrepareCharacterRegistry _prepareCharacterRegistry = new();
 
-    /// <summary>Manifest 未登记时由 <see cref="EnsureStageTimelineReadyAsync"/> 从 Addressables 加载的缓存。</summary>
-    StageTimelineConfig _runtimeAddressableTimeline;
+    /// <summary>某玩家确认准备并锁定角色后（playerIndex, characterId）。</summary>
+    public event Action<byte, E_Character> OnPrepareCharacterLocked;
+
+    /// <summary>某玩家取消准备并释放角色锁定。</summary>
+    public event Action<byte> OnPrepareCharacterReleased;
+
+    [Header("关卡时间线")]
+    [Tooltip("StageTimelineConfig 的 ConfigId（SO 文件名小写）；运行时从 GameResDB 读取")]
+    [SerializeField] string _activeStageTimelineConfigId = "stagetimeline_1";
 
     public string ActiveStageTimelineConfigId => _activeStageTimelineConfigId;
 
+    #region 进战斗场景（加载 + 准备面板）
+
     /// <summary>
-    /// 从主菜单进入战斗准备：可选首次从 Addressables 拉战斗区，打开准备面板。
-    /// 真正开战在 <see cref="StartSinglePlayerBattle"/> / <see cref="StartMutiPlayerBattle"/>，与 UI 入口解耦。
+    /// 统一入口：关闭 UI → 加载 BattleScene → 重置准备态 → 同步战斗区 → 打开准备面板。
+    /// 单机菜单与联机 <see cref="RoomManager.HandleEnterBattleScene"/> 均调用此方法。
     /// </summary>
-    public async Task EnterBattleScene()
+    public async Task<bool> LoadBattleSceneAndShowPrepareAsync()
     {
-        if (!_battleAreaPreloadedFromAddressables)
+        UIManager.Instance.CloseAll();
+
+        if (!await SceneLoader.LoadSceneAsync(BattleSceneName))
         {
-            try
-            {
-                string areaId = ResolveBattleAreaConfigId();
-                var battleAreaConfig = await ResManager.Instance.LoadAsync<BattleAreaConfig>(E_ResourceCategory.Config, areaId);
-                if (battleAreaConfig != null)
-                {
-                    GlobalBattleData.Initialize(battleAreaConfig);
-                    _battleAreaPreloadedFromAddressables = true;
-                    Logger.Info($"Battle area preloaded (Addressables): '{areaId}'.", LogTag.Battle);
-                }
-                else
-                    Logger.Critical($"Failed to load BattleAreaConfig '{areaId}'.", LogTag.Config);
-            }
-            catch (Exception ex)
-            {
-                Logger.Critical($"Error during battle area preload: {ex.Message}", LogTag.Battle);
-            }
+            Logger.Error("[Battle] Failed to load BattleScene.", LogTag.Battle);
+            return false;
         }
 
-        // 多人直连战斗等路径可能未走 Addressables，用 Manifest 里已进 GameResDB 的配置补齐
-        SyncGlobalBattleAreaFromResDbIfNeeded();
+        return await ShowBattlePrepareAsync();
+    }
+
+    /// <summary>已在 BattleScene 时仅打开准备面板（一般请用 <see cref="LoadBattleSceneAndShowPrepareAsync"/>）。</summary>
+    public async Task<bool> ShowBattlePrepareAsync()
+    {
+        ResetPrepareSession();
+        EnsureGlobalBattleDataReady();
+
+        if (!GlobalBattleData.IsInitialized)
+        {
+            Logger.Critical("[Battle] GlobalBattleData not ready; check GameResourceManifest.battleAreaConfigId.", LogTag.Battle);
+            return false;
+        }
 
         await UIManager.Instance.ShowPanelAsync<BattlePreparePanel>();
+        return true;
     }
 
-    static string ResolveBattleAreaConfigId()
+    /// <summary>新开一局准备阶段：清空玩家列表、释放旧 ECS 世界。</summary>
+    void ResetPrepareSession()
     {
-        var manifest = ResManager.Instance != null ? ResManager.Instance.Manifest : null;
-        if (manifest != null && !string.IsNullOrEmpty(manifest.battleAreaConfigId))
-            return manifest.battleAreaConfigId;
-        return "defaultbattlearea";
+        allPlayerDatas.Clear();
+        Array.Clear(_activePlayers, 0, _activePlayers.Length);
+        _prepareCharacterRegistry.Reset();
+        CurrentStatus = E_BattleStatus.Prepare;
+        DisposeBattleWorld();
     }
 
-    void DisposeBattleWorld()
+    public bool IsMultiplayerPrepare =>
+        NetworkManager.Instance != null
+        && NetworkManager.Instance.NetworkRole != NetworkRole.None;
+
+    public bool IsPrepareCharacterAvailable(E_Character character, byte forPlayerIndex) =>
+        !IsMultiplayerPrepare || _prepareCharacterRegistry.IsAvailable(character, forPlayerIndex);
+
+    public bool IsPlayerPrepareCharacterLocked(byte playerIndex) =>
+        _prepareCharacterRegistry.GetPick(playerIndex) != E_Character.None;
+
+    public bool TryGetPrepareCharacterLocker(E_Character character, out byte playerIndex) =>
+        _prepareCharacterRegistry.TryGetLocker(character, out playerIndex);
+
+    /// <summary>确认准备时锁定角色；失败表示已被其他已准备玩家占用。</summary>
+    public bool TryLockPrepareCharacter(byte playerIndex, E_Character character) =>
+        character != E_Character.None && _prepareCharacterRegistry.TryClaim(playerIndex, character);
+
+    /// <summary>房主本地确认准备：锁定、写入数据并广播。</summary>
+    public bool HostSubmitPrepareReady(PlayerBattleData data)
     {
-        if (_battleWorld == null) return;
-        _battleWorld.GetSystem<StageTimelineSystem>()?.End();
-        _battleWorld.Dispose();
-        _battleWorld = null;
+        if (!TryValidateAndLockPrepareReady(data))
+            return false;
+
+        SetOrUpdatePlayerData(data);
+        NetworkManager.Instance.Broadcast(new BattleReadyMSG { playerBattleData = data });
+        return true;
+    }
+
+    /// <summary>房主收到客户端的准备消息。</summary>
+    public bool HostReceiveClientPrepareReady(PlayerBattleData data)
+    {
+        if (!TryValidateAndLockPrepareReady(data))
+            return false;
+
+        SetOrUpdatePlayerData(data);
+        NetworkManager.Instance.Broadcast(new BattleReadyMSG { playerBattleData = data });
+        Logger.Info($"[BattlePrepare] Player {data.playerIndex} ready: {data.characterId} / {data.weaponId}", LogTag.Battle);
+        return true;
+    }
+
+    /// <summary>客户端收到房主广播的准备消息（含己方）。</summary>
+    public void ClientApplyPrepareReadyBroadcast(PlayerBattleData data)
+    {
+        if (data.characterId != E_Character.None)
+            _prepareCharacterRegistry.TryClaim(data.playerIndex, data.characterId);
+        SetOrUpdatePlayerData(data);
+    }
+
+    public bool HostSubmitPrepareCancel(byte playerIndex)
+    {
+        RemovePreparePlayerData(playerIndex);
+        NetworkManager.Instance.Broadcast(new BattlePrepareCancelMSG { playerIndex = playerIndex });
+        return true;
+    }
+
+    public bool HostReceiveClientPrepareCancel(byte playerIndex)
+    {
+        RemovePreparePlayerData(playerIndex);
+        NetworkManager.Instance.Broadcast(new BattlePrepareCancelMSG { playerIndex = playerIndex });
+        return true;
+    }
+
+    public void ClientApplyPrepareCancelBroadcast(byte playerIndex)
+    {
+        RemovePreparePlayerData(playerIndex);
+    }
+
+    public void RemovePreparePlayerData(byte playerIndex)
+    {
+        _prepareCharacterRegistry.Release(playerIndex);
+        for (int i = allPlayerDatas.Count - 1; i >= 0; i--)
+        {
+            if (allPlayerDatas[i].playerIndex == playerIndex)
+                allPlayerDatas.RemoveAt(i);
+        }
+        OnPrepareCharacterReleased?.Invoke(playerIndex);
+    }
+
+    bool TryValidateAndLockPrepareReady(PlayerBattleData data)
+    {
+        if (data.characterId == E_Character.None || data.weaponId == E_Weapon.None)
+        {
+            Logger.Warn($"[BattlePrepare] Invalid ready data from player {data.playerIndex}.", LogTag.Battle);
+            return false;
+        }
+
+        if (!IsMultiplayerPrepare)
+            return true;
+
+        if (TryLockPrepareCharacter(data.playerIndex, data.characterId))
+            return true;
+
+        Logger.Warn(
+            $"[BattlePrepare] Character {data.characterId} already locked by another ready player.",
+            LogTag.Battle);
+        return false;
+    }
+
+    static bool ValidateUniqueCharacterPicks(IReadOnlyList<PlayerBattleData> players)
+    {
+        for (int i = 0; i < players.Count; i++)
+        {
+            E_Character a = players[i].characterId;
+            if (a == E_Character.None)
+                return false;
+            for (int j = i + 1; j < players.Count; j++)
+            {
+                if (players[j].characterId == a)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    void EnsureGlobalBattleDataReady()
+    {
+        if (GlobalBattleData.IsInitialized || !GameResDB.IsInitialized)
+            return;
+
+        var manifest = ResManager.Instance?.Manifest;
+        if (manifest == null || string.IsNullOrEmpty(manifest.battleAreaConfigId))
+            return;
+
+        var battleArea = GameResDB.Instance.GetConfig<BattleAreaConfig>(manifest.battleAreaConfigId);
+        if (battleArea != null)
+            GlobalBattleData.Initialize(battleArea);
+    }
+
+    #endregion
+
+    #region 开战（ECS Bootstrap）
+
+    public void StartSinglePlayerBattle()
+    {
+        BeginBattleSession(singlePlayer: true, logicStartFrame: 0, remotePlayerDatas: null);
+    }
+
+    public void StartMutiPlayerBattleForHost()
+    {
+        var playerDatas = allPlayerDatas.ToArray();
+        uint startFrame = 0;
+        uint randomSeed = 0;
+
+        NetworkManager.Instance.Broadcast(new BattleStartMSG
+        {
+            startFrame = startFrame,
+            randomSeed = randomSeed,
+            playerDatas = playerDatas
+        });
+
+        BeginBattleSession(singlePlayer: false, startFrame, playerDatas);
+    }
+
+    public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] playerDatas)
+    {
+        BeginBattleSession(singlePlayer: false, startFrame, playerDatas);
+    }
+
+    /// <summary>单机 / 联机开战的唯一入口（在 Bootstrap 之前整理玩家与输入状态）。</summary>
+    void BeginBattleSession(bool singlePlayer, uint logicStartFrame, PlayerBattleData[] remotePlayerDatas)
+    {
+        isSinglePlayerMode = singlePlayer;
+
+        if (remotePlayerDatas != null)
+        {
+            allPlayerDatas.Clear();
+            for (int i = 0; i < remotePlayerDatas.Length; i++)
+                AddPlayerData(remotePlayerDatas[i]);
+        }
+
+        if (allPlayerDatas.Count == 0)
+        {
+            Logger.Error("[Battle] No player data; cannot start session.", LogTag.Battle);
+            return;
+        }
+
+        if (!singlePlayer && !ValidateUniqueCharacterPicks(allPlayerDatas))
+        {
+            Logger.Error("[Battle] Duplicate character picks among players; cannot start session.", LogTag.Battle);
+            return;
+        }
+
+        EnsureGlobalBattleDataReady();
+        if (!GlobalBattleData.IsInitialized)
+        {
+            Logger.Critical("[Battle] GlobalBattleData not initialized; aborting session start.", LogTag.Battle);
+            return;
+        }
+
+        RebuildActivePlayerMask();
+        InputManager.Instance?.ClearAllInputs();
+        BootstrapBattleSession(logicStartFrame);
+    }
+
+    void RebuildActivePlayerMask()
+    {
+        Array.Clear(_activePlayers, 0, _activePlayers.Length);
+        for (int i = 0; i < allPlayerDatas.Count; i++)
+            _activePlayers[allPlayerDatas[i].playerIndex] = true;
     }
 
     /// <summary>
-    /// 下一关或重开时切换时间轴 id，并清除仅 Addressables 加载的缓存引用。
+    /// ECS 世界创建顺序：释放旧世界 → 战斗区+池 → 新世界 → 逻辑帧 → 时间轴 → 玩家 → InBattle → HUD。
     /// </summary>
+    void BootstrapBattleSession(uint logicStartFrame)
+    {
+        CurrentStatus = E_BattleStatus.Prepare;
+        GlobalBattleData.ResetBattleSessionStats();
+        DisposeBattleWorld();
+        PrepareBattleInfrastructure();
+        CreateBattleWorld();
+        _battleWorld.LogicFrameTimer.ResetToFrame(logicStartFrame);
+        TryBeginStageTimeline();
+        GeneratePlayer();
+        CurrentStatus = E_BattleStatus.InBattle;
+        ShowBattleUIPanelFireAndForget();
+    }
+
+    #endregion
+
     public void SetActiveStageTimelineConfigId(string configId)
     {
         if (string.IsNullOrEmpty(configId)) return;
         _activeStageTimelineConfigId = configId.ToLowerInvariantTrimmed();
-        _runtimeAddressableTimeline = null;
     }
 
     StageTimelineConfig ResolveStageTimelineForBattle()
     {
-        if (GameResDB.IsInitialized)
-        {
-            var fromDb = GameResDB.Instance.GetConfig<StageTimelineConfig>(_activeStageTimelineConfigId);
-            if (fromDb != null)
-                return fromDb;
-        }
-
-        return _runtimeAddressableTimeline;
+        if (!GameResDB.IsInitialized)
+            return null;
+        return GameResDB.Instance.GetConfig<StageTimelineConfig>(_activeStageTimelineConfigId);
     }
 
-    /// <summary>
-    /// 完成一关后切换 Stage：按新配置 id 加载时间轴并重建 ECS 世界（保留 <see cref="allPlayerDatas"/>）。
-    /// </summary>
-    // public async Task<bool> RestartBattleWithStageAsync(string stageTimelineConfigId)
-    // {
-    //     if (string.IsNullOrEmpty(stageTimelineConfigId))
-    //         return false;
-
-    //     SetActiveStageTimelineConfigId(stageTimelineConfigId);
-
-    //     BootstrapBattleSession(0);
-    //     return true;
-    // }
-
-    /// <summary>查询当前关卡状态（时间线未 Begin 时为 false）。</summary>
     public bool TryGetStageState(out E_StageState state)
     {
         state = E_StageState.None;
@@ -190,9 +389,6 @@ public class BattleManager : SingletonMono<BattleManager>
         return timeline != null && timeline.TryGetStageState(out state);
     }
 
-    /// <summary>
-    /// 建立 ECS 世界与系统（调用前应先 <see cref="DisposeBattleWorld"/>）。
-    /// </summary>
     void CreateBattleWorld()
     {
         _battleWorld = new World();
@@ -208,21 +404,12 @@ public class BattleManager : SingletonMono<BattleManager>
         Logger.Info("Battle ECS World initialized.");
     }
 
-    /// <summary>
-    /// 开战 / 切关 的统一顺序：准备 → 释放旧世界 → 战斗区+池 → 新世界 → 逻辑帧 → 时间轴 → 玩家 → InBattle。
-    /// </summary>
-    void BootstrapBattleSession(uint logicStartFrame)
+    void DisposeBattleWorld()
     {
-        CurrentStatus = E_BattleStatus.Prepare;
-        GlobalBattleData.ResetBattleSessionStats();
-        DisposeBattleWorld();
-        PrepareBattleInfrastructure();
-        CreateBattleWorld();
-        _battleWorld.LogicFrameTimer.ResetToFrame(logicStartFrame);
-        TryBeginStageTimeline();
-        GeneratePlayer();
-        CurrentStatus = E_BattleStatus.InBattle;
-        ShowBattleUIPanelFireAndForget();
+        if (_battleWorld == null) return;
+        _battleWorld.GetSystem<StageTimelineSystem>()?.End();
+        _battleWorld.Dispose();
+        _battleWorld = null;
     }
 
     const string PrefabIdBattlePanel = "battlepanel";
@@ -252,7 +439,6 @@ public class BattleManager : SingletonMono<BattleManager>
         }
     }
 
-    /// <summary>供战斗 UI 读取本地玩家（或单机首位玩家）血量、火力道具与会话分。</summary>
     public bool TryGetBattleHudSnapshot(out BattleHudSnapshot snap)
     {
         snap = default;
@@ -295,50 +481,34 @@ public class BattleManager : SingletonMono<BattleManager>
         var cfg = ResolveStageTimelineForBattle();
         if (cfg == null)
         {
-            Logger.Warn($"[Battle] Stage timeline not resolved (id='{_activeStageTimelineConfigId}'). Register in GameResourceManifest.stageTimelineConfigIds or ensure cfg_* Addressables entry.", LogTag.Battle);
+            Logger.Warn($"[Battle] Stage timeline not resolved (id='{_activeStageTimelineConfigId}'). Register in GameResourceManifest.stageTimelineConfigIds.", LogTag.Battle);
             return;
         }
-        var timeline = _battleWorld.GetSystem<StageTimelineSystem>();
-        timeline?.Begin(cfg);
+        _battleWorld.GetSystem<StageTimelineSystem>()?.Begin(cfg);
     }
 
-    /// <summary>
-    /// 与 ECS 世界无关的战斗环境：全局战斗区数据 + 对象池预热（依赖 GameResDB 已初始化）。
-    /// </summary>
     void PrepareBattleInfrastructure()
     {
-        SyncGlobalBattleAreaFromResDbIfNeeded();
-
+        EnsureGlobalBattleDataReady();
         var globalPoolConfig = GameResDB.Instance.GetConfig<GlobalPoolConfig>("defaultglobalpool");
         WarmupGlobalPools(globalPoolConfig);
     }
 
-    /// <summary>
-    /// <see cref="EnterBattleScene"/> 为异步时，战斗可能在 GlobalBattleData 初始化前就开局；此处用 Manifest 中的战斗区配置立刻对齐。
-    /// </summary>
-    void SyncGlobalBattleAreaFromResDbIfNeeded()
-    {
-        if (GlobalBattleData.IsInitialized || !GameResDB.IsInitialized)
-            return;
-
-        var manifest = ResManager.Instance.Manifest;
-        if (manifest == null || string.IsNullOrEmpty(manifest.battleAreaConfigId))
-            return;
-
-        var battleArea = GameResDB.Instance.GetConfig<BattleAreaConfig>(manifest.battleAreaConfigId);
-        if (battleArea != null)
-            GlobalBattleData.Initialize(battleArea);
-    }
-
     void WarmupGlobalPools(GlobalPoolConfig globalPoolConfig)
     {
+        if (globalPoolConfig == null)
+        {
+            Logger.Warn("[Battle] GlobalPoolConfig 'defaultglobalpool' not found.", LogTag.Pool);
+            return;
+        }
+
         int maxPrefabIndex = GameResDB.Instance.GetMaxPrefabIndex();
         GameObjectPoolManager.Instance.Initialize(maxPrefabIndex);
-        
-        for(int i = 0; i < globalPoolConfig.poolCategories.Length; i++)
+
+        for (int i = 0; i < globalPoolConfig.poolCategories.Length; i++)
         {
             var categoryGroup = globalPoolConfig.poolCategories[i];
-            for(int j = 0; j < categoryGroup.entries.Length; j++)
+            for (int j = 0; j < categoryGroup.entries.Length; j++)
             {
                 var entry = categoryGroup.entries[j];
                 GameObjectPoolManager.Instance.WarmupPool(entry.prefabId, entry.defaultWarmupCount);
@@ -346,68 +516,38 @@ public class BattleManager : SingletonMono<BattleManager>
         }
     }
 
-    #region 怪物相关
-
-    public void AddEnemyTest(EnemyConfig enemyConfig, float posX, float posY)
-    {
-        var e_enemy = _battleWorld.EntityFactory.CreateEnemy(enemyConfig, posX, posY);
-        uint f = _battleWorld.LogicFrameTimer.CurrentFrame;
-        _battleWorld.EntityManager.AddComponent(e_enemy, EnemyMovementBaking.CreateSimpleDescent(f, posX, posY));
-        _battleWorld.EntityManager.AddComponent(e_enemy, new CPoolGetTag());
-        Logger.Info($"Test enemy added at ({posX}, {posY}) with config index {enemyConfig.emitterConfigIndex}.");
-    }
-
-    #endregion
-
-    #region 战斗启动调用
-    public void StartMutiPlayerBattleForClient(uint startFrame, uint randomSeed, PlayerBattleData[] allPlayerDatas)
-    {
-        StartMutiPlayerBattle(startFrame, randomSeed, allPlayerDatas);
-    }
-    public void StartMutiPlayerBattleForHost()
-    {
-        var allPlayerDatas = this.allPlayerDatas.ToArray();
-
-        // 1. 生成全局一致的起始参数
-        uint startFrame = 0;
-        uint randomSeed = 0;
-
-        // 2. 广播给所有客户端
-        var startMsg = new BattleStartMSG
-        {
-            startFrame = startFrame,
-            randomSeed = randomSeed,
-            playerDatas = allPlayerDatas
-        };
-        NetworkManager.Instance.Broadcast(startMsg);
-
-        // 3. 主机自己也初始化
-        StartMutiPlayerBattle(startFrame, randomSeed, allPlayerDatas);
-    }
-
-    public void StartSinglePlayerBattle()
-    {
-        isSinglePlayerMode = true;
-        // 准备面板与战斗区预载由菜单 <see cref="EnterBattleScene"/> 负责，此处只启动战斗会话
-        BootstrapBattleSession(0);
-    }
-
-    void StartMutiPlayerBattle(uint startFrame, uint randomSeed, PlayerBattleData[] playerDatas)
-    {
-        isSinglePlayerMode = false;
-
-        allPlayerDatas.Clear();
-        foreach (var data in playerDatas)
-            AddPlayerData(data);
-
-        BootstrapBattleSession(startFrame);
-    }
-    #endregion
+    #region 玩家与测试
 
     public void AddPlayerData(PlayerBattleData playerData)
     {
         allPlayerDatas.Add(playerData);
-        activePlayers[playerData.playerIndex] = true;
+        _activePlayers[playerData.playerIndex] = true;
+    }
+
+    /// <summary>准备阶段重复确认时按 playerIndex 覆盖，避免重复条目。</summary>
+    public void SetOrUpdatePlayerData(PlayerBattleData playerData)
+    {
+        if (playerData.characterId != E_Character.None)
+            _prepareCharacterRegistry.TryClaim(playerData.playerIndex, playerData.characterId);
+
+        for (int i = 0; i < allPlayerDatas.Count; i++)
+        {
+            if (allPlayerDatas[i].playerIndex != playerData.playerIndex)
+                continue;
+            allPlayerDatas[i] = playerData;
+            _activePlayers[playerData.playerIndex] = true;
+            NotifyPrepareCharacterLocked(playerData.playerIndex, playerData.characterId);
+            return;
+        }
+        AddPlayerData(playerData);
+        NotifyPrepareCharacterLocked(playerData.playerIndex, playerData.characterId);
+    }
+
+    void NotifyPrepareCharacterLocked(byte playerIndex, E_Character characterId)
+    {
+        if (characterId == E_Character.None)
+            return;
+        OnPrepareCharacterLocked?.Invoke(playerIndex, characterId);
     }
 
     public void GeneratePlayer()
@@ -422,7 +562,7 @@ public class BattleManager : SingletonMono<BattleManager>
         {
             var playerData = allPlayerDatas[i];
 
-            if(playerData.characterId == E_Character.None || playerData.weaponId == E_Weapon.None)
+            if (playerData.characterId == E_Character.None || playerData.weaponId == E_Weapon.None)
             {
                 Logger.Error($"Invalid player data for player index {playerData.playerIndex}: characterId={playerData.characterId}, weaponId={playerData.weaponId}");
                 continue;
@@ -439,52 +579,46 @@ public class BattleManager : SingletonMono<BattleManager>
         _battleWorld.EntityManager.AddComponent(e_Player, new CPoolGetTag());
     }
 
+    public void AddEnemyTest(EnemyConfig enemyConfig, float posX, float posY)
+    {
+        var e_enemy = _battleWorld.EntityFactory.CreateEnemy(enemyConfig, posX, posY);
+        uint f = _battleWorld.LogicFrameTimer.CurrentFrame;
+        _battleWorld.EntityManager.AddComponent(e_enemy, EnemyMovementBaking.CreateSimpleDescent(f, posX, posY));
+        _battleWorld.EntityManager.AddComponent(e_enemy, new CPoolGetTag());
+        Logger.Info($"Test enemy added at ({posX}, {posY}) with config index {enemyConfig.emitterConfigIndex}.");
+    }
+
+    #endregion
+
     void Update()
     {
         if (_battleWorld == null) return;
         if (CurrentStatus != E_BattleStatus.InBattle) return;
 
-        // 累积时间（用于控制帧率）
         _battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
 
-        // 【关键】只有时间到了，才尝试处理 CurrentFrame
-        if (_battleWorld.LogicFrameTimer.CanAdvance()) // 即 accumulated >= frameInterval
+        if (_battleWorld.LogicFrameTimer.CanAdvance())
         {
             uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
 
             FrameInput input = InputManager.Instance.RecordLocalInput(RoomManager.LocalPlayerIndex, frameToProcess);
 
             if (!isSinglePlayerMode)
-            {
                 InputManager.Instance.BroadcastLocalInput(input);
-            }
 
-            // 检查是否所有满足帧推进条件（单人模式 或 多人模式输入就绪）
-            if (isSinglePlayerMode || InputManager.Instance.AreAllInputsReady(frameToProcess, activePlayers))
+            if (isSinglePlayerMode || InputManager.Instance.AreAllInputsReady(frameToProcess, _activePlayers))
             {
-                // 执行逻辑
                 _battleWorld.LogicTick(frameToProcess);
-
-                // 推进到下一帧（现在 CurrentFrame 表示“下一个要处理的帧”）
-                _battleWorld.LogicFrameTimer.AdvanceFrame(); // CurrentFrame++
-
-                // 消耗时间
+                _battleWorld.LogicFrameTimer.AdvanceFrame();
                 _battleWorld.LogicFrameTimer.ConsumeFrameTime();
-
-                // 清理旧输入
-                //InputManager.Instance.CleanupOldFrames(frameToProcess);
             }
-            else
-            {
-                // 时间到了但输入没齐 → 卡住（正常行为，等待网络）
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            else
                 Logger.Debug($"[Frame {frameToProcess}] Time ready but inputs not ready.");
 #endif
-            }
-
         }
 
-        _battleWorld?.Update(Time.deltaTime);
+        _battleWorld.Update(Time.deltaTime);
     }
 
     void LateUpdate()

@@ -15,6 +15,13 @@ public enum DanmakuSelectMode
     Random
 }
 
+public enum EmitterCamp
+{
+    None,
+    Player,
+    Enemy
+}
+
 [Serializable]
 public struct LineModeConfig
 {

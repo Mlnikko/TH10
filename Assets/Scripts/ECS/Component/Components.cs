@@ -92,6 +92,16 @@ public struct CDropItem : IComponent
     }
 }
 
+/// <summary>
+/// 掉落物竖直上抛运动（每逻辑帧竖直位移：上正下负）；受重力并限制终端下落速度。
+/// </summary>
+public struct CDropItemMotion : IComponent
+{
+    public float vyPerFrame;
+    public float gravityPerFrame;
+    public float maxFallPerFrame;
+}
+
 #endregion
 
 #region 弹幕发射器组件

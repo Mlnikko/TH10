@@ -8,41 +8,17 @@ public class EnemyConfigEditor : Editor
     {
         DrawDefaultInspector();
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        var viewer = (EnemyConfigViewer)target;
 
-        GUILayout.BeginHorizontal();
+        ConfigViewerEditorUI.DrawSeparator();
 
-        if (GUILayout.Button("读取并预览敌人配置", GUILayout.Height(30)))
-        {
-            EnemyConfigViewer viewer = (EnemyConfigViewer)target;
-            if(viewer.EnemyConfig == null)
-            {
-                Logger.Warn("未指定 EnemyConfig！");
-                return;
-            }
-            viewer.LoadEnemyConfig();
-        }
+        if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.EnemyConfig, "EnemyConfig"))
+            return;
 
-        if (GUILayout.Button("应用并保存当前配置", GUILayout.Height(30)))
-        {
-            EnemyConfigViewer viewer = (EnemyConfigViewer)target;
-            if(viewer.EnemyConfig == null)
-            {
-                Logger.Warn("未指定 EnemyConfig！");
-                return;
-            }
-            if (EditorUtility.DisplayDialog(
-           "确认保存？",
-           "将覆盖资产",
-           "确定", "取消"))
-            {
-                viewer.SaveEnemyConfig();
-                EditorUtility.SetDirty(viewer.EnemyConfig);
-                AssetDatabase.SaveAssets();
-            }
-        }
-
-        GUILayout.EndHorizontal();
+        ConfigViewerEditorUI.DrawPrefabSyncHint();
+        ConfigViewerEditorUI.DrawSaveButton(
+            viewer.EnemyConfig,
+            viewer.SaveEnemyConfig,
+            "EnemyConfig");
     }
 }

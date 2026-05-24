@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickupPrefabId: drop_pr_s
   pickupSprite: {fileID: 0}
-  fallSpeed: 2
+  initialUpSpeed: 3
+  fallGravity: 0.1
+  maxFallSpeed: 1
   colliderConfig:
     isTrigger: 0
     shape: 2
@@ -24,4 +26,4 @@ MonoBehaviour:
     boxSize: {x: 0.1, y: 0.1}
     offset: {x: 0, y: 0}
   dropKind: 3
-  effectAmount: 100
+  effectAmount: 1

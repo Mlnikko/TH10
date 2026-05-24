@@ -37,6 +37,12 @@ public class WeaponSelectionUI : MonoBehaviour
         nameLabel.color = selected ? Color.green : Color.white;
     }
 
+    public void SetInteractable(bool interactable)
+    {
+        if (selectButton != null)
+            selectButton.interactable = interactable;
+    }
+
     public void OnClick()
     {
         onSelect?.Invoke();

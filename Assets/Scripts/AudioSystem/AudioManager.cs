@@ -4,11 +4,22 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.AddressableAssets;
 
+
+
 //音频管理器
 public class AudioManager : SingletonMono<AudioManager>
 {
-    const float minVolume = -40f;
-    const float maxVolume = 0.0f;
+    const float MinVolumeDb = -40f;
+    const float MaxVolumeDb = 0f;
+
+    /// <summary>AudioMixer 暴露的分组音量参数名（须与 Mixer 中 Exposed Parameters 一致）。</summary>
+    static class MixerGroupNames
+    {
+        public const string Master = "Master";
+        public const string UI = "UI";
+        public const string BGM = "BGM";
+        public const string SFX = "SFX";
+    }
 
     [SerializeField] AudioMixer audioMixer;
     [SerializeField] AudioConfig audioConfigs;
@@ -21,7 +32,7 @@ public class AudioManager : SingletonMono<AudioManager>
     {
         audiosDict = new();
 
-        if (audioConfigs == null) audioConfigs = Addressables.LoadAssetAsync<AudioConfig>("AudioConfig").WaitForCompletion();
+        if (audioConfigs == null) audioConfigs = Addressables.LoadAssetAsync<AudioConfig>("cfg_audioconfig").WaitForCompletion();
         if(audioMixer == null) audioMixer = Addressables.LoadAssetAsync<AudioMixer>("AudioMixer").WaitForCompletion();
 
         InitAudioManager();
@@ -188,16 +199,6 @@ public class AudioManager : SingletonMono<AudioManager>
         }     
     }
 
-    //void ApplicationSoundsSetting()
-    //{
-    //    float masterValue = GameSettingManager.Instance.GetGameSettingData().masterVolume;
-    //    float bgmValue = GameSettingManager.Instance.GetGameSettingData().bgmVolume;
-    //    float sfxValue = GameSettingManager.Instance.GetGameSettingData().sfxVolume;
-    //    SetMasterVolume(masterValue);
-    //    SetBGMVolume(bgmValue);
-    //    SetSFXVolume(sfxValue);
-    //}
-
     IEnumerator AudioFadeOutAndStopCoroutine(AudioSource audioSource, float fadeDuration)
     {
         float startVolume = audioSource.volume;
@@ -218,33 +219,34 @@ public class AudioManager : SingletonMono<AudioManager>
     {
         if (settings == null || audioMixer == null) return;
 
-        ApplyChannelVolume("MasterVolume", settings.masterVolume, settings.masterMuted);
-        ApplyChannelVolume("UIVolume", settings.uiVolume, settings.uiMuted);
-        ApplyChannelVolume("BGMVolume", settings.bgmVolume, settings.bgmMuted);
-        ApplyChannelVolume("SFXVolume", settings.sfxVolume, settings.sfxMuted);
+        ApplyChannelVolume(MixerGroupNames.Master, settings.masterVolume, settings.masterMuted);
+        ApplyChannelVolume(MixerGroupNames.UI, settings.uiVolume, settings.uiMuted);
+        ApplyChannelVolume(MixerGroupNames.BGM, settings.bgmVolume, settings.bgmMuted);
+        ApplyChannelVolume(MixerGroupNames.SFX, settings.sfxVolume, settings.sfxMuted);
     }
 
-    void ApplyChannelVolume(string exposedParameter, float slider0To10, bool muted)
+    void ApplyChannelVolume(string mixerGroupName, float slider0To10, bool muted)
     {
         if (muted)
-            SetMixerVolumeDb(exposedParameter, minVolume);
+            SetMixerVolumeDb(mixerGroupName, MinVolumeDb);
         else
-            SetMixerVolumeDb(exposedParameter, VolumeSliderToDb(slider0To10));
+            SetMixerVolumeDb(mixerGroupName, VolumeSliderToDb(slider0To10));
     }
 
-    public void SetMasterVolume(float value) => ApplyChannelVolume("MasterVolume", value, muted: false);
-    public void SetUIVolume(float value) => ApplyChannelVolume("UIVolume", value, muted: false);
-    public void SetBGMVolume(float value) => ApplyChannelVolume("BGMVolume", value, muted: false);
-    public void SetSFXVolume(float value) => ApplyChannelVolume("SFXVolume", value, muted: false);
+    public void SetMasterVolume(float value) => ApplyChannelVolume(MixerGroupNames.Master, value, muted: false);
+    public void SetUIVolume(float value) => ApplyChannelVolume(MixerGroupNames.UI, value, muted: false);
+    public void SetBGMVolume(float value) => ApplyChannelVolume(MixerGroupNames.BGM, value, muted: false);
+    public void SetSFXVolume(float value) => ApplyChannelVolume(MixerGroupNames.SFX, value, muted: false);
 
     static float VolumeSliderToDb(float slider0To10)
     {
-        return Mathf.Lerp(minVolume, maxVolume, Mathf.Clamp01(slider0To10 / 10f));
+        return Mathf.Lerp(MinVolumeDb, MaxVolumeDb, Mathf.Clamp01(slider0To10 / 10f));
     }
 
-    void SetMixerVolumeDb(string exposedParameter, float volumeDb)
+    void SetMixerVolumeDb(string mixerGroupName, float volumeDb)
     {
-        if (audioMixer == null || string.IsNullOrEmpty(exposedParameter)) return;
-        audioMixer.SetFloat(exposedParameter, volumeDb);
+        if (audioMixer == null || string.IsNullOrEmpty(mixerGroupName)) return;
+        if (!audioMixer.SetFloat(mixerGroupName, volumeDb))
+            Logger.Warn($"AudioMixer 未找到暴露参数 '{mixerGroupName}'，请在 AudioMixer 中 Expose 对应分组 Volume。", LogTag.Audio);
     }
 }

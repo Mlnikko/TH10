@@ -8,44 +8,17 @@ public class CharacterConfigEditor : Editor
     {
         DrawDefaultInspector();
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        var viewer = (CharacterConfigViewer)target;
 
-        GUILayout.BeginHorizontal();
+        ConfigViewerEditorUI.DrawSeparator();
 
-        if (GUILayout.Button("读取并预览角色配置", GUILayout.Height(30)))
-        {
-            CharacterConfigViewer viewer = (CharacterConfigViewer)target;
-            if (viewer.CharacterConfig == null)
-            {
-                Logger.Warn("未指定 CharacterConfig！");
-                return;
-            }
-            viewer.LoadCharacterConfig();
-            Logger.Debug($"已读取角色配置: {viewer.CharacterConfig.name}");
-        }
+        if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.CharacterConfig, "CharacterConfig"))
+            return;
 
-        if (GUILayout.Button("应用并保存角色配置", GUILayout.Height(30)))
-        {
-            CharacterConfigViewer viewer = (CharacterConfigViewer)target;
-            if (viewer.CharacterConfig == null)
-            {
-                Logger.Warn("未指定 CharacterConfig！");
-                return;
-            }
-
-            if (EditorUtility.DisplayDialog(
-            "确认保存？",
-            "将覆盖资产",
-            "确定", "取消"))
-            {
-                viewer.SaveCharacterConfig();
-                EditorUtility.SetDirty(viewer.CharacterConfig);
-                AssetDatabase.SaveAssets();
-                Logger.Debug($"已保存角色配置: {viewer.CharacterConfig.name}");
-            }
-        }
-
-        GUILayout.EndHorizontal();
+        ConfigViewerEditorUI.DrawPrefabSyncHint();
+        ConfigViewerEditorUI.DrawSaveButton(
+            viewer.CharacterConfig,
+            viewer.SaveCharacterConfig,
+            "CharacterConfig");
     }
 }

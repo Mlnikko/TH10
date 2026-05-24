@@ -1,8 +1,10 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
-public class EnemyConfigViewer : MonoBehaviour
+public class EnemyConfigViewer : GameConfigViewerBase
 {
+    protected override bool HasAssignedConfig => enemyConfig != null;
+
     public EnemyConfig EnemyConfig => enemyConfig;
     [SerializeField] EnemyConfig enemyConfig;
 
@@ -17,15 +19,12 @@ public class EnemyConfigViewer : MonoBehaviour
     [SerializeField] AudioName dieAudioName;
 
 
-    void Awake()
-    {
-        LoadEnemyConfig();
-    }
+    public void LoadEnemyConfig() => LoadFromConfig();
 
-
-    public void LoadEnemyConfig()
+    public override void LoadFromConfig()
     {
-        if (enemyConfig == null) return;
+        if (enemyConfig == null)
+            return;
 
         enemyType = enemyConfig.enemyType;
         maxHealth = enemyConfig.maxHealth;

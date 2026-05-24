@@ -38,6 +38,8 @@ public class RoomManager : SingletonMono<RoomManager>
     {
         if (IsInRoom) LeaveRoom();
 
+        LocalPlayerIndex = 0;
+
         // 获取本机局域网 IP
         string localIP = NetworkTool.GetLocalIPAddress();
 
@@ -74,11 +76,11 @@ public class RoomManager : SingletonMono<RoomManager>
         Logger.Info("Left room", LogTag.Room);
     }
 
+    /// <summary>房主开始游戏：广播后进战斗场景（与客户端共用 <see cref="HandleEnterBattleScene"/>）。</summary>
     public void EnterBattleScene()
     {
         if (!IsHost || !IsInRoom) return;
         Logger.Info("Starting battle...", LogTag.Room);
-
         NetworkManager.Instance.Broadcast(new GameStartMSG());
         HandleEnterBattleScene();
     }
@@ -127,17 +129,6 @@ public class RoomManager : SingletonMono<RoomManager>
 
     public void HandleEnterBattleScene()
     {
-        UIManager.Instance.CloseAll();
-        SceneLoader.LoadScene("BattleScene", success =>
-        {
-            if (!success)
-            {
-                Logger.Error("Failed to load BattleScene.", LogTag.Room);
-                return;
-            }
-
-            // 与 MenuPanel 单机流程一致：进入战斗场景后打开角色/武器准备面板
-            BattleManager.Instance.EnterBattleScene().Forget();
-        });
+        BattleManager.Instance.LoadBattleSceneAndShowPrepareAsync().Forget();
     }
 }

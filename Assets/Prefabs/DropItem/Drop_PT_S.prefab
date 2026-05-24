@@ -100,7 +100,9 @@ MonoBehaviour:
   dropItemConfig: {fileID: 11400000, guid: 99a4a050de160774f8c3c1428aeaa7fc, type: 2}
   pickupPrefabId: drop_pt_s
   pickupSprite: {fileID: 0}
-  fallSpeed: 2
+  initialUpSpeed: 3
+  fallGravity: 0.1
+  maxFallSpeed: 1
   colliderConfig:
     isTrigger: 0
     shape: 2
@@ -111,3 +113,5 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
   dropKind: 1
   effectAmount: 100
+  previewMotionDuration: 4
+  drawPreviewMotionPath: 1

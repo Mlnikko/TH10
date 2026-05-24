@@ -8,29 +8,33 @@ public class DanmakuEmitterConfigEditor : Editor
     {
         base.OnInspectorGUI();
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        var viewer = (DanmakuEmitterConfigViewer)target;
 
-        GUILayout.BeginHorizontal();
+        ConfigViewerEditorUI.DrawSeparator();
+        EditorGUILayout.LabelField("场景预览", EditorStyles.boldLabel);
 
-        if (GUILayout.Button("预览发射效果", GUILayout.Height(30)))
-        {
-            DanmakuEmitterConfigViewer viewer = (DanmakuEmitterConfigViewer)target;
+        if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.emitterConfig, "DanmakuEmitterConfig"))
+            return;
+
+        ConfigViewerEditorUI.DrawPrefabSyncHint("双击进入预制体编辑后自动同步发射参数。");
+
+        if (GUILayout.Button("预览发射效果", GUILayout.Height(28)))
             viewer.PreviewEmitterEffect();
-        }
 
-        if (GUILayout.Button("保存当前配置", GUILayout.Height(30)))
+        if (viewer.IsPreviewingEmitter)
         {
-            DanmakuEmitterConfigViewer viewer = (DanmakuEmitterConfigViewer)target;
+            EditorGUILayout.HelpBox(
+                "正在预览发射：按逻辑帧间隔生成弹幕并沿每帧速度位移。",
+                MessageType.Info);
 
-            if (EditorUtility.DisplayDialog("确认保存？", "将覆盖资产", "确定", "取消"))
-            {
-                viewer.SaveEmitterConfig();
-                EditorUtility.SetDirty(viewer.emitterConfig);
-                AssetDatabase.SaveAssets();
-            }
+            if (GUILayout.Button("停止发射预览", GUILayout.Height(24)))
+                viewer.StopPreviewEmitter();
         }
 
-        GUILayout.EndHorizontal();
+        ConfigViewerEditorUI.DrawSeparator();
+        ConfigViewerEditorUI.DrawSaveButton(
+            viewer.emitterConfig,
+            viewer.SaveEmitterConfig,
+            "DanmakuEmitterConfig");
     }
 }

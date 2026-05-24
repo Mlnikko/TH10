@@ -5,12 +5,13 @@ using UnityEngine.Audio;
 public enum AudioName
 {
     None = 0,
-    // SFX
+    // UI
     Cancel = 1,
     Confirm = 2,
     Select = 3,
     Pause = 4,
 
+    // SFX
     Danmaku_Shoot,
 
 
@@ -26,6 +27,7 @@ public enum AudioName
 public enum E_AudioGroup
 {
     BGM,
+    UI,
     SFX
 }
 

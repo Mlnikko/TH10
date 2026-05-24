@@ -46,8 +46,10 @@ public struct PlayerSpawnData
     }
 }
 
-public class BattleAreaConfigViewer : MonoBehaviour
+public class BattleAreaConfigViewer : GameConfigViewerBase
 {
+    protected override bool HasAssignedConfig => battleAreaConfig != null;
+
     [Header("配置引用")]
     public BattleAreaConfig battleAreaConfig;
 
@@ -57,9 +59,11 @@ public class BattleAreaConfigViewer : MonoBehaviour
     [Header("玩家出生点数据")]
     [SerializeField] PlayerSpawnData playerSpawnData;
 
-    public void LoadBattleAreaData()
+    public void LoadBattleAreaData() => LoadFromConfig();
+
+    public override void LoadFromConfig()
     {
-        if(battleAreaConfig == null)
+        if (battleAreaConfig == null)
         {
             Logger.Error("BattleAreaConfig is not assigned!");
             return;

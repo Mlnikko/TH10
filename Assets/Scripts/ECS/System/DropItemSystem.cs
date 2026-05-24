@@ -1,7 +1,7 @@
 using System;
 
 /// <summary>
-/// 掉落物匀速下落（速度来自 <see cref="DropItemConfig"/> 烘焙的每帧位移）与越界回收。
+/// 掉落物竖直上抛（至终端速度后匀速下落）；越界回收。
 /// </summary>
 public class DropItemSystem : BaseSystem
 {
@@ -12,16 +12,18 @@ public class DropItemSystem : BaseSystem
             return;
 
         var positions = EntityManager.GetComponentSpan<CPosition>();
-        var velocities = EntityManager.GetComponentSpan<CVelocity>();
+        var motions = EntityManager.GetComponentSpan<CDropItemMotion>();
 
         for (int i = 0; i < indices.Length; i++)
         {
             int idx = indices[i];
-            ref var pos = ref positions[idx];
-            ref readonly var vel = ref velocities[idx];
+            if ((uint)idx >= (uint)motions.Length)
+                continue;
 
-            pos.x += vel.vx;
-            pos.y += vel.vy;
+            ref var pos = ref positions[idx];
+            ref var motion = ref motions[idx];
+
+            pos.y += DropItemMotionSimulator.StepVertical(ref motion);
 
             TryRecycleDropOutOfBounds(idx, pos.x, pos.y);
         }

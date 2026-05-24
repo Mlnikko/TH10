@@ -1,8 +1,10 @@
 using UnityEngine;
 
-[RequireComponent (typeof(SpriteRenderer))]
-public class DanmakuConfigViewer : MonoBehaviour
+[RequireComponent(typeof(SpriteRenderer))]
+public class DanmakuConfigViewer : GameConfigViewerBase
 {
+    protected override bool HasAssignedConfig => danmakuConfig != null;
+
     public DanmakuConfig danmakuConfig;
 
     [SerializeField] E_DanmakuType danmakuType;
@@ -19,7 +21,9 @@ public class DanmakuConfigViewer : MonoBehaviour
 
     [SerializeField] float damage;
 
-    public void LoadDanmakuConfig()
+    public void LoadDanmakuConfig() => LoadFromConfig();
+
+    public override void LoadFromConfig()
     {
         if (danmakuConfig == null)
         {
@@ -61,18 +65,17 @@ public class DanmakuConfigViewer : MonoBehaviour
         Logger.Debug($"弹幕配置文件保存完成: {danmakuConfig.name}");
     }
 
+    protected override void ApplyEditorPreview() => ApplyDanmakuVisual();
+
+    void ApplyDanmakuVisual()
+    {
+        ConfigViewerSpritePreview.Apply(transform, sprite, color, scale);
+    }
+
     public void PreviewDanmaku()
     {
-        LoadDanmakuConfig();
-
-        transform.localScale = Vector3.one * scale;
-
-        // 预览渲染
-        if (TryGetComponent<SpriteRenderer>(out var spriteRenderer))
-        {
-            spriteRenderer.sprite = sprite;
-            spriteRenderer.color = color;
-        }
+        LoadFromConfig();
+        ApplyDanmakuVisual();
     }
 
     protected void OnDrawGizmosSelected()

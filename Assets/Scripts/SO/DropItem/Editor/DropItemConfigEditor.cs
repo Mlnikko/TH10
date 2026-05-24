@@ -8,29 +8,37 @@ public class DropItemConfigEditor : Editor
     {
         base.OnInspectorGUI();
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        var viewer = (DropItemConfigViewer)target;
+
+        ConfigViewerEditorUI.DrawSeparator();
+        EditorGUILayout.LabelField("场景预览", EditorStyles.boldLabel);
+
+        if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.dropItemConfig, "DropItemConfig"))
+            return;
+
+        ConfigViewerEditorUI.DrawPrefabSyncHint();
 
         GUILayout.BeginHorizontal();
 
-        if (GUILayout.Button("预览掉落物表现", GUILayout.Height(30)))
-        {
-            var viewer = (DropItemConfigViewer)target;
+        if (GUILayout.Button("刷新 Sprite 预览", GUILayout.Height(28)))
             viewer.PreviewDropItem();
-        }
 
-        if (GUILayout.Button("保存当前配置", GUILayout.Height(30)))
-        {
-            var viewer = (DropItemConfigViewer)target;
-
-            if (EditorUtility.DisplayDialog("确认保存？", "将覆盖资产", "确定", "取消"))
-            {
-                viewer.SaveDropItemConfig();
-                EditorUtility.SetDirty(viewer.dropItemConfig);
-                AssetDatabase.SaveAssets();
-            }
-        }
+        if (GUILayout.Button("预览掉落运动", GUILayout.Height(28)))
+            viewer.StartPreviewDropMotion();
 
         GUILayout.EndHorizontal();
+
+        if (viewer.IsPreviewingDropMotion)
+        {
+            EditorGUILayout.HelpBox("正在预览掉落运动… 按逻辑帧模拟上抛与下落。", MessageType.Info);
+            if (GUILayout.Button("停止运动预览", GUILayout.Height(24)))
+                viewer.StopPreviewDropMotion();
+        }
+
+        ConfigViewerEditorUI.DrawSeparator();
+        ConfigViewerEditorUI.DrawSaveButton(
+            viewer.dropItemConfig,
+            viewer.SaveDropItemConfig,
+            "DropItemConfig");
     }
 }

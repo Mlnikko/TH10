@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3972ac5ebeade5849989dc9bc80b2557, type: 3}
   m_Name: Character_Marisa
   m_EditorClassIdentifier: 
-  configId: 
   characterPrefabId: character_marisa
   character: 2
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"

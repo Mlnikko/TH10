@@ -22,9 +22,8 @@ public class MenuPanel : UIPanel
 
     void OnLocalModeClicked()
     {
-        UIManager.Instance.CloseAll();
-        SceneLoader.LoadScene("BattleScene");
-        BattleManager.Instance.EnterBattleScene().Forget();
+        RoomManager.LocalPlayerIndex = 0;
+        BattleManager.Instance.LoadBattleSceneAndShowPrepareAsync().Forget();
     }
 
     void OnOnlineModeClicked()

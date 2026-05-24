@@ -8,32 +8,21 @@ public class BattleAreaConfigEditor : Editor
     {
         base.OnInspectorGUI();
 
-        BattleAreaConfigViewer tool = (BattleAreaConfigViewer)target;
+        var viewer = (BattleAreaConfigViewer)target;
 
-        EditorGUILayout.Space();
+        ConfigViewerEditorUI.DrawSeparator();
 
-        GUILayout.BeginHorizontal();
+        if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.battleAreaConfig, "BattleAreaConfig"))
+            return;
 
-        if (GUILayout.Button("预览配置效果"))
-        {
-            tool.LoadBattleAreaData();
-        }
-
-        if (GUILayout.Button("保存当前配置"))
-        {
-            if (tool.battleAreaConfig == null)
+        ConfigViewerEditorUI.DrawPrefabSyncHint("双击进入预制体编辑后自动同步；Scene 视图选中物体可查看 Gizmo。");
+        ConfigViewerEditorUI.DrawSaveButton(
+            viewer.battleAreaConfig,
+            () =>
             {
-                Logger.Warn("未指定 BattleAreaConfig！");
-                return;
-            }
-
-            tool.SaveBattleAreaData();
-            EditorUtility.SetDirty(tool.battleAreaConfig);
-            AssetDatabase.SaveAssets();
-
-            Logger.Info($"战斗区域配置已更新：{tool.battleAreaConfig.name}");
-        }
-
-        GUILayout.EndHorizontal();
+                viewer.SaveBattleAreaData();
+                Logger.Info($"战斗区域配置已更新：{viewer.battleAreaConfig.name}");
+            },
+            "BattleAreaConfig");
     }
 }

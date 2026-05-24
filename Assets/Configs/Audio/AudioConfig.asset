@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f2c6ec6ac05c7b439d7fb154d7e6491, type: 3}
   m_Name: AudioConfig
   m_EditorClassIdentifier: 
-  ConfigId: AudioConfig
   audioGroups:
   - displayName: BGM
     audioGroup: 0
@@ -69,7 +68,7 @@ MonoBehaviour:
       isPlayOnAwake: 0
       isLoop: 0
   - displayName: "\u5F39\u5E55\u97F3\u6548"
-    audioGroup: 1
+    audioGroup: 2
     audioDatas:
     - displayName: "\u73A9\u5BB6\u5F39\u5E55\u53D1\u5C04"
       audioName: 5
@@ -80,7 +79,7 @@ MonoBehaviour:
       isPlayOnAwake: 0
       isLoop: 1
   - displayName: "\u6B7B\u4EA1\u97F3\u6548"
-    audioGroup: 1
+    audioGroup: 2
     audioDatas:
     - displayName: "\u73A9\u5BB6\u6B7B\u4EA1"
       audioName: 6
