@@ -24,8 +24,8 @@ MonoBehaviour:
   powerSecondaryLayouts:
   - minPowerOrbs: 1
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0, y: 0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0, y: -0.2}
   - minPowerOrbs: 2
     slots:
     - danmakuEmitterConfigId: dme_reimu_blue

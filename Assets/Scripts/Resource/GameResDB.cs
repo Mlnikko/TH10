@@ -137,6 +137,7 @@ public class GameResDB : Singleton<GameResDB>
         {
             var allPrefabIds = new List<string>();
             AppendNormalizedIds(allPrefabIds, manifest.characterPrefabIds);
+            AppendNormalizedIds(allPrefabIds, manifest.weaponPrefabIds);
             AppendNormalizedIds(allPrefabIds, manifest.enemyPrefabIds);
             AppendNormalizedIds(allPrefabIds, manifest.danmakuPrefabIds);
             AppendNormalizedIds(allPrefabIds, manifest.danmakuEmitterPrefabIds);

@@ -15,13 +15,13 @@ MonoBehaviour:
   enemyType: 1
   enemyPrefabId: minion_fariy
   emitterConfigId: dme_enemy_base
-  maxHealth: 3
+  maxHealth: 10
   colliderConfig:
     isTrigger: 0
     shape: 1
     layer: 4
     mask: 10
     radius: 0
-    boxSize: {x: 0.12, y: 0.12}
+    boxSize: {x: 0.15, y: 0.15}
     offset: {x: 0, y: 0}
   dropOnDeathConfigIds: []

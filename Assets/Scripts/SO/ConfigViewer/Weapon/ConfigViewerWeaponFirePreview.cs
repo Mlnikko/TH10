@@ -48,7 +48,7 @@ public sealed class ConfigViewerWeaponFirePreview
     {
         Stop();
 
-        if (anchor == null || weaponConfig == null)
+        if (anchor == null || weaponConfig == null || !ConfigViewerEditorScene.CanHostTransientPreview(anchor))
             return;
 
         _anchor = anchor;
@@ -162,7 +162,7 @@ public sealed class ConfigViewerWeaponFirePreview
         if (!_active)
             return;
 
-        if (_anchor == null)
+        if (_anchor == null || !ConfigViewerEditorScene.CanHostTransientPreview(_anchor))
         {
             Stop();
             return;

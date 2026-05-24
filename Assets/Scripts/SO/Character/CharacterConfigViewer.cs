@@ -1,5 +1,6 @@
 using UnityEngine;
 
+/// <summary>角色预制体配置编辑；不参与运行时逻辑。</summary>
 public class CharacterConfigViewer : GameConfigViewerBase
 {
     protected override bool HasAssignedConfig => characterConfig != null;
@@ -67,10 +68,12 @@ public class CharacterConfigViewer : GameConfigViewerBase
         characterConfig.grazeColliderConfig = grazeColliderConfig;
     }
 
+#if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
         GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, moveColliderConfig, Color.cyan, Color.cyan);
         GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, hitColliderConfig, Color.red, Color.red);
         GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, grazeColliderConfig, Color.blue, Color.blue);
     }
+#endif
 }

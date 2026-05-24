@@ -15,7 +15,12 @@ public class WeaponConfigAssetEditor : Editor
             "m_Script",
             "danmakuEmitterConfigIds",
             "description",
-            "secondaryEmitters");
+            "secondaryEmitters",
+            "weaponPrefabId");
+
+        var weaponPrefabId = serializedObject.FindProperty("weaponPrefabId");
+        EditorGUILayout.PropertyField(weaponPrefabId);
+        ResourceIdEditorPicker.DrawPoolPrefabIdField(weaponPrefabId, E_PoolCategory.Weapon);
 
         serializedObject.ApplyModifiedProperties();
     }

@@ -53,10 +53,10 @@ public class WeaponSecondaryEmitterGroup
 public class WeaponPowerSecondaryLayout
 {
     [Min(0)]
-    [Tooltip("玩家 powerOrbs >= 此值时启用本档副发射器；多档按 minPowerOrbs 升序配置")]
+    [Tooltip("玩家 powerOrbs >= 此值时切换到本档（整组替换，不在低档副炮上叠加）")]
     public int minPowerOrbs;
 
-    [Tooltip("本 Power 档启用的副发射器及槽位偏移")]
+    [Tooltip("本档副炮布局（该档的完整发射点列表，非增量）")]
     public WeaponEmitterSlot[] slots;
 }
 
@@ -88,6 +88,10 @@ public class WeaponSlowModeLayoutConfig
     [Tooltip("低速时副发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）")]
     [Range(0f, 1f)]
     public float secondarySlotConverge = 1f;
+
+    [Tooltip("副炮收束/展开速度（0~1 每秒；0 表示瞬时切换）")]
+    [Min(0f)]
+    public float secondarySlotConvergeSpeed = 4f;
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
@@ -96,6 +100,12 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     [Header("武器配置")]
     public E_Weapon weaponID;
 
+    [Header("预制体")]
+    [Tooltip("战斗表现用武器预制体 id；为空时默认与 ConfigId 相同（如 weapon_reimu_blue）")]
+    public string weaponPrefabId;
+
+    [NonSerialized] public int weaponPrefabIndex = -1;
+
     [Header("显示")]
     public WeaponDisplayConfig display = new();
 
@@ -103,7 +113,7 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     public WeaponPrimaryEmitterGroup primaryEmitters = new();
 
     [Header("副发射器（按 Power）")]
-    [Tooltip("按 minPowerOrbs 分档；拾取 P 后自动切换到满足 powerOrbs 的最高档")]
+    [Tooltip("按 minPowerOrbs 分档；拾取 P 后切换到满足 powerOrbs 的最高档（整档替换副炮，非叠加）")]
     public WeaponPowerSecondaryLayout[] powerSecondaryLayouts = Array.Empty<WeaponPowerSecondaryLayout>();
 
     [Header("副发射器（旧字段，自动迁移）")]
@@ -137,11 +147,11 @@ public class WeaponConfig : GameConfig, IReferenceResolver
         return primaryEmitters.normal.slotOffset * (1f - converge);
     }
 
-    public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, bool slowMode)
-    {
-        float converge = slowMode ? slowModeLayout.secondarySlotConverge : 0f;
-        return baseOffset * (1f - converge);
-    }
+    public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, float converge01) =>
+        baseOffset * (1f - slowModeLayout.secondarySlotConverge * Mathf.Clamp01(converge01));
+
+    public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, bool slowMode) =>
+        ResolveSecondarySlotOffset(baseOffset, slowMode ? 1f : 0f);
 
     /// <summary>根据当前火力选取应启用的副炮烘焙档。</summary>
     public bool TryResolvePowerSecondary(int powerOrbs, out WeaponPowerSecondaryResolved resolved)
@@ -184,8 +194,8 @@ public class WeaponConfig : GameConfig, IReferenceResolver
             return true;
         }
 
-        if (TryPickSecondarySlotsFromLayouts(powerSecondaryLayouts, powerOrbs, out slots))
-            return true;
+        if (powerSecondaryLayouts != null && powerSecondaryLayouts.Length > 0)
+            return TryPickSecondarySlotsFromLayouts(powerSecondaryLayouts, powerOrbs, out slots);
 
         var legacy = secondaryEmitters?.slots;
         if (legacy != null && legacy.Length > 0)
@@ -278,6 +288,23 @@ public class WeaponConfig : GameConfig, IReferenceResolver
                 }
             }
         }
+
+        weaponPrefabId = weaponPrefabId.ToLowerInvariantTrimmed();
+        if (string.IsNullOrEmpty(weaponPrefabId))
+            weaponPrefabId = ConfigId;
+
+        ClearLegacySecondaryWhenPowerLayoutsExist();
+    }
+
+    void ClearLegacySecondaryWhenPowerLayoutsExist()
+    {
+        if (powerSecondaryLayouts == null || powerSecondaryLayouts.Length == 0)
+            return;
+
+        if (secondaryEmitters?.slots == null || secondaryEmitters.slots.Length == 0)
+            return;
+
+        secondaryEmitters.slots = Array.Empty<WeaponEmitterSlot>();
     }
 
     void MigrateLegacySecondaryToPowerLayouts()
@@ -353,6 +380,16 @@ public class WeaponConfig : GameConfig, IReferenceResolver
 
     public void ResolveReferences(GameResDB resDb)
     {
+        string prefabId = StringHelper.NormalizeResourceId(
+            string.IsNullOrEmpty(weaponPrefabId) ? ConfigId : weaponPrefabId);
+        weaponPrefabIndex = resDb.GetPrefabIndex(prefabId);
+        if (weaponPrefabIndex == -1)
+        {
+            Logger.Warn(
+                $"[WeaponConfig] Weapon prefab not found: '{prefabId}' (config: {ConfigId})",
+                LogTag.Resource);
+        }
+
         primaryNormalEmitterCfgIndex = ResolveEmitterIndex(
             resDb,
             primaryEmitters.normal.danmakuEmitterConfigId,

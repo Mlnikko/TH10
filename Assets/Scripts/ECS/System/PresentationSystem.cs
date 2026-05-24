@@ -117,7 +117,9 @@ public class PresentationSystem : BaseSystem
                         {
                             go.transform.position = spawnPos;
                             go.SetActive(true);
-                            updater = new PlayerUpdater(go);
+                            var playerUpdater = new PlayerUpdater(go);
+                            TryAttachWeaponPrefab(player.weaponCfgIndex, playerUpdater);
+                            updater = playerUpdater;
                         }
                     }
                 }
@@ -171,6 +173,24 @@ public class PresentationSystem : BaseSystem
             EntityManager.RemoveComponent<CPoolGetTag>(entity);
         }
     }
+    static void TryAttachWeaponPrefab(byte weaponCfgIndex, PlayerUpdater playerUpdater)
+    {
+        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(weaponCfgIndex);
+        if (weaponConfig == null || weaponConfig.weaponPrefabIndex < 0)
+            return;
+
+        GameObject weaponGo = GameObjectPoolManager.Instance.Get(weaponConfig.weaponPrefabIndex);
+        if (weaponGo == null)
+        {
+            Logger.Warn(
+                $"Weapon prefab pool Get failed (cfgIndex={weaponCfgIndex}, prefabIndex={weaponConfig.weaponPrefabIndex}).",
+                LogTag.Pool);
+            return;
+        }
+
+        playerUpdater.AttachWeapon(weaponGo);
+    }
+
     #endregion
 
     #region Despawn Logic

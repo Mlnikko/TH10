@@ -50,6 +50,9 @@ MonoBehaviour:
   characterPrefabIds:
   - character_marisa
   - character_reimu
+  weaponPrefabIds:
+  - weapon_reimu_blue
+  - weapon_reimu_red
   enemyPrefabIds:
   - minion_fariy
   danmakuPrefabIds:

@@ -315,6 +315,9 @@ public struct CPlayer : IComponent
     /// <summary>武器发射布局变体：0 通常 / 1 低速（主炮配置切换 + 槽位收束）。</summary>
     public byte emitterSlotLayoutVariant;
 
+    /// <summary>副炮槽位收束插值（0=展开，1=完全收束）；由 <see cref="PlayerControlSystem"/> 每逻辑帧推进。</summary>
+    public float secondarySlotConvergeT;
+
     /// <summary>已应用的副炮 Power 档 <see cref="WeaponPowerSecondaryLayout.minPowerOrbs"/>；<see cref="int.MinValue"/> 表示尚未同步。</summary>
     public int appliedSecondaryPowerMinOrbs;
 }
@@ -327,6 +330,10 @@ public struct CPlayerEmitterOwnership : IComponent
     public byte secondarySlotIndex;
     public float slotOffsetX;
     public float slotOffsetY;
+
+    /// <summary><see cref="DanmakuEmitterConfig.emitterPosOffset"/>（不含武器槽位偏移）。</summary>
+    public float emitterBaseOffsetX;
+    public float emitterBaseOffsetY;
 }
 
 #endregion

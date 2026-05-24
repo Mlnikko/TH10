@@ -21,6 +21,7 @@ public class GameResourceManifestEditor : Editor
 
         // Prefabs
         { nameof(GameResourceManifest.characterPrefabIds),       ("/Prefabs/Character/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.weaponPrefabIds),          ("/Prefabs/Weapon/", typeof(GameObject)) },
         { nameof(GameResourceManifest.enemyPrefabIds),           ("/Prefabs/Enemy/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuPrefabIds),         ("/Prefabs/Danmaku/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuEmitterPrefabIds),  ("/Prefabs/DanmakuEmitter/", typeof(GameObject)) },

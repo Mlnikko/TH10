@@ -17,6 +17,8 @@ public class GameResourceManifest : ScriptableObject
 
     [Header("预制体 - Prefabs")]
     public string[] characterPrefabIds = new string[0];
+    /// <summary>武器表现预制体（挂于角色下，含发射点布局）。</summary>
+    public string[] weaponPrefabIds = new string[0];
     public string[] enemyPrefabIds = new string[0];
     public string[] danmakuPrefabIds = new string[0];
     public string[] danmakuEmitterPrefabIds = new string[0];

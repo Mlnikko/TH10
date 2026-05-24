@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
+/// <summary>弹幕预制体配置编辑；不参与运行时逻辑。</summary>
 public class DanmakuConfigViewer : GameConfigViewerBase
 {
     protected override bool HasAssignedConfig => danmakuConfig != null;

@@ -46,6 +46,7 @@ public struct PlayerSpawnData
     }
 }
 
+/// <summary>战斗区 Scene 编辑；不参与运行时逻辑。</summary>
 public class BattleAreaConfigViewer : GameConfigViewerBase
 {
     protected override bool HasAssignedConfig => battleAreaConfig != null;

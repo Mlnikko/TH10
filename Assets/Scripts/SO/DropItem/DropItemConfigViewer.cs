@@ -7,6 +7,7 @@ using UnityEditor;
 /// <summary>
 /// 挂载在掉落物预制体上：编辑 <see cref="DropItemConfig"/>、预览 Sprite / 碰撞体 Gizmo / 掉落运动轨迹。
 /// </summary>
+/// <summary>掉落物预制体配置编辑；不参与运行时逻辑。</summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class DropItemConfigViewer : GameConfigViewerBase
 {

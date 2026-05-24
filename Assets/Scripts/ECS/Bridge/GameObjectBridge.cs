@@ -72,18 +72,22 @@ public class GameObjectBridge
             return; // 已经解绑或从未绑定
         }
 
-        // 1. 移除 ECS 组件
-        if (em.IsValid(entity))
+        IPresentationPooledAttachments pooledAttachments = null;
+        if (em.IsValid(entity) && em.HasComponent<CGameObjectLink>(entity))
         {
-            if (em.HasComponent<CGameObjectLink>(entity))
-                em.RemoveComponent<CGameObjectLink>(entity);
-            if (em.HasComponent<CPresentationPose>(entity))
-                em.RemoveComponent<CPresentationPose>(entity);
+            ref var link = ref em.GetComponent<CGameObjectLink>(entity);
+            pooledAttachments = link.Updater as IPresentationPooledAttachments;
+            em.RemoveComponent<CGameObjectLink>(entity);
         }
+
+        if (em.IsValid(entity) && em.HasComponent<CPresentationPose>(entity))
+            em.RemoveComponent<CPresentationPose>(entity);
 
         // 2. 清除映射
         //_goIDToEntity.Remove(go.GetInstanceID());
         _entityToGO.Remove(entity);
+
+        pooledAttachments?.ReleasePooledAttachments();
 
         // 4. 返回对象池
         if (returnToPool)

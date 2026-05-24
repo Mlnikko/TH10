@@ -65,3 +65,37 @@ MonoBehaviour:
       maxCapacity: 100
       defaultWarmupCount: 100
       allowForceRecycle: 0
+  - categoryName: "\u6B66\u5668"
+    category: 5
+    entries:
+    - prefabId: weapon_reimu_blue
+      maxCapacity: 4
+      defaultWarmupCount: 4
+      allowForceRecycle: 0
+    - prefabId: weapon_reimu_red
+      maxCapacity: 4
+      defaultWarmupCount: 4
+      allowForceRecycle: 0
+  - categoryName: "\u53D1\u5C04\u5668"
+    category: 6
+    entries:
+    - prefabId: dme_reimu_main
+      maxCapacity: 16
+      defaultWarmupCount: 16
+      allowForceRecycle: 0
+    - prefabId: dme_reimu_blue
+      maxCapacity: 16
+      defaultWarmupCount: 16
+      allowForceRecycle: 0
+    - prefabId: dme_reimu_red
+      maxCapacity: 16
+      defaultWarmupCount: 16
+      allowForceRecycle: 0
+    - prefabId: dme_reimu_pink
+      maxCapacity: 16
+      defaultWarmupCount: 16
+      allowForceRecycle: 0
+    - prefabId: dme_test
+      maxCapacity: 32
+      defaultWarmupCount: 32
+      allowForceRecycle: 0

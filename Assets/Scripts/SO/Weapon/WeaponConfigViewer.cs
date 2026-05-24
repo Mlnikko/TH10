@@ -1,10 +1,12 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
+/// <summary>
+/// 武器预制体编辑器：布局/发射预览。运行时由 <see cref="WeaponRuntimeLayoutView"/> 驱动表现，本组件在 Play 时自动禁用。
+/// </summary>
 public class WeaponConfigViewer : GameConfigViewerBase
 {
     protected override bool HasAssignedConfig => weaponConfig != null;
@@ -31,39 +33,53 @@ public class WeaponConfigViewer : GameConfigViewerBase
 
 #if UNITY_EDITOR
     [Header("布局预览")]
-    [SerializeField] bool drawEmitterLayoutGizmos = true;
     [SerializeField] WeaponEditorLayoutPreviewMode previewLayoutMode = WeaponEditorLayoutPreviewMode.Both;
-    [SerializeField] bool previewLayoutShowSlowPrimaryEmitter = true;
     [SerializeField, Min(0)] int previewPowerOrbs;
 
     [Header("发射预览")]
-    [SerializeField, Min(0)] int previewFirePowerOrbs;
     [SerializeField] float previewDuration = 5f;
     [SerializeField] float previewBulletLifetime = 3f;
-    [SerializeField] bool drawEmitterDisplaySprites = true;
 
     readonly ConfigViewerWeaponFirePreview _firePreview = new();
-    readonly List<ConfigViewerWeaponEmitLayout.EmitPoint> _layoutPoints = new();
+    readonly ConfigViewerWeaponLayoutPreview _layoutPreview = new();
+    WeaponConfig _layoutPreviewSnapshot;
+    bool _layoutPreviewSnapshotDirty = true;
 #endif
 
     public void LoadWeaponConfig() => LoadFromConfig();
+
+    protected override void ApplyEditorPreview() => RefreshEmitterLayoutPreview();
 
     public override void LoadFromConfig()
     {
         if (weaponConfig == null)
             return;
 
+#if UNITY_EDITOR
+        _layoutPreviewSnapshotDirty = true;
+        _layoutPreview.Invalidate();
+#endif
+
         weaponID = weaponConfig.weaponID;
         display = weaponConfig.display ?? new WeaponDisplayConfig();
         primaryEmitters = weaponConfig.primaryEmitters ?? new WeaponPrimaryEmitterGroup();
         powerSecondaryLayouts = weaponConfig.powerSecondaryLayouts ?? System.Array.Empty<WeaponPowerSecondaryLayout>();
         slowModeLayout = weaponConfig.slowModeLayout ?? new WeaponSlowModeLayoutConfig();
+
+#if UNITY_EDITOR
+        RefreshEmitterLayoutPreview();
+#endif
     }
 
     public void SaveWeaponConfig()
     {
         if (weaponConfig == null)
             return;
+
+#if UNITY_EDITOR
+        _layoutPreviewSnapshotDirty = true;
+        _layoutPreview.Invalidate();
+#endif
 
         weaponConfig.weaponID = weaponID;
         weaponConfig.display = display;
@@ -78,9 +94,53 @@ public class WeaponConfigViewer : GameConfigViewerBase
 
     public void PreviewWeaponFire(WeaponEditorFirePreviewMode fireMode) => StartFirePreview(fireMode);
 
+    public void InvalidateLayoutPreview()
+    {
+        _layoutPreviewSnapshotDirty = true;
+        _layoutPreview.Invalidate();
+    }
+
+    public void RefreshEmitterLayoutPreview()
+    {
+        if (!ConfigViewerEditorScene.CanHostTransientPreview(transform))
+        {
+            _layoutPreview.Clear();
+            return;
+        }
+
+        _layoutPreviewSnapshotDirty = true;
+
+        _layoutPreview.Sync(
+            transform,
+            GetLayoutPreviewSnapshot(),
+            previewPowerOrbs,
+            previewLayoutMode);
+    }
+
     protected override void StopEditorPreviews()
     {
         StopFirePreview();
+        _layoutPreview.Clear();
+        DestroyLayoutPreviewSnapshot();
+    }
+
+    void OnValidate()
+    {
+        _layoutPreviewSnapshotDirty = true;
+        _layoutPreview.Invalidate();
+    }
+
+    void Update()
+    {
+        if (!ConfigViewerEditorScene.CanHostTransientPreview(transform))
+        {
+            if (_firePreview.IsActive)
+                StopFirePreview();
+            _layoutPreview.Clear();
+            return;
+        }
+
+        RefreshEmitterLayoutPreview();
     }
 
     public void StartFirePreview(WeaponEditorFirePreviewMode fireMode)
@@ -91,10 +151,18 @@ public class WeaponConfigViewer : GameConfigViewerBase
             return;
         }
 
+        previewLayoutMode = fireMode == WeaponEditorFirePreviewMode.SlowConverge
+            ? WeaponEditorLayoutPreviewMode.SlowConvergeOnly
+            : WeaponEditorLayoutPreviewMode.NormalOnly;
+        EditorUtility.SetDirty(this);
+
+        _layoutPreviewSnapshotDirty = true;
+        _layoutPreview.Invalidate();
+
         _firePreview.Start(
             transform,
-            BuildRuntimeWeaponSnapshot(),
-            previewFirePowerOrbs,
+            GetLayoutPreviewSnapshot(),
+            previewPowerOrbs,
             fireMode,
             previewDuration,
             previewBulletLifetime,
@@ -103,7 +171,27 @@ public class WeaponConfigViewer : GameConfigViewerBase
 
     public void StopFirePreview() => _firePreview.Stop();
 
-    public WeaponConfig BuildRuntimeWeaponSnapshot()
+    WeaponConfig GetLayoutPreviewSnapshot()
+    {
+        if (!_layoutPreviewSnapshotDirty && _layoutPreviewSnapshot != null)
+            return _layoutPreviewSnapshot;
+
+        DestroyLayoutPreviewSnapshot();
+        _layoutPreviewSnapshot = BuildRuntimeWeaponSnapshot();
+        _layoutPreviewSnapshotDirty = false;
+        return _layoutPreviewSnapshot;
+    }
+
+    void DestroyLayoutPreviewSnapshot()
+    {
+        if (_layoutPreviewSnapshot == null)
+            return;
+
+        DestroyImmediate(_layoutPreviewSnapshot);
+        _layoutPreviewSnapshot = null;
+    }
+
+    WeaponConfig BuildRuntimeWeaponSnapshot()
     {
         var snap = Instantiate(weaponConfig);
         snap.weaponID = weaponID;
@@ -113,52 +201,6 @@ public class WeaponConfigViewer : GameConfigViewerBase
         snap.slowModeLayout = slowModeLayout;
         snap.description = display.description;
         return snap;
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (!drawEmitterLayoutGizmos)
-            return;
-
-        var snap = BuildRuntimeWeaponSnapshot();
-        float rotRad = transform.eulerAngles.z * Mathf.Deg2Rad;
-        Vector3 origin = transform.position;
-
-        ConfigViewerWeaponEmitLayout.CollectLayoutPoints(
-            origin,
-            rotRad,
-            snap,
-            previewPowerOrbs,
-            previewLayoutMode,
-            previewLayoutShowSlowPrimaryEmitter,
-            _layoutPoints);
-
-        DestroyImmediate(snap);
-
-        Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(origin, 0.06f);
-
-        for (int i = 0; i < _layoutPoints.Count; i++)
-        {
-            var p = _layoutPoints[i];
-            Gizmos.color = p.isSlowModeLayout
-                ? new Color(1f, 0.85f, 0.2f, 0.95f)
-                : p.isPrimary
-                    ? new Color(0.35f, 0.9f, 1f, 0.95f)
-                    : new Color(0.5f, 1f, 0.55f, 0.9f);
-
-            Gizmos.DrawWireSphere(p.worldPosition, p.isPrimary ? 0.055f : 0.045f);
-            Gizmos.DrawLine(origin, p.worldPosition);
-            Handles.Label(p.worldPosition + Vector3.up * 0.08f, p.label);
-
-            if (drawEmitterDisplaySprites && p.displaySprite != null)
-            {
-                var tint = p.isSlowModeLayout
-                    ? new Color(1f, 0.9f, 0.45f, 0.75f)
-                    : new Color(0.75f, 1f, 1f, 0.75f);
-                ConfigViewerGizmoSprite.DrawAt(p.worldPosition, p.displaySprite, tint);
-            }
-        }
     }
 #endif
 }

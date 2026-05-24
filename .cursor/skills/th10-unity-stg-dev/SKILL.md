@@ -120,14 +120,16 @@ flowchart TB
 
 1. `StageTimelineSystem`
 2. `EnemyMovementSystem`
-3. `DropItemSystem`（竖直上抛运动 + 拾取前逻辑）
+3. `DropItemSystem`（竖直上抛运动）
 4. `CollisionSystem`
 5. `CollisionLogicSystem`
-6. `PlayerControlSystem`
-7. `DanmakuSystem`
-8. `DanmakuEmitSystem`
-9. `PresentationSystem`（池化预制体生成/回收）
-10. `PresentationPoseSystem`（逻辑帧末写入 `CPresentationPose`，供 Updater 插值）
+6. `PlayerControlSystem`（含 owned 武器发射器同步）
+7. `DropItemCollectSystem`
+8. `DropItemMagnetSystem`
+9. `DanmakuSystem`
+10. `DanmakuEmitSystem`
+11. `PresentationSystem`（池化预制体；玩家附加武器 prefab）
+12. `PresentationPoseSystem`（逻辑帧末 `CPresentationPose`）
 
 ## 架构规则
 
@@ -151,7 +153,7 @@ flowchart TB
 - 无 Viewer 的类型（Weapon、StageTimeline、Pool 等）直接编辑 `Assets/Configs` 下 `.asset`。
 - 在 `Assets/Configs` 或 `Assets/Prefabs` 下添加手工资产时，保持 id 与 `GameResourceManifest` 以及 `DM_`、`DME_`、`Character_`、`Weapon_`、`Drop_` 等已有命名约定一致。
 - 关卡、波次、Boss 阶段、弹幕和发射器配置应优先通过 SO 数据表达，不要把可调数值硬编码进系统逻辑。
-- 对象池预热由 `GlobalPoolConfig`、`StagePoolConfig` 和 prefab id 数据驱动。如果某个池化预制体会在战斗中出现，确保它存在于 Manifest 和池配置中，并有足够的预热数量。
+- 对象池预热由 `GlobalPoolConfig`、`StagePoolConfig` 和 prefab id 数据驱动。`E_PoolCategory` 含 **Weapon**（武器预制体）、**DanmakuEmitter**（`dme_*` 布局表现）等；Manifest 需登记 `weaponPrefabIds` / `danmakuEmitterPrefabIds` 并与池条目一致。
 - 避免添加直接的 `Resources.Load` 路径。本项目使用 Addressables 加 `GameResDB`。
 
 ## 多人联机与 UTP 规则
@@ -175,10 +177,10 @@ flowchart TB
 
 ### 添加弹幕或发射器功能
 
-- 阅读 `DanmakuConfig`、`DanmakuEmitterConfig`、`CDanmakuEmitter`、`DanmakuEmitSystem` 和 `DanmakuSystem`。
-- 将编辑器配置字段添加到 SO 配置中，再把运行时友好的值烘焙到 ECS 组件里。
-- 在可行时，让逐帧发射计算保持无分配。
-- 如果该功能需要预制体，更新 Manifest/池配置预期，并检查 `DanmakuUpdater`。
+- 阅读 `DanmakuConfig`、`DanmakuEmitterConfig`、`CDanmakuEmitter`、`DanmakuEmitSystem`、`DanmakuSystem`。
+- **玩家武器**：改 `WeaponConfig`（主炮 / `powerSecondaryLayouts` / 低速布局）与 `EntityFactory.CreatePlayerWeaponEmitters`；勿在玩家实体上叠多个 `CDanmakuEmitter`。
+- 将配置烘焙到 ECS；发射数学复用 `DanmakuEmitterSpawnMath`。
+- 更新 Manifest/池（弹幕 prefab、`dme_*` 布局、武器 prefab）。
 
 ### 添加关卡时间轴或敌人波次
 

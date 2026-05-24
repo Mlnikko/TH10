@@ -1,5 +1,6 @@
 using UnityEngine;
 
+/// <summary>敌人预制体配置编辑；不参与运行时逻辑。</summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class EnemyConfigViewer : GameConfigViewerBase
 {
@@ -43,10 +44,13 @@ public class EnemyConfigViewer : GameConfigViewerBase
         Logger.Debug("已保存敌人配置：" + enemyConfig.name);
     }
 
+#if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
-        if (enemyConfig == null) return;
+        if (enemyConfig == null)
+            return;
 
         GizmosDrawer.ColliderDrawer(transform.position, transform.rotation, transform.localScale.x, colliderConfig, Color.yellow, Color.green);
     }
+#endif
 }

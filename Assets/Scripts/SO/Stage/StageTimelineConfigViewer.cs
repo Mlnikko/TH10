@@ -11,6 +11,8 @@ using UnityEditor;
 /// </summary>
 public class StageTimelineConfigViewer : GameConfigViewerBase
 {
+    protected override bool AllowPlayModeExecution => true;
+
     protected override bool HasAssignedConfig => stageTimelineConfig != null;
 
     [Header("配置文件")]
@@ -59,8 +61,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     protected override void StopEditorPreviews() => StopPreviewTimeline();
 
-    void OnEnable()
+    protected override void OnEnable()
     {
+        base.OnEnable();
+        if (!enabled)
+            return;
+
         EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
         EditorApplication.update += OnEditorInspectorRefresh;
     }

@@ -5,6 +5,21 @@ using UnityEngine;
 [CustomEditor(typeof(WeaponConfigViewer))]
 public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewer>
 {
+    public override void OnInspectorGUI()
+    {
+        EditorGUI.BeginChangeCheck();
+        base.OnInspectorGUI();
+        bool inspectorChanged = EditorGUI.EndChangeCheck();
+
+        if (inspectorChanged)
+            Viewer.InvalidateLayoutPreview();
+
+        if (ConfigViewerEditorScene.CanHostTransientPreview(Viewer.transform))
+            Viewer.RefreshEmitterLayoutPreview();
+        else
+            Viewer.StopAllEditorPreviews();
+    }
+
     protected override void DrawViewerTools()
     {
         if (DrawMissingConfig(Viewer.WeaponConfig, "WeaponConfig"))
@@ -12,20 +27,23 @@ public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewe
 
         DrawSyncHint("将 Viewer 放在角色发射原点；双击进入预制体后自动同步。");
 
-        EditorGUILayout.LabelField("发射器布局", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox(
-            "Scene Gizmo：青色=通常，黄色=低速收束。「布局预览模式」选 Both 可同时对照。\n" +
-            "「预览 Power」决定副炮档位。",
-            MessageType.None);
-
         EditorGUILayout.LabelField("发射预览", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "布局预览与发射预览共用「预览 Power」。点击发射预览按钮会同步切换「布局预览模式」。",
+            MessageType.None);
         using (new EditorGUILayout.HorizontalScope())
         {
             if (GUILayout.Button("预览·通常", GUILayout.Height(28)))
+            {
                 Viewer.PreviewWeaponFire(WeaponEditorFirePreviewMode.Normal);
+                Repaint();
+            }
 
             if (GUILayout.Button("预览·低速收束", GUILayout.Height(28)))
+            {
                 Viewer.PreviewWeaponFire(WeaponEditorFirePreviewMode.SlowConverge);
+                Repaint();
+            }
         }
 
         if (Viewer.IsPreviewingFire)

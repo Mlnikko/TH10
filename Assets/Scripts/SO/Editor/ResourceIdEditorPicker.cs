@@ -170,6 +170,14 @@ public static class ResourceIdEditorPicker
                 return CollectPrefabIds(
                     nameof(GameResourceManifest.effectPrefabIds),
                     "Prefabs/Effect");
+            case E_PoolCategory.Weapon:
+                return CollectPrefabIds(
+                    nameof(GameResourceManifest.weaponPrefabIds),
+                    "Prefabs/Weapon");
+            case E_PoolCategory.DanmakuEmitter:
+                return CollectPrefabIds(
+                    nameof(GameResourceManifest.danmakuEmitterPrefabIds),
+                    "Prefabs/DanmakuEmitter");
             default:
                 return CollectAllPoolPrefabIds();
         }
@@ -179,13 +187,17 @@ public static class ResourceIdEditorPicker
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         AddManifestIds(set, nameof(GameResourceManifest.characterPrefabIds));
+        AddManifestIds(set, nameof(GameResourceManifest.weaponPrefabIds));
         AddManifestIds(set, nameof(GameResourceManifest.enemyPrefabIds));
         AddManifestIds(set, nameof(GameResourceManifest.danmakuPrefabIds));
+        AddManifestIds(set, nameof(GameResourceManifest.danmakuEmitterPrefabIds));
         AddManifestIds(set, nameof(GameResourceManifest.dropItemPrefabIds));
         AddManifestIds(set, nameof(GameResourceManifest.effectPrefabIds));
         AddPrefabIdsFromFolder(set, "Prefabs/Character");
+        AddPrefabIdsFromFolder(set, "Prefabs/Weapon");
         AddPrefabIdsFromFolder(set, "Prefabs/Enemy");
         AddPrefabIdsFromFolder(set, "Prefabs/Danmaku");
+        AddPrefabIdsFromFolder(set, "Prefabs/DanmakuEmitter");
         AddPrefabIdsFromFolder(set, "Prefabs/DropItem");
         AddPrefabIdsFromFolder(set, "Prefabs/Effect");
         return SortIds(set);

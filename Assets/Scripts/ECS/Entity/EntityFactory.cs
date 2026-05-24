@@ -67,6 +67,7 @@ public class EntityFactory
             powerOrbs = 0,
             primaryEmitterEntityIndex = -1,
             emitterSlotLayoutVariant = 0,
+            secondarySlotConvergeT = 0f,
             appliedSecondaryPowerMinOrbs = int.MinValue,
         });
         _entityManager.AddComponent(e_player, new CHealth(characterConfig.maxHealth, characterConfig.maxHealth));
@@ -126,7 +127,7 @@ public class EntityFactory
         return primaryEmitterEntityIndex;
     }
 
-    /// <summary>按当前 Power 重建玩家副发射器实体（主炮不变）。</summary>
+    /// <summary>按当前 Power 档位切换副发射器实体（销毁旧档后生成新档，主炮不变，非叠加）。</summary>
     public void SyncPlayerSecondaryEmitters(Entity playerEntity, WeaponConfig weaponConfig, int powerOrbs)
     {
         if (!_entityManager.IsValid(playerEntity) || weaponConfig == null)
@@ -241,6 +242,8 @@ public class EntityFactory
             secondarySlotIndex = secondarySlotIndex,
             slotOffsetX = slotOffset.x,
             slotOffsetY = slotOffset.y,
+            emitterBaseOffsetX = emitterCfg.emitterPosOffset.x,
+            emitterBaseOffsetY = emitterCfg.emitterPosOffset.y,
         });
 
         return e_emitter.Index;

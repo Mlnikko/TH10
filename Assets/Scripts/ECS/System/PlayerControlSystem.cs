@@ -39,7 +39,8 @@ public class PlayerControlSystem : BaseSystem
             pos.y = Mathf.Clamp(pos.y, GlobalBattleData.AreaData.Bottom, GlobalBattleData.AreaData.Top);
 
             TrySyncWeaponPowerSecondaries(playerEntityIdx, ref player);
-            TrySyncWeaponEmitterLayout(playerEntityIdx, ref player, emitters);
+            TrySyncWeaponPrimaryEmitterLayout(playerEntityIdx, ref player, emitters);
+            AnimateSecondarySlotConvergence(playerEntityIdx, ref player, emitters);
         }
 
         SyncOwnedEmitters(positions, rotations, players, emitters);
@@ -55,7 +56,7 @@ public class PlayerControlSystem : BaseSystem
         EntityFactory.SyncPlayerSecondaryEmitters(playerEntity, weaponConfig, player.powerOrbs);
     }
 
-    void TrySyncWeaponEmitterLayout(int playerEntityIdx, ref CPlayer player, Span<CDanmakuEmitter> emitters)
+    void TrySyncWeaponPrimaryEmitterLayout(int playerEntityIdx, ref CPlayer player, Span<CDanmakuEmitter> emitters)
     {
         byte layoutVariant = player.isSlowMode ? (byte)1 : (byte)0;
         if (layoutVariant == player.emitterSlotLayoutVariant)
@@ -76,8 +77,64 @@ public class PlayerControlSystem : BaseSystem
             ref var ownership = ref ownerships[emitterIdx];
             if (ownership.ownerPlayerEntityIndex != playerEntityIdx)
                 continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Primary)
+                continue;
 
             RebuildOwnedEmitter(emitterIdx, ref player, weaponConfig, ownerships, emitters);
+        }
+    }
+
+    void AnimateSecondarySlotConvergence(int playerEntityIdx, ref CPlayer player, Span<CDanmakuEmitter> emitters)
+    {
+        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
+        if (weaponConfig == null)
+            return;
+
+        float targetT = player.isSlowMode ? 1f : 0f;
+        float speed = weaponConfig.slowModeLayout.secondarySlotConvergeSpeed;
+
+        if (speed <= 0f)
+            player.secondarySlotConvergeT = targetT;
+        else
+        {
+            uint fps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
+            float step = speed / fps;
+            player.secondarySlotConvergeT = Mathf.MoveTowards(player.secondarySlotConvergeT, targetT, step);
+        }
+
+        ApplySecondaryEmitterSlotOffsets(playerEntityIdx, player.secondarySlotConvergeT, weaponConfig, emitters);
+    }
+
+    void ApplySecondaryEmitterSlotOffsets(
+        int playerEntityIdx,
+        float converge01,
+        WeaponConfig weaponConfig,
+        Span<CDanmakuEmitter> emitters)
+    {
+        Span<int> ownedIndices = EntityManager.GetActiveIndices<CPlayerEmitterOwnership>();
+        if (ownedIndices.Length == 0)
+            return;
+
+        var ownershipSpan = EntityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            if ((uint)emitterIdx >= (uint)emitters.Length)
+                continue;
+
+            ref var ownership = ref ownershipSpan[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != playerEntityIdx)
+                continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+                continue;
+
+            Vector2 baseSlot = new(ownership.slotOffsetX, ownership.slotOffsetY);
+            Vector2 slotOffset = weaponConfig.ResolveSecondarySlotOffset(baseSlot, converge01);
+
+            ref var emitter = ref emitters[emitterIdx];
+            emitter.emitterPosOffsetX = ownership.emitterBaseOffsetX + slotOffset.x;
+            emitter.emitterPosOffsetY = ownership.emitterBaseOffsetY + slotOffset.y;
         }
     }
 
@@ -113,7 +170,7 @@ public class PlayerControlSystem : BaseSystem
 
             emitterCfgIndex = indices[secIndex];
             var baseSlot = new Vector2(ownership.slotOffsetX, ownership.slotOffsetY);
-            slotOffset = weaponConfig.ResolveSecondarySlotOffset(baseSlot, player.isSlowMode);
+            slotOffset = weaponConfig.ResolveSecondarySlotOffset(baseSlot, player.secondarySlotConvergeT);
         }
 
         if (emitterCfgIndex < 0)
@@ -132,6 +189,9 @@ public class PlayerControlSystem : BaseSystem
         replacement.isEmitting = wasEmitting;
         replacement.lastFireFrame = lastFireFrame;
         emitters[emitterEntityIndex] = replacement;
+
+        ownership.emitterBaseOffsetX = emitterCfg.emitterPosOffset.x;
+        ownership.emitterBaseOffsetY = emitterCfg.emitterPosOffset.y;
     }
 
     void SyncOwnedEmitters(

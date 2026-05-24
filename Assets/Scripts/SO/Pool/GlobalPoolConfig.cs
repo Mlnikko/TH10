@@ -3,12 +3,14 @@ using UnityEngine;
 
 public enum E_PoolCategory
 {
-    Player,     // 角色
-    Enemy,      // 敌人
-    Danmaku,    // 弹幕
-    Drop,       // 掉落物 (道具/碎片)
-    Effect,     // 特效 (可选，如爆炸、激光)
-    Other       // 其他
+    Player,          // 角色预制体
+    Enemy,           // 敌人预制体
+    Danmaku,         // 弹幕预制体
+    Drop,            // 掉落物预制体
+    Effect,          // 特效预制体
+    Weapon,          // 武器预制体（挂于角色下）
+    DanmakuEmitter,  // 弹幕发射器预制体（武器布局/表现）
+    Other,           // 其他
 }
 
 [Serializable]

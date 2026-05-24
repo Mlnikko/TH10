@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+/// <summary>发射器预制体配置编辑；不参与运行时逻辑。</summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 {
@@ -320,7 +321,8 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     void SpawnPreviewBullet(DanmakuConfig danmaku, float x, float y, float rotRad, float velX, float velY)
     {
         var go = new GameObject("PreviewDanmaku");
-        ConfigViewerEditorScene.AttachTransientObject(go, transform, ref _previewRoot, $"{name}_EmitterPreview");
+        if (!ConfigViewerEditorScene.AttachTransientObject(go, transform, ref _previewRoot, $"{name}_EmitterPreview"))
+            return;
 
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = danmaku.sprite;

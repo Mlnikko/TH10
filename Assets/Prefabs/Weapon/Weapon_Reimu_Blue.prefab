@@ -57,8 +57,8 @@ MonoBehaviour:
   powerSecondaryLayouts:
   - minPowerOrbs: 1
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0, y: 0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0, y: -0.2}
   - minPowerOrbs: 2
     slots:
     - danmakuEmitterConfigId: dme_reimu_blue
@@ -86,11 +86,7 @@ MonoBehaviour:
   slowModeLayout:
     primarySlotConverge: 0.5
     secondarySlotConverge: 0.5
-  drawEmitterLayoutGizmos: 1
   previewLayoutMode: 2
-  previewLayoutShowSlowPrimaryEmitter: 1
   previewPowerOrbs: 4
-  previewFirePowerOrbs: 4
   previewDuration: 5
   previewBulletLifetime: 3
-  drawEmitterDisplaySprites: 1
