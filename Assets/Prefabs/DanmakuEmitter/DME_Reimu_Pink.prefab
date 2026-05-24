@@ -100,6 +100,7 @@ MonoBehaviour:
   emitterConfig: {fileID: 11400000, guid: c5d303c0f37cd0140b941ac3df1472cd, type: 2}
   emitterType: 1
   emitterCamp: 1
+  displaySprite: {fileID: 1617516616, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   emitPosOffset: {x: 0, y: 0}
   emitRotOffsetZ: 0
   danmakuRotOffsetZ: 90

@@ -2,9 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// <see cref="DanmakuEmitterConfig"/> 资产 Inspector：预制体 / 弹幕 ConfigId 使用 Manifest 下拉。
-/// </summary>
 [CustomEditor(typeof(DanmakuEmitterConfig))]
 [CanEditMultipleObjects]
 public class DanmakuEmitterConfigAssetEditor : Editor
@@ -42,7 +39,14 @@ public class DanmakuEmitterConfigAssetEditor : Editor
             EditorGUILayout.PropertyField(prop, true);
         }
 
-        serializedObject.ApplyModifiedProperties();
+        if (serializedObject.ApplyModifiedProperties())
+        {
+            foreach (Object obj in targets)
+            {
+                if (obj is DanmakuEmitterConfig cfg)
+                    ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(cfg);
+            }
+        }
     }
 }
 #endif

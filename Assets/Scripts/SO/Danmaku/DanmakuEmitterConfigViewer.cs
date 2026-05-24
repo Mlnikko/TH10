@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+[RequireComponent(typeof(SpriteRenderer))]
 public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 {
     protected override bool HasAssignedConfig => emitterConfig != null;
@@ -17,6 +18,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
     [Header("发射器阵营")]
     [SerializeField] EmitterCamp emitterCamp;
+
+    [Header("发射器显示")]
+    [SerializeField] Sprite displaySprite;
 
     [Header("发射器Offset调整")]
     [SerializeField] Vector2 emitPosOffset;
@@ -88,6 +92,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
         emitterType = emitterConfig.emitMode;
         emitterCamp = emitterConfig.emitterCamp;
+        displaySprite = emitterConfig.displaySprite;
         emitPosOffset = emitterConfig.emitterPosOffset;
         emitRotOffsetZ = emitterConfig.emitterRotOffsetZ;
         danmakuRotOffsetZ = emitterConfig.danmakuRotOffsetZ;
@@ -97,8 +102,28 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         launchSpeed = emitterConfig.launchSpeed;
         launchAudio = emitterConfig.audio_Fire;
 
+        ApplyEditorPreview();
         Logger.Debug("已加载发射器配置" + emitterConfig.name, LogTag.Config);
     }
+
+    protected override void ApplyEditorPreview() => SyncDisplaySpriteFromConfig();
+
+    /// <summary>将当前 <see cref="displaySprite"/> 写入预制体上的 SpriteRenderer（编辑器用）。</summary>
+    public void SyncDisplaySpriteFromConfig()
+    {
+        if (!TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+            return;
+
+        spriteRenderer.sprite = displaySprite;
+    }
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        if (!Application.isPlaying)
+            SyncDisplaySpriteFromConfig();
+    }
+#endif
 
     public void SaveEmitterConfig()
     {
@@ -119,6 +144,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
         emitterConfig.emitMode = emitterType;
         emitterConfig.emitterCamp = emitterCamp;
+        emitterConfig.displaySprite = displaySprite;
         emitterConfig.emitterPosOffset = emitPosOffset;
         emitterConfig.emitterRotOffsetZ = emitRotOffsetZ;
         emitterConfig.danmakuRotOffsetZ = danmakuRotOffsetZ;
@@ -130,6 +156,11 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
         uint logicFps = GameManager.logicFPS > 0 ? GameManager.logicFPS : 60u;
         emitterConfig.BakeLogicTiming(logicFps);
+
+#if UNITY_EDITOR
+        ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(emitterConfig);
+        SyncDisplaySpriteFromConfig();
+#endif
     }
 
     public void PreviewEmitterEffect()
@@ -436,10 +467,10 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     void OnDrawGizmosSelected()
     {
 #if UNITY_EDITOR
+        Vector3 origin = transform.position;
+
         if (!drawPreviewSpawnGizmos)
             return;
-
-        Vector3 origin = transform.position;
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(origin, 0.05f);

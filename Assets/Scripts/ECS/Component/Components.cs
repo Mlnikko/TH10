@@ -312,8 +312,11 @@ public struct CPlayer : IComponent
     /// <summary>主发射器子实体索引；无发射器时为 -1。</summary>
     public int primaryEmitterEntityIndex;
 
-    /// <summary>主发射器当前配置变体：0 通常 / 1 低速。</summary>
-    public byte primaryEmitterConfigVariant;
+    /// <summary>武器发射布局变体：0 通常 / 1 低速（主炮配置切换 + 槽位收束）。</summary>
+    public byte emitterSlotLayoutVariant;
+
+    /// <summary>已应用的副炮 Power 档 <see cref="WeaponPowerSecondaryLayout.minPowerOrbs"/>；<see cref="int.MinValue"/> 表示尚未同步。</summary>
+    public int appliedSecondaryPowerMinOrbs;
 }
 
 /// <summary>挂在玩家武器发射子实体上，用于同步位置与射击状态。</summary>

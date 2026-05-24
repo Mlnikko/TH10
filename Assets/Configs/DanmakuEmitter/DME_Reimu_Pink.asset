@@ -19,6 +19,7 @@ MonoBehaviour:
   emitMode: 1
   launchIntervalSeconds: 0.05
   launchSpeed: 30
+  displaySprite: {fileID: 1617516616, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 90

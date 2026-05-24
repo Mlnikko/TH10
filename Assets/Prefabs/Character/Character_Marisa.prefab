@@ -168,38 +168,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &928002736275478380
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9199871135331202742}
-  m_Layer: 0
-  m_Name: Emitters_0
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9199871135331202742
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 928002736275478380}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 6641769743711842257}
-  m_Father: {fileID: 5734727350752357153}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1075929028107132105
 GameObject:
   m_ObjectHideFlags: 0
@@ -232,7 +200,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 9199871135331202742}
   - {fileID: 5304902191044193706}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -324,26 +291,30 @@ MonoBehaviour:
   characterConfig: {fileID: 11400000, guid: 8081d63c8f9fdfa41ab47d36b3980340, type: 2}
   characterName: 2
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"
+  maxHealth: 1
   speed: 2.2
   slowSpeed: 1.1
   moveColliderConfig:
-    type: 1
-    layer: 0
+    isTrigger: 0
+    shape: 1
+    layer: 2
     mask: 0
     radius: 0
     boxSize: {x: 0.3, y: 0.5}
     offset: {x: 0, y: 0.08}
   hitColliderConfig:
-    type: 2
-    layer: 0
-    mask: 0
+    isTrigger: 0
+    shape: 2
+    layer: 2
+    mask: 52
     radius: 0.04
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}
   grazeColliderConfig:
-    type: 2
-    layer: 0
-    mask: 0
+    isTrigger: 1
+    shape: 2
+    layer: 2
+    mask: 16
     radius: 0.3
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}
@@ -550,34 +521,3 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &8344844930145521762
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6641769743711842257}
-  m_Layer: 0
-  m_Name: Main
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6641769743711842257
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8344844930145521762}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 9199871135331202742}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -13,7 +13,9 @@ public class WeaponConfigAssetEditor : Editor
         DrawPropertiesExcluding(
             serializedObject,
             "m_Script",
-            "danmakuEmitterConfigIds");
+            "danmakuEmitterConfigIds",
+            "description",
+            "secondaryEmitters");
 
         serializedObject.ApplyModifiedProperties();
     }

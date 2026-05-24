@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+
 public class EntityFactory
 {
     readonly EntityManager _entityManager;
@@ -64,7 +66,8 @@ public class EntityFactory
             isInvincible = false,
             powerOrbs = 0,
             primaryEmitterEntityIndex = -1,
-            primaryEmitterConfigVariant = 0,
+            emitterSlotLayoutVariant = 0,
+            appliedSecondaryPowerMinOrbs = int.MinValue,
         });
         _entityManager.AddComponent(e_player, new CHealth(characterConfig.maxHealth, characterConfig.maxHealth));
         _entityManager.AddComponent(e_player, new CCollider
@@ -81,20 +84,28 @@ public class EntityFactory
         });
 
         int playerEntityIndex = e_player.Index;
+        ref var playerComponent = ref _entityManager.GetComponent<CPlayer>(e_player);
         int primaryEmitterEntityIndex = CreatePlayerWeaponEmitters(
             playerEntityIndex,
             weaponConfig,
+            playerComponent.powerOrbs,
             posX,
             posY);
 
-        ref var playerComponent = ref _entityManager.GetComponent<CPlayer>(e_player);
         playerComponent.primaryEmitterEntityIndex = primaryEmitterEntityIndex;
+        playerComponent.appliedSecondaryPowerMinOrbs =
+            ResolveSecondaryPowerTierKey(weaponConfig, playerComponent.powerOrbs);
 
         Logger.Info($"Player {playerBattleData.playerIndex} ({playerBattleData.characterId}) initialized successfully.", LogTag.Battle);
         return e_player;
     }
 
-    int CreatePlayerWeaponEmitters(int ownerPlayerEntityIndex, WeaponConfig weaponConfig, float posX, float posY)
+    int CreatePlayerWeaponEmitters(
+        int ownerPlayerEntityIndex,
+        WeaponConfig weaponConfig,
+        int powerOrbs,
+        float posX,
+        float posY)
     {
         int primaryEmitterEntityIndex = -1;
 
@@ -111,28 +122,92 @@ public class EntityFactory
                 posY);
         }
 
-        var secondaryIndices = weaponConfig.secondaryEmitterCfgIndices;
-        var secondarySlots = weaponConfig.secondaryEmitters.slots;
-        if (secondaryIndices != null && secondarySlots != null)
-        {
-            int count = Mathf.Min(secondaryIndices.Length, secondarySlots.Length);
-            for (int i = 0; i < count; i++)
-            {
-                if (secondaryIndices[i] < 0)
-                    continue;
+        SpawnPlayerSecondaryEmitters(ownerPlayerEntityIndex, weaponConfig, powerOrbs, posX, posY);
+        return primaryEmitterEntityIndex;
+    }
 
-                CreateWeaponEmitterEntity(
-                    ownerPlayerEntityIndex,
-                    secondaryIndices[i],
-                    secondarySlots[i].slotOffset,
-                    E_WeaponEmitterSlotRole.Secondary,
-                    (byte)i,
-                    posX,
-                    posY);
-            }
+    /// <summary>按当前 Power 重建玩家副发射器实体（主炮不变）。</summary>
+    public void SyncPlayerSecondaryEmitters(Entity playerEntity, WeaponConfig weaponConfig, int powerOrbs)
+    {
+        if (!_entityManager.IsValid(playerEntity) || weaponConfig == null)
+            return;
+
+        int tierKey = ResolveSecondaryPowerTierKey(weaponConfig, powerOrbs);
+
+        ref var player = ref _entityManager.GetComponent<CPlayer>(playerEntity);
+        if (tierKey == player.appliedSecondaryPowerMinOrbs)
+            return;
+
+        player.appliedSecondaryPowerMinOrbs = tierKey;
+
+        DestroyPlayerSecondaryEmitters(playerEntity.Index);
+
+        ref var pos = ref _entityManager.GetComponent<CPosition>(playerEntity);
+        SpawnPlayerSecondaryEmitters(playerEntity.Index, weaponConfig, powerOrbs, pos.x, pos.y);
+    }
+
+    static int ResolveSecondaryPowerTierKey(WeaponConfig weaponConfig, int powerOrbs)
+    {
+        return weaponConfig.TryResolvePowerSecondary(powerOrbs, out var tier)
+            ? tier.minPowerOrbs
+            : int.MinValue;
+    }
+
+    void SpawnPlayerSecondaryEmitters(
+        int ownerPlayerEntityIndex,
+        WeaponConfig weaponConfig,
+        int powerOrbs,
+        float posX,
+        float posY)
+    {
+        if (!weaponConfig.TryResolvePowerSecondary(powerOrbs, out var tier))
+            return;
+
+        var indices = tier.emitterCfgIndices;
+        var slots = tier.slots;
+        if (indices == null || slots == null)
+            return;
+
+        int count = Mathf.Min(indices.Length, slots.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (indices[i] < 0)
+                continue;
+
+            CreateWeaponEmitterEntity(
+                ownerPlayerEntityIndex,
+                indices[i],
+                slots[i].slotOffset,
+                E_WeaponEmitterSlotRole.Secondary,
+                (byte)i,
+                posX,
+                posY);
+        }
+    }
+
+    void DestroyPlayerSecondaryEmitters(int ownerPlayerEntityIndex)
+    {
+        Span<int> ownedIndices = _entityManager.GetActiveIndices<CPlayerEmitterOwnership>();
+        if (ownedIndices.Length == 0)
+            return;
+
+        var ownerships = _entityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        var toDestroy = new System.Collections.Generic.List<Entity>(4);
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != ownerPlayerEntityIndex)
+                continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+                continue;
+
+            toDestroy.Add(_entityManager.GetEntity(emitterIdx));
         }
 
-        return primaryEmitterEntityIndex;
+        for (int i = 0; i < toDestroy.Count; i++)
+            _entityManager.DestroyEntity(toDestroy[i]);
     }
 
     int CreateWeaponEmitterEntity(

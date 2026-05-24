@@ -534,16 +534,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 751d266ccd1ee9b4482544063fcded3e
-    m_Address: Plugins/ParadoxNotion/CanvasCore/Framework/Design/Editor/Resources/StyleSheet/StyleSheetDark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac3f234217273a644aed606c7b88b85a
-    m_Address: Plugins/ParadoxNotion/CanvasCore/Framework/Design/Editor/Resources/StyleSheet/StyleSheetLight
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 653f074fc0d3b324593cb0beeedff0ea
     m_Address: cfg_dotweensettings
     m_ReadOnly: 0
@@ -1011,6 +1001,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 508691782c2c5ad4db2bb141614ccffa
     m_Address: prefab_dme_reimu_pink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb1b1a7b53da69142b08d05dcee79fb9
+    m_Address: prefab_weapon_reimu_blue
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cce96cd2b75c6b64ab429113be53d686
+    m_Address: prefab_weapon_reimu_red
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

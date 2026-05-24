@@ -19,7 +19,7 @@ public class WeaponSelectionUI : MonoBehaviour
     public void Initialize(WeaponConfig config, System.Action onSelect)
     {
         this.onSelect = onSelect;
-        nameLabel.text = string.IsNullOrEmpty(config.description) ? config.ConfigId : config.description;
+        nameLabel.text = config.GetSelectionDisplayName();
         weaponId = config.weaponID;
 
         string spriteId = config.ConfigId;

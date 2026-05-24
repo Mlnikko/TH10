@@ -76,6 +76,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
 
     [NonSerialized] public float launchSpeedPerFrame;
 
+    [Header("编辑器显示")]
+    [Tooltip("Scene / 配置预览中发射器本体的 Sprite；不参与战斗逻辑与烘焙")]
+    public Sprite displaySprite;
+
     [Tooltip("发射器位置偏移（相对于生成点），用于调整发射器位置")]
     public Vector2 emitterPosOffset = Vector2.zero;
     [Tooltip("发射器旋转偏移（度）；实例化为 CDanmakuEmitter 时烘焙为弧度 emitterRotOffsetRad，发射逻辑不再做 Deg2Rad")]
@@ -107,6 +111,8 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
                     danmakuConfigIds[i] = StringHelper.NormalizeResourceId(danmakuConfigIds[i]);
             }
         }
+
+        ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(this);
     }
 #endif
 

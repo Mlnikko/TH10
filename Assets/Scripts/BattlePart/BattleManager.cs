@@ -606,6 +606,46 @@ public class BattleManager : SingletonMono<BattleManager>
         Logger.Info($"Test enemy added at ({posX}, {posY}) with config index {enemyConfig.emitterConfigIndex}.");
     }
 
+    /// <summary>单元测试：设置指定玩家的火力（powerOrbs），并同步副炮布局。</summary>
+    public bool TrySetPlayerPowerOrbs(byte playerIndex, int powerOrbs)
+    {
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        powerOrbs = Math.Max(0, powerOrbs);
+
+        var em = _battleWorld.EntityManager;
+        Span<int> playerIndices = em.GetActiveIndices<CPlayer>();
+        if (playerIndices.Length == 0)
+            return false;
+
+        var players = em.GetComponentSpan<CPlayer>();
+        Entity targetEntity = Entity.Null;
+
+        for (int i = 0; i < playerIndices.Length; i++)
+        {
+            int entityIdx = playerIndices[i];
+            if (players[entityIdx].playerIndex != playerIndex)
+                continue;
+
+            targetEntity = em.GetEntity(entityIdx);
+            break;
+        }
+
+        if (!em.IsValid(targetEntity))
+            return false;
+
+        ref var player = ref em.GetComponent<CPlayer>(targetEntity);
+        player.powerOrbs = powerOrbs;
+
+        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
+        if (weaponConfig != null)
+            _battleWorld.EntityFactory.SyncPlayerSecondaryEmitters(targetEntity, weaponConfig, powerOrbs);
+
+        Logger.Info($"[UnitTest] Player {playerIndex} powerOrbs = {powerOrbs}.", LogTag.UnitTest);
+        return true;
+    }
+
     #endregion
 
     void Update()

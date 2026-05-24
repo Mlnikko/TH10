@@ -12,13 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1624a18d887774459c5d78881f0331f, type: 3}
   m_Name: Weapon_Marisa_2
   m_EditorClassIdentifier: 
-  configId: 
-  weaponID: 22
+  weaponID: 0
+  display:
+    selectionName: 
+    description: 
   primaryEmitters:
     normal:
       danmakuEmitterConfigId: 
       slotOffset: {x: 0, y: 0}
     slowModeDanmakuEmitterConfigId: 
+  powerSecondaryLayouts: []
   secondaryEmitters:
     slots: []
+  slowModeLayout:
+    primarySlotConverge: 0
+    secondarySlotConverge: 1
   description: 
+  danmakuEmitterConfigIds: []

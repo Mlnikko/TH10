@@ -15,9 +15,9 @@ public class PlayerControlSystem : BaseSystem
 
         for (int i = 0; i < indices.Length; i++)
         {
-            int idx = indices[i];
+            int playerEntityIdx = indices[i];
 
-            ref var player = ref players[idx];
+            ref var player = ref players[playerEntityIdx];
             var input = InputManager.Instance.GetInputForFrame(player.playerIndex, currentframe);
             player.isSlowMode = input.SlowMode;
             player.isShooting = input.Shoot;
@@ -27,37 +27,95 @@ public class PlayerControlSystem : BaseSystem
             float dx = input.MoveHorizontal * distancePerFrame;
             float dy = input.MoveVertical * distancePerFrame;
 
-            ref var vel = ref velocities[idx];
+            ref var vel = ref velocities[playerEntityIdx];
             vel.vx = input.MoveHorizontal * distancePerFrame;
             vel.vy = input.MoveVertical * distancePerFrame;
 
-            ref var pos = ref positions[idx];
+            ref var pos = ref positions[playerEntityIdx];
             pos.x += dx;
             pos.y += dy;
 
             pos.x = Mathf.Clamp(pos.x, GlobalBattleData.AreaData.Left, GlobalBattleData.AreaData.Right);
             pos.y = Mathf.Clamp(pos.y, GlobalBattleData.AreaData.Bottom, GlobalBattleData.AreaData.Top);
 
-            TrySwapPrimaryEmitter(ref player, emitters);
+            TrySyncWeaponPowerSecondaries(playerEntityIdx, ref player);
+            TrySyncWeaponEmitterLayout(playerEntityIdx, ref player, emitters);
         }
 
         SyncOwnedEmitters(positions, rotations, players, emitters);
     }
 
-    void TrySwapPrimaryEmitter(ref CPlayer player, Span<CDanmakuEmitter> emitters)
+    void TrySyncWeaponPowerSecondaries(int playerEntityIdx, ref CPlayer player)
     {
-        if (player.primaryEmitterEntityIndex < 0)
+        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
+        if (weaponConfig == null)
             return;
 
-        byte variant = player.isSlowMode ? (byte)1 : (byte)0;
-        if (variant == player.primaryEmitterConfigVariant)
+        Entity playerEntity = EntityManager.GetEntity(playerEntityIdx);
+        EntityFactory.SyncPlayerSecondaryEmitters(playerEntity, weaponConfig, player.powerOrbs);
+    }
+
+    void TrySyncWeaponEmitterLayout(int playerEntityIdx, ref CPlayer player, Span<CDanmakuEmitter> emitters)
+    {
+        byte layoutVariant = player.isSlowMode ? (byte)1 : (byte)0;
+        if (layoutVariant == player.emitterSlotLayoutVariant)
             return;
+
+        player.emitterSlotLayoutVariant = layoutVariant;
 
         var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
         if (weaponConfig == null)
             return;
 
-        int emitterCfgIndex = weaponConfig.ResolvePrimaryEmitterCfgIndex(player.isSlowMode);
+        var ownerships = EntityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        Span<int> ownedIndices = EntityManager.GetActiveIndices<CPlayerEmitterOwnership>();
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != playerEntityIdx)
+                continue;
+
+            RebuildOwnedEmitter(emitterIdx, ref player, weaponConfig, ownerships, emitters);
+        }
+    }
+
+    static void RebuildOwnedEmitter(
+        int emitterEntityIndex,
+        ref CPlayer player,
+        WeaponConfig weaponConfig,
+        Span<CPlayerEmitterOwnership> ownerships,
+        Span<CDanmakuEmitter> emitters)
+    {
+        if ((uint)emitterEntityIndex >= (uint)emitters.Length)
+            return;
+
+        ref var ownership = ref ownerships[emitterEntityIndex];
+
+        int emitterCfgIndex;
+        Vector2 slotOffset;
+
+        if (ownership.role == E_WeaponEmitterSlotRole.Primary)
+        {
+            emitterCfgIndex = weaponConfig.ResolvePrimaryEmitterCfgIndex(player.isSlowMode);
+            slotOffset = weaponConfig.ResolvePrimarySlotOffset(player.isSlowMode);
+        }
+        else
+        {
+            int secIndex = ownership.secondarySlotIndex;
+            if (!weaponConfig.TryResolvePowerSecondary(player.powerOrbs, out var tier))
+                return;
+
+            var indices = tier.emitterCfgIndices;
+            if (indices == null || secIndex < 0 || secIndex >= indices.Length)
+                return;
+
+            emitterCfgIndex = indices[secIndex];
+            var baseSlot = new Vector2(ownership.slotOffsetX, ownership.slotOffsetY);
+            slotOffset = weaponConfig.ResolveSecondarySlotOffset(baseSlot, player.isSlowMode);
+        }
+
         if (emitterCfgIndex < 0)
             return;
 
@@ -65,24 +123,15 @@ public class PlayerControlSystem : BaseSystem
         if (emitterCfg == null)
             return;
 
-        int emitterEntityIndex = player.primaryEmitterEntityIndex;
-        if ((uint)emitterEntityIndex >= (uint)emitters.Length)
-            return;
-
         bool wasEmitting = emitters[emitterEntityIndex].isEmitting;
         uint lastFireFrame = emitters[emitterEntityIndex].lastFireFrame;
 
-        var ownerships = EntityManager.GetComponentSpan<CPlayerEmitterOwnership>();
-        ref var ownership = ref ownerships[emitterEntityIndex];
-
         var replacement = new CDanmakuEmitter(emitterCfg);
-        replacement.emitterPosOffsetX += ownership.slotOffsetX;
-        replacement.emitterPosOffsetY += ownership.slotOffsetY;
+        replacement.emitterPosOffsetX += slotOffset.x;
+        replacement.emitterPosOffsetY += slotOffset.y;
         replacement.isEmitting = wasEmitting;
         replacement.lastFireFrame = lastFireFrame;
         emitters[emitterEntityIndex] = replacement;
-
-        player.primaryEmitterConfigVariant = variant;
     }
 
     void SyncOwnedEmitters(
