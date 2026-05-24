@@ -7,11 +7,16 @@ public static class EnemyMovementBaking
 {
     const int DefaultBezierDurationFrames = 360;
 
-    /// <summary>测试或脚本生成敌人时的简单竖直下落。</summary>
-    public static CEnemyMovement CreateSimpleDescent(uint spawnFrame, float originX, float originY, float descentPerFrame = 0.06f)
+    /// <summary>测试或脚本生成敌人时的简单竖直下落（速度：世界单位/秒）。</summary>
+    public static CEnemyMovement CreateSimpleDescent(
+        uint spawnFrame,
+        float originX,
+        float originY,
+        float descentSpeedPerSecond = 3.6f)
     {
-        float d = -Mathf.Abs(descentPerFrame);
-        return BakeLinear(spawnFrame, originX, originY, 0f, d, -1);
+        uint fps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
+        float perFrame = descentSpeedPerSecond / fps;
+        return BakeLinear(spawnFrame, originX, originY, 0f, -Mathf.Abs(perFrame), -1);
     }
 
     public static bool TryBakeFromWave(
@@ -102,7 +107,8 @@ public static class EnemyMovementBaking
     static void BakeDirectionalLinear(MovementPatternData data, uint spawnFrame, float ox, float oy, out CEnemyMovement motion)
     {
         Vector2 dir = data.direction.sqrMagnitude > 1e-8f ? data.direction.normalized : Vector2.down;
-        motion = BakeLinear(spawnFrame, ox, oy, dir.x * data.speed, dir.y * data.speed, data.durationFrames);
+        float spd = data.moveSpeedPerFrame;
+        motion = BakeLinear(spawnFrame, ox, oy, dir.x * spd, dir.y * spd, data.durationFrames);
     }
 
     static CEnemyMovement BakeLinear(uint spawnFrame, float ox, float oy, float dx, float dy, int dur)
@@ -128,7 +134,8 @@ public static class EnemyMovementBaking
             if (d.sqrMagnitude > 1e-8f)
                 dir = d.normalized;
         }
-        motion = BakeLinear(spawnFrame, ox, oy, dir.x * data.speed, dir.y * data.speed, data.durationFrames);
+        float spd = data.moveSpeedPerFrame;
+        motion = BakeLinear(spawnFrame, ox, oy, dir.x * spd, dir.y * spd, data.durationFrames);
         motion.kind = E_EnemyMotionKind.AimedLinear;
     }
 
@@ -158,12 +165,12 @@ public static class EnemyMovementBaking
             originX = ox,
             originY = oy,
             durationFrames = data.durationFrames,
-            dX = dir.x * data.speed,
-            dY = dir.y * data.speed,
+            dX = dir.x * data.moveSpeedPerFrame,
+            dY = dir.y * data.moveSpeedPerFrame,
             perpX = perp.x,
             perpY = perp.y,
             sineAmp = Mathf.Max(0f, data.amplitude),
-            sineOmega = Mathf.Max(0f, data.frequency),
+            sineOmega = Mathf.Max(0f, data.sineOmegaPerFrame),
             sinePhase0 = phase
         };
     }
@@ -175,7 +182,7 @@ public static class EnemyMovementBaking
         float dx = ox - cx;
         float dy = oy - cy;
         float dist = Mathf.Sqrt(dx * dx + dy * dy);
-        float r = dist > 1e-4f ? dist : Mathf.Max(0.01f, data.radius);
+        float r = dist > 1e-4f ? dist : Mathf.Max(0.01f, data.orbitRadius);
         float phase0 = dist > 1e-4f
             ? Mathf.Atan2(dy, dx)
             : data.startAngleDeg * Mathf.Deg2Rad;
@@ -218,9 +225,9 @@ public static class EnemyMovementBaking
         else
         {
             p0 = Vector2.zero;
-            p1 = new Vector2(0.2f, -0.5f);
-            p2 = new Vector2(0.6f, -1f);
-            p3 = new Vector2(1f, -1.5f);
+            p1 = new Vector2(0.5f, -1f);
+            p2 = new Vector2(1.5f, -2f);
+            p3 = new Vector2(2f, -2.5f);
         }
 
         int dur = data.durationFrames >= 0 ? data.durationFrames : DefaultBezierDurationFrames;

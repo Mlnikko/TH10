@@ -22,10 +22,14 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
 #if UNITY_EDITOR
     [Header("编辑器预览")]
-    [Tooltip("预览时长（秒）；≤0 时使用 StageTimelineConfig.maxStageDurationSeconds")]
+    [Tooltip("预览时长（秒）；≤0 时按片段自动估算或使用关卡 maxStageDurationSeconds")]
     [SerializeField] float previewDurationSeconds = 120f;
 
+    [Tooltip("分段预览：道中波次列表索引")]
+    [SerializeField] int previewMidStageWaveIndex;
+
     bool _previewActive;
+    E_StageTimelinePreviewScope _activePreviewScope = E_StageTimelinePreviewScope.FullTimeline;
     bool _previewBootstrapping;
     int _bootstrapGeneration;
     LogicFramePreviewRunner _previewClock;
@@ -50,6 +54,8 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 #if UNITY_EDITOR
     public bool IsPreviewingTimeline => _previewActive;
     public bool IsPreviewBootstrapping => _previewBootstrapping;
+    public E_StageTimelinePreviewScope ActivePreviewScope => _activePreviewScope;
+    public int PreviewMidStageWaveIndex => previewMidStageWaveIndex;
 
     protected override void StopEditorPreviews() => StopPreviewTimeline();
 
@@ -92,6 +98,18 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     }
 
     public void RequestPreviewStageTimeline()
+        => RequestPreview(E_StageTimelinePreviewScope.FullTimeline, 0);
+
+    public void RequestPreviewMidStageWave(int waveIndex)
+        => RequestPreview(E_StageTimelinePreviewScope.SingleMidStageWave, waveIndex);
+
+    public void RequestPreviewMidBoss()
+        => RequestPreview(E_StageTimelinePreviewScope.MidBossEncounter, 0);
+
+    public void RequestPreviewMainBoss()
+        => RequestPreview(E_StageTimelinePreviewScope.MainBossEncounter, 0);
+
+    void RequestPreview(E_StageTimelinePreviewScope scope, int waveIndex)
     {
         if (_previewActive || _previewBootstrapping)
             return;
@@ -99,6 +117,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         if (stageTimelineConfig == null)
         {
             Logger.Warn("[StageTimelineConfigViewer] 未指定 StageTimelineConfig。", LogTag.Config);
+            return;
+        }
+
+        if (!TryValidatePreviewTarget(scope, waveIndex, out string targetError))
+        {
+            Logger.Warn($"[StageTimelineConfigViewer] {targetError}", LogTag.Config);
             return;
         }
 
@@ -111,16 +135,64 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         StopPreviewTimeline();
         _previewBootstrapping = true;
         int generation = ++_bootstrapGeneration;
+        var previewScope = scope;
+        int previewWave = waveIndex;
 
         EditorApplication.delayCall += () =>
         {
             if (generation != _bootstrapGeneration || this == null)
                 return;
-            _ = BeginPreviewAsync(generation);
+            _ = BeginPreviewAsync(generation, previewScope, previewWave);
         };
     }
 
-    async Task BeginPreviewAsync(int generation)
+    bool TryValidatePreviewTarget(E_StageTimelinePreviewScope scope, int waveIndex, out string error)
+    {
+        error = null;
+        switch (scope)
+        {
+            case E_StageTimelinePreviewScope.SingleMidStageWave:
+                if (stageTimelineConfig.midStageWaves == null || stageTimelineConfig.midStageWaves.Count == 0)
+                {
+                    error = "时间轴未配置道中波次。";
+                    return false;
+                }
+                if (waveIndex < 0 || waveIndex >= stageTimelineConfig.midStageWaves.Count)
+                {
+                    error = $"波次索引 {waveIndex} 超出范围（0–{stageTimelineConfig.midStageWaves.Count - 1}）。";
+                    return false;
+                }
+                if (stageTimelineConfig.midStageWaves[waveIndex] == null)
+                {
+                    error = $"道中波次 [{waveIndex}] 为空。";
+                    return false;
+                }
+                return true;
+
+            case E_StageTimelinePreviewScope.MidBossEncounter:
+                var mid = stageTimelineConfig.midBossEncounter;
+                if (mid == null || !mid.enabled || string.IsNullOrEmpty(mid.enemyConfigId))
+                {
+                    error = "未配置已启用的中场 Boss（midBossEncounter）。";
+                    return false;
+                }
+                return true;
+
+            case E_StageTimelinePreviewScope.MainBossEncounter:
+                var main = stageTimelineConfig.mainBossEncounter;
+                if (main == null || !main.enabled || string.IsNullOrEmpty(main.enemyConfigId))
+                {
+                    error = "未配置已启用的关底 Boss（mainBossEncounter）。";
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    }
+
+    async Task BeginPreviewAsync(int generation, E_StageTimelinePreviewScope scope, int waveIndex)
     {
         try
         {
@@ -143,7 +215,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                 return;
             }
 
-            StartPreviewTimelineCore();
+            StartPreviewTimelineCore(scope, waveIndex);
         }
         catch (Exception ex)
         {
@@ -155,15 +227,29 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         }
     }
 
-    void StartPreviewTimelineCore()
+    void StartPreviewTimelineCore(E_StageTimelinePreviewScope scope, int waveIndex)
     {
         BakeTimelineForPreview();
 
         _previewWorld = CreatePreviewWorld();
         _timelineSystem = _previewWorld.GetSystem<StageTimelineSystem>();
-        _timelineSystem.Begin(stageTimelineConfig);
+        _timelineSystem.Begin(stageTimelineConfig, scope, waveIndex);
 
-        float duration = ResolvePreviewDurationSeconds();
+        if (!_timelineSystem.IsActive)
+        {
+            ForceCleanupPreviewPresentation(_previewWorld);
+            _previewWorld.Dispose();
+            _previewWorld = null;
+            _timelineSystem = null;
+            StageTimelinePreviewRuntime.ReleasePreviewBattleAreaIfOwned();
+            return;
+        }
+
+        _activePreviewScope = scope;
+        if (scope == E_StageTimelinePreviewScope.SingleMidStageWave)
+            previewMidStageWaveIndex = waveIndex;
+
+        float duration = ResolvePreviewDurationSeconds(scope, waveIndex);
         uint fps = LogicFramePreviewClock.GetLogicFps();
         _previewClock = LogicFramePreviewClock.CreateRealTimeSession(duration, fps);
         _previewClock.Reset();
@@ -173,7 +259,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         EditorApplication.update -= OnEditorPreviewUpdate;
         EditorApplication.update += OnEditorPreviewUpdate;
 
-        Logger.Info($"[StageTimelineConfigViewer] 预览开始（{fps} FPS，约 {duration:F1}s）。", LogTag.Config);
+        Logger.Info(
+            $"[StageTimelineConfigViewer] {DescribePreviewScope(scope, waveIndex)} 预览开始（{fps} FPS，约 {duration:F1}s）。",
+            LogTag.Config);
     }
 
     public void StopPreviewTimeline()
@@ -185,6 +273,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             return;
 
         _previewActive = false;
+        _activePreviewScope = E_StageTimelinePreviewScope.FullTimeline;
         EditorApplication.update -= OnEditorPreviewUpdate;
 
         _timelineSystem?.End();
@@ -201,14 +290,115 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         SceneView.RepaintAll();
     }
 
-    float ResolvePreviewDurationSeconds()
+    float ResolvePreviewDurationSeconds(E_StageTimelinePreviewScope scope, int waveIndex)
     {
         if (previewDurationSeconds > 0f)
             return previewDurationSeconds;
-        if (stageTimelineConfig != null && stageTimelineConfig.maxStageDurationSeconds > 0f)
+
+        float estimated = EstimateScopedPreviewDurationSeconds(scope, waveIndex);
+        if (estimated > 0f)
+            return estimated;
+
+        if (scope == E_StageTimelinePreviewScope.FullTimeline
+            && stageTimelineConfig != null
+            && stageTimelineConfig.maxStageDurationSeconds > 0f)
             return stageTimelineConfig.maxStageDurationSeconds;
-        return 60f;
+
+        return scope switch
+        {
+            E_StageTimelinePreviewScope.SingleMidStageWave => 45f,
+            E_StageTimelinePreviewScope.MidBossEncounter => 60f,
+            E_StageTimelinePreviewScope.MainBossEncounter => 90f,
+            _ => 60f,
+        };
     }
+
+    float EstimateScopedPreviewDurationSeconds(E_StageTimelinePreviewScope scope, int waveIndex)
+    {
+        if (stageTimelineConfig == null)
+            return 0f;
+
+        uint fps = LogicFramePreviewClock.GetLogicFps();
+        float FrameToSec(int frames) => frames < 0 ? 0f : frames / (float)fps;
+
+        switch (scope)
+        {
+            case E_StageTimelinePreviewScope.SingleMidStageWave:
+            {
+                var wave = stageTimelineConfig.midStageWaves[waveIndex];
+                float motionSec = EstimateMovementDurationSeconds(wave?.movementData, fps);
+                if (motionSec <= 0f && wave != null && wave.useDefaultDescentIfNoMovement)
+                {
+                    var area = StageTimelinePreviewRuntime.ResolveBattleAreaConfig(battleAreaConfig)?.battleAreaData
+                               ?? BattleAreaData.Default;
+                    float descent = Mathf.Max(0.01f, wave.defaultDescentSpeed);
+                    motionSec = area.Height / descent + 2f;
+                }
+                return Mathf.Max(15f, motionSec + 8f);
+            }
+
+            case E_StageTimelinePreviewScope.MidBossEncounter:
+            {
+                var mid = stageTimelineConfig.midBossEncounter;
+                float intro = EstimateMovementDurationSeconds(mid?.introMovement, fps);
+                return Mathf.Max(30f, intro + 15f);
+            }
+
+            case E_StageTimelinePreviewScope.MainBossEncounter:
+            {
+                var main = stageTimelineConfig.mainBossEncounter;
+                float total = FrameToSec(main.bossIntroDurationFrames);
+                if (main.bossPhases != null)
+                {
+                    for (int i = 0; i < main.bossPhases.Count; i++)
+                    {
+                        var phase = main.bossPhases[i];
+                        if (phase == null || phase.triggerType != BossPhaseConfig.TriggerType.Time)
+                            continue;
+                        float phaseEnd = FrameToSec(phase.triggerFrameOffset);
+                        if (phase.durationFrames >= 0)
+                            phaseEnd += FrameToSec(phase.durationFrames);
+                        else
+                            phaseEnd += 30f;
+                        total = Mathf.Max(total, phaseEnd);
+                    }
+                }
+                return Mathf.Max(45f, total + 10f);
+            }
+
+            default:
+                return 0f;
+        }
+    }
+
+    static float EstimateMovementDurationSeconds(MovementPatternData movement, uint fps)
+    {
+        if (movement == null)
+            return 0f;
+        if (movement.durationFrames < 0)
+        {
+            if (movement.durationSeconds < 0f)
+                return 0f;
+            return movement.durationSeconds;
+        }
+        return movement.durationFrames / (float)fps;
+    }
+
+    static string DescribePreviewScope(E_StageTimelinePreviewScope scope, int waveIndex) => scope switch
+    {
+        E_StageTimelinePreviewScope.SingleMidStageWave => $"道中波次 [{waveIndex}]",
+        E_StageTimelinePreviewScope.MidBossEncounter => "中场 Boss",
+        E_StageTimelinePreviewScope.MainBossEncounter => "关底 Boss",
+        _ => "完整关卡时间轴",
+    };
+
+    public static string GetPreviewScopeDisplayName(E_StageTimelinePreviewScope scope) => scope switch
+    {
+        E_StageTimelinePreviewScope.SingleMidStageWave => "道中波次",
+        E_StageTimelinePreviewScope.MidBossEncounter => "中场 Boss",
+        E_StageTimelinePreviewScope.MainBossEncounter => "关底 Boss",
+        _ => "完整时间轴",
+    };
 
     void BakeTimelineForPreview()
     {

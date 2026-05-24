@@ -69,7 +69,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [NonSerialized] public int launchCooldownFrames;
 
     [Min(0f)]
+    [Tooltip("弹幕初速度（世界单位/秒）；在 BakeLogicTiming 中烘焙为 launchSpeedPerFrame")]
     public float launchSpeed = 2f;
+
+    [NonSerialized] public float launchSpeedPerFrame;
 
     [Tooltip("发射器位置偏移（相对于生成点），用于调整发射器位置")]
     public Vector2 emitterPosOffset = Vector2.zero;
@@ -143,9 +146,11 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
 
     public void BakeLogicTiming(uint logicFPS)
     {
+        float fps = Mathf.Max(1f, logicFPS);
         if (launchIntervalSeconds <= 0f)
             launchCooldownFrames = 0;
         else
-            launchCooldownFrames = Mathf.Max(1, Mathf.RoundToInt(launchIntervalSeconds * logicFPS));
+            launchCooldownFrames = Mathf.Max(1, Mathf.RoundToInt(launchIntervalSeconds * fps));
+        launchSpeedPerFrame = launchSpeed / fps;
     }
 }

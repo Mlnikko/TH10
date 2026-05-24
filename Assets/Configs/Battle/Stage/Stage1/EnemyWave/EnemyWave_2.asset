@@ -21,7 +21,7 @@ MonoBehaviour:
   movementData:
     rid: 3645174066016945121
   useDefaultDescentIfNoMovement: 1
-  defaultDescentSpeedPerFrame: 0.06
+  defaultDescentSpeed: 3.6
   hpMultiplier: 1
   waitForClear: 0
   waveDropMode: 1
@@ -35,8 +35,8 @@ MonoBehaviour:
       data:
         type: 6
         durationSeconds: -1
-        speed: 0.12
-        amplitude: 0.25
-        frequency: 0.08
+        moveSpeed: 7.2
+        amplitude: 1
+        oscillationHz: 0.76
         direction: {x: 0, y: -1}
         bezierPoints: []

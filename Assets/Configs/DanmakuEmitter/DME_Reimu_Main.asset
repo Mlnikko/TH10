@@ -18,7 +18,7 @@ MonoBehaviour:
   danmakuSelectMode: 0
   emitMode: 1
   launchIntervalSeconds: 0.05
-  launchSpeed: 0.5
+  launchSpeed: 30
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 90

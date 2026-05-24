@@ -23,6 +23,25 @@ public abstract class MovementPatternData
 
     [NonSerialized] public int durationFrames = -1;
 
+    [Tooltip("移动速度（世界单位/秒），与 CharacterConfig.moveSpeed 同量级")]
+    public float moveSpeed = 3.6f;
+
+    [NonSerialized] public float moveSpeedPerFrame;
+
+    [Tooltip("正弦：垂直于主运动方向的最大偏移（世界单位）")]
+    public float amplitude = 1f;
+
+    [Tooltip("正弦：振荡频率（Hz）")]
+    public float oscillationHz = 1f;
+
+    [NonSerialized] public float sineOmegaPerFrame;
+
+    [Tooltip("直线/正弦主轴方向（未归一化也可，烘焙时会归一）")]
+    public Vector2 direction = Vector2.down;
+
+    [Tooltip("贝塞尔：相对出生点的 4 个控制点 P0..P3（P0 一般为 0,0，可在烘焙时自动补）")]
+    public List<Vector2> bezierPoints = new();
+
     /// <summary>由关卡时间轴在 <see cref="GameResDB"/> 解析阶段调用。</summary>
     public virtual void BakeMovementTiming(uint logicFps)
     {
@@ -30,22 +49,16 @@ public abstract class MovementPatternData
             durationFrames = -1;
         else
             durationFrames = Mathf.Max(0, Mathf.RoundToInt(durationSeconds * logicFps));
+
+        BakeKinematics(logicFps);
     }
 
-    [Tooltip("直线/瞄准：沿 direction 的标量速度（世界单位 / 逻辑帧）")]
-    public float speed = 0.12f;
-
-    [Tooltip("正弦：垂直于主运动方向的最大偏移（世界单位）")]
-    public float amplitude = 0.25f;
-
-    [Tooltip("正弦：角速度（弧度 / 逻辑帧）")]
-    public float frequency = 0.08f;
-
-    [Tooltip("直线/正弦主轴方向（未归一化也可，烘焙时会归一）")]
-    public Vector2 direction = Vector2.down;
-
-    [Tooltip("贝塞尔：相对出生点的 4 个控制点 P0..P3（P0 一般为 0,0，可在烘焙时自动补）")]
-    public List<Vector2> bezierPoints = new();
+    protected void BakeKinematics(uint logicFps)
+    {
+        float fps = Mathf.Max(1f, logicFps);
+        moveSpeedPerFrame = moveSpeed / fps;
+        sineOmegaPerFrame = (Mathf.PI * 2f * oscillationHz) / fps;
+    }
 }
 
 [Serializable]
@@ -78,13 +91,21 @@ public class CircularMovementData : MovementPatternData
     public Vector2 centerOffset;
 
     [Tooltip("轨道半径（世界单位）")]
-    public float radius = 1f;
+    public float orbitRadius = 1.5f;
 
-    [Tooltip("角速度（弧度 / 逻辑帧），正值逆时针")]
-    public float angularVelocityRadPerFrame = 0.02f;
+    [Tooltip("绕轨角速度（度/秒）")]
+    public float angularSpeedDegPerSec = 90f;
+
+    [NonSerialized] public float angularVelocityRadPerFrame;
 
     [Tooltip("起始角（度），相对 +X")]
     public float startAngleDeg;
+
+    public override void BakeMovementTiming(uint logicFps)
+    {
+        base.BakeMovementTiming(logicFps);
+        angularVelocityRadPerFrame = angularSpeedDegPerSec * Mathf.Deg2Rad / Mathf.Max(1f, logicFps);
+    }
 }
 
 [Serializable]

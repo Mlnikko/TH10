@@ -25,10 +25,12 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     public int maxHealth;
 
     [Header("移速配置")]
+    [Tooltip("移动速度（世界单位/秒）；烘焙为 moveDistancePerFrame")]
     public float moveSpeed;
     [NonSerialized]
     public float moveDistancePerFrame;
 
+    [Tooltip("低速模式移动速度（世界单位/秒）；烘焙为 moveSlowDistancePerFrame")]
     public float moveSlowSpeed;
     [NonSerialized]
     public float moveSlowDistancePerFrame;

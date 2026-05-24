@@ -147,7 +147,7 @@ public struct CDanmakuEmitter : IComponent
     public int sequentialIndex;
     public uint randomSeed;
 
-    // ================= 通用参数 (预计算) =================
+    // ================= 通用参数 (预计算，launchSpeed 为世界单位/逻辑帧) =================
     public float launchSpeed;
     public float emitterPosOffsetX, emitterPosOffsetY;
     /// <summary>发射器旋转偏移（弧度）；由 <see cref="DanmakuEmitterConfig.emitterRotOffsetZ"/>（度）在构造时烘焙。</summary>
@@ -187,7 +187,7 @@ public struct CDanmakuEmitter : IComponent
         // 行为模式
         emitMode = soConfig.emitMode;
         selectMode = soConfig.danmakuSelectMode;
-        launchSpeed = soConfig.launchSpeed;
+        launchSpeed = soConfig.launchSpeedPerFrame;
 
         emitterPosOffsetX = soConfig.emitterPosOffset.x;
         emitterPosOffsetY = soConfig.emitterPosOffset.y;

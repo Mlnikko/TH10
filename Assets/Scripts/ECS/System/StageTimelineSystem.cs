@@ -2,6 +2,15 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>编辑器/工具用：限定 <see cref="StageTimelineSystem"/> 仅驱动部分时间轴内容。</summary>
+public enum E_StageTimelinePreviewScope
+{
+    FullTimeline = 0,
+    SingleMidStageWave,
+    MidBossEncounter,
+    MainBossEncounter,
+}
+
 /// <summary>
 /// 按 <see cref="StageTimelineConfig"/> 在逻辑帧上驱动道中波次、道中 BOSS、关底 BOSS 登场与阶段状态（<see cref="CStageState"/>）。
 /// 出怪位置基于 <see cref="GlobalBattleData.AreaData"/>；<see cref="EnemyWaveConfig.movementData"/> 由 <see cref="EnemyMovementBaking"/> 烘焙为 <see cref="CEnemyMovement"/>。
@@ -26,7 +35,11 @@ public class StageTimelineSystem : BaseSystem
 
     uint _bossFightStartElapsed;
 
+    E_StageTimelinePreviewScope _previewScope = E_StageTimelinePreviewScope.FullTimeline;
+    int _previewMidStageWaveIndex;
+
     public bool IsActive => _config != null;
+    public E_StageTimelinePreviewScope PreviewScope => _previewScope;
 
     /// <summary>
     /// 读取关卡权威实体上的 <see cref="CStageState"/>（时间线未开始时返回 false）。
@@ -56,6 +69,12 @@ public class StageTimelineSystem : BaseSystem
     /// 开始本关时间线（通常在战斗 World 就绪且逻辑帧计时器已对齐到起始帧之后调用）。
     /// </summary>
     public void Begin(StageTimelineConfig config)
+        => Begin(config, E_StageTimelinePreviewScope.FullTimeline, 0);
+
+    /// <summary>
+    /// 开始时间线；<paramref name="previewScope"/> 非 <see cref="E_StageTimelinePreviewScope.FullTimeline"/> 时仅驱动对应片段（编辑器预览）。
+    /// </summary>
+    public void Begin(StageTimelineConfig config, E_StageTimelinePreviewScope previewScope, int midStageWaveIndex = 0)
     {
         EndInternal();
         if (config == null)
@@ -64,14 +83,34 @@ public class StageTimelineSystem : BaseSystem
             return;
         }
 
+        _previewScope = previewScope;
+        _previewMidStageWaveIndex = midStageWaveIndex;
         _config = config;
         _sortedWaves.Clear();
-        foreach (var w in config.midStageWaves)
+
+        if (previewScope == E_StageTimelinePreviewScope.SingleMidStageWave)
         {
-            if (w != null)
-                _sortedWaves.Add(w);
+            if (config.midStageWaves == null
+                || midStageWaveIndex < 0
+                || midStageWaveIndex >= config.midStageWaves.Count
+                || config.midStageWaves[midStageWaveIndex] == null)
+            {
+                Logger.Warn($"[StageTimeline] Invalid preview wave index {midStageWaveIndex}.", LogTag.Battle);
+                EndInternal();
+                return;
+            }
+
+            _sortedWaves.Add(config.midStageWaves[midStageWaveIndex]);
         }
-        _sortedWaves.Sort((a, b) => a.startFrameOffset.CompareTo(b.startFrameOffset));
+        else if (previewScope == E_StageTimelinePreviewScope.FullTimeline)
+        {
+            foreach (var w in config.midStageWaves)
+            {
+                if (w != null)
+                    _sortedWaves.Add(w);
+            }
+            _sortedWaves.Sort((a, b) => a.startFrameOffset.CompareTo(b.startFrameOffset));
+        }
 
         _nextWaveIndex = 0;
         _waitingForWaveClear = false;
@@ -102,6 +141,8 @@ public class StageTimelineSystem : BaseSystem
     void EndInternal()
     {
         _config = null;
+        _previewScope = E_StageTimelinePreviewScope.FullTimeline;
+        _previewMidStageWaveIndex = 0;
         _sortedWaves.Clear();
         _nextWaveIndex = 0;
         _waitingForWaveClear = false;
@@ -144,14 +185,30 @@ public class StageTimelineSystem : BaseSystem
         uint elapsed = currentFrame - _stageStartFrame;
 
         UpdateClearWatch();
-        TrySpawnMidWaves(elapsed, currentFrame);
-        TrySpawnMidBoss(elapsed, currentFrame);
-        TrySpawnMainBoss(elapsed, currentFrame);
-        UpdateBossIntro(elapsed, currentFrame);
-        UpdateBossFightPhases(elapsed);
-        UpdateBossDefeat();
-        UpdateStageTimeout(elapsed, currentFrame);
+
+        if (_previewScope == E_StageTimelinePreviewScope.FullTimeline
+            || _previewScope == E_StageTimelinePreviewScope.SingleMidStageWave)
+            TrySpawnMidWaves(elapsed, currentFrame);
+
+        if (_previewScope == E_StageTimelinePreviewScope.FullTimeline
+            || _previewScope == E_StageTimelinePreviewScope.MidBossEncounter)
+            TrySpawnMidBoss(elapsed, currentFrame);
+
+        if (_previewScope == E_StageTimelinePreviewScope.FullTimeline
+            || _previewScope == E_StageTimelinePreviewScope.MainBossEncounter)
+        {
+            TrySpawnMainBoss(elapsed, currentFrame);
+            UpdateBossIntro(elapsed, currentFrame);
+            UpdateBossFightPhases(elapsed);
+            UpdateBossDefeat();
+        }
+
+        if (_previewScope == E_StageTimelinePreviewScope.FullTimeline)
+            UpdateStageTimeout(elapsed, currentFrame);
     }
+
+    static bool IsScopedPreview(E_StageTimelinePreviewScope scope) =>
+        scope != E_StageTimelinePreviewScope.FullTimeline;
 
     void UpdateClearWatch()
     {
@@ -177,10 +234,13 @@ public class StageTimelineSystem : BaseSystem
         while (_nextWaveIndex < _sortedWaves.Count && !_waitingForWaveClear)
         {
             var wave = _sortedWaves[_nextWaveIndex];
-            if (stageElapsed < (uint)wave.startFrameOffset)
+            if (!IsScopedPreview(_previewScope) && stageElapsed < (uint)wave.startFrameOffset)
                 break;
 
-            SpawnWave(wave, _nextWaveIndex, currentFrame);
+            int spawnIndex = _previewScope == E_StageTimelinePreviewScope.SingleMidStageWave
+                ? _previewMidStageWaveIndex
+                : _nextWaveIndex;
+            SpawnWave(wave, spawnIndex, currentFrame);
             _nextWaveIndex++;
         }
     }
@@ -371,7 +431,7 @@ public class StageTimelineSystem : BaseSystem
             return;
 
         var encounter = _config.midBossEncounter;
-        if (stageElapsed < (uint)encounter.spawnFrameOffset)
+        if (!IsScopedPreview(_previewScope) && stageElapsed < (uint)encounter.spawnFrameOffset)
             return;
 
         var cfg = GameResDB.Instance.GetConfig<EnemyConfig>(encounter.enemyConfigId);
@@ -387,6 +447,11 @@ public class StageTimelineSystem : BaseSystem
         _midBossEntity = EntityFactory.CreateEnemy(cfg, pos.x, pos.y, 1f);
         if (!_midBossEntity.IsNull)
         {
+            if (encounter.introMovement != null
+                && EnemyMovementBaking.TryBakeFromProfile(
+                    encounter.introMovement, currentFrame, pos.x, pos.y, 0, EntityManager, out var motion))
+                EntityManager.AddComponent(_midBossEntity, motion);
+
             EntityManager.AddComponent(_midBossEntity, new CNoOffscreenRecycleTag());
             EntityManager.AddComponent(_midBossEntity, new CPoolGetTag());
         }
@@ -399,7 +464,7 @@ public class StageTimelineSystem : BaseSystem
             return;
 
         var encounter = _config.mainBossEncounter;
-        if (stageElapsed < (uint)encounter.spawnFrameOffset)
+        if (!IsScopedPreview(_previewScope) && stageElapsed < (uint)encounter.spawnFrameOffset)
             return;
 
         var cfg = GameResDB.Instance.GetConfig<EnemyConfig>(encounter.enemyConfigId);
@@ -438,7 +503,9 @@ public class StageTimelineSystem : BaseSystem
             return;
 
         var encounter = _config.mainBossEncounter;
-        uint introEnd = (uint)encounter.spawnFrameOffset + (uint)encounter.bossIntroDurationFrames;
+        uint introEnd = IsScopedPreview(_previewScope)
+            ? (uint)encounter.bossIntroDurationFrames
+            : (uint)encounter.spawnFrameOffset + (uint)encounter.bossIntroDurationFrames;
         if (stageElapsed < introEnd)
             return;
 

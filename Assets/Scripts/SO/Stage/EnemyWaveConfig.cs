@@ -23,9 +23,13 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
 
     [NonSerialized] public int startFrameOffset;
 
+    [NonSerialized] public float defaultDescentSpeedPerFrame;
+
     public void BakeLogicTiming(uint logicFPS)
     {
-        startFrameOffset = startTimeSeconds <= 0f ? 0 : Mathf.Max(0, Mathf.RoundToInt(startTimeSeconds * logicFPS));
+        float fps = Mathf.Max(1f, logicFPS);
+        startFrameOffset = startTimeSeconds <= 0f ? 0 : Mathf.Max(0, Mathf.RoundToInt(startTimeSeconds * fps));
+        defaultDescentSpeedPerFrame = defaultDescentSpeed / fps;
         movementData?.BakeMovementTiming(logicFPS);
     }
 
@@ -49,8 +53,8 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
     public bool useDefaultDescentIfNoMovement = true;
 
     [Min(0f)]
-    [Tooltip("默认下落速度（世界单位 / 逻辑帧），仅当未配置 movementData 且上一项为真时生效")]
-    public float defaultDescentSpeedPerFrame = 0.06f;
+    [Tooltip("默认下落速度（世界单位/秒），仅当未配置 movementData 且上一项为真时生效")]
+    public float defaultDescentSpeed = 3.6f;
 
     [Tooltip("初始血量倍率 (用于难度调整)")]
     public float hpMultiplier = 1.0f;
