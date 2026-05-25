@@ -9,7 +9,7 @@ public enum E_Weapon : byte
     Weapon_Reimu_Red = 11,
     Weapon_Reimu_Pink = 12,
 
-    Weapon_Marisa_0 = 20,
+    Weapon_Marisa_Green = 20,
     Weapon_Marisa_1 = 21,
     Weapon_Marisa_2 = 22,
 }
@@ -60,12 +60,32 @@ public class WeaponPowerSecondaryLayout
     public WeaponEmitterSlot[] slots;
 }
 
+/// <summary>低速模式下主炮按 Power 分档（整档替换发射器与槽位偏移，非叠加）。</summary>
+[Serializable]
+public class WeaponPowerPrimarySlowLayout
+{
+    [Min(0)]
+    [Tooltip("玩家 powerOrbs >= 此值时在低速模式下使用本档主炮")]
+    public int minPowerOrbs;
+
+    [Tooltip("本档主炮槽位（发射器 ConfigId + 偏移）")]
+    public WeaponEmitterSlot slot;
+}
+
 /// <summary>烘焙后的 Power 副炮档（<see cref="WeaponConfig.ResolveReferences"/> 填充）。</summary>
 public struct WeaponPowerSecondaryResolved
 {
     public int minPowerOrbs;
     public int[] emitterCfgIndices;
     public WeaponEmitterSlot[] slots;
+}
+
+/// <summary>烘焙后的低速主炮 Power 档。</summary>
+public struct WeaponPowerPrimarySlowResolved
+{
+    public int minPowerOrbs;
+    public int emitterCfgIndex;
+    public WeaponEmitterSlot slot;
 }
 
 [Serializable]
@@ -81,17 +101,41 @@ public class WeaponDisplayConfig
 [Serializable]
 public class WeaponSlowModeLayoutConfig
 {
-    [Tooltip("低速时主发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）")]
+    [Tooltip("主炮低速槽位表现（灵梦常用：向玩家收束）")]
+    public E_WeaponSlowSlotPositionMode primarySlowPositionMode = E_WeaponSlowSlotPositionMode.ConvergeToPlayer;
+
+    [Tooltip("副炮低速槽位表现（魔理沙常用：轨迹跟随 / 世界锚定）")]
+    public E_WeaponSlowSlotPositionMode secondarySlowPositionMode = E_WeaponSlowSlotPositionMode.ConvergeToPlayer;
+
+    [Tooltip("低速时主发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）；仅 ConvergeToPlayer 模式")]
     [Range(0f, 1f)]
     public float primarySlotConverge;
 
-    [Tooltip("低速时副发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）")]
+    [Tooltip("低速时副发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）；仅 ConvergeToPlayer 模式")]
     [Range(0f, 1f)]
     public float secondarySlotConverge = 1f;
 
-    [Tooltip("副炮收束/展开速度（0~1 每秒；0 表示瞬时切换）")]
+    [Tooltip("副炮收束/展开速度（Converge 模式；0 表示瞬时切换）")]
     [Min(0f)]
     public float secondarySlotConvergeSpeed = 4f;
+
+    [Header("轨迹跟随（TrailFollowWhileFast）")]
+    [Tooltip("通常模式下，移速每逻辑帧对应的副炮偏移展开量")]
+    [Min(0f)]
+    public float secondaryTrailSpreadPerSpeed = 0.12f;
+
+    [Tooltip("轨迹展开相对配置槽位的最大偏移")]
+    [Min(0f)]
+    public float secondaryTrailMaxOffset = 0.55f;
+
+    [Tooltip("停止移动时副炮偏移回到配置槽位的速度（世界单位/秒）")]
+    [Min(0f)]
+    public float secondaryTrailCatchUpSpeed = 3f;
+
+    [Header("退出低速")]
+    [Tooltip("WorldAnchor / Trail 模式下退出低速后，偏移回到配置槽位的速度")]
+    [Min(0f)]
+    public float secondaryReturnToSlotSpeed = 5f;
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
@@ -112,6 +156,10 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     [Header("主发射器")]
     public WeaponPrimaryEmitterGroup primaryEmitters = new();
 
+    [Header("低速主炮（按 Power）")]
+    [Tooltip("低速/聚焦模式下按 minPowerOrbs 切换主炮；为空则回退 primaryEmitters.slowMode 或 normal")]
+    public WeaponPowerPrimarySlowLayout[] powerPrimarySlowLayouts = Array.Empty<WeaponPowerPrimarySlowLayout>();
+
     [Header("副发射器（按 Power）")]
     [Tooltip("按 minPowerOrbs 分档；拾取 P 后切换到满足 powerOrbs 的最高档（整档替换副炮，非叠加）")]
     public WeaponPowerSecondaryLayout[] powerSecondaryLayouts = Array.Empty<WeaponPowerSecondaryLayout>();
@@ -125,6 +173,7 @@ public class WeaponConfig : GameConfig, IReferenceResolver
 
     [NonSerialized] public int primaryNormalEmitterCfgIndex = -1;
     [NonSerialized] public int primarySlowEmitterCfgIndex = -1;
+    [NonSerialized] public WeaponPowerPrimarySlowResolved[] powerPrimarySlowResolved = Array.Empty<WeaponPowerPrimarySlowResolved>();
     [NonSerialized] public WeaponPowerSecondaryResolved[] powerSecondaryResolved = Array.Empty<WeaponPowerSecondaryResolved>();
 
     [TextArea(1, 5)]
@@ -141,17 +190,119 @@ public class WeaponConfig : GameConfig, IReferenceResolver
         return ConfigId;
     }
 
-    public Vector2 ResolvePrimarySlotOffset(bool slowMode)
+    public Vector2 ResolvePrimarySlotOffset(bool slowMode, int powerOrbs = 0) =>
+        ResolvePrimarySlotOffset(slowMode, powerOrbs, slowMode ? 1f : 0f, Vector2.zero);
+
+    public Vector2 ResolvePrimarySlotOffset(
+        bool slowMode,
+        int powerOrbs,
+        float converge01,
+        Vector2 runtimeOffset)
     {
-        float converge = slowMode ? slowModeLayout.primarySlotConverge : 0f;
-        return primaryEmitters.normal.slotOffset * (1f - converge);
+        Vector2 baseOffset = primaryEmitters.normal.slotOffset;
+        if (slowMode && TryResolvePowerPrimarySlow(powerOrbs, out var tier))
+            baseOffset = tier.slot.slotOffset;
+
+        return WeaponSlowModePosition.ResolvePrimarySlotOffset(
+            this,
+            slowMode,
+            powerOrbs,
+            converge01,
+            runtimeOffset);
     }
 
     public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, float converge01) =>
-        baseOffset * (1f - slowModeLayout.secondarySlotConverge * Mathf.Clamp01(converge01));
+        ResolveSecondarySlotOffset(baseOffset, slowMode: true, converge01, baseOffset);
 
     public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, bool slowMode) =>
-        ResolveSecondarySlotOffset(baseOffset, slowMode ? 1f : 0f);
+        ResolveSecondarySlotOffset(baseOffset, slowMode, slowMode ? 1f : 0f, baseOffset);
+
+    public Vector2 ResolveSecondarySlotOffset(
+        Vector2 baseOffset,
+        bool slowMode,
+        float converge01,
+        Vector2 runtimeOffset) =>
+        WeaponSlowModePosition.ResolveSecondarySlotOffset(this, baseOffset, slowMode, converge01, runtimeOffset);
+
+    /// <summary>根据当前火力选取低速主炮烘焙档。</summary>
+    public bool TryResolvePowerPrimarySlow(int powerOrbs, out WeaponPowerPrimarySlowResolved resolved)
+    {
+        resolved = default;
+        var tiers = powerPrimarySlowResolved;
+        if (tiers == null || tiers.Length == 0)
+            return false;
+
+        bool found = false;
+        for (int i = 0; i < tiers.Length; i++)
+        {
+            ref readonly var tier = ref tiers[i];
+            if (tier.minPowerOrbs > powerOrbs || tier.emitterCfgIndex < 0)
+                continue;
+
+            if (!found || tier.minPowerOrbs >= resolved.minPowerOrbs)
+            {
+                resolved = tier;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    /// <summary>编辑器未烘焙或布局预览时解析低速主炮槽位。</summary>
+    public bool TryGetPrimarySlowSlotForPower(int powerOrbs, out WeaponEmitterSlot slot)
+    {
+        slot = default;
+        if (TryResolvePowerPrimarySlow(powerOrbs, out var resolved) && resolved.emitterCfgIndex >= 0)
+        {
+            slot = resolved.slot;
+            return true;
+        }
+
+        if (powerPrimarySlowLayouts != null && powerPrimarySlowLayouts.Length > 0)
+            return TryPickPrimarySlowSlotFromLayouts(powerPrimarySlowLayouts, powerOrbs, out slot);
+
+        string legacyId = primaryEmitters.slowModeDanmakuEmitterConfigId;
+        if (!string.IsNullOrWhiteSpace(legacyId))
+        {
+            slot = new WeaponEmitterSlot
+            {
+                danmakuEmitterConfigId = legacyId,
+                slotOffset = primaryEmitters.normal.slotOffset,
+            };
+            return true;
+        }
+
+        return false;
+    }
+
+    static bool TryPickPrimarySlowSlotFromLayouts(
+        WeaponPowerPrimarySlowLayout[] layouts,
+        int powerOrbs,
+        out WeaponEmitterSlot slot)
+    {
+        slot = default;
+        if (layouts == null || layouts.Length == 0)
+            return false;
+
+        WeaponPowerPrimarySlowLayout best = null;
+        for (int i = 0; i < layouts.Length; i++)
+        {
+            var layout = layouts[i];
+            if (layout == null || layout.minPowerOrbs > powerOrbs)
+                continue;
+            if (string.IsNullOrWhiteSpace(layout.slot.danmakuEmitterConfigId))
+                continue;
+            if (best == null || layout.minPowerOrbs >= best.minPowerOrbs)
+                best = layout;
+        }
+
+        if (best == null)
+            return false;
+
+        slot = best.slot;
+        return true;
+    }
 
     /// <summary>根据当前火力选取应启用的副炮烘焙档。</summary>
     public bool TryResolvePowerSecondary(int powerOrbs, out WeaponPowerSecondaryResolved resolved)
@@ -250,6 +401,48 @@ public class WeaponConfig : GameConfig, IReferenceResolver
         return false;
     }
 
+    void MigrateLegacyPrimarySlowToPowerLayouts()
+    {
+        if (powerPrimarySlowLayouts != null && powerPrimarySlowLayouts.Length > 0)
+            return;
+
+        string slowId = primaryEmitters.slowModeDanmakuEmitterConfigId;
+        if (string.IsNullOrWhiteSpace(slowId))
+            return;
+
+        powerPrimarySlowLayouts = new[]
+        {
+            new WeaponPowerPrimarySlowLayout
+            {
+                minPowerOrbs = 0,
+                slot = new WeaponEmitterSlot
+                {
+                    danmakuEmitterConfigId = slowId,
+                    slotOffset = primaryEmitters.normal.slotOffset,
+                },
+            },
+        };
+    }
+
+    void MigrateLegacySecondaryToPowerLayouts()
+    {
+        if (powerSecondaryLayouts != null && powerSecondaryLayouts.Length > 0)
+            return;
+
+        var legacy = secondaryEmitters?.slots;
+        if (legacy == null || legacy.Length == 0)
+            return;
+
+        powerSecondaryLayouts = new[]
+        {
+            new WeaponPowerSecondaryLayout
+            {
+                minPowerOrbs = 0,
+                slots = legacy,
+            },
+        };
+    }
+
 #if UNITY_EDITOR
     [SerializeField, HideInInspector]
     string[] danmakuEmitterConfigIds;
@@ -258,9 +451,22 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     {
         MigrateLegacyEmitterIds();
         MigrateLegacySecondaryToPowerLayouts();
+        MigrateLegacyPrimarySlowToPowerLayouts();
         SyncDisplayFromLegacyDescription();
         NormalizeEmitterId(ref primaryEmitters.normal.danmakuEmitterConfigId);
         NormalizeEmitterId(ref primaryEmitters.slowModeDanmakuEmitterConfigId);
+
+        if (powerPrimarySlowLayouts != null)
+        {
+            for (int t = 0; t < powerPrimarySlowLayouts.Length; t++)
+            {
+                var layout = powerPrimarySlowLayouts[t];
+                if (layout == null)
+                    continue;
+                NormalizeEmitterId(ref layout.slot.danmakuEmitterConfigId);
+                powerPrimarySlowLayouts[t] = layout;
+            }
+        }
 
         if (secondaryEmitters.slots != null)
         {
@@ -294,6 +500,18 @@ public class WeaponConfig : GameConfig, IReferenceResolver
             weaponPrefabId = ConfigId;
 
         ClearLegacySecondaryWhenPowerLayoutsExist();
+        ClearLegacyPrimarySlowIdWhenPowerLayoutsExist();
+    }
+
+    void ClearLegacyPrimarySlowIdWhenPowerLayoutsExist()
+    {
+        if (powerPrimarySlowLayouts == null || powerPrimarySlowLayouts.Length == 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(primaryEmitters.slowModeDanmakuEmitterConfigId))
+            return;
+
+        primaryEmitters.slowModeDanmakuEmitterConfigId = string.Empty;
     }
 
     void ClearLegacySecondaryWhenPowerLayoutsExist()
@@ -305,25 +523,6 @@ public class WeaponConfig : GameConfig, IReferenceResolver
             return;
 
         secondaryEmitters.slots = Array.Empty<WeaponEmitterSlot>();
-    }
-
-    void MigrateLegacySecondaryToPowerLayouts()
-    {
-        if (powerSecondaryLayouts != null && powerSecondaryLayouts.Length > 0)
-            return;
-
-        var legacy = secondaryEmitters?.slots;
-        if (legacy == null || legacy.Length == 0)
-            return;
-
-        powerSecondaryLayouts = new[]
-        {
-            new WeaponPowerSecondaryLayout
-            {
-                minPowerOrbs = 0,
-                slots = legacy,
-            },
-        };
     }
 
     void MigrateLegacyEmitterIds()
@@ -371,10 +570,17 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     }
 #endif
 
-    public int ResolvePrimaryEmitterCfgIndex(bool slowMode)
+    public int ResolvePrimaryEmitterCfgIndex(bool slowMode, int powerOrbs = 0)
     {
-        if (slowMode && primarySlowEmitterCfgIndex >= 0)
+        if (!slowMode)
+            return primaryNormalEmitterCfgIndex;
+
+        if (TryResolvePowerPrimarySlow(powerOrbs, out var tier) && tier.emitterCfgIndex >= 0)
+            return tier.emitterCfgIndex;
+
+        if (primarySlowEmitterCfgIndex >= 0)
             return primarySlowEmitterCfgIndex;
+
         return primaryNormalEmitterCfgIndex;
     }
 
@@ -395,10 +601,45 @@ public class WeaponConfig : GameConfig, IReferenceResolver
             primaryEmitters.normal.danmakuEmitterConfigId,
             "primary.normal");
 
+        MigrateLegacyPrimarySlowToPowerLayouts();
+
         string slowId = StringHelper.NormalizeResourceId(primaryEmitters.slowModeDanmakuEmitterConfigId);
         primarySlowEmitterCfgIndex = string.IsNullOrEmpty(slowId)
             ? -1
             : ResolveEmitterIndex(resDb, slowId, "primary.slowMode");
+
+        if (powerPrimarySlowLayouts != null && powerPrimarySlowLayouts.Length > 0)
+        {
+            powerPrimarySlowResolved = new WeaponPowerPrimarySlowResolved[powerPrimarySlowLayouts.Length];
+            for (int t = 0; t < powerPrimarySlowLayouts.Length; t++)
+            {
+                var layout = powerPrimarySlowLayouts[t];
+                if (layout == null || string.IsNullOrWhiteSpace(layout.slot.danmakuEmitterConfigId))
+                {
+                    powerPrimarySlowResolved[t] = new WeaponPowerPrimarySlowResolved
+                    {
+                        minPowerOrbs = layout?.minPowerOrbs ?? 0,
+                        emitterCfgIndex = -1,
+                        slot = layout?.slot ?? default,
+                    };
+                    continue;
+                }
+
+                int idx = ResolveEmitterIndex(
+                    resDb,
+                    layout.slot.danmakuEmitterConfigId,
+                    $"power[{layout.minPowerOrbs}].primarySlow");
+
+                powerPrimarySlowResolved[t] = new WeaponPowerPrimarySlowResolved
+                {
+                    minPowerOrbs = layout.minPowerOrbs,
+                    emitterCfgIndex = idx,
+                    slot = layout.slot,
+                };
+            }
+        }
+        else
+            powerPrimarySlowResolved = Array.Empty<WeaponPowerPrimarySlowResolved>();
 
         MigrateLegacySecondaryToPowerLayouts();
 

@@ -69,6 +69,7 @@ public class EntityFactory
             emitterSlotLayoutVariant = 0,
             secondarySlotConvergeT = 0f,
             appliedSecondaryPowerMinOrbs = int.MinValue,
+            appliedPrimarySlowPowerMinOrbs = int.MinValue,
         });
         _entityManager.AddComponent(e_player, new CHealth(characterConfig.maxHealth, characterConfig.maxHealth));
         _entityManager.AddComponent(e_player, new CCollider
@@ -127,24 +128,81 @@ public class EntityFactory
         return primaryEmitterEntityIndex;
     }
 
-    /// <summary>按当前 Power 档位切换副发射器实体（销毁旧档后生成新档，主炮不变，非叠加）。</summary>
-    public void SyncPlayerSecondaryEmitters(Entity playerEntity, WeaponConfig weaponConfig, int powerOrbs)
+    /// <summary>按当前 Power 同步副炮（整档替换）与低速主炮配置。</summary>
+    public void SyncPlayerWeaponPowerLayouts(Entity playerEntity, WeaponConfig weaponConfig, int powerOrbs)
     {
         if (!_entityManager.IsValid(playerEntity) || weaponConfig == null)
             return;
 
-        int tierKey = ResolveSecondaryPowerTierKey(weaponConfig, powerOrbs);
-
         ref var player = ref _entityManager.GetComponent<CPlayer>(playerEntity);
+        SyncPlayerSecondaryEmittersInternal(playerEntity, weaponConfig, powerOrbs, ref player);
+        SyncPlayerPrimarySlowPowerInternal(playerEntity, weaponConfig, powerOrbs, ref player);
+    }
+
+    /// <summary>按当前 Power 档位切换副发射器实体（销毁旧档后生成新档，非叠加）。</summary>
+    public void SyncPlayerSecondaryEmitters(Entity playerEntity, WeaponConfig weaponConfig, int powerOrbs) =>
+        SyncPlayerWeaponPowerLayouts(playerEntity, weaponConfig, powerOrbs);
+
+    void SyncPlayerSecondaryEmittersInternal(
+        Entity playerEntity,
+        WeaponConfig weaponConfig,
+        int powerOrbs,
+        ref CPlayer player)
+    {
+        int tierKey = ResolveSecondaryPowerTierKey(weaponConfig, powerOrbs);
         if (tierKey == player.appliedSecondaryPowerMinOrbs)
             return;
 
         player.appliedSecondaryPowerMinOrbs = tierKey;
-
         DestroyPlayerSecondaryEmitters(playerEntity.Index);
 
         ref var pos = ref _entityManager.GetComponent<CPosition>(playerEntity);
         SpawnPlayerSecondaryEmitters(playerEntity.Index, weaponConfig, powerOrbs, pos.x, pos.y);
+    }
+
+    void SyncPlayerPrimarySlowPowerInternal(
+        Entity playerEntity,
+        WeaponConfig weaponConfig,
+        int powerOrbs,
+        ref CPlayer player)
+    {
+        int tierKey = player.isSlowMode
+            ? ResolvePrimarySlowPowerTierKey(weaponConfig, powerOrbs)
+            : int.MinValue;
+
+        if (tierKey == player.appliedPrimarySlowPowerMinOrbs)
+            return;
+
+        player.appliedPrimarySlowPowerMinOrbs = tierKey;
+
+        if (!player.isSlowMode)
+            return;
+
+        RebuildPlayerPrimaryEmitters(playerEntity.Index, weaponConfig, ref player);
+    }
+
+    static int ResolvePrimarySlowPowerTierKey(WeaponConfig weaponConfig, int powerOrbs) =>
+        weaponConfig.TryResolvePowerPrimarySlow(powerOrbs, out var tier)
+            ? tier.minPowerOrbs
+            : int.MinValue;
+
+    void RebuildPlayerPrimaryEmitters(int playerEntityIndex, WeaponConfig weaponConfig, ref CPlayer player)
+    {
+        Span<int> ownedIndices = _entityManager.GetActiveIndices<CPlayerEmitterOwnership>();
+        var ownerships = _entityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        var emitters = _entityManager.GetComponentSpan<CDanmakuEmitter>();
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != playerEntityIndex)
+                continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Primary)
+                continue;
+
+            PlayerControlSystem.RebuildOwnedEmitter(emitterIdx, ref player, weaponConfig, ownerships, emitters);
+        }
     }
 
     static int ResolveSecondaryPowerTierKey(WeaponConfig weaponConfig, int powerOrbs)
@@ -244,6 +302,8 @@ public class EntityFactory
             slotOffsetY = slotOffset.y,
             emitterBaseOffsetX = emitterCfg.emitterPosOffset.x,
             emitterBaseOffsetY = emitterCfg.emitterPosOffset.y,
+            runtimeSlotOffsetX = slotOffset.x,
+            runtimeSlotOffsetY = slotOffset.y,
         });
 
         return e_emitter.Index;
@@ -279,6 +339,19 @@ public class EntityFactory
             width = danmakuCfg.colliderConfig.boxSize.x,
             height = danmakuCfg.colliderConfig.boxSize.y
         });
+
+        if (danmakuCfg.danmakuType == E_DanmakuType.Homing)
+        {
+            _entityManager.AddComponent(e_danmaku, new CDanmakuBezierHoming
+            {
+                targetEnemyIndex = DanmakuBezierHomingLogic.FindNearestTargetIndex(
+                    _entityManager, posX, posY, danmakuCfg.homingTargetLayerMask),
+                segmentT = 0f,
+                progressPerFrame = danmakuCfg.homingProgressPerFrame,
+                curveStrength = danmakuCfg.homingCurveStrength,
+                homingTargetLayerMask = danmakuCfg.homingTargetLayerMask,
+            });
+        }
 
         return e_danmaku;
     }

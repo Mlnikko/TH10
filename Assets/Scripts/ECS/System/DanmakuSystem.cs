@@ -11,24 +11,32 @@ public class DanmakuSystem : BaseSystem
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var rotations = EntityManager.GetComponentSpan<CRotation>();
         var velocities = EntityManager.GetComponentSpan<CVelocity>();
-        var colliders = EntityManager.GetComponentSpan<CCollider>();
+        var homings = EntityManager.GetComponentSpan<CDanmakuBezierHoming>();
 
         for (int i = 0; i < indices.Length; i++)
         {
             int idx = indices[i];
 
-            ref var danmaku = ref danmakus[idx];
-            ref var position = ref positions[idx];   
+            ref var position = ref positions[idx];
             ref var rotation = ref rotations[idx];
             ref var velocity = ref velocities[idx];
-            ref var collider = ref colliders[idx];
 
-            UpdateDanmakuPosition(ref position, ref velocity);
-            UpdateDanmakuRotation(ref rotation, ref velocity);
+            if (EntityManager.HasComponent<CDanmakuBezierHoming>(idx))
+            {
+                ref var homing = ref homings[idx];
+                DanmakuBezierHomingLogic.AdvanceAlongBezier(
+                    EntityManager, idx, ref position, ref velocity, ref rotation, ref homings[idx]);
+            }
+            else
+            {
+                UpdateDanmakuPosition(ref position, ref velocity);
+                UpdateDanmakuRotation(ref rotation, ref velocity);
+            }
+
             RecycleOutOfBoundsDanmaku(position, idx);
         }
     }
-    
+
     void UpdateDanmakuPosition(ref CPosition position, ref CVelocity velocity)
     {
         position.x += velocity.vx;
@@ -40,12 +48,9 @@ public class DanmakuSystem : BaseSystem
         rotation.angleRad = MathF.Atan2(velocity.vy, velocity.vx);
     }
 
-    // 弹幕超出边界后回收
     void RecycleOutOfBoundsDanmaku(CPosition position, int entityIndex)
     {
-       if(!GlobalBattleData.AreaData.IsPointInRecycleArea(position.x, position.y))
-       {
-           EntityManager.AddComponent(entityIndex, new CPoolRecycleTag());
-        }
+        if (!GlobalBattleData.AreaData.IsPointInRecycleArea(position.x, position.y))
+            EntityManager.AddComponent(entityIndex, new CPoolRecycleTag());
     }
 }

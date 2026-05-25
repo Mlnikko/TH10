@@ -5,7 +5,7 @@ using System;
 /// </summary>
 public static class DropItemPickupEffects
 {
-    public static void Apply(in DropItemConfig cfg, EntityManager em, Entity playerEntity)
+    public static void Apply(in DropItemConfig cfg, EntityManager em, Entity playerEntity, EntityFactory entityFactory = null)
     {
         if (!em.IsValid(playerEntity) || cfg == null)
             return;
@@ -30,6 +30,13 @@ public static class DropItemPickupEffects
                 {
                     ref var pl = ref em.GetComponent<CPlayer>(playerEntity);
                     pl.powerOrbs += amt;
+
+                    if (entityFactory != null)
+                    {
+                        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(pl.weaponCfgIndex);
+                        if (weaponConfig != null)
+                            entityFactory.SyncPlayerSecondaryEmitters(playerEntity, weaponConfig, pl.powerOrbs);
+                    }
                 }
                 break;
 

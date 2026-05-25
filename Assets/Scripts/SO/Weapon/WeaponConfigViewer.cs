@@ -25,6 +25,9 @@ public class WeaponConfigViewer : GameConfigViewerBase
     [Header("主发射器")]
     [SerializeField] WeaponPrimaryEmitterGroup primaryEmitters = new();
 
+    [Header("低速主炮（按 Power）")]
+    [SerializeField] WeaponPowerPrimarySlowLayout[] powerPrimarySlowLayouts = System.Array.Empty<WeaponPowerPrimarySlowLayout>();
+
     [Header("副发射器（按 Power）")]
     [SerializeField] WeaponPowerSecondaryLayout[] powerSecondaryLayouts = System.Array.Empty<WeaponPowerSecondaryLayout>();
 
@@ -63,6 +66,7 @@ public class WeaponConfigViewer : GameConfigViewerBase
         weaponID = weaponConfig.weaponID;
         display = weaponConfig.display ?? new WeaponDisplayConfig();
         primaryEmitters = weaponConfig.primaryEmitters ?? new WeaponPrimaryEmitterGroup();
+        powerPrimarySlowLayouts = weaponConfig.powerPrimarySlowLayouts ?? System.Array.Empty<WeaponPowerPrimarySlowLayout>();
         powerSecondaryLayouts = weaponConfig.powerSecondaryLayouts ?? System.Array.Empty<WeaponPowerSecondaryLayout>();
         slowModeLayout = weaponConfig.slowModeLayout ?? new WeaponSlowModeLayoutConfig();
 
@@ -84,6 +88,7 @@ public class WeaponConfigViewer : GameConfigViewerBase
         weaponConfig.weaponID = weaponID;
         weaponConfig.display = display;
         weaponConfig.primaryEmitters = primaryEmitters;
+        weaponConfig.powerPrimarySlowLayouts = powerPrimarySlowLayouts;
         weaponConfig.powerSecondaryLayouts = powerSecondaryLayouts;
         weaponConfig.slowModeLayout = slowModeLayout;
         weaponConfig.description = display.description;
@@ -197,6 +202,7 @@ public class WeaponConfigViewer : GameConfigViewerBase
         snap.weaponID = weaponID;
         snap.display = display;
         snap.primaryEmitters = primaryEmitters;
+        snap.powerPrimarySlowLayouts = powerPrimarySlowLayouts;
         snap.powerSecondaryLayouts = powerSecondaryLayouts;
         snap.slowModeLayout = slowModeLayout;
         snap.description = display.description;

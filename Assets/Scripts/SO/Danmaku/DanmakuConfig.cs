@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewDanmakuConfig", menuName = "Configs/Danmaku")]
-public class DanmakuConfig : GameConfig , IReferenceResolver
+public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("弹幕预制体")]
     [Tooltip("预制体 Id（小写）；Inspector 中从 GameResourceManifest / Prefabs/Danmaku 下拉选择")]
@@ -26,20 +26,34 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
     [Header("弹幕伤害")]
     public float damage = 1f;
 
-    [Header("弹幕追踪设置")]
-    [HideInInspector] public float HomingTurnSpeed = 5f;
-    [HideInInspector] public LayerMask HomingTargetLayers = 1; // 例如 Player 层
+    [Header("追踪弹幕（Bezier 路径）")]
+    [Tooltip("追踪目标所在碰撞层；玩家弹通常选 Enemy")]
+    public E_ColliderLayer homingTargetLayers = E_ColliderLayer.Enemy;
+
+    [Tooltip("沿一条 Bezier 逼近目标所需时间（秒）；越小转弯越急")]
+    [Min(0.02f)]
+    public float homingBezierDurationSeconds = 0.35f;
+
+    [Tooltip("曲线弯曲强度（0=直线，约 0.2~0.6 为常见弧弯）")]
+    [Range(0f, 1.5f)]
+    public float homingCurveStrength = 0.35f;
 
     [Header("弹幕运动设置")]
     public bool IsAccelerating = false;
     [HideInInspector] public float MaxSpeed = 10f;
     [HideInInspector] public float Acceleration = 2f;
 
+    [NonSerialized] public float homingProgressPerFrame;
+    [NonSerialized] public ushort homingTargetLayerMask;
+
 #if UNITY_EDITOR
     void OnValidate()
     {
         if (!string.IsNullOrEmpty(danmakuPrefabId))
             danmakuPrefabId = StringHelper.NormalizeResourceId(danmakuPrefabId);
+
+        if (homingBezierDurationSeconds < 0.02f)
+            homingBezierDurationSeconds = 0.02f;
     }
 #endif
 
@@ -54,5 +68,16 @@ public class DanmakuConfig : GameConfig , IReferenceResolver
                 LogTag.Resource
             );
         }
+
+        homingTargetLayerMask = (ushort)homingTargetLayers;
+    }
+
+    public void BakeLogicTiming(uint logicFPS)
+    {
+        if (logicFPS <= 0)
+            logicFPS = 60;
+
+        int frames = Mathf.Max(1, Mathf.CeilToInt(homingBezierDurationSeconds * logicFPS));
+        homingProgressPerFrame = 1f / frames;
     }
 }

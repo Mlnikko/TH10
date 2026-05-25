@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Weapon_Reimu_Blue
   m_EditorClassIdentifier: 
   weaponID: 10
+  weaponPrefabId: weapon_reimu_blue
   display:
     selectionName: 
     description: 
@@ -25,43 +26,36 @@ MonoBehaviour:
   - minPowerOrbs: 1
     slots:
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0, y: -0.2}
+      slotOffset: {x: 0, y: -0.35}
   - minPowerOrbs: 2
     slots:
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: -0.2, y: -0.1}
+      slotOffset: {x: -0.35, y: -0.2}
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0.2, y: -0.1}
+      slotOffset: {x: 0.35, y: -0.2}
   - minPowerOrbs: 3
     slots:
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: -0.2, y: -0.1}
+      slotOffset: {x: -0.35, y: -0.2}
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0.2, y: -0.1}
+      slotOffset: {x: 0.35, y: -0.2}
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0, y: -0.2}
+      slotOffset: {x: 0, y: -0.35}
   - minPowerOrbs: 4
     slots:
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: -0.35, y: -0.1}
+      slotOffset: {x: -0.5, y: -0.2}
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0.35, y: -0.1}
+      slotOffset: {x: 0.5, y: -0.2}
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: -0.15, y: -0.25}
+      slotOffset: {x: -0.2, y: -0.45}
     - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0.15, y: -0.25}
+      slotOffset: {x: 0.2, y: -0.45}
   secondaryEmitters:
-    slots:
-    - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0.5, y: 0}
-    - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: -0.5, y: 0}
-    - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: 0.3, y: -0.3}
-    - danmakuEmitterConfigId: dme_reimu_blue
-      slotOffset: {x: -0.3, y: -0.3}
+    slots: []
   slowModeLayout:
     primarySlotConverge: 0.5
     secondarySlotConverge: 0.5
+    secondarySlotConvergeSpeed: 4
   description: 
   danmakuEmitterConfigIds: []

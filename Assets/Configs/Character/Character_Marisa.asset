@@ -15,7 +15,7 @@ MonoBehaviour:
   characterPrefabId: character_marisa
   character: 2
   weaponConfigIds:
-  - weapon_marisa_0
+  - weapon_marisa_green
   - weapon_marisa_1
   - weapon_marisa_2
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"

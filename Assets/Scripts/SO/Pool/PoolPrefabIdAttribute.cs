@@ -5,4 +5,16 @@ using UnityEngine;
 /// </summary>
 public sealed class PoolPrefabIdAttribute : PropertyAttribute
 {
+    public E_PoolCategory Category { get; }
+    public bool HasExplicitCategory { get; }
+
+    public PoolPrefabIdAttribute()
+    {
+    }
+
+    public PoolPrefabIdAttribute(E_PoolCategory category)
+    {
+        Category = category;
+        HasExplicitCategory = true;
+    }
 }

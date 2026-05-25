@@ -5,6 +5,23 @@ using UnityEngine;
 [CustomEditor(typeof(DropItemConfigViewer), true)]
 public class DropItemConfigViewerEditor : GameConfigViewerEditor<DropItemConfigViewer>
 {
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+
+        const string PickupPrefabIdField = "pickupPrefabId";
+        DrawPropertiesExcluding(serializedObject, "m_Script", PickupPrefabIdField);
+
+        var prefabId = serializedObject.FindProperty(PickupPrefabIdField);
+        if (prefabId != null)
+            ResourceIdEditorPicker.DrawDropItemPrefabIdField(prefabId);
+
+        serializedObject.ApplyModifiedProperties();
+
+        ConfigViewerEditorUI.DrawSeparator();
+        DrawViewerTools();
+    }
+
     protected override void DrawViewerTools()
     {
         EditorGUILayout.LabelField("场景预览", EditorStyles.boldLabel);

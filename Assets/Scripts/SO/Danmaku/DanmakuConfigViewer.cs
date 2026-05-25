@@ -22,6 +22,11 @@ public class DanmakuConfigViewer : GameConfigViewerBase
 
     [SerializeField] float damage;
 
+    [Header("追踪弹幕（Bezier）")]
+    [SerializeField] E_ColliderLayer homingTargetLayers = E_ColliderLayer.Enemy;
+    [SerializeField] float homingBezierDurationSeconds = 0.35f;
+    [SerializeField] float homingCurveStrength = 0.35f;
+
     public void LoadDanmakuConfig() => LoadFromConfig();
 
     public override void LoadFromConfig()
@@ -41,6 +46,10 @@ public class DanmakuConfigViewer : GameConfigViewerBase
         colliderConfig = danmakuConfig.colliderConfig;
 
         damage = danmakuConfig.damage;
+
+        homingTargetLayers = danmakuConfig.homingTargetLayers;
+        homingBezierDurationSeconds = danmakuConfig.homingBezierDurationSeconds;
+        homingCurveStrength = danmakuConfig.homingCurveStrength;
 
         Logger.Debug($"弹幕配置文件加载完成: {danmakuConfig.name}");
     }
@@ -62,6 +71,13 @@ public class DanmakuConfigViewer : GameConfigViewerBase
         danmakuConfig.colliderConfig = colliderConfig;
 
         danmakuConfig.damage = damage;
+
+        if (danmakuType == E_DanmakuType.Homing)
+        {
+            danmakuConfig.homingTargetLayers = homingTargetLayers;
+            danmakuConfig.homingBezierDurationSeconds = homingBezierDurationSeconds;
+            danmakuConfig.homingCurveStrength = homingCurveStrength;
+        }
 
         Logger.Debug($"弹幕配置文件保存完成: {danmakuConfig.name}");
     }

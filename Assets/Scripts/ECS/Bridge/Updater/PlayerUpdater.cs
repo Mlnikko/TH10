@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>表现层回收角色时，一并归还挂接的对象池实例（如武器预制体）。</summary>
@@ -13,6 +15,8 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
 
     GameObject _weaponGo;
     readonly WeaponRuntimeLayoutView _weaponLayout = new();
+    readonly List<Vector2> _secondaryRuntimeOffsets = new(8);
+    readonly List<Vector3> _secondaryWorldOrigins = new(8);
 
     int _lastDirection = 0;
     bool _lastIsSlowMode = false;
@@ -61,6 +65,64 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
         _weaponGo = null;
     }
 
+    void CollectSecondaryVisualOverrides(
+        in EntityManager em,
+        int playerEntityIndex,
+        WeaponConfig weaponConfig,
+        bool slowMode)
+    {
+        _secondaryRuntimeOffsets.Clear();
+        _secondaryWorldOrigins.Clear();
+
+        if (weaponConfig == null)
+            return;
+
+        var mode = weaponConfig.slowModeLayout.secondarySlowPositionMode;
+        Span<int> ownedIndices = em.GetActiveIndices<CPlayerEmitterOwnership>();
+        if (ownedIndices.Length == 0)
+            return;
+
+        var ownerships = em.GetComponentSpan<CPlayerEmitterOwnership>();
+        var positions = em.GetComponentSpan<CPosition>();
+
+        if (!weaponConfig.TryGetSecondarySlotsForPower(
+                em.GetComponentSpan<CPlayer>()[playerEntityIndex].powerOrbs,
+                out var slots))
+            return;
+
+        for (int s = 0; s < slots.Length; s++)
+            _secondaryRuntimeOffsets.Add(slots[s].slotOffset);
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref readonly var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != playerEntityIndex)
+                continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+                continue;
+
+            int slotIndex = ownership.secondarySlotIndex;
+            if (slotIndex < _secondaryRuntimeOffsets.Count)
+            {
+                _secondaryRuntimeOffsets[slotIndex] = new Vector2(
+                    ownership.runtimeSlotOffsetX,
+                    ownership.runtimeSlotOffsetY);
+            }
+
+            if (slowMode
+                && mode == E_WeaponSlowSlotPositionMode.WorldAnchorWhileSlow
+                && (ownership.slowPositionState & WeaponSlowModePosition.SlowStateWorldAnchor) != 0)
+            {
+                while (_secondaryWorldOrigins.Count <= slotIndex)
+                    _secondaryWorldOrigins.Add(Vector3.zero);
+
+                ref readonly var pos = ref positions[emitterIdx];
+                _secondaryWorldOrigins[slotIndex] = new Vector3(pos.x, pos.y, 0f);
+            }
+        }
+    }
+
     public void UpdateGameObject(in EntityManager em, Entity entity)
     {
         // === 位置更新（逻辑帧插值 + 联机等待输入时本地预测）===
@@ -76,12 +138,15 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
             var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
             if (weaponConfig != null)
             {
+                CollectSecondaryVisualOverrides(em, entity.Index, weaponConfig, player.isSlowMode);
                 _weaponLayout.Sync(
                     _weaponGo.transform,
                     weaponConfig,
                     player.powerOrbs,
                     player.secondarySlotConvergeT,
-                    player.isSlowMode);
+                    player.isSlowMode,
+                    _secondaryRuntimeOffsets.Count > 0 ? _secondaryRuntimeOffsets.ToArray() : null,
+                    _secondaryWorldOrigins.Count > 0 ? _secondaryWorldOrigins.ToArray() : null);
             }
         }
 

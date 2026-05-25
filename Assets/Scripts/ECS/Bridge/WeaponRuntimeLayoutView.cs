@@ -31,7 +31,9 @@ public sealed class WeaponRuntimeLayoutView
         WeaponConfig weapon,
         int powerOrbs,
         float secondaryConverge01,
-        bool slowModePrimary)
+        bool slowModePrimary,
+        Vector2[] secondaryRuntimeOffsets = null,
+        Vector3[] secondaryWorldOrigins = null)
     {
         if (weaponTransform == null || weapon == null)
         {
@@ -47,6 +49,8 @@ public sealed class WeaponRuntimeLayoutView
             powerOrbs,
             secondaryConverge01,
             slowModePrimary,
+            secondaryRuntimeOffsets,
+            secondaryWorldOrigins,
             _points);
 
         int structureHash = ComputeStructureHash(weapon, powerOrbs, slowModePrimary, _points);

@@ -18,7 +18,7 @@ MonoBehaviour:
   m_GUID: ce1532357111f0d4a9c779a4293a7eb3
   m_SerializeEntries:
   - m_GUID: 21eab830fde214d44a882133316bd2a2
-    m_Address: cfg_weapon_marisa_0
+    m_Address: cfg_weapon_marisa_green
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -428,7 +428,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a53889af21e396c40b0b51624e423dc8
-    m_Address: prefab_minion_fariy
+    m_Address: prefab_minion_fariy_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -525,7 +525,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bbb2c76c117338045854982ba0901625
-    m_Address: cfg_minion_fariy
+    m_Address: cfg_minion_fariy_blue
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -930,12 +930,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aabbccddee11223344556677889900aa
-    m_Address: cfg_drop_pr_s
+    m_Address: cfg_drop_rpr_s
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca871ea02d320904382476df4f37ec13
-    m_Address: prefab_drop_pr_s
+    m_Address: prefab_drop_rpr_s
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -945,12 +945,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a53cd15a47c01e34dabd913552447846
-    m_Address: prefab_drop_pt_s
+    m_Address: prefab_drop_bpt_s
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 99a4a050de160774f8c3c1428aeaa7fc
-    m_Address: cfg_drop_pt_s
+    m_Address: cfg_drop_bpt_s
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1011,6 +1011,106 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cce96cd2b75c6b64ab429113be53d686
     m_Address: prefab_weapon_reimu_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff7a72542d89bd84dacdb2fb3349e601
+    m_Address: prefab_effect_dead_blue
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 137ee34c5b6ee844c8b3eba812dbde6c
+    m_Address: prefab_minion_fariy_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5603929fa6f242c4aa597e869684cf1c
+    m_Address: cfg_minion_fariy_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ac35966dae64a44282681570cf97f00
+    m_Address: prefab_effect_dead_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7e48f48d1655f9448558c9c5bde4ba8
+    m_Address: prefab_minion_fariy_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d05ca36f396d324abcd5bf14119bc32
+    m_Address: prefab_minion_fariy_yellow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3402f30c81f0d546aa2224dff254073
+    m_Address: cfg_minion_fariy_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0723e70b065605344a47ef5f4d3469a1
+    m_Address: cfg_minion_fariy_yellow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7928d35c73ffd746acfaff434bd11ca
+    m_Address: prefab_drop_gpt_s
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc077f149e7a1a2408ed1c0990f956fa
+    m_Address: cfg_drop_gpt_s
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c81a110b918ee6c46b24af78297cbc0d
+    m_Address: prefab_dm_marisa_main
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4d1548e85b3444b458ed48c1197ffa7e
+    m_Address: prefab_dme_marisa_main
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63fd077dda7c2aa499b1d01a60f20239
+    m_Address: prefab_weapon_reimu_pink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a74469bab00925d44ac65f170d8fa97f
+    m_Address: cfg_dm_marisa_main
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34f53a9f0a85014418109c1ab821b759
+    m_Address: cfg_dme_marisa_main
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c234de98dffd50b4ca41b72aad1a35db
+    m_Address: prefab_weapon_marisa_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8448398d54f388e4fa5c03c142c6942a
+    m_Address: prefab_dm_marisa_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67a1719170dfb9943b1d8502df6614a0
+    m_Address: prefab_dme_marisa_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e142d85974e16048bdd2c595679a93f
+    m_Address: cfg_dm_marisa_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 871ada1500f56bc4f8bd246366ec33bc
+    m_Address: cfg_dme_marisa_green
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

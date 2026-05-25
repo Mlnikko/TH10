@@ -51,14 +51,48 @@ MonoBehaviour:
     description: 
   primaryEmitters:
     normal:
-      danmakuEmitterConfigId: 
+      danmakuEmitterConfigId: dme_reimu_main
       slotOffset: {x: 0, y: 0}
     slowModeDanmakuEmitterConfigId: 
-  powerSecondaryLayouts: []
+  powerPrimarySlowLayouts:
+  - minPowerOrbs: 0
+    slot:
+      danmakuEmitterConfigId: 
+      slotOffset: {x: 0, y: 0}
+  powerSecondaryLayouts:
+  - minPowerOrbs: 1
+    slots:
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: 0, y: 0.25}
+  - minPowerOrbs: 2
+    slots:
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: 0.25, y: 0.25}
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: -0.25, y: 0.25}
+  - minPowerOrbs: 3
+    slots:
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: 0.45, y: 0.25}
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: -0.45, y: 0.25}
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: 0, y: 0.5}
+  - minPowerOrbs: 4
+    slots:
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: 0.45, y: 0.25}
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: -0.45, y: 0.25}
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: -0.2, y: 0.5}
+    - danmakuEmitterConfigId: dme_reimu_red
+      slotOffset: {x: 0.2, y: 0.5}
   slowModeLayout:
     primarySlotConverge: 0
-    secondarySlotConverge: 1
+    secondarySlotConverge: 0.3
+    secondarySlotConvergeSpeed: 4
   previewLayoutMode: 0
-  previewPowerOrbs: 1
+  previewPowerOrbs: 4
   previewDuration: 5
   previewBulletLifetime: 3

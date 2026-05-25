@@ -91,6 +91,19 @@ public struct CDanmaku : IComponent
 }
 
 /// <summary>
+/// 沿 cubic Bezier 追踪 <see cref="homingTargetLayerMask"/> 内最近实体（见 <see cref="DanmakuBezierHomingLogic"/>）。
+/// </summary>
+public struct CDanmakuBezierHoming : IComponent
+{
+    public int targetEnemyIndex;
+    /// <summary>当前 Bezier 段参数 [0,1]；到达 1 后归零并指向移动中的目标。</summary>
+    public float segmentT;
+    public float progressPerFrame;
+    public float curveStrength;
+    public ushort homingTargetLayerMask;
+}
+
+/// <summary>
 /// 掉落物逻辑实体；配置索引指向 <see cref="DropItemConfig"/>。
 /// </summary>
 public struct CDropItem : IComponent
@@ -320,6 +333,9 @@ public struct CPlayer : IComponent
 
     /// <summary>已应用的副炮 Power 档 <see cref="WeaponPowerSecondaryLayout.minPowerOrbs"/>；<see cref="int.MinValue"/> 表示尚未同步。</summary>
     public int appliedSecondaryPowerMinOrbs;
+
+    /// <summary>低速模式下已应用的主炮 Power 档 <see cref="WeaponPowerPrimarySlowLayout.minPowerOrbs"/>。</summary>
+    public int appliedPrimarySlowPowerMinOrbs;
 }
 
 /// <summary>挂在玩家武器发射子实体上，用于同步位置与射击状态。</summary>
@@ -334,6 +350,17 @@ public struct CPlayerEmitterOwnership : IComponent
     /// <summary><see cref="DanmakuEmitterConfig.emitterPosOffset"/>（不含武器槽位偏移）。</summary>
     public float emitterBaseOffsetX;
     public float emitterBaseOffsetY;
+
+    /// <summary>轨迹跟随 / 退出低速回位时的运行时槽位偏移（相对玩家）。</summary>
+    public float runtimeSlotOffsetX;
+    public float runtimeSlotOffsetY;
+
+    /// <summary><see cref="E_WeaponSlowSlotPositionMode.WorldAnchorWhileSlow"/> 期间的世界锚点。</summary>
+    public float slowWorldAnchorX;
+    public float slowWorldAnchorY;
+
+    /// <summary>见 <see cref="WeaponSlowModePosition.SlowStateWorldAnchor"/>。</summary>
+    public byte slowPositionState;
 }
 
 #endregion

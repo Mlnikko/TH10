@@ -101,9 +101,21 @@ public class CollisionLogicSystem : BaseSystem
 
         if (enemy.currentHealth <= 0)
         {
+            TrySpawnDeathEffectFromEnemy(enemyEntity);
             TrySpawnDropsFromEnemy(enemyEntity);
             EntityManager.AddComponent(enemyEntity.Index, new CPoolRecycleTag());
         }
+    }
+
+    void TrySpawnDeathEffectFromEnemy(Entity enemyEntity)
+    {
+        ref readonly var ce = ref EntityManager.GetComponent<CEnemy>(enemyEntity);
+        var enemyCfg = GameResDB.Instance.GetConfig<EnemyConfig>(ce.enemyCfgIndex);
+        if (enemyCfg == null || enemyCfg.deathEffectPrefabIndex < 0)
+            return;
+
+        ref readonly var pos = ref EntityManager.GetComponent<CPosition>(enemyEntity);
+        BattlePresentationEffects.TrySpawnPooledEffect(enemyCfg.deathEffectPrefabIndex, pos.x, pos.y);
     }
 
     void TrySpawnDropsFromEnemy(Entity enemyEntity)
@@ -203,6 +215,6 @@ public class CollisionLogicSystem : BaseSystem
 
     void TryApplyDropPickup(Entity dropEntity, Entity playerEntity, Span<CCollider> colliders)
     {
-        DropItemPickup.TryCollisionPickup(EntityManager, dropEntity, playerEntity, colliders);
+        DropItemPickup.TryCollisionPickup(EntityManager, dropEntity, playerEntity, colliders, EntityFactory);
     }
 }

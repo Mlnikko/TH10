@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemyWave_1
   m_EditorClassIdentifier: 
   startTimeSeconds: 0
-  enemyConfigId: minion_fariy
+  enemyConfigId: minion_fariy_blue
   count: 1
   spawnPattern: 0
   spawnAreaSize: {x: 10, y: 5}
@@ -24,9 +24,8 @@ MonoBehaviour:
   defaultDescentSpeed: 3.6
   hpMultiplier: 1
   waitForClear: 0
-  waveDropMode: 1
-  waveDropOnDeathConfigIds:
-  - drop_pr_s
+  waveDropMode: 0
+  waveDropOnDeathConfigIds: []
   references:
     version: 2
     RefIds:

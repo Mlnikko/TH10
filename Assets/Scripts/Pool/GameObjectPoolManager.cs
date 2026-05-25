@@ -129,7 +129,20 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         // 检查池是否为空
         if (queue == null || queue.Count == 0)
         {
-            Logger.Error($"POOL EXHAUSTED! Index: {prefabIndex}. Increase warmup count!");
+            string prefabHint = "?";
+            if (GameResDB.IsInitialized)
+            {
+                var prefab = GameResDB.Instance.GetPrefab(prefabIndex);
+                if (prefab != null)
+                    prefabHint = prefab.name;
+            }
+
+            bool neverWarmed = queue == null;
+            Logger.Error(
+                neverWarmed
+                    ? $"POOL NOT WARMED! Index: {prefabIndex} ({prefabHint}). Add prefabId to DefaultGlobalPool entries."
+                    : $"POOL EXHAUSTED! Index: {prefabIndex} ({prefabHint}). Increase defaultWarmupCount in DefaultGlobalPool.",
+                LogTag.Pool);
             return null;
         }
 

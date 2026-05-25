@@ -16,6 +16,8 @@ public class DropItemConfigViewer : GameConfigViewerBase
     public DropItemConfig dropItemConfig;
 
     [Header("表现")]
+    [Tooltip("掉落物表现预制体 id（Drop 池）")]
+    [PoolPrefabId(E_PoolCategory.Drop)]
     [SerializeField] string pickupPrefabId;
 
     [SerializeField] Sprite pickupSprite;

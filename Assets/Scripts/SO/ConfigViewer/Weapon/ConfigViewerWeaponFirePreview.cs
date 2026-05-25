@@ -88,17 +88,11 @@ public sealed class ConfigViewerWeaponFirePreview
     {
         _emitters.Clear();
 
-        var primary = weaponCfg.primaryEmitters.normal;
-        string primaryEmitterId = primary.danmakuEmitterConfigId;
-        if (slowConverge)
-        {
-            string slowId = StringHelper.NormalizeResourceId(
-                weaponCfg.primaryEmitters.slowModeDanmakuEmitterConfigId);
-            if (!string.IsNullOrEmpty(slowId))
-                primaryEmitterId = slowId;
-        }
+        string primaryEmitterId = weaponCfg.primaryEmitters.normal.danmakuEmitterConfigId;
+        if (slowConverge && weaponCfg.TryGetPrimarySlowSlotForPower(previewPowerOrbs, out var slowSlot))
+            primaryEmitterId = slowSlot.danmakuEmitterConfigId;
 
-        Vector2 primaryOffset = weaponCfg.ResolvePrimarySlotOffset(slowConverge);
+        Vector2 primaryOffset = weaponCfg.ResolvePrimarySlotOffset(slowConverge, previewPowerOrbs);
         if (!TryAddEmitter(primaryEmitterId, primaryOffset, logTag))
         {
             Logger.Warn($"[{logTag}] 主发射器无效，无法开始预览。", LogTag.Config);

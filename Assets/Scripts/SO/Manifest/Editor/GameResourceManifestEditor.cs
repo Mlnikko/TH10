@@ -38,9 +38,11 @@ public class GameResourceManifestEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();
-        if (GUILayout.Button("自动识别填充资源ID"))
+        if (GUILayout.Button("自动识别填充资源ID", GUILayout.Height(28)))
             FillResources();
+
+        EditorGUILayout.Space(6);
+        base.OnInspectorGUI();
     }
 
     void FillResources()

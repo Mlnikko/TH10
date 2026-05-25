@@ -39,12 +39,14 @@ public class EntityManager
     public const int MAX_ENTITIES = 65536; // 16位索引
     readonly BitSet _activeMask;
     readonly ushort[] _versions;
+    readonly uint[] _componentMasks;
     readonly Queue<int> _freeIds;
 
     public EntityManager()
     {
         _activeMask = new BitSet(MAX_ENTITIES);
         _versions = new ushort[MAX_ENTITIES];
+        _componentMasks = new uint[MAX_ENTITIES];
         _freeIds = new Queue<int>(MAX_ENTITIES);
         Initialize();
     }
@@ -65,12 +67,17 @@ public class EntityManager
 
         int index = _freeIds.Dequeue();
 
+        uint mask = _componentMasks[index];
+        if (mask != 0)
+            ClearComponentsFromMask(index, mask);
+
         _activeMask.Set(index, true);
 
         Entity entity = Entity.FromIndexAndVersion(index, _versions[index]);
 
         return entity;
     }
+
     public void DestroyEntity(Entity entity)
     {
         if (entity.IsNull) return;
@@ -82,11 +89,17 @@ public class EntityManager
         if (index >= MAX_ENTITIES || !_activeMask.Get(index) || _versions[index] != version)
             return;
 
+        ClearComponentsFromMask(index, _componentMasks[index]);
+
         // 销毁时递增 Version！这是防复用的关键
         _versions[index]++;
         _activeMask.Set(index, false);
         _freeIds.Enqueue(index);
     }
+
+    /// <summary>实体槽位是否仍被分配（未 Destroy）。</summary>
+    public bool IsIndexActive(int index) =>
+        (uint)index < MAX_ENTITIES && _activeMask.Get(index);
 
     // 核心安全方法：检查 Entity 是否有效
     public bool IsValid(Entity entity)
@@ -114,7 +127,13 @@ public class EntityManager
     public void AddComponent<T>(int index, in T component) where T : struct, IComponent
     {
         if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index)) return;
-        ComponentStorage<T>.Add(index, component); // 调用新的 Add
+
+        uint bit = ComponentMaskBits.GetMask<T>();
+        if (bit == 0)
+            return;
+
+        ComponentStorage<T>.Add(index, component);
+        _componentMasks[index] |= bit;
     }
     #endregion
 
@@ -129,7 +148,7 @@ public class EntityManager
     public void RemoveComponent<T>(int index) where T : struct, IComponent
     {
         if ((uint)index >= MAX_ENTITIES || !_activeMask.Get(index)) return;
-        ComponentStorage<T>.Remove(index);
+        RemoveComponentAtSlot<T>(index);
     }
     #endregion
 
@@ -143,7 +162,14 @@ public class EntityManager
     public bool HasComponent<T>(Entity entity) where T : struct, IComponent
     {
         if (!IsValid(entity)) return false;
-        return ComponentStorage<T>.HasComponent.Get(entity.Index);
+        return HasComponent<T>(entity.Index);
+    }
+
+    public bool HasComponent<T>(int index) where T : struct, IComponent
+    {
+        if (!IsIndexActive(index)) return false;
+        uint bit = ComponentMaskBits.GetMask<T>();
+        return bit != 0 && (_componentMasks[index] & bit) != 0;
     }
 
     public Span<T> GetComponentSpan<T>() where T : struct, IComponent
@@ -154,5 +180,49 @@ public class EntityManager
     public Span<int> GetActiveIndices<T>() where T : struct, IComponent
     {
         return ComponentStorage<T>.GetActiveIndices();
+    }
+
+    void ClearComponentsFromMask(int index, uint mask)
+    {
+        if (mask == 0)
+            return;
+
+        if ((mask & ComponentMaskBits.CPoolRecycleTag) != 0) RemoveComponentAtSlot<CPoolRecycleTag>(index);
+        if ((mask & ComponentMaskBits.CPoolGetTag) != 0) RemoveComponentAtSlot<CPoolGetTag>(index);
+        if ((mask & ComponentMaskBits.CNoOffscreenRecycleTag) != 0) RemoveComponentAtSlot<CNoOffscreenRecycleTag>(index);
+        if ((mask & ComponentMaskBits.CGameObjectLink) != 0) RemoveComponentAtSlot<CGameObjectLink>(index);
+        if ((mask & ComponentMaskBits.CPresentationPose) != 0) RemoveComponentAtSlot<CPresentationPose>(index);
+
+        if ((mask & ComponentMaskBits.CPlayerEmitterOwnership) != 0) RemoveComponentAtSlot<CPlayerEmitterOwnership>(index);
+        if ((mask & ComponentMaskBits.CDanmakuEmitter) != 0) RemoveComponentAtSlot<CDanmakuEmitter>(index);
+        if ((mask & ComponentMaskBits.CDanmaku) != 0) RemoveComponentAtSlot<CDanmaku>(index);
+        if ((mask & ComponentMaskBits.CDropItemMagnet) != 0) RemoveComponentAtSlot<CDropItemMagnet>(index);
+        if ((mask & ComponentMaskBits.CDropItemMotion) != 0) RemoveComponentAtSlot<CDropItemMotion>(index);
+        if ((mask & ComponentMaskBits.CDropItem) != 0) RemoveComponentAtSlot<CDropItem>(index);
+        if ((mask & ComponentMaskBits.CEnemyDeathLoot) != 0) RemoveComponentAtSlot<CEnemyDeathLoot>(index);
+        if ((mask & ComponentMaskBits.CEnemyMovement) != 0) RemoveComponentAtSlot<CEnemyMovement>(index);
+        if ((mask & ComponentMaskBits.CEnemy) != 0) RemoveComponentAtSlot<CEnemy>(index);
+        if ((mask & ComponentMaskBits.CPlayer) != 0) RemoveComponentAtSlot<CPlayer>(index);
+        if ((mask & ComponentMaskBits.CHealth) != 0) RemoveComponentAtSlot<CHealth>(index);
+        if ((mask & ComponentMaskBits.CCollider) != 0) RemoveComponentAtSlot<CCollider>(index);
+        if ((mask & ComponentMaskBits.CVelocity) != 0) RemoveComponentAtSlot<CVelocity>(index);
+        if ((mask & ComponentMaskBits.CRotation) != 0) RemoveComponentAtSlot<CRotation>(index);
+        if ((mask & ComponentMaskBits.CPosition) != 0) RemoveComponentAtSlot<CPosition>(index);
+        if ((mask & ComponentMaskBits.CStageState) != 0) RemoveComponentAtSlot<CStageState>(index);
+        if ((mask & ComponentMaskBits.CDanmakuBezierHoming) != 0) RemoveComponentAtSlot<CDanmakuBezierHoming>(index);
+
+        _componentMasks[index] = 0;
+    }
+
+    void RemoveComponentAtSlot<T>(int index) where T : struct, IComponent
+    {
+        uint bit = ComponentMaskBits.GetMask<T>();
+        if (bit == 0)
+            return;
+
+        if (ComponentStorage<T>.HasComponent.Get(index))
+            ComponentStorage<T>.Remove(index);
+
+        _componentMasks[index] &= ~bit;
     }
 }

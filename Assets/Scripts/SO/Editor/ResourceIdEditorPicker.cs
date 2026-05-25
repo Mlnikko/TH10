@@ -39,12 +39,93 @@ public static class ResourceIdEditorPicker
         DrawIdPopup(stringProp, ids, "武器 Config Id");
     }
 
+    /// <summary>从允许列表中选武器 ConfigId；列表为空时回退到 Manifest 全量列表。</summary>
+    public static void DrawWeaponConfigIdFieldFromAllowed(
+        SerializedProperty stringProp,
+        IReadOnlyList<string> allowedIds,
+        string label)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = BuildAllowedIdList(allowedIds, CollectWeaponConfigIds());
+        DrawIdPopup(stringProp, ids, label ?? "武器 Config Id");
+    }
+
+    public static void DrawWeaponConfigIdFieldFromAllowed(
+        SerializedProperty stringProp,
+        SerializedProperty allowedArrayProp,
+        string label)
+    {
+        DrawWeaponConfigIdFieldFromAllowed(
+            stringProp,
+            ReadStringIdsFromArrayProperty(allowedArrayProp),
+            label);
+    }
+
+    static string[] ReadStringIdsFromArrayProperty(SerializedProperty arrayProp)
+    {
+        if (arrayProp == null || !arrayProp.isArray || arrayProp.arraySize == 0)
+            return Array.Empty<string>();
+
+        var result = new string[arrayProp.arraySize];
+        for (int i = 0; i < arrayProp.arraySize; i++)
+            result[i] = arrayProp.GetArrayElementAtIndex(i).stringValue ?? string.Empty;
+
+        return result;
+    }
+
+    static List<string> BuildAllowedIdList(IReadOnlyList<string> preferred, List<string> fallback)
+    {
+        if (preferred == null || preferred.Count == 0)
+            return fallback;
+
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        for (int i = 0; i < preferred.Count; i++)
+        {
+            string id = StringHelper.NormalizeResourceId(preferred[i]);
+            if (string.IsNullOrEmpty(id) || !set.Add(id))
+                continue;
+            result.Add(id);
+        }
+
+        return result.Count > 0 ? result : fallback;
+    }
+
     public static void DrawWeaponConfigIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
             return;
 
         var ids = CollectWeaponConfigIds();
+        DrawIdPopupAtRect(rect, stringProp, ids, label ?? GUIContent.none);
+    }
+
+    public static void DrawEnemyConfigIdField(SerializedProperty stringProp)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectEnemyConfigIds();
+        DrawIdPopup(stringProp, ids, "敌人 Config Id");
+    }
+
+    public static void DrawDropItemConfigIdField(SerializedProperty stringProp)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectDropItemConfigIds();
+        DrawIdPopup(stringProp, ids, "掉落 Config Id");
+    }
+
+    public static void DrawDropItemConfigIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectDropItemConfigIds();
         DrawIdPopupAtRect(rect, stringProp, ids, label ?? GUIContent.none);
     }
 
@@ -108,6 +189,9 @@ public static class ResourceIdEditorPicker
         var ids = CollectPoolPrefabIds(category);
         DrawIdPopup(stringProp, ids, "预制体 Id");
     }
+
+    public static void DrawDropItemPrefabIdField(SerializedProperty stringProp) =>
+        DrawPoolPrefabIdField(stringProp, E_PoolCategory.Drop);
 
     public static void DrawPoolPrefabIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label, E_PoolCategory category)
     {
@@ -203,21 +287,278 @@ public static class ResourceIdEditorPicker
         return SortIds(set);
     }
 
+    const float WeaponRowRemoveButtonWidth = 24f;
+
+    public static void DrawWeaponPowerPrimarySlowLayouts(SerializedProperty arrayProp)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return;
+
+        EditorGUILayout.LabelField("低速主炮（按 Power）", EditorStyles.boldLabel);
+        var emitterIds = CollectDanmakuEmitterConfigIds();
+
+        for (int t = 0; t < arrayProp.arraySize; t++)
+        {
+            var tier = arrayProp.GetArrayElementAtIndex(t);
+            var minPower = tier.FindPropertyRelative(nameof(WeaponPowerPrimarySlowLayout.minPowerOrbs));
+            var slot = tier.FindPropertyRelative(nameof(WeaponPowerPrimarySlowLayout.slot));
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            if (DrawWeaponPowerTierHeader(minPower, $"档位 [{t}]", arrayProp, t))
+                break;
+
+            DrawWeaponEmitterSlot(slot, emitterIds, "主炮槽位");
+            EditorGUILayout.EndVertical();
+        }
+
+        DrawWeaponArrayAddButton("+ 添加主炮档位", 110, () => arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize));
+    }
+
+    public static void DrawWeaponPowerSecondaryLayouts(SerializedProperty arrayProp)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return;
+
+        EditorGUILayout.LabelField("副炮（按 Power）", EditorStyles.boldLabel);
+        var emitterIds = CollectDanmakuEmitterConfigIds();
+
+        for (int t = 0; t < arrayProp.arraySize; t++)
+        {
+            var tier = arrayProp.GetArrayElementAtIndex(t);
+            var minPower = tier.FindPropertyRelative(nameof(WeaponPowerSecondaryLayout.minPowerOrbs));
+            var slots = tier.FindPropertyRelative(nameof(WeaponPowerSecondaryLayout.slots));
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            if (DrawWeaponPowerTierHeader(minPower, $"档位 [{t}]", arrayProp, t))
+                break;
+
+            DrawWeaponSecondarySlotsArray(slots, emitterIds);
+            EditorGUILayout.EndVertical();
+        }
+
+        DrawWeaponArrayAddButton("+ 添加副炮档位", 110, () => arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize));
+    }
+
+    static bool DrawWeaponPowerTierHeader(
+        SerializedProperty minPowerProp,
+        string tierLabel,
+        SerializedProperty tierArrayProp,
+        int tierIndex)
+    {
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PropertyField(minPowerProp, new GUIContent($"最低 Power (P≥) · {tierLabel}"));
+        bool removed = GUILayout.Button(new GUIContent("−", "删除本 Power 档位"), GUILayout.Width(WeaponRowRemoveButtonWidth));
+        EditorGUILayout.EndHorizontal();
+
+        if (removed)
+        {
+            tierArrayProp.DeleteArrayElementAtIndex(tierIndex);
+            return true;
+        }
+
+        return false;
+    }
+
+    static void DrawWeaponSecondarySlotsArray(SerializedProperty slotsProp, IReadOnlyList<string> emitterIds)
+    {
+        if (slotsProp == null || !slotsProp.isArray)
+            return;
+
+        EditorGUILayout.LabelField("副炮槽位", EditorStyles.miniBoldLabel);
+
+        float line = EditorGUIUtility.singleLineHeight;
+        float spacing = EditorGUIUtility.standardVerticalSpacing;
+        float blockHeight = line * 2f + spacing;
+
+        for (int i = 0; i < slotsProp.arraySize; i++)
+        {
+            var slot = slotsProp.GetArrayElementAtIndex(i);
+            var configIdProp = slot.FindPropertyRelative(nameof(WeaponEmitterSlot.danmakuEmitterConfigId));
+            var offsetProp = slot.FindPropertyRelative(nameof(WeaponEmitterSlot.slotOffset));
+            if (configIdProp == null || offsetProp == null)
+                continue;
+
+            Rect block = EditorGUILayout.GetControlRect(false, blockHeight);
+            float y = block.y;
+
+            Rect removeRect = new Rect(block.xMax - WeaponRowRemoveButtonWidth, y, WeaponRowRemoveButtonWidth, line);
+            Rect popupRect = new Rect(block.x, y, block.width - WeaponRowRemoveButtonWidth - 2f, line);
+            DrawIdPopupAtRect(popupRect, configIdProp, emitterIds, new GUIContent($"副炮 [{i}]"));
+
+            if (GUI.Button(removeRect, new GUIContent("−", "移除此副炮槽位")))
+            {
+                slotsProp.DeleteArrayElementAtIndex(i);
+                break;
+            }
+
+            y += line + spacing;
+            EditorGUI.PropertyField(
+                new Rect(block.x, y, block.width, line),
+                offsetProp,
+                new GUIContent("槽位偏移"));
+
+            EditorGUILayout.Space(2);
+        }
+
+        DrawWeaponArrayAddButton("+ 添加副炮槽", 100, () => slotsProp.InsertArrayElementAtIndex(slotsProp.arraySize));
+    }
+
     public static void DrawWeaponEmitterSlot(SerializedProperty slotProp, IReadOnlyList<string> emitterIds, string label)
     {
         if (slotProp == null)
             return;
 
-        EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
-        EditorGUI.indentLevel++;
+        if (!string.IsNullOrEmpty(label))
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
 
+        DrawWeaponEmitterSlotFields(slotProp, emitterIds);
+    }
+
+    static void DrawWeaponEmitterSlotFields(SerializedProperty slotProp, IReadOnlyList<string> emitterIds)
+    {
         var configIdProp = slotProp.FindPropertyRelative(nameof(WeaponEmitterSlot.danmakuEmitterConfigId));
         var offsetProp = slotProp.FindPropertyRelative(nameof(WeaponEmitterSlot.slotOffset));
+        if (configIdProp == null || offsetProp == null)
+            return;
 
-        DrawIdPopup(configIdProp, emitterIds, "发射器 Config Id");
-        EditorGUILayout.PropertyField(offsetProp, new GUIContent("槽位偏移"));
+        float line = EditorGUIUtility.singleLineHeight;
+        float spacing = EditorGUIUtility.standardVerticalSpacing;
+        Rect block = EditorGUILayout.GetControlRect(false, line * 2f + spacing);
+        float y = block.y;
 
-        EditorGUI.indentLevel--;
+        DrawIdPopupAtRect(
+            new Rect(block.x, y, block.width, line),
+            configIdProp,
+            emitterIds,
+            new GUIContent("发射器", "选 (无) 可清除发射器配置"));
+
+        y += line + spacing;
+        EditorGUI.PropertyField(
+            new Rect(block.x, y, block.width, line),
+            offsetProp,
+            new GUIContent("槽位偏移"));
+    }
+
+    static void DrawWeaponArrayAddButton(string label, float width, System.Action onAdd)
+    {
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button(label, GUILayout.Width(width)))
+            onAdd();
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space(4);
+    }
+
+    public static float GetDropItemConfigIdArrayHeight(SerializedProperty arrayProp)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return EditorGUIUtility.singleLineHeight;
+
+        float line = EditorGUIUtility.singleLineHeight;
+        float spacing = EditorGUIUtility.standardVerticalSpacing;
+        int rowCount = Mathf.Max(0, arrayProp.arraySize);
+        return rowCount * (line + spacing) + line + spacing * 2f;
+    }
+
+    public static void DrawDropItemConfigIdArray(SerializedProperty arrayProp)
+    {
+        DrawDropItemConfigIdArray(arrayProp, drawSectionHeader: true);
+    }
+
+    public static void DrawDropItemConfigIdArrayAtRect(Rect position, SerializedProperty arrayProp, GUIContent label)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return;
+
+        float line = EditorGUIUtility.singleLineHeight;
+        float spacing = EditorGUIUtility.standardVerticalSpacing;
+        float y = position.y;
+        float width = position.width;
+
+        if (label != null && !string.IsNullOrEmpty(label.text))
+        {
+            EditorGUI.LabelField(new Rect(position.x, y, width, line), label.text, EditorStyles.boldLabel);
+            y += line + spacing;
+        }
+
+        y = DrawDropItemConfigIdArrayRows(
+            new Rect(position.x, y, width, position.yMax - y),
+            arrayProp,
+            y);
+
+        Rect addButtonRect = new Rect(position.x + width - 100f, y, 100f, line);
+        if (GUI.Button(addButtonRect, "+ 添加掉落"))
+            arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize);
+    }
+
+    public static void DrawDropItemConfigIdArray(SerializedProperty arrayProp, bool drawSectionHeader)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return;
+
+        if (drawSectionHeader)
+            EditorGUILayout.LabelField("死亡掉落", EditorStyles.boldLabel);
+
+        var ids = CollectDropItemConfigIds();
+        DrawDropItemConfigIdArrayRowsGUILayout(arrayProp, ids);
+        EditorGUILayout.Space(2);
+    }
+
+    static void DrawDropItemConfigIdArrayRowsGUILayout(SerializedProperty arrayProp, IReadOnlyList<string> ids)
+    {
+        const float removeButtonWidth = 24f;
+
+        for (int i = 0; i < arrayProp.arraySize; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+            var element = arrayProp.GetArrayElementAtIndex(i);
+            DrawIdPopup(element, ids, $"掉落 [{i}]");
+            if (GUILayout.Button("−", GUILayout.Width(removeButtonWidth)))
+            {
+                arrayProp.DeleteArrayElementAtIndex(i);
+                EditorGUILayout.EndHorizontal();
+                break;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("+ 添加掉落", GUILayout.Width(100)))
+            arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize);
+        EditorGUILayout.EndHorizontal();
+    }
+
+    static float DrawDropItemConfigIdArrayRows(Rect position, SerializedProperty arrayProp, float startY)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return startY;
+
+        var ids = CollectDropItemConfigIds();
+        float line = EditorGUIUtility.singleLineHeight;
+        float spacing = EditorGUIUtility.standardVerticalSpacing;
+        const float removeButtonWidth = 24f;
+        float y = startY;
+
+        for (int i = 0; i < arrayProp.arraySize; i++)
+        {
+            var element = arrayProp.GetArrayElementAtIndex(i);
+            Rect rowRect = new Rect(position.x, y, position.width, line);
+            Rect removeRect = new Rect(rowRect.xMax - removeButtonWidth, rowRect.y, removeButtonWidth, rowRect.height);
+            Rect popupRect = new Rect(rowRect.x, rowRect.y, rowRect.width - removeButtonWidth - 2f, rowRect.height);
+
+            DrawIdPopupAtRect(popupRect, element, ids, new GUIContent($"掉落 [{i}]"));
+            if (GUI.Button(removeRect, "−"))
+            {
+                arrayProp.DeleteArrayElementAtIndex(i);
+                break;
+            }
+
+            y += line + spacing;
+        }
+
+        return y;
     }
 
     public static void DrawDanmakuConfigIdArray(SerializedProperty arrayProp)
@@ -350,6 +691,22 @@ public static class ResourceIdEditorPicker
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         AddManifestIds(set, nameof(GameResourceManifest.danmakuConfigIds));
         AddConfigIdsFromFolder<DanmakuConfig>(set, "Assets/Configs/Danmaku");
+        return SortIds(set);
+    }
+
+    static List<string> CollectEnemyConfigIds()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddManifestIds(set, nameof(GameResourceManifest.enemyConfigIds));
+        AddConfigIdsFromFolder<EnemyConfig>(set, "Assets/Configs/Enemy");
+        return SortIds(set);
+    }
+
+    static List<string> CollectDropItemConfigIds()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddManifestIds(set, nameof(GameResourceManifest.dropItemConfigIds));
+        AddConfigIdsFromFolder<DropItemConfig>(set, "Assets/Configs/DropItem");
         return SortIds(set);
     }
 

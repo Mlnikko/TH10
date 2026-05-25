@@ -383,7 +383,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: weapon_marisa_0
+      name: weapon_marisa_green
       rect:
         serializedVersion: 2
         x: 51
@@ -520,9 +520,9 @@ TextureImporter:
     secondaryTextures: []
     nameFileIdTable:
       flag_pass: -992658856
-      weapon_marisa_0: 1663811794
       weapon_marisa_1: -1903523073
       weapon_marisa_2: -1380428916
+      weapon_marisa_green: 1663811794
       weapon_name_dark_00: 1733091591
       weapon_name_dark_01: -225495119
       weapon_name_dark_02: -1262568428

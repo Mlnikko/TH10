@@ -5,10 +5,57 @@ using UnityEngine;
 [CustomEditor(typeof(WeaponConfigViewer))]
 public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewer>
 {
+    const string PrimaryEmittersField = "primaryEmitters";
+    const string PowerPrimarySlowField = "powerPrimarySlowLayouts";
+    const string PowerSecondaryField = "powerSecondaryLayouts";
+    const string SlowModeLayoutField = "slowModeLayout";
+    const string PreviewLayoutModeField = "previewLayoutMode";
+    const string PreviewPowerOrbsField = "previewPowerOrbs";
+    const string PreviewDurationField = "previewDuration";
+    const string PreviewBulletLifetimeField = "previewBulletLifetime";
+
     public override void OnInspectorGUI()
     {
+        serializedObject.Update();
+
+        DrawPropertiesExcluding(
+            serializedObject,
+            "m_Script",
+            PrimaryEmittersField,
+            PowerPrimarySlowField,
+            PowerSecondaryField,
+            SlowModeLayoutField,
+            PreviewLayoutModeField,
+            PreviewPowerOrbsField,
+            PreviewDurationField,
+            PreviewBulletLifetimeField);
+
+        var primary = serializedObject.FindProperty(PrimaryEmittersField);
+        var powerSlow = serializedObject.FindProperty(PowerPrimarySlowField);
+        var powerSecondary = serializedObject.FindProperty(PowerSecondaryField);
+        var slowLayout = serializedObject.FindProperty(SlowModeLayoutField);
+
+        WeaponConfigAssetEditor.DrawPrimaryEmitters(primary, powerSlow);
+        if (powerSlow != null)
+            ResourceIdEditorPicker.DrawWeaponPowerPrimarySlowLayouts(powerSlow);
+        if (powerSecondary != null)
+            ResourceIdEditorPicker.DrawWeaponPowerSecondaryLayouts(powerSecondary);
+
+        if (slowLayout != null)
+            WeaponConfigAssetEditor.DrawSlowModeLayout(slowLayout);
+
+        ConfigViewerEditorUI.DrawSeparator();
+        EditorGUILayout.LabelField("布局 / 发射预览", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(PreviewLayoutModeField));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(PreviewPowerOrbsField));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(PreviewDurationField));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(PreviewBulletLifetimeField));
+
+        serializedObject.ApplyModifiedProperties();
+
         EditorGUI.BeginChangeCheck();
-        base.OnInspectorGUI();
+        ConfigViewerEditorUI.DrawSeparator();
+        DrawViewerTools();
         bool inspectorChanged = EditorGUI.EndChangeCheck();
 
         if (inspectorChanged)
@@ -29,7 +76,7 @@ public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewe
 
         EditorGUILayout.LabelField("发射预览", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
-            "布局预览与发射预览共用「预览 Power」。点击发射预览按钮会同步切换「布局预览模式」。",
+            "布局预览与发射预览共用「预览 Power」。低速预览会按 Power 档位显示主炮与副炮。",
             MessageType.None);
         using (new EditorGUILayout.HorizontalScope())
         {

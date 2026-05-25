@@ -5,6 +5,58 @@ using UnityEngine;
 [CustomEditor(typeof(DanmakuEmitterConfigViewer), true)]
 public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEmitterConfigViewer>
 {
+    const string EmitterConfigField = "emitterConfig";
+
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+
+        var configRef = serializedObject.FindProperty(EmitterConfigField);
+        EditorGUILayout.PropertyField(configRef, new GUIContent("配置文件"));
+
+        DrawEmitterConfigResourceFields(Viewer);
+
+        DrawPropertiesExcluding(serializedObject, "m_Script", EmitterConfigField);
+
+        serializedObject.ApplyModifiedProperties();
+
+        ConfigViewerEditorUI.DrawSeparator();
+        DrawViewerTools();
+    }
+
+    static void DrawEmitterConfigResourceFields(DanmakuEmitterConfigViewer viewer)
+    {
+        var config = viewer != null ? viewer.emitterConfig : null;
+        if (config == null)
+        {
+            EditorGUILayout.HelpBox("指定 DanmakuEmitterConfig 后可配置预制体 Id 与装填弹幕。", MessageType.None);
+            return;
+        }
+
+        var cfgSo = new SerializedObject(config);
+        cfgSo.Update();
+
+        var prefabId = cfgSo.FindProperty(nameof(DanmakuEmitterConfig.emitterPrefabId));
+        var danmakuIds = cfgSo.FindProperty(nameof(DanmakuEmitterConfig.danmakuConfigIds));
+        var selectMode = cfgSo.FindProperty(nameof(DanmakuEmitterConfig.danmakuSelectMode));
+
+        EditorGUILayout.LabelField("资源引用", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        ResourceIdEditorPicker.DrawPrefabIdField(
+            prefabId,
+            nameof(GameResourceManifest.danmakuEmitterPrefabIds),
+            "Prefabs/DanmakuEmitter");
+        ResourceIdEditorPicker.DrawDanmakuConfigIdArray(danmakuIds);
+        EditorGUILayout.PropertyField(selectMode, new GUIContent("弹幕选择模式"));
+        EditorGUI.indentLevel--;
+
+        if (cfgSo.ApplyModifiedProperties())
+        {
+            ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(config);
+            viewer.SyncDisplaySpriteFromConfig();
+        }
+    }
+
     protected override void DrawViewerTools()
     {
         EditorGUILayout.LabelField("场景预览", EditorStyles.boldLabel);

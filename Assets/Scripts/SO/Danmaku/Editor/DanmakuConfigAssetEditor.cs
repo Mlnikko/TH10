@@ -33,10 +33,22 @@ public class DanmakuConfigAssetEditor : Editor
                 continue;
             }
 
+            if (IsHomingOnlyField(prop.name))
+            {
+                var typeProp = serializedObject.FindProperty(nameof(DanmakuConfig.danmakuType));
+                if (typeProp == null || typeProp.enumValueIndex != (int)E_DanmakuType.Homing)
+                    continue;
+            }
+
             EditorGUILayout.PropertyField(prop, true);
         }
 
         serializedObject.ApplyModifiedProperties();
     }
+
+    static bool IsHomingOnlyField(string propertyName) =>
+        propertyName == nameof(DanmakuConfig.homingTargetLayers)
+        || propertyName == nameof(DanmakuConfig.homingBezierDurationSeconds)
+        || propertyName == nameof(DanmakuConfig.homingCurveStrength);
 }
 #endif

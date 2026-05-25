@@ -19,7 +19,7 @@ public class CollisionSystem : BaseSystem
         Span<int> activeColliders = TempBuffers.CollisionActive;
         Span<int> queryResults = TempBuffers.CollisionQuery;
 
-        Span<int> indices = ComponentStorage<CCollider>.GetActiveIndices();
+        Span<int> indices = EntityManager.GetActiveIndices<CCollider>();
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var rotations = EntityManager.GetComponentSpan<CRotation>();
         var velocities = EntityManager.GetComponentSpan<CVelocity>();

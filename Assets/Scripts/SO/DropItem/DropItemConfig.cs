@@ -19,6 +19,8 @@ public enum E_DropKind : byte
 public class DropItemConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("表现")]
+    [Tooltip("掉落物表现预制体 id（Drop 池，须在 Manifest.dropItemPrefabIds 登记）")]
+    [PoolPrefabId(E_PoolCategory.Drop)]
     public string pickupPrefabId;
     [NonSerialized] public int pickupPrefabIndex = -1;
 

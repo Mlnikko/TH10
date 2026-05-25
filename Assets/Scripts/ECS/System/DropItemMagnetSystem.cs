@@ -59,7 +59,7 @@ public class DropItemMagnetSystem : BaseSystem
             if (!reached)
                 continue;
 
-            DropItemPickup.ApplyPickupEffects(EntityManager, drop, targetPlayer);
+            DropItemPickup.ApplyPickupEffects(EntityManager, drop, targetPlayer, EntityFactory);
             if (DropItemPickup.TryConsumeDrop(EntityManager, drop))
                 EntityManager.RemoveComponent<CDropItemMagnet>(drop);
         }

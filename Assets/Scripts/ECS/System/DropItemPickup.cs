@@ -7,7 +7,8 @@ public static class DropItemPickup
         EntityManager em,
         Entity dropEntity,
         Entity playerEntity,
-        System.Span<CCollider> colliders)
+        System.Span<CCollider> colliders,
+        EntityFactory entityFactory = null)
     {
         if (!em.IsValid(dropEntity) || !em.IsValid(playerEntity))
             return false;
@@ -22,12 +23,12 @@ public static class DropItemPickup
         if (TempBitSets.DropItemPickupConsumed.Get(di))
             return false;
 
-        ApplyPickupEffects(em, dropEntity, playerEntity);
+        ApplyPickupEffects(em, dropEntity, playerEntity, entityFactory);
         return TryConsumeDrop(em, dropEntity);
     }
 
   /// <summary>对单个掉落物应用拾取效果（不回收）。</summary>
-    public static void ApplyPickupEffects(EntityManager em, Entity dropEntity, Entity playerEntity)
+    public static void ApplyPickupEffects(EntityManager em, Entity dropEntity, Entity playerEntity, EntityFactory entityFactory = null)
     {
         if (!em.IsValid(dropEntity) || !em.IsValid(playerEntity))
             return;
@@ -39,7 +40,7 @@ public static class DropItemPickup
         if (cfg == null)
             return;
 
-        DropItemPickupEffects.Apply(in cfg, em, playerEntity);
+        DropItemPickupEffects.Apply(in cfg, em, playerEntity, entityFactory);
     }
 
     public static bool TryConsumeDrop(EntityManager em, Entity dropEntity)
