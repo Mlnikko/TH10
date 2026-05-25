@@ -51,7 +51,12 @@ public class WeaponConfigViewer : GameConfigViewerBase
 
     public void LoadWeaponConfig() => LoadFromConfig();
 
-    protected override void ApplyEditorPreview() => RefreshEmitterLayoutPreview();
+    protected override void ApplyEditorPreview()
+    {
+#if UNITY_EDITOR
+        RefreshEmitterLayoutPreview();
+#endif
+    }
 
     public override void LoadFromConfig()
     {

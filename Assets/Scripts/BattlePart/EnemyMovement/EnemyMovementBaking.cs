@@ -1,5 +1,5 @@
 using UnityEngine;
-using System;
+
 /// <summary>
 /// 将 <see cref="MovementPatternData"/> / 波次默认值烘焙为运行时 <see cref="CEnemyMovement"/>。
 /// </summary>
@@ -19,17 +19,52 @@ public static class EnemyMovementBaking
         return BakeLinear(spawnFrame, originX, originY, 0f, -Mathf.Abs(perFrame), -1);
     }
 
+    public static bool TryAttachMovementFromWave(
+        EntityManager em,
+        Entity entity,
+        EnemyWaveConfig wave,
+        uint spawnFrame,
+        float originX,
+        float originY,
+        int spawnIndexInWave)
+    {
+        if (wave.pathRouteBakeIndex >= 0)
+        {
+            em.AddComponent(entity, new CEnemyPathMovement
+            {
+                spawnFrame = spawnFrame,
+                originX = originX,
+                originY = originY,
+                routeBakeIndex = wave.pathRouteBakeIndex
+            });
+            return true;
+        }
+
+        if (TryBakeFromWave(wave, spawnFrame, originX, originY, spawnIndexInWave, out var motion))
+        {
+            em.AddComponent(entity, motion);
+            return true;
+        }
+
+        return false;
+    }
+
     public static bool TryBakeFromWave(
         EnemyWaveConfig wave,
         uint spawnFrame,
         float originX,
         float originY,
         int spawnIndexInWave,
-        EntityManager em,
         out CEnemyMovement motion)
     {
+        if (wave.pathRouteBakeIndex >= 0)
+        {
+            motion = default;
+            return false;
+        }
+
         if (wave.movementData != null)
-            return TryBakeFromProfile(wave.movementData, spawnFrame, originX, originY, spawnIndexInWave, em, out motion);
+            return TryBakeFromProfile(wave.movementData, spawnFrame, originX, originY, spawnIndexInWave, out motion);
 
         if (wave.useDefaultDescentIfNoMovement && wave.defaultDescentSpeedPerFrame > 0f)
         {
@@ -54,7 +89,6 @@ public static class EnemyMovementBaking
         float originX,
         float originY,
         int spawnIndexInWave,
-        EntityManager em,
         out CEnemyMovement motion)
     {
         motion = default;
@@ -78,10 +112,6 @@ public static class EnemyMovementBaking
                 BakeDirectionalLinear(data, spawnFrame, originX, originY, out motion);
                 return true;
 
-            case AimedLinearMovementData:
-                BakeAimed(data, spawnFrame, originX, originY, em, out motion);
-                return true;
-
             case SineMovementData sine:
                 BakeSine(sine, spawnFrame, originX, originY, spawnIndexInWave, out motion);
                 return true;
@@ -97,6 +127,10 @@ public static class EnemyMovementBaking
             case WaypointPathMovementData path:
                 BakeWaypoint(path, spawnFrame, originX, originY, out motion);
                 return true;
+
+            case PathRouteMovementData:
+                motion = default;
+                return false;
 
             default:
                 BakeDirectionalLinear(data, spawnFrame, originX, originY, out motion);
@@ -123,34 +157,6 @@ public static class EnemyMovementBaking
             dX = dx,
             dY = dy
         };
-    }
-
-    static void BakeAimed(MovementPatternData data, uint spawnFrame, float ox, float oy, EntityManager em, out CEnemyMovement motion)
-    {
-        Vector2 dir = Vector2.down;
-        if (TryGetFirstPlayerPosition(em, out float px, out float py))
-        {
-            Vector2 d = new Vector2(px - ox, py - oy);
-            if (d.sqrMagnitude > 1e-8f)
-                dir = d.normalized;
-        }
-        float spd = data.moveSpeedPerFrame;
-        motion = BakeLinear(spawnFrame, ox, oy, dir.x * spd, dir.y * spd, data.durationFrames);
-        motion.kind = E_EnemyMotionKind.AimedLinear;
-    }
-
-    static bool TryGetFirstPlayerPosition(EntityManager em, out float px, out float py)
-    {
-        px = py = 0f;
-        Span<int> pl = em.GetActiveIndices<CPlayer>();
-        if (pl.Length == 0) return false;
-        int i = pl[0];
-        var posSpan = em.GetComponentSpan<CPosition>();
-        if (i < 0 || i >= posSpan.Length) return false;
-        var p = posSpan[i];
-        px = p.x;
-        py = p.y;
-        return true;
     }
 
     static void BakeSine(SineMovementData data, uint spawnFrame, float ox, float oy, int spawnIndexInWave, out CEnemyMovement motion)

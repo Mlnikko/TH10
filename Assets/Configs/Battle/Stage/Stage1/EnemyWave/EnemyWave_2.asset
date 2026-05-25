@@ -30,9 +30,9 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 3645174066016945121
-      type: {class: AimedLinearMovementData, ns: , asm: Assembly-CSharp}
+      type: {class: LinearMovementData, ns: , asm: Assembly-CSharp}
       data:
-        type: 6
+        type: 1
         durationSeconds: -1
         moveSpeed: 3
         amplitude: 1

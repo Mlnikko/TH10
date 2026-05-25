@@ -89,6 +89,6 @@ MonoBehaviour:
     secondarySlotConverge: 0
     secondarySlotConvergeSpeed: 4
   previewLayoutMode: 1
-  previewPowerOrbs: 1
+  previewPowerOrbs: 400
   previewDuration: 5
   previewBulletLifetime: 3

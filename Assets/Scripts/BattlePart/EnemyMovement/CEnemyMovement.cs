@@ -9,8 +9,7 @@ public enum E_EnemyMotionKind : byte
     Sine = 3,
     Orbit = 4,
     CubicBezier = 5,
-    WaypointPolyline = 6,
-    AimedLinear = 7
+    WaypointPolyline = 6
 }
 
 /// <summary>

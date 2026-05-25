@@ -12,6 +12,14 @@ public static class ConfigViewerPrefabSync
         if (config == null)
             return;
 
+        RunWhenEditorSafe(() => ApplyDanmakuEmitterDisplaySpriteImmediate(config));
+    }
+
+    static void ApplyDanmakuEmitterDisplaySpriteImmediate(DanmakuEmitterConfig config)
+    {
+        if (config == null)
+            return;
+
         GameObject prefab = ConfigViewerAssetLookup.FindDanmakuEmitterPrefab(config.emitterPrefabId);
         if (prefab == null)
             return;
@@ -24,6 +32,17 @@ public static class ConfigViewerPrefabSync
         var viewer = prefab.GetComponent<DanmakuEmitterConfigViewer>();
         if (viewer != null && viewer.emitterConfig == config)
             viewer.SyncDisplaySpriteFromConfig();
+    }
+
+    /// <summary>
+    /// 避开 OnValidate / CheckConsistency 阶段修改 SpriteRenderer（会触发 SendMessage 报错）。
+    /// </summary>
+    static void RunWhenEditorSafe(System.Action action)
+    {
+        if (action == null)
+            return;
+
+        EditorApplication.delayCall += () => action();
     }
 
     public static bool TryApplySprite(GameObject root, Sprite sprite)

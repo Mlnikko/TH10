@@ -20,6 +20,7 @@ public sealed class ConfigViewerWeaponFirePreview
     struct PreviewBullet
     {
         public GameObject go;
+        public DanmakuConfig danmaku;
         public float velX;
         public float velY;
         public int ageFrames;
@@ -185,6 +186,12 @@ public sealed class ConfigViewerWeaponFirePreview
         for (int i = 0; i < _emitters.Count; i++)
         {
             var state = _emitters[i];
+            if (state.emitter.launchCountMax >= 0 &&
+                state.emitter.launchCountUsed >= state.emitter.launchCountMax)
+            {
+                continue;
+            }
+
             uint since = frame - state.lastFireFrame;
             if (state.emitter.launchCooldownFrames > 0 &&
                 since < (uint)state.emitter.launchCooldownFrames)
@@ -198,6 +205,8 @@ public sealed class ConfigViewerWeaponFirePreview
 
             FireBurst(state, danmaku);
             state.lastFireFrame = frame;
+            state.emitter.launchCountUsed++;
+            _emitters[i] = state;
         }
     }
 
@@ -236,7 +245,7 @@ public sealed class ConfigViewerWeaponFirePreview
         go.transform.position = new Vector3(x, y, _anchor.position.z);
         go.transform.rotation = Quaternion.Euler(0f, 0f, rotRad * Mathf.Rad2Deg);
 
-        _bullets.Add(new PreviewBullet { go = go, velX = velX, velY = velY, ageFrames = 0 });
+        _bullets.Add(new PreviewBullet { go = go, danmaku = danmaku, velX = velX, velY = velY, ageFrames = 0 });
     }
 
     void AdvanceBullets()
@@ -250,18 +259,20 @@ public sealed class ConfigViewerWeaponFirePreview
                 continue;
             }
 
+            Vector3 pos = b.go.transform.position;
+
             b.ageFrames++;
             if (_bulletLifetimeFrames > 0 && b.ageFrames >= _bulletLifetimeFrames)
             {
+                DanmakuHitEffectPresentation.TrySpawnAtConfig(b.danmaku, pos.x, pos.y);
                 Object.DestroyImmediate(b.go);
                 _bullets.RemoveAt(i);
                 continue;
             }
 
-            Vector3 p = b.go.transform.position;
-            p.x += b.velX;
-            p.y += b.velY;
-            b.go.transform.position = p;
+            pos.x += b.velX;
+            pos.y += b.velY;
+            b.go.transform.position = pos;
             _bullets[i] = b;
         }
     }

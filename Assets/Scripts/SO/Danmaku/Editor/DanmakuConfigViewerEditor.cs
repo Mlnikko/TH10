@@ -5,6 +5,41 @@ using UnityEngine;
 [CustomEditor(typeof(DanmakuConfigViewer), true)]
 public class DanmakuConfigViewerEditor : GameConfigViewerEditor<DanmakuConfigViewer>
 {
+    const string ConfigField = "danmakuConfig";
+    const string PrefabIdField = "danmakuPrefabId";
+    const string HitEffectField = "hitEffectPrefabId";
+
+    public override void OnInspectorGUI()
+    {
+        serializedObject.Update();
+
+        var configRef = serializedObject.FindProperty(ConfigField);
+        if (configRef != null)
+            EditorGUILayout.PropertyField(configRef);
+
+        var prefabId = serializedObject.FindProperty(PrefabIdField);
+        if (prefabId != null)
+            ResourceIdEditorPicker.DrawDanmakuPrefabIdField(prefabId);
+
+        var hitEffect = serializedObject.FindProperty(HitEffectField);
+        if (hitEffect != null)
+        {
+            var rect = EditorGUILayout.GetControlRect(true);
+            ResourceIdEditorPicker.DrawPoolPrefabIdAtRect(
+                rect,
+                hitEffect,
+                new GUIContent("命中特效预制体Id"),
+                E_PoolCategory.Effect);
+        }
+
+        DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField, PrefabIdField, HitEffectField);
+
+        serializedObject.ApplyModifiedProperties();
+
+        ConfigViewerEditorUI.DrawSeparator();
+        DrawViewerTools();
+    }
+
     protected override void DrawViewerTools()
     {
         if (DrawMissingConfig(Viewer.danmakuConfig, "DanmakuConfig"))

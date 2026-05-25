@@ -10,10 +10,21 @@ public sealed class WeaponRuntimeLayoutView
     {
         public GameObject go;
         public int prefabIndex;
+        public DanmakuEmitterConfig emitterCfg;
+        public string spinStateKey;
+        public Vector3 baseLocalScale;
+    }
+
+    struct DisplayMotionState
+    {
+        public float displaySpinAngleDeg;
+        public float displayScalePhaseRad;
+        public uint lastMotionLogicFrame;
     }
 
     readonly List<WeaponEmitLayout.EmitPoint> _points = new();
     readonly List<VisualEntry> _visuals = new();
+    readonly Dictionary<string, DisplayMotionState> _displayMotionCache = new();
 
     Transform _layoutRoot;
     int _lastStructureHash = int.MinValue;
@@ -23,6 +34,7 @@ public sealed class WeaponRuntimeLayoutView
     {
         _lastStructureHash = int.MinValue;
         _lastPoseHash = int.MinValue;
+        _displayMotionCache.Clear();
         ReleaseVisuals();
     }
 
@@ -60,11 +72,31 @@ public sealed class WeaponRuntimeLayoutView
             return;
         }
 
-        if (poseHash != _lastPoseHash)
+        if (poseHash != _lastPoseHash || HasActiveDisplayMotion(_points))
         {
-            _lastPoseHash = poseHash;
+            if (poseHash != _lastPoseHash)
+                _lastPoseHash = poseHash;
             ApplyPose(_points);
         }
+    }
+
+    static bool HasActiveDisplayMotion(List<WeaponEmitLayout.EmitPoint> points)
+    {
+        for (int i = 0; i < points.Count; i++)
+        {
+            var cfg = points[i].emitterCfg;
+            if (cfg == null)
+                continue;
+
+            if (DanmakuEmitterDisplaySpin.HasDisplayMotion(
+                    cfg.displaySelfSpinRadPerFrame,
+                    cfg.displayScaleMin,
+                    cfg.displayScaleMax,
+                    cfg.displayScaleCyclesPerSecond))
+                return true;
+        }
+
+        return false;
     }
 
     void Rebuild(Transform weaponTransform, List<WeaponEmitLayout.EmitPoint> points)
@@ -95,7 +127,14 @@ public sealed class WeaponRuntimeLayoutView
             instance.name = point.label;
             instance.SetActive(true);
 
-            _visuals.Add(new VisualEntry { go = instance, prefabIndex = point.emitterPrefabIndex });
+            _visuals.Add(new VisualEntry
+            {
+                go = instance,
+                prefabIndex = point.emitterPrefabIndex,
+                emitterCfg = point.emitterCfg,
+                spinStateKey = GetSpinStateKey(point),
+                baseLocalScale = instance.transform.localScale,
+            });
         }
 
         ApplyPose(points);
@@ -103,6 +142,8 @@ public sealed class WeaponRuntimeLayoutView
 
     void ApplyPose(List<WeaponEmitLayout.EmitPoint> points)
     {
+        uint logicFrame = ResolveLogicFrame();
+
         int count = Mathf.Min(_visuals.Count, points.Count);
         for (int i = 0; i < count; i++)
         {
@@ -110,10 +151,91 @@ public sealed class WeaponRuntimeLayoutView
                 continue;
 
             var point = points[i];
-            _visuals[i].go.transform.SetPositionAndRotation(
+            var visual = _visuals[i];
+            var cfg = visual.emitterCfg ?? point.emitterCfg;
+            string motionKey = visual.spinStateKey ?? GetSpinStateKey(point);
+            Transform t = visual.go.transform;
+
+            if (cfg == null)
+            {
+                t.SetPositionAndRotation(
+                    point.worldPosition,
+                    Quaternion.Euler(0f, 0f, point.worldRotZDeg));
+                t.localScale = visual.baseLocalScale;
+                continue;
+            }
+
+            if (!_displayMotionCache.TryGetValue(motionKey, out var motion))
+                motion = default;
+
+            AdvanceDisplayMotion(ref motion, cfg, logicFrame);
+            _displayMotionCache[motionKey] = motion;
+
+            t.SetPositionAndRotation(
                 point.worldPosition,
-                Quaternion.Euler(0f, 0f, point.worldRotZDeg));
+                DanmakuEmitterDisplaySpin.GetWorldRotation(point.worldRotZDeg, motion.displaySpinAngleDeg));
+            t.localScale = DanmakuEmitterDisplaySpin.GetLocalScale(
+                visual.baseLocalScale,
+                cfg.displayScaleMin,
+                cfg.displayScaleMax,
+                motion.displayScalePhaseRad,
+                cfg.displayScaleCyclesPerSecond);
         }
+    }
+
+    static string GetSpinStateKey(WeaponEmitLayout.EmitPoint point)
+    {
+        if (point.isPrimary)
+            return "primary";
+
+        if (!string.IsNullOrEmpty(point.label))
+        {
+            int modeSep = point.label.IndexOf('·');
+            if (modeSep > 0)
+                return point.label.Substring(0, modeSep);
+
+            return point.label;
+        }
+
+        return point.emitterPrefabIndex.ToString();
+    }
+
+    static void AdvanceDisplayMotion(ref DisplayMotionState motion, DanmakuEmitterConfig cfg, uint logicFrame)
+    {
+        if (cfg == null)
+            return;
+
+        bool hasSpin = cfg.displaySelfSpinRadPerFrame != 0f;
+        bool hasScale = DanmakuEmitterDisplaySpin.HasScalePulse(
+            cfg.displayScaleMin,
+            cfg.displayScaleMax,
+            cfg.displayScaleCyclesPerSecond);
+
+        if (!hasSpin && !hasScale)
+            return;
+
+        if (motion.lastMotionLogicFrame == 0)
+        {
+            motion.lastMotionLogicFrame = logicFrame;
+            return;
+        }
+
+        if (logicFrame > motion.lastMotionLogicFrame)
+        {
+            uint delta = logicFrame - motion.lastMotionLogicFrame;
+            if (hasSpin)
+                motion.displaySpinAngleDeg += cfg.displaySelfSpinRadPerFrame * delta * Mathf.Rad2Deg;
+            if (hasScale)
+                motion.displayScalePhaseRad += cfg.displayScalePhaseRadPerFrame * delta;
+        }
+
+        motion.lastMotionLogicFrame = logicFrame;
+    }
+
+    static uint ResolveLogicFrame()
+    {
+        var world = BattleManager.Instance != null ? BattleManager.Instance.ActiveBattleWorld : null;
+        return world != null ? world.LogicFrameTimer.CurrentFrame : 0u;
     }
 
     void ReleaseVisuals()

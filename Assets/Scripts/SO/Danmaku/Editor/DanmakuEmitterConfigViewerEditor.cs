@@ -66,8 +66,14 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
 
         DrawSyncHint("双击进入预制体编辑后自动同步发射参数。");
 
-        if (GUILayout.Button("预览发射效果", GUILayout.Height(28)))
-            Viewer.PreviewEmitterEffect();
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("预览发射效果", GUILayout.Height(28)))
+                Viewer.PreviewEmitterEffect();
+
+            if (GUILayout.Button("预览自转/缩放", GUILayout.Height(28)))
+                Viewer.StartPreviewDisplaySpin();
+        }
 
         if (Viewer.IsPreviewingEmitter)
         {
@@ -77,6 +83,13 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
 
             if (GUILayout.Button("停止发射预览", GUILayout.Height(24)))
                 Viewer.StopPreviewEmitter();
+        }
+
+        if (Viewer.IsPreviewingDisplaySpin)
+        {
+            EditorGUILayout.HelpBox("正在预览 Sprite 自转/循环缩放…", MessageType.Info);
+            if (GUILayout.Button("停止表现预览", GUILayout.Height(24)))
+                Viewer.StopPreviewDisplaySpin();
         }
 
         ConfigViewerEditorUI.DrawSeparator();

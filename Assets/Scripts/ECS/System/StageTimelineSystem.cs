@@ -23,6 +23,7 @@ public class StageTimelineSystem : BaseSystem
     int _nextWaveIndex;
     bool _waitingForWaveClear;
     readonly List<Entity> _clearWatchEntities = new();
+    readonly List<PendingSequentialSpawn> _pendingSequentialSpawns = new();
 
     bool _hasStageAnchor;
     uint _stageStartFrame;
@@ -115,6 +116,8 @@ public class StageTimelineSystem : BaseSystem
         _nextWaveIndex = 0;
         _waitingForWaveClear = false;
         _clearWatchEntities.Clear();
+        _pendingSequentialSpawns.Clear();
+        EnemyPathBakeCache.Clear();
         _hasStageAnchor = false;
         _midBossSpawned = false;
         _mainBossSpawned = false;
@@ -122,12 +125,27 @@ public class StageTimelineSystem : BaseSystem
         _mainBossEntity = Entity.Null;
         _bossFightStartElapsed = 0;
 
+        RebuildWavePathBakes();
         EnsureStageAuthority();
         ref var st = ref EntityManager.GetComponent<CStageState>(_stageAuthority);
         st.currentState = E_StageState.MidStage;
         st.stateEnterFrame = 0;
         st.currentBossPhaseIndex = -1;
         st.bossEntity = Entity.Null;
+    }
+
+    void RebuildWavePathBakes()
+    {
+        EnemyPathBakeCache.Clear();
+        uint fps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
+        for (int i = 0; i < _sortedWaves.Count; i++)
+        {
+            var wave = _sortedWaves[i];
+            if (wave == null)
+                continue;
+            wave.BakeLogicTiming(fps);
+            wave.BakePathRouteIfNeeded(fps);
+        }
     }
 
     /// <summary>
@@ -147,6 +165,8 @@ public class StageTimelineSystem : BaseSystem
         _nextWaveIndex = 0;
         _waitingForWaveClear = false;
         _clearWatchEntities.Clear();
+        _pendingSequentialSpawns.Clear();
+        EnemyPathBakeCache.Clear();
         _hasStageAnchor = false;
         _midBossSpawned = false;
         _mainBossSpawned = false;
@@ -185,6 +205,7 @@ public class StageTimelineSystem : BaseSystem
         uint elapsed = currentFrame - _stageStartFrame;
 
         UpdateClearWatch();
+        ProcessPendingSequentialSpawns(currentFrame);
 
         if (_previewScope == E_StageTimelinePreviewScope.FullTimeline
             || _previewScope == E_StageTimelinePreviewScope.SingleMidStageWave)
@@ -247,182 +268,171 @@ public class StageTimelineSystem : BaseSystem
 
     void SpawnWave(EnemyWaveConfig wave, int waveIndexInSorted, uint currentFrame)
     {
-        if (string.IsNullOrEmpty(wave.enemyConfigId))
+        if (string.IsNullOrEmpty(wave.enemyConfigId)
+            && (wave.spawnQueue == null || wave.spawnQueue.Length == 0))
         {
             Logger.Warn("[StageTimeline] Wave skipped: empty enemyConfigId.", LogTag.Battle);
             return;
         }
 
-        var enemyCfg = GameResDB.Instance.GetConfig<EnemyConfig>(wave.enemyConfigId);
-        if (enemyCfg == null)
-        {
-            Logger.Error($"[StageTimeline] EnemyConfig not found: '{wave.enemyConfigId}'", LogTag.Battle);
+        var area = GlobalBattleData.IsInitialized
+            ? GlobalBattleData.AreaData
+            : BattleAreaData.Default;
+        var positions = EnemyWaveSpawnMath.ComputeSpawnPositions(wave, area, waveIndexInSorted, currentFrame);
+        int spawnCount = wave.ResolveSpawnCount();
+        if (spawnCount <= 0 || positions.Count == 0)
             return;
-        }
 
-        var positions = ComputeSpawnPositions(wave, waveIndexInSorted, currentFrame);
-        for (int i = 0; i < positions.Count; i++)
+        if (wave.UsesSequentialSpawn)
         {
-            var p = positions[i];
-            var e = EntityFactory.CreateEnemy(enemyCfg, p.x, p.y, wave.hpMultiplier);
-            if (e.IsNull)
-                continue;
-            if (EnemyMovementBaking.TryBakeFromWave(wave, currentFrame, p.x, p.y, i, EntityManager, out var motion))
-                EntityManager.AddComponent(e, motion);
+            if (!TrySpawnWaveEntry(wave, waveIndexInSorted, currentFrame, positions, 0))
+                return;
 
-            if (wave.waveDropMode != E_WaveDropOverrideMode.UseEnemyConfig)
+            if (spawnCount > 1)
             {
-                EntityManager.AddComponent(e, new CEnemyDeathLoot
+                _pendingSequentialSpawns.Add(new PendingSequentialSpawn
                 {
-                    waveDropMode = wave.waveDropMode,
-                    waveDropCfgIndices = wave.waveDropOnDeathCfgIndices ?? Array.Empty<int>()
+                    wave = wave,
+                    waveIndexInSorted = waveIndexInSorted,
+                    positions = positions,
+                    nextEntryIndex = 1,
+                    nextSpawnFrame = currentFrame + ResolveDelayFrames(wave, 1)
                 });
             }
-
-            EntityManager.AddComponent(e, new CPoolGetTag());
-            if (wave.waitForClear)
-                _clearWatchEntities.Add(e);
+        }
+        else
+        {
+            for (int i = 0; i < spawnCount; i++)
+                TrySpawnWaveEntry(wave, waveIndexInSorted, currentFrame, positions, i);
         }
 
         if (wave.waitForClear && _clearWatchEntities.Count > 0)
             _waitingForWaveClear = true;
     }
 
-    List<Vector2> ComputeSpawnPositions(EnemyWaveConfig wave, int waveIndex, uint currentFrame)
+    void ProcessPendingSequentialSpawns(uint currentFrame)
     {
-        var area = GlobalBattleData.IsInitialized
-            ? GlobalBattleData.AreaData
-            : BattleAreaData.Default;
-
-        var list = new List<Vector2>(Mathf.Max(1, wave.count));
-        float inset = BattleAreaEdgeInset(area);
-        float maxSpanX = Mathf.Max(0.05f, area.Width - 2f * inset);
-        float maxSpanY = Mathf.Max(0.05f, area.Height - 2f * inset);
-        Vector2 anchor = TopSpawnAnchor(area, wave.spawnOffset);
-
-        switch (wave.spawnPattern)
+        for (int j = _pendingSequentialSpawns.Count - 1; j >= 0; j--)
         {
-            case SpawnPattern.BossCenter:
-                list.Add(area.Center + wave.spawnOffset);
-                ClampSpawnListToBattleArea(area, list);
-                return list;
+            var job = _pendingSequentialSpawns[j];
+            if (currentFrame < job.nextSpawnFrame)
+                continue;
 
-            case SpawnPattern.Line:
+            if (!TrySpawnWaveEntry(job.wave, job.waveIndexInSorted, currentFrame, job.positions, job.nextEntryIndex))
             {
-                int n = Mathf.Max(1, wave.count);
-                float span = Mathf.Min(Mathf.Max(0.01f, wave.spawnAreaSize.x), maxSpanX);
-                for (int i = 0; i < n; i++)
-                {
-                    float t = n == 1 ? 0.5f : i / (float)(n - 1);
-                    float x = anchor.x + Mathf.Lerp(-span * 0.5f, span * 0.5f, t);
-                    list.Add(new Vector2(x, anchor.y));
-                }
-                ClampSpawnListToBattleArea(area, list);
-                return list;
+                _pendingSequentialSpawns.RemoveAt(j);
+                continue;
             }
 
-            case SpawnPattern.Grid:
+            job.nextEntryIndex++;
+            int total = job.wave.ResolveSpawnCount();
+            if (job.nextEntryIndex >= total)
             {
-                int n = Mathf.Max(1, wave.count);
-                int cols = Mathf.CeilToInt(Mathf.Sqrt(n));
-                int rows = Mathf.CeilToInt(n / (float)cols);
-                float sx = Mathf.Min(Mathf.Max(0.01f, wave.spawnAreaSize.x), maxSpanX);
-                float sy = Mathf.Min(Mathf.Max(0.01f, wave.spawnAreaSize.y), maxSpanY);
-                int k = 0;
-                for (int r = 0; r < rows && k < n; r++)
-                {
-                    for (int c = 0; c < cols && k < n; c++, k++)
-                    {
-                        float ux = cols == 1 ? 0.5f : c / (float)(cols - 1);
-                        float uy = rows == 1 ? 0.5f : r / (float)(rows - 1);
-                        float x = anchor.x + Mathf.Lerp(-sx * 0.5f, sx * 0.5f, ux);
-                        float y = anchor.y + Mathf.Lerp(-sy * 0.5f, sy * 0.5f, uy);
-                        list.Add(new Vector2(x, y));
-                    }
-                }
-                ClampSpawnListToBattleArea(area, list);
-                return list;
+                _pendingSequentialSpawns.RemoveAt(j);
+                continue;
             }
 
-            case SpawnPattern.Circle:
-            {
-                int n = Mathf.Max(1, wave.count);
-                float minDim = Mathf.Max(0.01f, Mathf.Min(area.Width, area.Height));
-                float requested = Mathf.Max(0.01f, wave.spawnAreaSize.x * 0.5f);
-                float rad = Mathf.Min(requested, minDim * 0.48f);
-                for (int i = 0; i < n; i++)
-                {
-                    float t = i / (float)n;
-                    float ang = t * Mathf.PI * 2f;
-                    list.Add(new Vector2(anchor.x + Mathf.Cos(ang) * rad, anchor.y + Mathf.Sin(ang) * rad));
-                }
-                ClampSpawnListToBattleArea(area, list);
-                return list;
-            }
-
-            case SpawnPattern.Random:
-            default:
-            {
-                float sx = Mathf.Min(Mathf.Max(area.Width * 0.02f, wave.spawnAreaSize.x), maxSpanX);
-                float sy = Mathf.Min(Mathf.Max(area.Height * 0.02f, wave.spawnAreaSize.y), maxSpanY);
-                int n = Mathf.Max(1, wave.count);
-                for (int i = 0; i < n; i++)
-                {
-                    float rx = Deterministic01(currentFrame, waveIndex, i, 0);
-                    float ry = Deterministic01(currentFrame, waveIndex, i, 1);
-                    list.Add(new Vector2(
-                        anchor.x + (rx - 0.5f) * sx,
-                        anchor.y + (ry - 0.5f) * sy));
-                }
-                ClampSpawnListToBattleArea(area, list);
-                return list;
-            }
+            job.nextSpawnFrame = currentFrame + ResolveDelayFrames(job.wave, job.nextEntryIndex);
+            _pendingSequentialSpawns[j] = job;
         }
     }
 
-    /// <summary>上沿附近刷怪锚点：内缩量与 <see cref="BattleAreaData.Height"/> 成比例，避免小坐标战斗区仍用固定 40 单位导致刷在区域外。</summary>
-    static Vector2 TopSpawnAnchor(BattleAreaData area, Vector2 spawnOffset)
+    static uint ResolveDelayFrames(EnemyWaveConfig wave, int entryIndex)
     {
-        float topInset = Mathf.Clamp(area.Height * 0.056f, 0.08f, 96f);
-        return new Vector2(area.Center.x + spawnOffset.x, area.Top - topInset + spawnOffset.y);
+        if (wave.spawnQueue != null && entryIndex < wave.spawnQueue.Length)
+        {
+            float sec = wave.spawnQueue[entryIndex].delayAfterPreviousSeconds;
+            if (sec > 0f)
+            {
+                uint fps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
+                return (uint)Mathf.Max(1, Mathf.RoundToInt(sec * fps));
+            }
+        }
+
+        return wave.spawnIntervalFrames > 0
+            ? (uint)wave.spawnIntervalFrames
+            : 1u;
     }
 
-    static float BattleAreaEdgeInset(BattleAreaData area)
+    bool TrySpawnWaveEntry(
+        EnemyWaveConfig wave,
+        int waveIndexInSorted,
+        uint currentFrame,
+        List<Vector2> positions,
+        int entryIndex)
     {
-        float m = Mathf.Min(area.Width, area.Height);
-        return Mathf.Clamp(m * 0.02f, 0.02f, m * 0.45f);
+        if (!TryResolveSpawnEntry(wave, entryIndex, positions, out EnemyConfig enemyCfg, out Vector2 pos))
+            return false;
+
+        var e = EntityFactory.CreateEnemy(enemyCfg, pos.x, pos.y, wave.hpMultiplier);
+        if (e.IsNull)
+            return false;
+
+        EnemyMovementBaking.TryAttachMovementFromWave(
+            EntityManager, e, wave, currentFrame, pos.x, pos.y, entryIndex);
+
+        if (wave.waveDropMode != E_WaveDropOverrideMode.UseEnemyConfig)
+        {
+            EntityManager.AddComponent(e, new CEnemyDeathLoot
+            {
+                waveDropMode = wave.waveDropMode,
+                waveDropCfgIndices = wave.waveDropOnDeathCfgIndices ?? Array.Empty<int>()
+            });
+        }
+
+        EntityManager.AddComponent(e, new CPoolGetTag());
+        if (wave.waitForClear)
+            _clearWatchEntities.Add(e);
+        return true;
     }
 
-    static Vector2 ClampPointToBattleArea(BattleAreaData area, Vector2 p, float inset)
+    static bool TryResolveSpawnEntry(
+        EnemyWaveConfig wave,
+        int entryIndex,
+        List<Vector2> positions,
+        out EnemyConfig enemyCfg,
+        out Vector2 pos)
     {
-        float ix = Mathf.Min(inset, area.Width * 0.49f);
-        float iy = Mathf.Min(inset, area.Height * 0.49f);
-        if (ix * 2f >= area.Width) ix = area.Width * 0.25f;
-        if (iy * 2f >= area.Height) iy = area.Height * 0.25f;
-        return new Vector2(
-            Mathf.Clamp(p.x, area.Left + ix, area.Right - ix),
-            Mathf.Clamp(p.y, area.Bottom + iy, area.Top - iy));
+        enemyCfg = null;
+        pos = default;
+
+        string enemyId = wave.enemyConfigId;
+        int slot = entryIndex;
+        if (wave.spawnQueue != null && wave.spawnQueue.Length > 0)
+        {
+            if (entryIndex < 0 || entryIndex >= wave.spawnQueue.Length)
+                return false;
+            var entry = wave.spawnQueue[entryIndex];
+            if (!string.IsNullOrWhiteSpace(entry.enemyConfigId))
+                enemyId = entry.enemyConfigId;
+            if (entry.spawnSlotIndex >= 0)
+                slot = entry.spawnSlotIndex;
+        }
+
+        if (string.IsNullOrWhiteSpace(enemyId))
+            return false;
+
+        enemyCfg = GameResDB.Instance.GetConfig<EnemyConfig>(enemyId);
+        if (enemyCfg == null)
+        {
+            Logger.Error($"[StageTimeline] EnemyConfig not found: '{enemyId}'", LogTag.Battle);
+            return false;
+        }
+
+        if (positions == null || positions.Count == 0)
+            return false;
+        int posIndex = Mathf.Clamp(slot, 0, positions.Count - 1);
+        pos = positions[posIndex];
+        return true;
     }
 
-    static void ClampSpawnListToBattleArea(BattleAreaData area, List<Vector2> list)
+    struct PendingSequentialSpawn
     {
-        float inset = BattleAreaEdgeInset(area);
-        for (int i = 0; i < list.Count; i++)
-            list[i] = ClampPointToBattleArea(area, list[i], inset);
-    }
-
-    static float Deterministic01(uint frame, int waveIndex, int spawnIndex, int salt)
-    {
-        uint x = frame * 2246822519u
-                 + (uint)waveIndex * 3266489917u
-                 + (uint)spawnIndex * 668265263u
-                 + (uint)salt * 374761393u;
-        x ^= x >> 16;
-        x *= 2654435761u;
-        x ^= x >> 13;
-        x *= 3266489917u;
-        x ^= x >> 16;
-        return (x & 0xffffffu) / (float)0xffffffu;
+        public EnemyWaveConfig wave;
+        public int waveIndexInSorted;
+        public List<Vector2> positions;
+        public int nextEntryIndex;
+        public uint nextSpawnFrame;
     }
 
     void TrySpawnMidBoss(uint stageElapsed, uint currentFrame)
@@ -449,7 +459,7 @@ public class StageTimelineSystem : BaseSystem
         {
             if (encounter.introMovement != null
                 && EnemyMovementBaking.TryBakeFromProfile(
-                    encounter.introMovement, currentFrame, pos.x, pos.y, 0, EntityManager, out var motion))
+                    encounter.introMovement, currentFrame, pos.x, pos.y, 0, out var motion))
                 EntityManager.AddComponent(_midBossEntity, motion);
 
             EntityManager.AddComponent(_midBossEntity, new CNoOffscreenRecycleTag());

@@ -8,6 +8,42 @@ public class EnemyMovementSystem : BaseSystem
 {
     public override void OnLogicTick(uint frame)
     {
+        AdvancePathRoutedEnemies(frame);
+        AdvanceLegacyMovementEnemies(frame);
+    }
+
+    void AdvancePathRoutedEnemies(uint frame)
+    {
+        Span<int> indices = EntityManager.GetActiveIndices<CEnemyPathMovement>();
+        if (indices.Length == 0)
+            return;
+
+        var paths = EntityManager.GetComponentSpan<CEnemyPathMovement>();
+        var positions = EntityManager.GetComponentSpan<CPosition>();
+        var velocities = EntityManager.GetComponentSpan<CVelocity>();
+
+        for (int i = 0; i < indices.Length; i++)
+        {
+            int idx = indices[i];
+            ref var path = ref paths[idx];
+            ref var pos = ref positions[idx];
+            float prevX = pos.x;
+            float prevY = pos.y;
+            if (!EnemyPathMotionEvaluator.TryEvaluate(
+                    path.routeBakeIndex, path.spawnFrame, path.originX, path.originY, frame, out float nx, out float ny))
+                continue;
+
+            ref var vel = ref velocities[idx];
+            vel.vx = nx - prevX;
+            vel.vy = ny - prevY;
+            pos.x = nx;
+            pos.y = ny;
+            TryRecycleEnemyOutOfRecycleArea(idx, nx, ny);
+        }
+    }
+
+    void AdvanceLegacyMovementEnemies(uint frame)
+    {
         Span<int> indices = EntityManager.GetActiveIndices<CEnemyMovement>();
         if (indices.Length == 0)
             return;

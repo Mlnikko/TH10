@@ -26,6 +26,13 @@ public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     [Header("弹幕伤害")]
     public float damage = 1f;
 
+    [Header("命中表现")]
+    [Tooltip("弹幕回收时在回收位置播放的纯粒子特效（Effect 池）；留空则不播放")]
+    [PoolPrefabId(E_PoolCategory.Effect)]
+    public string hitEffectPrefabId;
+
+    [NonSerialized] public int hitEffectPrefabIndex = -1;
+
     [Header("追踪弹幕（Bezier 路径）")]
     [Tooltip("追踪目标所在碰撞层；玩家弹通常选 Enemy")]
     public E_ColliderLayer homingTargetLayers = E_ColliderLayer.Enemy;
@@ -52,6 +59,9 @@ public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
         if (!string.IsNullOrEmpty(danmakuPrefabId))
             danmakuPrefabId = StringHelper.NormalizeResourceId(danmakuPrefabId);
 
+        if (!string.IsNullOrEmpty(hitEffectPrefabId))
+            hitEffectPrefabId = StringHelper.NormalizeResourceId(hitEffectPrefabId);
+
         if (homingBezierDurationSeconds < 0.02f)
             homingBezierDurationSeconds = 0.02f;
     }
@@ -70,6 +80,14 @@ public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
         }
 
         homingTargetLayerMask = (ushort)homingTargetLayers;
+
+        hitEffectPrefabIndex = resDb.GetPrefabIndex(hitEffectPrefabId);
+        if (!string.IsNullOrEmpty(hitEffectPrefabId) && hitEffectPrefabIndex < 0)
+        {
+            Logger.Warn(
+                $"[DanmakuConfig] Hit effect prefab not found: '{hitEffectPrefabId}' (configId: {ConfigId})",
+                LogTag.Resource);
+        }
     }
 
     public void BakeLogicTiming(uint logicFPS)

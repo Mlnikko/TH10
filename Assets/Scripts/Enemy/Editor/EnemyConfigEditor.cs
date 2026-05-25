@@ -6,6 +6,8 @@ using UnityEngine;
 [CustomEditor(typeof(EnemyConfigViewer), true)]
 public class EnemyConfigEditor : Editor
 {
+    const string ConfigField = "enemyConfig";
+    const string PrefabIdField = "enemyPrefabId";
     const string DropIdsField = "dropOnDeathConfigIds";
     const string DeathFxField = "deathEffectPrefabId";
 
@@ -16,7 +18,20 @@ public class EnemyConfigEditor : Editor
 
         serializedObject.Update();
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", DropIdsField, DeathFxField);
+        var configRef = serializedObject.FindProperty(ConfigField);
+        if (configRef != null)
+            EditorGUILayout.PropertyField(configRef);
+
+        if (inPrefabStage && viewer.EnemyConfig != null)
+            DrawEnemyPrefabIdFromConfig(viewer);
+        else
+        {
+            var prefabId = serializedObject.FindProperty(PrefabIdField);
+            if (prefabId != null)
+                ResourceIdEditorPicker.DrawEnemyPrefabIdField(prefabId);
+        }
+
+        DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField, PrefabIdField, DropIdsField, DeathFxField);
 
         if (inPrefabStage && viewer.EnemyConfig != null)
             DrawDropAndDeathFromConfig(viewer);
@@ -48,6 +63,23 @@ public class EnemyConfigEditor : Editor
 
         var stage = PrefabStageUtility.GetCurrentPrefabStage();
         return stage != null && stage.IsPartOfPrefabContents(go);
+    }
+
+    void DrawEnemyPrefabIdFromConfig(EnemyConfigViewer viewer)
+    {
+        var configSo = new SerializedObject(viewer.EnemyConfig);
+        configSo.Update();
+
+        var prefabId = configSo.FindProperty(PrefabIdField);
+        if (prefabId != null)
+            ResourceIdEditorPicker.DrawEnemyPrefabIdField(prefabId);
+
+        if (configSo.ApplyModifiedProperties())
+        {
+            EditorUtility.SetDirty(viewer.EnemyConfig);
+            viewer.LoadFromConfig();
+            serializedObject.Update();
+        }
     }
 
     void DrawDropAndDeathFromConfig(EnemyConfigViewer viewer)

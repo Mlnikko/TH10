@@ -13,7 +13,7 @@ public abstract class MovementPatternData
         Circle = 3,
         Bezier = 4,
         WaypointPolyline = 5,
-        Aimed = 6
+        PathRoute = 6
     }
 
     public E_PatternType type;
@@ -147,8 +147,63 @@ public class WaypointPathMovementData : MovementPatternData
     }
 }
 
-[Serializable]
-public class AimedLinearMovementData : MovementPatternData
+/// <summary>路径段曲线类型（相邻节点之间的运动方式）。</summary>
+public enum E_PathSegmentCurve : byte
 {
-    public AimedLinearMovementData() => type = E_PatternType.Aimed;
+    Linear = 0,
+    Arc = 1,
+    Bezier = 2
+}
+
+[Serializable]
+public class MovementPathNode
+{
+    [Tooltip("相对本波出生点的局部坐标")]
+    public Vector2 positionLocal;
+
+    [Min(0f)]
+    [Tooltip("到达该节点后的停留时间（秒）")]
+    public float holdSeconds;
+}
+
+[Serializable]
+public class MovementPathLeg
+{
+    public E_PathSegmentCurve curve = E_PathSegmentCurve.Linear;
+
+    [Min(0f)]
+    [Tooltip("本段行驶时间（秒）；≤0 时用路径默认段时长或按 moveSpeed 推算")]
+    public float travelSeconds;
+
+    [Tooltip("贝塞尔：相对段起点的控制点 1")]
+    public Vector2 bezierHandle1Local;
+
+    [Tooltip("贝塞尔：相对段终点的控制点 2")]
+    public Vector2 bezierHandle2Local;
+
+    [Tooltip("圆弧：中段垂直于弦的拱高（世界单位，可正可负）")]
+    public float arcBulge = 0.5f;
+}
+
+/// <summary>
+/// 起终点 + 停留点路径；每段可选直线/圆弧/贝塞尔。节点[0] 为起点，最后一项为终点。
+/// </summary>
+[Serializable]
+public class PathRouteMovementData : MovementPatternData
+{
+    public PathRouteMovementData() => type = E_PatternType.PathRoute;
+
+    [Tooltip("路径节点（至少 2 个：起点 → … → 终点）")]
+    public List<MovementPathNode> nodes = new()
+    {
+        new MovementPathNode { positionLocal = Vector2.zero },
+        new MovementPathNode { positionLocal = new Vector2(0f, -3f) }
+    };
+
+    [Tooltip("相邻节点间的路段配置；数量应为 nodes.Count - 1，不足时按直线+默认时长补全")]
+    public List<MovementPathLeg> legs = new();
+
+    [Min(0f)]
+    [Tooltip("未单独配置路段行驶时间时的默认段时长（秒）")]
+    public float defaultLegDurationSeconds = 1f;
 }

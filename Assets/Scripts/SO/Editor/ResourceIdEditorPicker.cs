@@ -21,6 +21,24 @@ public static class ResourceIdEditorPicker
         DrawIdPopup(stringProp, ids, "预制体 Id");
     }
 
+    public static void DrawEnemyPrefabIdField(SerializedProperty stringProp)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectPrefabIds(nameof(GameResourceManifest.enemyPrefabIds), "Prefabs/Enemy");
+        DrawIdPopup(stringProp, ids, "敌人预制体Id");
+    }
+
+    public static void DrawDanmakuPrefabIdField(SerializedProperty stringProp)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectPrefabIds(nameof(GameResourceManifest.danmakuPrefabIds), "Prefabs/Danmaku");
+        DrawIdPopup(stringProp, ids, "弹幕预制体Id");
+    }
+
     public static void DrawDanmakuConfigIdField(SerializedProperty stringProp)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)

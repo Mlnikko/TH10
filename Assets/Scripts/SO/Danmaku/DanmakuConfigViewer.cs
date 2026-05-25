@@ -8,6 +8,9 @@ public class DanmakuConfigViewer : GameConfigViewerBase
 
     public DanmakuConfig danmakuConfig;
 
+    [Header("弹幕预制体")]
+    [SerializeField] string danmakuPrefabId;
+
     [SerializeField] E_DanmakuType danmakuType;
 
     [Header("弹幕缩放")]
@@ -21,6 +24,10 @@ public class DanmakuConfigViewer : GameConfigViewerBase
     [SerializeField] ColliderConfig colliderConfig;
 
     [SerializeField] float damage;
+
+    [Header("命中表现")]
+    [PoolPrefabId(E_PoolCategory.Effect)]
+    [SerializeField] string hitEffectPrefabId;
 
     [Header("追踪弹幕（Bezier）")]
     [SerializeField] E_ColliderLayer homingTargetLayers = E_ColliderLayer.Enemy;
@@ -38,6 +45,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
         }
         scale = danmakuConfig.scale;
 
+        danmakuPrefabId = danmakuConfig.danmakuPrefabId;
         sprite = danmakuConfig.sprite;
         color = danmakuConfig.color;
        
@@ -46,6 +54,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
         colliderConfig = danmakuConfig.colliderConfig;
 
         damage = danmakuConfig.damage;
+        hitEffectPrefabId = danmakuConfig.hitEffectPrefabId;
 
         homingTargetLayers = danmakuConfig.homingTargetLayers;
         homingBezierDurationSeconds = danmakuConfig.homingBezierDurationSeconds;
@@ -63,6 +72,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
         }
         danmakuConfig.scale = scale;
 
+        danmakuConfig.danmakuPrefabId = danmakuPrefabId;
         danmakuConfig.sprite = sprite;
         danmakuConfig.color = color;
        
@@ -71,6 +81,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
         danmakuConfig.colliderConfig = colliderConfig;
 
         danmakuConfig.damage = damage;
+        danmakuConfig.hitEffectPrefabId = hitEffectPrefabId;
 
         if (danmakuType == E_DanmakuType.Homing)
         {

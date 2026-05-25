@@ -33,6 +33,12 @@ public class DanmakuConfigAssetEditor : Editor
                 continue;
             }
 
+            if (prop.name == nameof(DanmakuConfig.hitEffectPrefabId))
+            {
+                ResourceIdEditorPicker.DrawPoolPrefabIdField(prop, E_PoolCategory.Effect);
+                continue;
+            }
+
             if (IsHomingOnlyField(prop.name))
             {
                 var typeProp = serializedObject.FindProperty(nameof(DanmakuConfig.danmakuType));

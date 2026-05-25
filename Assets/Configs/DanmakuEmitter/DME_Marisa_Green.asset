@@ -18,8 +18,13 @@ MonoBehaviour:
   danmakuSelectMode: 0
   emitMode: 1
   launchIntervalSeconds: 0.05
+  launchCount: -1
   launchSpeed: 30
   displaySprite: {fileID: 471917078, guid: 26ced90f533491b4baf77b785ea6b010, type: 3}
+  displaySelfSpinDegreesPerSecond: 0
+  displayScaleMin: 0.85
+  displayScaleMax: 1.15
+  displayScaleCyclesPerSecond: 1
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 90

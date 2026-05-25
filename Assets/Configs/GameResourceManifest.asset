@@ -16,6 +16,7 @@ MonoBehaviour:
   - character_marisa
   - character_reimu
   enemyConfigIds:
+  - elite_fariy
   - minion_fariy_blue
   - minion_fariy_green
   - minion_fariy_red
@@ -28,24 +29,28 @@ MonoBehaviour:
   - weapon_reimu_pink
   - weapon_reimu_red
   danmakuConfigIds:
+  - dm_boll
   - dm_marisa_blue
   - dm_marisa_green
   - dm_marisa_main
   - dm_marisa_red
   - dm_reimu_blue
-  - dm_reimu_main
+  - dm_reimu_main_pink
+  - dm_reimu_main_red
   - dm_reimu_pink
   - dm_reimu_red
-  - dm_star_0
+  - dm_star
   - dm_test
   danmakuEmitterConfigIds:
   - dme_enemy_base
+  - dme_enemy_toplayer
   - dme_marisa_blue
   - dme_marisa_green
   - dme_marisa_main
   - dme_marisa_red
   - dme_reimu_blue
-  - dme_reimu_main
+  - dme_reimu_main_pink
+  - dme_reimu_main_red
   - dme_reimu_pink
   - dme_reimu_red
   - dme_test
@@ -62,6 +67,7 @@ MonoBehaviour:
   - stagepool_1
   stageTimelineConfigIds:
   - stagetimeline_1
+  - stagetimeline_example
   battleAreaConfigId: battlearea
   characterPrefabIds:
   - character_marisa
@@ -74,34 +80,43 @@ MonoBehaviour:
   - weapon_reimu_pink
   - weapon_reimu_red
   enemyPrefabIds:
+  - elite_fariy
   - minion_fariy_blue
   - minion_fariy_green
   - minion_fariy_red
   - minion_fariy_yellow
   danmakuPrefabIds:
+  - dm_boll
   - dm_marisa_blue
   - dm_marisa_green
   - dm_marisa_main
   - dm_marisa_red
   - dm_reimu_blue
-  - dm_reimu_main
+  - dm_reimu_main_pink
+  - dm_reimu_main_red
   - dm_reimu_pink
   - dm_reimu_red
-  - dm_star_0
+  - dm_star
   - dm_test
   danmakuEmitterPrefabIds:
+  - dme_enemy_toplayer
   - dme_marisa_blue
   - dme_marisa_green
   - dme_marisa_main
   - dme_marisa_red
   - dme_reimu_blue
-  - dme_reimu_main
+  - dme_reimu_main_pink
+  - dme_reimu_main_red
   - dme_reimu_pink
   - dme_reimu_red
   - dme_test
   effectPrefabIds:
   - effect_dead_blue
+  - effect_dead_green
   - effect_dead_red
+  - effect_dm_marisa_green_dm_hit
+  - effect_dm_marisa_main_dm_hit
+  - effect_reimu_main_dm_red_hit
   dropItemPrefabIds:
   - drop_bpt_b
   - drop_bpt_s

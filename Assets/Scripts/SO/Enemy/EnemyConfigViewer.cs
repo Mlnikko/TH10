@@ -9,6 +9,9 @@ public class EnemyConfigViewer : GameConfigViewerBase
     public EnemyConfig EnemyConfig => enemyConfig;
     [SerializeField] EnemyConfig enemyConfig;
 
+    [Header("敌人预制体")]
+    [SerializeField] string enemyPrefabId;
+
     [Header("敌人属性设置")]
     [SerializeField] EnemyType enemyType;
     [SerializeField] int maxHealth;
@@ -36,6 +39,7 @@ public class EnemyConfigViewer : GameConfigViewerBase
         if (enemyConfig == null)
             return;
 
+        enemyPrefabId = enemyConfig.enemyPrefabId;
         enemyType = enemyConfig.enemyType;
         maxHealth = enemyConfig.maxHealth;
         colliderConfig = enemyConfig.colliderConfig;
@@ -51,6 +55,9 @@ public class EnemyConfigViewer : GameConfigViewerBase
     public void SaveEnemyConfig()
     {
         if (enemyConfig == null) return;
+        enemyConfig.enemyPrefabId = string.IsNullOrWhiteSpace(enemyPrefabId)
+            ? string.Empty
+            : enemyPrefabId.ToLowerInvariantTrimmed();
         enemyConfig.enemyType = enemyType;
         enemyConfig.maxHealth = maxHealth;
         enemyConfig.colliderConfig = colliderConfig;

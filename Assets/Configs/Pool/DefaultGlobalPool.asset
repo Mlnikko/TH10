@@ -43,6 +43,10 @@ MonoBehaviour:
       maxCapacity: 200
       defaultWarmupCount: 50
       allowForceRecycle: 0
+    - prefabId: elite_fariy
+      maxCapacity: 50
+      defaultWarmupCount: 50
+      allowForceRecycle: 0
   - categoryName: "\u5F39\u5E55"
     category: 2
     entries:
@@ -50,10 +54,14 @@ MonoBehaviour:
       maxCapacity: 5000
       defaultWarmupCount: 5000
       allowForceRecycle: 1
-    - prefabId: dm_reimu_main
+    - prefabId: dm_reimu_main_red
       maxCapacity: 500
       defaultWarmupCount: 300
       allowForceRecycle: 0
+    - prefabId: dm_reimu_main_pink
+      maxCapacity: 500
+      defaultWarmupCount: 500
+      allowForceRecycle: 1
     - prefabId: dm_reimu_red
       maxCapacity: 1000
       defaultWarmupCount: 500
@@ -82,10 +90,22 @@ MonoBehaviour:
       maxCapacity: 500
       defaultWarmupCount: 500
       allowForceRecycle: 1
+    - prefabId: dm_boll
+      maxCapacity: 500
+      defaultWarmupCount: 500
+      allowForceRecycle: 1
+    - prefabId: dm_star
+      maxCapacity: 500
+      defaultWarmupCount: 500
+      allowForceRecycle: 1
   - categoryName: "\u6389\u843D\u7269"
     category: 3
     entries:
     - prefabId: drop_bpt_s
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: drop_bpt_b
       maxCapacity: 100
       defaultWarmupCount: 100
       allowForceRecycle: 0
@@ -96,6 +116,18 @@ MonoBehaviour:
     - prefabId: drop_rpr_s
       maxCapacity: 100
       defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: drop_rpr_b
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: drop_fpr
+      maxCapacity: 10
+      defaultWarmupCount: 10
+      allowForceRecycle: 0
+    - prefabId: drop_hp
+      maxCapacity: 10
+      defaultWarmupCount: 10
       allowForceRecycle: 0
   - categoryName: "\u6B66\u5668"
     category: 5
@@ -131,7 +163,11 @@ MonoBehaviour:
       maxCapacity: 32
       defaultWarmupCount: 32
       allowForceRecycle: 0
-    - prefabId: dme_reimu_main
+    - prefabId: dme_reimu_main_red
+      maxCapacity: 16
+      defaultWarmupCount: 16
+      allowForceRecycle: 0
+    - prefabId: dme_reimu_main_pink
       maxCapacity: 16
       defaultWarmupCount: 16
       allowForceRecycle: 0
@@ -163,6 +199,10 @@ MonoBehaviour:
       maxCapacity: 16
       defaultWarmupCount: 16
       allowForceRecycle: 0
+    - prefabId: dme_enemy_toplayer
+      maxCapacity: 30
+      defaultWarmupCount: 30
+      allowForceRecycle: 0
   - categoryName: "\u7279\u6548"
     category: 4
     entries:
@@ -170,7 +210,23 @@ MonoBehaviour:
       maxCapacity: 100
       defaultWarmupCount: 100
       allowForceRecycle: 0
+    - prefabId: effect_dead_green
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
     - prefabId: effect_dead_red
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: effect_reimu_main_dm_red_hit
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: effect_dm_marisa_green_dm_hit
+      maxCapacity: 100
+      defaultWarmupCount: 100
+      allowForceRecycle: 0
+    - prefabId: effect_dm_marisa_main_dm_hit
       maxCapacity: 100
       defaultWarmupCount: 100
       allowForceRecycle: 0

@@ -66,4 +66,16 @@ public struct BattleAreaData
     {
         return x >= RecycleLeft && x <= RecycleRight && y >= RecycleBottom && y <= RecycleTop;
     }
+
+    /// <summary>点是否在战斗区内（含边界）。</summary>
+    public bool IsPointInBattleArea(float x, float y)
+    {
+        return x >= Left && x <= Right && y >= Bottom && y <= Top;
+    }
+
+    /// <summary>在 GO 回收区内且不在战斗区内（刷怪合法带）。</summary>
+    public bool IsPointInExteriorRecycleBand(float x, float y)
+    {
+        return IsPointInRecycleArea(x, y) && !IsPointInBattleArea(x, y);
+    }
 }

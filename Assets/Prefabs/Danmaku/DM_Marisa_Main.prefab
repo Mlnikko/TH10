@@ -98,6 +98,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: a74469bab00925d44ac65f170d8fa97f, type: 2}
+  danmakuPrefabId: dm_marisa_main
   danmakuType: 0
   scale: 1
   sprite: {fileID: -1616953828, guid: 26ced90f533491b4baf77b785ea6b010, type: 3}
@@ -111,6 +112,7 @@ MonoBehaviour:
     boxSize: {x: 0.16, y: 0.1}
     offset: {x: 0.04, y: 0}
   damage: 1
+  hitEffectPrefabId: effect_dm_marisa_main_dm_hit
   homingTargetLayers: 4
   homingBezierDurationSeconds: 0.35
   homingCurveStrength: 0.35

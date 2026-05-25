@@ -209,6 +209,8 @@ public class PresentationSystem : BaseSystem
             int entityIndex = indices[i];
             Entity entity = EntityManager.GetEntity(entityIndex);
 
+            DanmakuHitEffectPresentation.TrySpawnOnRecycle(EntityManager, entityIndex);
+
             // 1. 获取关联的 GameObjectLink
             bool hasLink = EntityManager.HasComponent<CGameObjectLink>(entity);
 

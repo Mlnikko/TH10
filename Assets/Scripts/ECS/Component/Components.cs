@@ -152,6 +152,10 @@ public struct CDanmakuEmitter : IComponent
     public uint lastFireFrame;
     /// <summary>两次发射之间至少间隔的逻辑帧数；0 表示无间隔（由 <see cref="DanmakuEmitterConfig"/> 在加载时烘焙）。</summary>
     public int launchCooldownFrames;
+    /// <summary>最大发射次数；-1 表示无限（来自 <see cref="DanmakuEmitterConfig.launchCount"/>）。</summary>
+    public int launchCountMax;
+    /// <summary>已完成的发射轮次（一次 Line/Arc 齐射计 1 次）。</summary>
+    public int launchCountUsed;
 
     public EmitMode emitMode;           // Line, Arc
     public DanmakuSelectMode selectMode; // First, Sequential, Random
@@ -193,6 +197,8 @@ public struct CDanmakuEmitter : IComponent
         lastFireFrame = 0;
 
         launchCooldownFrames = soConfig.launchCooldownFrames;
+        launchCountMax = soConfig.launchCount;
+        launchCountUsed = 0;
 
         sequentialIndex = 0;
         randomSeed = 0; // 初始化种子，实际使用时需结合全局帧数或实体ID

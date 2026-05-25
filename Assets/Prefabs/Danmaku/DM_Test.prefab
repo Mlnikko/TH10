@@ -98,6 +98,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   danmakuConfig: {fileID: 11400000, guid: 5755a258a3adb9846b569706f7ca88f3, type: 2}
+  danmakuPrefabId: dm_test
   danmakuType: 0
   scale: 0
   sprite: {fileID: 1051418369, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
@@ -111,3 +112,7 @@ MonoBehaviour:
     boxSize: {x: 0.16, y: 0.12}
     offset: {x: 0.19, y: 0}
   damage: 1
+  hitEffectPrefabId: 
+  homingTargetLayers: 4
+  homingBezierDurationSeconds: 0.35
+  homingCurveStrength: 0.35

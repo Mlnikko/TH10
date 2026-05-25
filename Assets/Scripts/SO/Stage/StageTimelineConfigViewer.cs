@@ -27,8 +27,11 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     [Tooltip("预览时长（秒）；≤0 时按片段自动估算或使用关卡 maxStageDurationSeconds")]
     [SerializeField] float previewDurationSeconds = 120f;
 
-    [Tooltip("分段预览：道中波次列表索引")]
     [SerializeField] int previewMidStageWaveIndex;
+
+    [Header("Scene 可视化")]
+    [Tooltip("在 Scene 视图绘制战斗区/回收区、刷怪点（黄）、运动路径（青）、退场点（品红）")]
+    [SerializeField] bool drawWavePathGizmo = true;
 
     bool _previewActive;
     E_StageTimelinePreviewScope _activePreviewScope = E_StageTimelinePreviewScope.FullTimeline;
@@ -410,6 +413,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     {
         uint fps = LogicFramePreviewClock.GetLogicFps();
         stageTimelineConfig.BakeLogicTiming(fps);
+        EnemyPathBakeCache.Clear();
 
         if (stageTimelineConfig.midStageWaves == null)
             return;
@@ -419,6 +423,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             var wave = stageTimelineConfig.midStageWaves[i];
             if (wave is ILogicTimingBake bake)
                 bake.BakeLogicTiming(fps);
+            wave?.BakePathRouteIfNeeded(fps);
             wave?.ResolveDropReferences(GameResDB.Instance);
         }
 
@@ -494,5 +499,57 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     public uint PreviewLogicFrame => _previewLogicFrame;
     public float PreviewElapsedSeconds => _previewClock.ElapsedRealSeconds;
+
+    void OnDrawGizmosSelected()
+    {
+        if (!drawWavePathGizmo || stageTimelineConfig == null)
+            return;
+
+        if (!TryResolveGizmoBattleArea(out var area))
+            return;
+
+        int waveIndex = ResolveGizmoWaveIndex();
+        if (waveIndex < 0)
+            return;
+
+        var waves = stageTimelineConfig.midStageWaves;
+        if (waves == null || waveIndex >= waves.Count || waves[waveIndex] == null)
+            return;
+
+        StageTimelineWaveGizmo.DrawBattleAreaFrames(area);
+        var paths = StageTimelineWaveGizmo.BuildPathPreviews(
+            waves[waveIndex], area, waveIndex, LogicFramePreviewClock.GetLogicFps());
+        StageTimelineWaveGizmo.DrawPathPreviews(paths);
+    }
+
+    int ResolveGizmoWaveIndex()
+    {
+        if (_previewActive && _activePreviewScope == E_StageTimelinePreviewScope.SingleMidStageWave)
+            return previewMidStageWaveIndex;
+
+        if (stageTimelineConfig?.midStageWaves == null || stageTimelineConfig.midStageWaves.Count == 0)
+            return -1;
+
+        return Mathf.Clamp(previewMidStageWaveIndex, 0, stageTimelineConfig.midStageWaves.Count - 1);
+    }
+
+    bool TryResolveGizmoBattleArea(out BattleAreaData area)
+    {
+        area = default;
+        var cfg = StageTimelinePreviewRuntime.ResolveBattleAreaConfig(battleAreaConfig);
+        if (cfg != null)
+        {
+            area = cfg.battleAreaData;
+            return area.Width > 0f && area.Height > 0f;
+        }
+
+        if (GlobalBattleData.IsInitialized)
+        {
+            area = GlobalBattleData.AreaData;
+            return true;
+        }
+
+        return false;
+    }
 #endif
 }

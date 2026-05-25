@@ -14,10 +14,10 @@ public class StageTimelineConfigEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();
+        serializedObject.Update();
+        DrawPropertiesExcluding(serializedObject, "m_Script", "previewMidStageWaveIndex");
 
         var viewer = (StageTimelineConfigViewer)target;
-        serializedObject.Update();
 
         ConfigViewerEditorUI.DrawSeparator();
         EditorGUILayout.LabelField("关卡时间轴预览（仅编辑器）", EditorStyles.boldLabel);
@@ -29,6 +29,7 @@ public class StageTimelineConfigEditor : Editor
         DrawScopedPreviewControls(viewer);
         DrawFullTimelinePreview(viewer);
         DrawActivePreviewStatus(viewer);
+        DrawSceneGizmoLegend(viewer);
 
         serializedObject.ApplyModifiedProperties();
     }
@@ -81,7 +82,7 @@ public class StageTimelineConfigEditor : Editor
             {
                 int max = waves.Count - 1;
                 _previewWaveIndexProp.intValue = EditorGUILayout.IntSlider(
-                    "波次索引",
+                    new GUIContent("波次索引", "分段预览与 Scene 路径 Gizmo 共用"),
                     Mathf.Clamp(_previewWaveIndexProp.intValue, 0, max),
                     0,
                     max);
@@ -111,8 +112,10 @@ public class StageTimelineConfigEditor : Editor
         }
 
         string enemy = string.IsNullOrEmpty(wave.enemyConfigId) ? "（未指定敌人）" : wave.enemyConfigId;
+        int spawnN = wave.ResolveSpawnCount();
+        string queueHint = wave.UsesSequentialSpawn ? " · 顺序出怪" : "";
         EditorGUILayout.LabelField(
-            $"[{index}] {wave.name} · {enemy} ×{wave.count} · {wave.spawnPattern}",
+            $"[{index}] {wave.name} · {enemy} ×{spawnN} · {wave.spawnPattern}{queueHint}",
             EditorStyles.miniLabel);
     }
 
@@ -193,5 +196,16 @@ public class StageTimelineConfigEditor : Editor
         StageTimelinePreviewRuntime.CanPreview
         && !viewer.IsPreviewBootstrapping
         && !StageTimelinePreviewRuntime.IsLoading;
+
+    static void DrawSceneGizmoLegend(StageTimelineConfigViewer viewer)
+    {
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("Scene 可视化", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "选中本 Viewer 且在 Scene 视图可见时：绿色=战斗区，红色=GO 回收区；"
+            + "黄色球=生成点，青色折线=运动路径，品红球=离开回收区（退场）位置。"
+            + "分段预览区的「波次索引」滑动条同时决定 Scene 中绘制哪一条 midStageWaves。",
+            MessageType.None);
+    }
 }
 #endif

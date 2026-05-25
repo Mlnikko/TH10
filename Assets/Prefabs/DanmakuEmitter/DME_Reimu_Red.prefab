@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6625397365489703456}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: -0.9984573, w: -0.055525273}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -101,6 +101,7 @@ MonoBehaviour:
   emitterType: 1
   emitterCamp: 1
   displaySprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  displaySelfSpinDegreesPerSecond: 180
   emitPosOffset: {x: 0, y: 0}
   emitRotOffsetZ: 0
   danmakuRotOffsetZ: 90

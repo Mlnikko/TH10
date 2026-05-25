@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemyWave_1
   m_EditorClassIdentifier: 
   startTimeSeconds: 0
-  enemyConfigId: minion_fariy_blue
+  enemyConfigId: elite_fariy
   count: 1
   spawnPattern: 0
   spawnAreaSize: {x: 10, y: 5}

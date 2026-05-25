@@ -124,13 +124,13 @@ MonoBehaviour:
   maxHealth: 10
   colliderConfig:
     isTrigger: 0
-    shape: 1
+    shape: 2
     layer: 4
     mask: 10
-    radius: 0
-    boxSize: {x: 0.15, y: 0.15}
-    offset: {x: 0, y: 0}
+    radius: 0.08
+    boxSize: {x: 0, y: 0}
+    offset: {x: -0, y: 0}
   dropOnDeathConfigIds:
-  - drop_rpr_s
-  deathEffectPrefabId: effect_dead_red
+  - drop_bpt_s
+  deathEffectPrefabId: effect_dead_blue
   dieAudioName: 0

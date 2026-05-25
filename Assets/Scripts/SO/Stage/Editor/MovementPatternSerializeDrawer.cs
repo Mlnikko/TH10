@@ -11,11 +11,11 @@ public sealed class MovementPatternSerializeDrawer : PropertyDrawer
         ("无", null),
         ("静态", typeof(StaticMovementData)),
         ("直线匀速", typeof(LinearMovementData)),
-        ("瞄准玩家直线", typeof(AimedLinearMovementData)),
         ("直线 + 正弦摆动", typeof(SineMovementData)),
         ("圆周运动", typeof(CircularMovementData)),
         ("三次贝塞尔", typeof(BezierCubicMovementData)),
         ("折线路径", typeof(WaypointPathMovementData)),
+        ("路径（起终点/停留/曲线）", typeof(PathRouteMovementData)),
     };
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

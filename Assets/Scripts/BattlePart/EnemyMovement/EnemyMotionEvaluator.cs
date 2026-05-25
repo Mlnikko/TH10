@@ -23,7 +23,6 @@ public static class EnemyMotionEvaluator
         switch (m.kind)
         {
             case E_EnemyMotionKind.Linear:
-            case E_EnemyMotionKind.AimedLinear:
                 x = m.originX + m.dX * t;
                 y = m.originY + m.dY * t;
                 return;

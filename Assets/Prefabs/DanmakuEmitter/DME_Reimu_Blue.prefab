@@ -101,6 +101,7 @@ MonoBehaviour:
   emitterType: 1
   emitterCamp: 1
   displaySprite: {fileID: 1961407575, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  displaySelfSpinDegreesPerSecond: 360
   emitPosOffset: {x: 0, y: 0}
   emitRotOffsetZ: 0
   danmakuRotOffsetZ: 90
@@ -119,4 +120,5 @@ MonoBehaviour:
   launchSpeed: 30
   previewDuration: 5
   previewBulletLifetime: 3
+  previewSpinDuration: 5
   drawPreviewSpawnGizmos: 1

@@ -26,6 +26,7 @@ MonoBehaviour:
     boxSize: {x: 0.16, y: 0.1}
     offset: {x: 0.04, y: 0}
   damage: 1
+  hitEffectPrefabId: effect_dm_marisa_main_dm_hit
   homingTargetLayers: 4
   homingBezierDurationSeconds: 0.35
   homingCurveStrength: 0.35

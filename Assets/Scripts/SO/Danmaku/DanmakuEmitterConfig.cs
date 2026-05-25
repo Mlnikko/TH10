@@ -68,6 +68,9 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Tooltip("发射间隔（秒）；在 ILogicTimingBake.BakeLogicTiming 中烘焙为 launchCooldownFrames")]
     public float launchIntervalSeconds = 0.5f;
 
+    [Tooltip("发射次数；-1 表示无限次数")]
+    public int launchCount = -1;
+
     [NonSerialized] public int launchCooldownFrames;
 
     [Min(0f)]
@@ -79,6 +82,25 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Header("编辑器显示")]
     [Tooltip("Scene / 配置预览中发射器本体的 Sprite；不参与战斗逻辑与烘焙")]
     public Sprite displaySprite;
+
+    [Tooltip("发射器 Sprite 自转角速度（度/秒，>0 时持续自转；仅表现，不影响弹幕发射方向）")]
+    public float displaySelfSpinDegreesPerSecond;
+
+    [NonSerialized] public float displaySelfSpinRadPerFrame;
+
+    [Tooltip("循环缩放倍数下限（相对预制体 Uniform 缩放；与上限相等或周期为 0 时不缩放）")]
+    [Min(0.01f)]
+    public float displayScaleMin = 1f;
+
+    [Tooltip("循环缩放倍数上限（相对预制体 Uniform 缩放）")]
+    [Min(0.01f)]
+    public float displayScaleMax = 1f;
+
+    [Tooltip("缩放循环频率（次/秒）；0 表示不循环缩放")]
+    [Min(0f)]
+    public float displayScaleCyclesPerSecond;
+
+    [NonSerialized] public float displayScalePhaseRadPerFrame;
 
     [Tooltip("发射器位置偏移（相对于生成点），用于调整发射器位置")]
     public Vector2 emitterPosOffset = Vector2.zero;
@@ -112,7 +134,8 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
             }
         }
 
-        ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(this);
+        if (displayScaleMin > displayScaleMax)
+            (displayScaleMin, displayScaleMax) = (displayScaleMax, displayScaleMin);
     }
 #endif
 
@@ -160,5 +183,7 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
         else
             launchCooldownFrames = Mathf.Max(1, Mathf.RoundToInt(launchIntervalSeconds * fps));
         launchSpeedPerFrame = launchSpeed / fps;
+        displaySelfSpinRadPerFrame = displaySelfSpinDegreesPerSecond * Mathf.Deg2Rad / fps;
+        displayScalePhaseRadPerFrame = displayScaleCyclesPerSecond * Mathf.PI * 2f / fps;
     }
 }

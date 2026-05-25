@@ -370,10 +370,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24034a254f70cb740afb34fb64db5ac6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stageTimelineConfig: {fileID: 11400000, guid: e971af894ed361447a6c40705e97b584, type: 2}
+  stageTimelineConfig: {fileID: 11400000, guid: c5b4a39281706f5e4d3c2b1a09080706, type: 2}
   battleAreaConfig: {fileID: 11400000, guid: aaf3a19affdf5c2408060432e85d27f3, type: 2}
   previewDurationSeconds: 120
   previewMidStageWaveIndex: 0
+  drawWavePathGizmo: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
