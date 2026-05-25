@@ -24,17 +24,17 @@ MonoBehaviour:
     slowModeDanmakuEmitterConfigId: 
   powerPrimarySlowLayouts: []
   powerSecondaryLayouts:
-  - minPowerOrbs: 1
+  - minPowerOrbs: 100
     slots:
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: 0, y: -0.35}
-  - minPowerOrbs: 2
+  - minPowerOrbs: 200
     slots:
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: -0.35, y: -0.2}
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: 0.35, y: -0.2}
-  - minPowerOrbs: 3
+  - minPowerOrbs: 300
     slots:
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: -0.35, y: -0.2}
@@ -42,7 +42,7 @@ MonoBehaviour:
       slotOffset: {x: 0.35, y: -0.2}
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: 0, y: -0.35}
-  - minPowerOrbs: 4
+  - minPowerOrbs: 400
     slots:
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: -0.5, y: -0.2}
@@ -55,14 +55,8 @@ MonoBehaviour:
   secondaryEmitters:
     slots: []
   slowModeLayout:
-    primarySlowPositionMode: 0
-    secondarySlowPositionMode: 1
     primarySlotConverge: 0
     secondarySlotConverge: 0
     secondarySlotConvergeSpeed: 4
-    secondaryTrailSpreadPerSpeed: 0.12
-    secondaryTrailMaxOffset: 0.55
-    secondaryTrailCatchUpSpeed: 3
-    secondaryReturnToSlotSpeed: 5
   description: 
   danmakuEmitterConfigIds: []

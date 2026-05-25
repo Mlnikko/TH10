@@ -44,8 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 563a4a4460295de41ad0fd9c93b02adf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponConfig: {fileID: 11400000, guid: 4de346eab560c424bb2c0f88ea7da36f, type: 2}
-  weaponID: 11
+  weaponConfig: {fileID: 11400000, guid: f71a12f69b46e1d418028435f48d1cbb, type: 2}
+  weaponID: 12
   display:
     selectionName: 
     description: 
@@ -60,33 +60,33 @@ MonoBehaviour:
       danmakuEmitterConfigId: 
       slotOffset: {x: 0, y: 0}
   powerSecondaryLayouts:
-  - minPowerOrbs: 1
+  - minPowerOrbs: 100
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: 0, y: 0.25}
-  - minPowerOrbs: 2
+  - minPowerOrbs: 200
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: 0.25, y: 0.25}
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: -0.25, y: 0.25}
-  - minPowerOrbs: 3
+  - minPowerOrbs: 300
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: 0.45, y: 0.25}
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: -0.45, y: 0.25}
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: 0, y: 0.5}
-  - minPowerOrbs: 4
+  - minPowerOrbs: 400
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: 0.45, y: 0.25}
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: -0.45, y: 0.25}
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: -0.2, y: 0.5}
-    - danmakuEmitterConfigId: dme_reimu_red
+    - danmakuEmitterConfigId: dme_reimu_pink
       slotOffset: {x: 0.2, y: 0.5}
   slowModeLayout:
     primarySlotConverge: 0

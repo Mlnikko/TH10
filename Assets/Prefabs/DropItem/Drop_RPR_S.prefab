@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 7280448314741908135}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.05434435, y: -0.99069357, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -98,21 +98,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dropItemConfig: {fileID: 11400000, guid: aabbccddee11223344556677889900aa, type: 2}
-  pickupPrefabId: drop_pr_s
+  pickupPrefabId: drop_rpr_s
   pickupSprite: {fileID: 0}
-  initialUpSpeed: 3
+  initialUpSpeed: 2
   fallGravity: 0.1
   maxFallSpeed: 1
   riseSpinDegreesPerSecond: 720
   colliderConfig:
     isTrigger: 0
-    shape: 2
+    shape: 1
     layer: 32
     mask: 2
-    radius: 0.06
-    boxSize: {x: 0.1, y: 0.1}
+    radius: 0
+    boxSize: {x: 0.12, y: 0.12}
     offset: {x: 0, y: 0}
   dropKind: 3
-  effectAmount: 1
+  effectAmount: 10
   previewMotionDuration: 5
   drawPreviewMotionPath: 1

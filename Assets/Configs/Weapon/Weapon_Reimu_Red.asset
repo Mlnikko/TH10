@@ -22,18 +22,23 @@ MonoBehaviour:
       danmakuEmitterConfigId: dme_reimu_main
       slotOffset: {x: 0, y: 0}
     slowModeDanmakuEmitterConfigId: 
+  powerPrimarySlowLayouts:
+  - minPowerOrbs: 0
+    slot:
+      danmakuEmitterConfigId: 
+      slotOffset: {x: 0, y: 0}
   powerSecondaryLayouts:
-  - minPowerOrbs: 1
+  - minPowerOrbs: 100
     slots:
     - danmakuEmitterConfigId: dme_reimu_red
       slotOffset: {x: 0, y: 0.25}
-  - minPowerOrbs: 2
+  - minPowerOrbs: 200
     slots:
     - danmakuEmitterConfigId: dme_reimu_red
       slotOffset: {x: 0.25, y: 0.25}
     - danmakuEmitterConfigId: dme_reimu_red
       slotOffset: {x: -0.25, y: 0.25}
-  - minPowerOrbs: 3
+  - minPowerOrbs: 300
     slots:
     - danmakuEmitterConfigId: dme_reimu_red
       slotOffset: {x: 0.45, y: 0.25}
@@ -41,7 +46,7 @@ MonoBehaviour:
       slotOffset: {x: -0.45, y: 0.25}
     - danmakuEmitterConfigId: dme_reimu_red
       slotOffset: {x: 0, y: 0.5}
-  - minPowerOrbs: 4
+  - minPowerOrbs: 400
     slots:
     - danmakuEmitterConfigId: dme_reimu_red
       slotOffset: {x: 0.45, y: 0.25}

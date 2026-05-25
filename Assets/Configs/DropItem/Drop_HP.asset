@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e3c21d4b5a409e9d8c7b6a543210fe, type: 3}
+  m_Name: Drop_HP
+  m_EditorClassIdentifier: 
+  pickupPrefabId: drop_hp
+  pickupSprite: {fileID: 0}
+  initialUpSpeed: 2
+  fallGravity: 0.1
+  maxFallSpeed: 1
+  riseSpinDegreesPerSecond: 720
+  colliderConfig:
+    isTrigger: 0
+    shape: 1
+    layer: 32
+    mask: 2
+    radius: 0
+    boxSize: {x: 0.16, y: 0.16}
+    offset: {x: 0, y: 0}
+  dropKind: 2
+  effectAmount: 1

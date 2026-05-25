@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickupPrefabId: drop_rpr_s
   pickupSprite: {fileID: 0}
-  initialUpSpeed: 3
+  initialUpSpeed: 2
   fallGravity: 0.1
   maxFallSpeed: 1
-  riseSpinDegreesPerSecond: 360
+  riseSpinDegreesPerSecond: 720
   colliderConfig:
     isTrigger: 0
-    shape: 2
+    shape: 1
     layer: 32
     mask: 2
-    radius: 0.06
-    boxSize: {x: 0.1, y: 0.1}
+    radius: 0
+    boxSize: {x: 0.12, y: 0.12}
     offset: {x: 0, y: 0}
   dropKind: 3
-  effectAmount: 1
+  effectAmount: 10

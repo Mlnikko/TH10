@@ -10,8 +10,8 @@ public enum E_Weapon : byte
     Weapon_Reimu_Pink = 12,
 
     Weapon_Marisa_Green = 20,
-    Weapon_Marisa_1 = 21,
-    Weapon_Marisa_2 = 22,
+    Weapon_Marisa_Red = 21,
+    Weapon_Marisa_Blue = 22,
 }
 
 public enum E_WeaponEmitterSlotRole : byte
@@ -101,41 +101,17 @@ public class WeaponDisplayConfig
 [Serializable]
 public class WeaponSlowModeLayoutConfig
 {
-    [Tooltip("主炮低速槽位表现（灵梦常用：向玩家收束）")]
-    public E_WeaponSlowSlotPositionMode primarySlowPositionMode = E_WeaponSlowSlotPositionMode.ConvergeToPlayer;
-
-    [Tooltip("副炮低速槽位表现（魔理沙常用：轨迹跟随 / 世界锚定）")]
-    public E_WeaponSlowSlotPositionMode secondarySlowPositionMode = E_WeaponSlowSlotPositionMode.ConvergeToPlayer;
-
-    [Tooltip("低速时主发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）；仅 ConvergeToPlayer 模式")]
+    [Tooltip("低速时主发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）")]
     [Range(0f, 1f)]
     public float primarySlotConverge;
 
-    [Tooltip("低速时副发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）；仅 ConvergeToPlayer 模式")]
+    [Tooltip("低速时副发射器槽位向玩家中心收束比例（0=不变，1=缩到原点）")]
     [Range(0f, 1f)]
     public float secondarySlotConverge = 1f;
 
-    [Tooltip("副炮收束/展开速度（Converge 模式；0 表示瞬时切换）")]
+    [Tooltip("副炮收束/展开速度（0~1 每秒；0 表示瞬时切换）")]
     [Min(0f)]
     public float secondarySlotConvergeSpeed = 4f;
-
-    [Header("轨迹跟随（TrailFollowWhileFast）")]
-    [Tooltip("通常模式下，移速每逻辑帧对应的副炮偏移展开量")]
-    [Min(0f)]
-    public float secondaryTrailSpreadPerSpeed = 0.12f;
-
-    [Tooltip("轨迹展开相对配置槽位的最大偏移")]
-    [Min(0f)]
-    public float secondaryTrailMaxOffset = 0.55f;
-
-    [Tooltip("停止移动时副炮偏移回到配置槽位的速度（世界单位/秒）")]
-    [Min(0f)]
-    public float secondaryTrailCatchUpSpeed = 3f;
-
-    [Header("退出低速")]
-    [Tooltip("WorldAnchor / Trail 模式下退出低速后，偏移回到配置槽位的速度")]
-    [Min(0f)]
-    public float secondaryReturnToSlotSpeed = 5f;
 }
 
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
@@ -190,39 +166,20 @@ public class WeaponConfig : GameConfig, IReferenceResolver
         return ConfigId;
     }
 
-    public Vector2 ResolvePrimarySlotOffset(bool slowMode, int powerOrbs = 0) =>
-        ResolvePrimarySlotOffset(slowMode, powerOrbs, slowMode ? 1f : 0f, Vector2.zero);
-
-    public Vector2 ResolvePrimarySlotOffset(
-        bool slowMode,
-        int powerOrbs,
-        float converge01,
-        Vector2 runtimeOffset)
+    public Vector2 ResolvePrimarySlotOffset(bool slowMode, int powerOrbs = 0)
     {
+        float converge = slowMode ? slowModeLayout.primarySlotConverge : 0f;
         Vector2 baseOffset = primaryEmitters.normal.slotOffset;
         if (slowMode && TryResolvePowerPrimarySlow(powerOrbs, out var tier))
             baseOffset = tier.slot.slotOffset;
-
-        return WeaponSlowModePosition.ResolvePrimarySlotOffset(
-            this,
-            slowMode,
-            powerOrbs,
-            converge01,
-            runtimeOffset);
+        return baseOffset * (1f - converge);
     }
 
     public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, float converge01) =>
-        ResolveSecondarySlotOffset(baseOffset, slowMode: true, converge01, baseOffset);
+        baseOffset * (1f - slowModeLayout.secondarySlotConverge * Mathf.Clamp01(converge01));
 
     public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, bool slowMode) =>
-        ResolveSecondarySlotOffset(baseOffset, slowMode, slowMode ? 1f : 0f, baseOffset);
-
-    public Vector2 ResolveSecondarySlotOffset(
-        Vector2 baseOffset,
-        bool slowMode,
-        float converge01,
-        Vector2 runtimeOffset) =>
-        WeaponSlowModePosition.ResolveSecondarySlotOffset(this, baseOffset, slowMode, converge01, runtimeOffset);
+        ResolveSecondarySlotOffset(baseOffset, slowMode ? 1f : 0f);
 
     /// <summary>根据当前火力选取低速主炮烘焙档。</summary>
     public bool TryResolvePowerPrimarySlow(int powerOrbs, out WeaponPowerPrimarySlowResolved resolved)

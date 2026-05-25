@@ -98,19 +98,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dropItemConfig: {fileID: 11400000, guid: 99a4a050de160774f8c3c1428aeaa7fc, type: 2}
-  pickupPrefabId: drop_pt_s
+  pickupPrefabId: drop_bpt_s
   pickupSprite: {fileID: 0}
-  initialUpSpeed: 3
+  initialUpSpeed: 2
   fallGravity: 0.1
   maxFallSpeed: 1
   riseSpinDegreesPerSecond: 720
   colliderConfig:
     isTrigger: 0
-    shape: 2
+    shape: 1
     layer: 32
     mask: 2
-    radius: 0.06
-    boxSize: {x: 0.1, y: 0.1}
+    radius: 0
+    boxSize: {x: 0.12, y: 0.12}
     offset: {x: 0, y: 0}
   dropKind: 1
   effectAmount: 100

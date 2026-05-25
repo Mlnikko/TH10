@@ -39,60 +39,6 @@ public static class ResourceIdEditorPicker
         DrawIdPopup(stringProp, ids, "武器 Config Id");
     }
 
-    /// <summary>从允许列表中选武器 ConfigId；列表为空时回退到 Manifest 全量列表。</summary>
-    public static void DrawWeaponConfigIdFieldFromAllowed(
-        SerializedProperty stringProp,
-        IReadOnlyList<string> allowedIds,
-        string label)
-    {
-        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
-            return;
-
-        var ids = BuildAllowedIdList(allowedIds, CollectWeaponConfigIds());
-        DrawIdPopup(stringProp, ids, label ?? "武器 Config Id");
-    }
-
-    public static void DrawWeaponConfigIdFieldFromAllowed(
-        SerializedProperty stringProp,
-        SerializedProperty allowedArrayProp,
-        string label)
-    {
-        DrawWeaponConfigIdFieldFromAllowed(
-            stringProp,
-            ReadStringIdsFromArrayProperty(allowedArrayProp),
-            label);
-    }
-
-    static string[] ReadStringIdsFromArrayProperty(SerializedProperty arrayProp)
-    {
-        if (arrayProp == null || !arrayProp.isArray || arrayProp.arraySize == 0)
-            return Array.Empty<string>();
-
-        var result = new string[arrayProp.arraySize];
-        for (int i = 0; i < arrayProp.arraySize; i++)
-            result[i] = arrayProp.GetArrayElementAtIndex(i).stringValue ?? string.Empty;
-
-        return result;
-    }
-
-    static List<string> BuildAllowedIdList(IReadOnlyList<string> preferred, List<string> fallback)
-    {
-        if (preferred == null || preferred.Count == 0)
-            return fallback;
-
-        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var result = new List<string>();
-        for (int i = 0; i < preferred.Count; i++)
-        {
-            string id = StringHelper.NormalizeResourceId(preferred[i]);
-            if (string.IsNullOrEmpty(id) || !set.Add(id))
-                continue;
-            result.Add(id);
-        }
-
-        return result.Count > 0 ? result : fallback;
-    }
-
     public static void DrawWeaponConfigIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)

@@ -87,50 +87,6 @@ public static class WeaponEmitLayout
         bool slowModePrimary,
         List<EmitPoint> outPoints)
     {
-        CollectBattleWeaponVisualPoints(
-            origin,
-            rotRad,
-            weapon,
-            powerOrbs,
-            secondaryConverge01,
-            slowModePrimary,
-            secondaryRuntimeOffsets: null,
-            outPoints);
-    }
-
-    public static void CollectBattleWeaponVisualPoints(
-        Vector3 origin,
-        float rotRad,
-        WeaponConfig weapon,
-        int powerOrbs,
-        float secondaryConverge01,
-        bool slowModePrimary,
-        Vector2[] secondaryRuntimeOffsets,
-        List<EmitPoint> outPoints)
-    {
-        CollectBattleWeaponVisualPoints(
-            origin,
-            rotRad,
-            weapon,
-            powerOrbs,
-            secondaryConverge01,
-            slowModePrimary,
-            secondaryRuntimeOffsets,
-            secondaryWorldOrigins: null,
-            outPoints);
-    }
-
-    public static void CollectBattleWeaponVisualPoints(
-        Vector3 origin,
-        float rotRad,
-        WeaponConfig weapon,
-        int powerOrbs,
-        float secondaryConverge01,
-        bool slowModePrimary,
-        Vector2[] secondaryRuntimeOffsets,
-        Vector3[] secondaryWorldOrigins,
-        List<EmitPoint> outPoints)
-    {
         outPoints.Clear();
         if (weapon == null)
             return;
@@ -140,16 +96,7 @@ public static class WeaponEmitLayout
         else
             CollectPrimaryNormal(origin, rotRad, weapon, includeSlowPrimaryEmitter: false, outPoints);
 
-        CollectSecondaries(
-            origin,
-            rotRad,
-            weapon,
-            powerOrbs,
-            slowModePrimary,
-            secondaryConverge01,
-            secondaryRuntimeOffsets,
-            secondaryWorldOrigins,
-            outPoints);
+        CollectSecondaries(origin, rotRad, weapon, powerOrbs, slowModePrimary, secondaryConverge01, outPoints);
     }
 
     static void CollectPrimaryNormal(
@@ -212,20 +159,6 @@ public static class WeaponEmitLayout
         float secondaryConverge01,
         List<EmitPoint> outPoints)
     {
-        CollectSecondaries(origin, rotRad, weapon, powerOrbs, slowMode, secondaryConverge01, null, null, outPoints);
-    }
-
-    static void CollectSecondaries(
-        Vector3 origin,
-        float rotRad,
-        WeaponConfig weapon,
-        int powerOrbs,
-        bool slowMode,
-        float secondaryConverge01,
-        Vector2[] secondaryRuntimeOffsets,
-        Vector3[] secondaryWorldOrigins,
-        List<EmitPoint> outPoints)
-    {
         if (!weapon.TryGetSecondarySlotsForPower(powerOrbs, out var slots))
             return;
 
@@ -233,26 +166,11 @@ public static class WeaponEmitLayout
 
         for (int i = 0; i < slots.Length; i++)
         {
-            Vector3 pointOrigin = origin;
-            if (slowMode
-                && secondaryWorldOrigins != null
-                && i < secondaryWorldOrigins.Length)
-            {
-                pointOrigin = secondaryWorldOrigins[i];
-            }
-
-            Vector2 runtime = i < (secondaryRuntimeOffsets?.Length ?? 0)
-                ? secondaryRuntimeOffsets[i]
-                : slots[i].slotOffset;
-            Vector2 atMode = weapon.ResolveSecondarySlotOffset(
-                slots[i].slotOffset,
-                slowMode,
-                secondaryConverge01,
-                runtime);
+            Vector2 atMode = weapon.ResolveSecondarySlotOffset(slots[i].slotOffset, secondaryConverge01);
             TryAddPoint(
                 outPoints,
                 $"副炮[{i}]·{modeTag}",
-                pointOrigin,
+                origin,
                 rotRad,
                 slots[i].danmakuEmitterConfigId,
                 atMode,

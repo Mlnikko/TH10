@@ -16,8 +16,8 @@ MonoBehaviour:
   character: 2
   weaponConfigIds:
   - weapon_marisa_green
-  - weapon_marisa_1
-  - weapon_marisa_2
+  - weapon_marisa_red
+  - weapon_marisa_blue
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"
   maxHealth: 1
   moveSpeed: 2.2

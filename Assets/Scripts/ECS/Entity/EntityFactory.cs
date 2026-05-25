@@ -302,8 +302,6 @@ public class EntityFactory
             slotOffsetY = slotOffset.y,
             emitterBaseOffsetX = emitterCfg.emitterPosOffset.x,
             emitterBaseOffsetY = emitterCfg.emitterPosOffset.y,
-            runtimeSlotOffsetX = slotOffset.x,
-            runtimeSlotOffsetY = slotOffset.y,
         });
 
         return e_emitter.Index;

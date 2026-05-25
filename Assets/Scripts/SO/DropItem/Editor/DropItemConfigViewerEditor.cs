@@ -9,12 +9,18 @@ public class DropItemConfigViewerEditor : GameConfigViewerEditor<DropItemConfigV
     {
         serializedObject.Update();
 
+        const string ConfigField = "dropItemConfig";
         const string PickupPrefabIdField = "pickupPrefabId";
-        DrawPropertiesExcluding(serializedObject, "m_Script", PickupPrefabIdField);
+
+        var configRef = serializedObject.FindProperty(ConfigField);
+        if (configRef != null)
+            EditorGUILayout.PropertyField(configRef);
 
         var prefabId = serializedObject.FindProperty(PickupPrefabIdField);
         if (prefabId != null)
             ResourceIdEditorPicker.DrawDropItemPrefabIdField(prefabId);
+
+        DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField, PickupPrefabIdField);
 
         serializedObject.ApplyModifiedProperties();
 

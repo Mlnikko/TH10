@@ -350,17 +350,6 @@ public struct CPlayerEmitterOwnership : IComponent
     /// <summary><see cref="DanmakuEmitterConfig.emitterPosOffset"/>（不含武器槽位偏移）。</summary>
     public float emitterBaseOffsetX;
     public float emitterBaseOffsetY;
-
-    /// <summary>轨迹跟随 / 退出低速回位时的运行时槽位偏移（相对玩家）。</summary>
-    public float runtimeSlotOffsetX;
-    public float runtimeSlotOffsetY;
-
-    /// <summary><see cref="E_WeaponSlowSlotPositionMode.WorldAnchorWhileSlow"/> 期间的世界锚点。</summary>
-    public float slowWorldAnchorX;
-    public float slowWorldAnchorY;
-
-    /// <summary>见 <see cref="WeaponSlowModePosition.SlowStateWorldAnchor"/>。</summary>
-    public byte slowPositionState;
 }
 
 #endregion

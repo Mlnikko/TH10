@@ -42,7 +42,7 @@ public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewe
             ResourceIdEditorPicker.DrawWeaponPowerSecondaryLayouts(powerSecondary);
 
         if (slowLayout != null)
-            WeaponConfigAssetEditor.DrawSlowModeLayout(slowLayout);
+            EditorGUILayout.PropertyField(slowLayout, new GUIContent("低速收束布局"), true);
 
         ConfigViewerEditorUI.DrawSeparator();
         EditorGUILayout.LabelField("布局 / 发射预览", EditorStyles.boldLabel);
