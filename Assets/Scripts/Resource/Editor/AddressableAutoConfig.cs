@@ -51,6 +51,10 @@ public static class AddressableAutoConfig
             return;
         }
 
+        int removed = RemoveOrphanEntries(settings);
+        if (removed > 0)
+            Logger.Info($"已移除 {removed} 个无效 Addressables 条目（资源已删除或 GUID 失效）");
+
         int count = 0;
         var allKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // 忽略大小写防冲突
 
@@ -118,5 +122,34 @@ public static class AddressableAutoConfig
                 Logger.Error($"配置资源失败: {path}\n{e}");
             }
         }
+    }
+
+    /// <summary>移除 GUID 无法解析到有效资源路径的条目（例如已删 prefab 的残留引用）。</summary>
+    static int RemoveOrphanEntries(AddressableAssetSettings settings)
+    {
+        int removed = 0;
+        foreach (var group in settings.groups)
+        {
+            if (group == null)
+                continue;
+
+            var entries = group.entries.ToArray();
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry == null || string.IsNullOrEmpty(entry.guid))
+                    continue;
+
+                string path = AssetDatabase.GUIDToAssetPath(entry.guid);
+                if (!string.IsNullOrEmpty(path))
+                    continue;
+
+                settings.RemoveAssetEntry(entry.guid);
+                removed++;
+                Logger.Warn($"已移除无效 Addressables 条目: {entry.address} (guid={entry.guid})");
+            }
+        }
+
+        return removed;
     }
 }

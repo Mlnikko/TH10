@@ -41,7 +41,7 @@ public struct ArcModeConfig
     public float arcAngle;      // 扇形展开角（度）
     public float arcRadius;        // 发射半径
 
-    [Min(0f)]
+    [Min(1)]
     public int arcBulletCount;    // 弧线上子弹数
     public bool arcClockwise;
 }
@@ -149,7 +149,7 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Tooltip("发射间隔（秒）；在 ILogicTimingBake.BakeLogicTiming 中烘焙为 launchCooldownFrames")]
     public float launchIntervalSeconds = 0.5f;
 
-    [Tooltip("发射次数；-1 表示无限次数")]
+    [Tooltip("发射次数（齐射轮次）；-1 表示无限。0 在保存时会被纠正为 -1，运行时亦按无限处理")]
     public int launchCount = -1;
 
     [NonSerialized] public int launchCooldownFrames;
@@ -181,6 +181,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Min(0f)]
     public float displayScaleCyclesPerSecond;
 
+    [TextArea(2, 6)]
+    [Tooltip("策划备注：描述该发射器在关卡/Boss 战中的视觉表现（仅编辑器，不参与烘焙与战斗逻辑）")]
+    public string presentationDescription;
+
     [NonSerialized] public float displayScalePhaseRadPerFrame;
 
     [Tooltip("发射器位置偏移（相对于生成点），用于调整发射器位置")]
@@ -195,6 +199,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     public float salvoAngleAdvanceDeg;
 
     public EmitterCamp emitterCamp = EmitterCamp.Enemy;
+
+    [Tooltip("敌人发射器专用：每次齐射时朝向最近玩家调整发射角（Line/Arc/Wave/Grain 均以其模式基准方向对准玩家）")]
+    public bool aimAtPlayer;
+
     public AudioName audio_Fire = AudioName.None;
 
     [Header("Line Mode 参数")]
@@ -233,6 +241,11 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
         var grain = grainModeConfig;
         GrainModeConfig.NormalizeSpeedScales(ref grain);
         grainModeConfig = grain;
+
+        if (launchCount == 0)
+            launchCount = -1;
+
+        DanmakuEmitterSalvoInfo.ClampActiveModeSalvoCounts(this);
     }
 #endif
 

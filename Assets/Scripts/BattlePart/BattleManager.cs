@@ -23,22 +23,88 @@ public enum E_BattleStatus
     InBattle
 }
 
+/// <summary>战斗暂停原因（影响暂停菜单按钮与是否允许恢复）。</summary>
+public enum E_BattlePauseReason
+{
+    None,
+    /// <summary>玩家手动暂停，可继续。</summary>
+    Manual,
+    /// <summary>单机生命归零，仅可重新开始。</summary>
+    GameOverSingle,
+    /// <summary>联机全员生命归零，仅可返回房间。</summary>
+    GameOverMulti,
+    /// <summary>单机关卡通关，可重新开始或退出。</summary>
+    StageClearSingle,
+    /// <summary>联机关卡通关；房主可重新开始，全员可返回房间。</summary>
+    StageClearMulti,
+}
+
+/// <summary>Boss 血条 HUD 只读快照（供 <see cref="BattleUIPanel"/> 轮询）。</summary>
+public readonly struct BossHudSnapshot
+{
+    public readonly int CurrentHealth;
+    public readonly int MaxHealth;
+    public readonly int BossPhaseIndex;
+    public readonly string DisplayName;
+    /// <summary>Boss 在战斗区内的水平归一化位置 [0=左缘, 1=右缘]。</summary>
+    public readonly float NormalizedHorizontal;
+
+    public float NormalizedHealth =>
+        MaxHealth > 0 ? Mathf.Clamp01((float)CurrentHealth / MaxHealth) : 0f;
+
+    public BossHudSnapshot(
+        int currentHealth,
+        int maxHealth,
+        int bossPhaseIndex,
+        string displayName,
+        float normalizedHorizontal)
+    {
+        CurrentHealth = currentHealth;
+        MaxHealth = maxHealth;
+        BossPhaseIndex = bossPhaseIndex;
+        DisplayName = displayName ?? string.Empty;
+        NormalizedHorizontal = Mathf.Clamp01(normalizedHorizontal);
+    }
+
+    public static float WorldXToNormalizedHorizontal(float worldX, in BattleAreaData area)
+    {
+        if (area.Width <= 0.001f)
+            return 0.5f;
+        return Mathf.Clamp01((worldX - area.Left) / area.Width);
+    }
+}
+
 /// <summary>战斗 HUD 只读快照（供 UI 轮询）。</summary>
 public readonly struct BattleHudSnapshot
 {
     public readonly int Score;
-    public readonly int HiScore;
     public readonly int HealthCurrent;
     public readonly int HealthMax;
     public readonly int PowerOrbs;
 
-    public BattleHudSnapshot(int score, int hiScore, int healthCurrent, int healthMax, int powerOrbs)
+    public BattleHudSnapshot(int score, int healthCurrent, int healthMax, int powerOrbs)
     {
         Score = score;
-        HiScore = hiScore;
         HealthCurrent = healthCurrent;
         HealthMax = healthMax;
         PowerOrbs = powerOrbs;
+    }
+}
+
+/// <summary>战斗运行时调试快照（供 HUD RuntimeData 显示）。</summary>
+public readonly struct BattleRuntimeSnapshot
+{
+    public readonly float RenderFps;
+    public readonly float LogicFps;
+    public readonly int ActiveEntityCount;
+    public readonly int ActiveGameObjectCount;
+
+    public BattleRuntimeSnapshot(float renderFps, float logicFps, int activeEntityCount, int activeGameObjectCount)
+    {
+        RenderFps = renderFps;
+        LogicFps = logicFps;
+        ActiveEntityCount = activeEntityCount;
+        ActiveGameObjectCount = activeGameObjectCount;
     }
 }
 
@@ -87,6 +153,7 @@ public static class GlobalBattleData
 /// <summary>
 /// 战斗会话入口：进场景 + 准备 UI + ECS 开战均由此类编排。
 /// </summary>
+[DefaultExecutionOrder(100)]
 public class BattleManager : SingletonMono<BattleManager>
 {
     public const string BattleSceneName = "BattleScene";
@@ -100,9 +167,77 @@ public class BattleManager : SingletonMono<BattleManager>
 
     int TotalPlayers => allPlayerDatas.Count;
 
+    /// <summary>当前战斗会话中的玩家数量（供 ECS 复活等逻辑使用）。</summary>
+    public int TotalPlayerCount => TotalPlayers;
+
+    public bool TryGetPlayerBattleData(byte playerIndex, out PlayerBattleData data)
+    {
+        for (int i = 0; i < allPlayerDatas.Count; i++)
+        {
+            if (allPlayerDatas[i].playerIndex != playerIndex)
+                continue;
+
+            data = allPlayerDatas[i];
+            return true;
+        }
+
+        data = default;
+        return false;
+    }
+
     World _battleWorld;
 
     public World ActiveBattleWorld => _battleWorld;
+
+    /// <summary>战斗逻辑帧是否已暂停。</summary>
+    public bool IsBattlePaused { get; private set; }
+
+    /// <summary>当前暂停原因。</summary>
+    public E_BattlePauseReason PauseReason => _pauseReason;
+
+    /// <summary>因生命归零触发的强制暂停（不可继续游戏）。</summary>
+    public bool IsGameOverPaused =>
+        IsBattlePaused
+        && (_pauseReason == E_BattlePauseReason.GameOverSingle
+            || _pauseReason == E_BattlePauseReason.GameOverMulti);
+
+    /// <summary>关卡通关后的强制暂停（不可继续游戏）。</summary>
+    public bool IsStageClearPaused =>
+        IsBattlePaused
+        && (_pauseReason == E_BattlePauseReason.StageClearSingle
+            || _pauseReason == E_BattlePauseReason.StageClearMulti);
+
+    /// <summary>Game Over 或关卡通关等不可恢复的终局暂停。</summary>
+    public bool IsTerminalBattlePaused => IsGameOverPaused || IsStageClearPaused;
+
+    /// <summary>联机关卡通关后，房主可发起重新开始。</summary>
+    public bool CanHostRestartAfterStageClear =>
+        IsStageClearPaused && !isSinglePlayerMode && IsLocalNetworkHost();
+
+    /// <summary>手动暂停且可恢复（联机仅房主）。</summary>
+    public bool CanResumeBattle =>
+        IsBattlePaused
+        && _pauseReason == E_BattlePauseReason.Manual
+        && (isSinglePlayerMode || IsLocalNetworkHost());
+
+    /// <summary>联机中本地玩家已生命归零、战斗仍在进行（观战）。</summary>
+    public bool IsLocalSpectating =>
+        !isSinglePlayerMode
+        && CurrentStatus == E_BattleStatus.InBattle
+        && IsPlayerEliminated(RoomManager.LocalPlayerIndex)
+        && !IsTerminalBattlePaused;
+
+    /// <summary>按暂停键可暂停（单机任意玩家；联机仅房主）。</summary>
+    public bool CanPauseBattle =>
+        CurrentStatus == E_BattleStatus.InBattle
+        && _battleWorld != null
+        && !IsTerminalBattlePaused
+        && !IsLocalSpectating
+        && (isSinglePlayerMode || IsLocalNetworkHost());
+
+    E_BattlePauseReason _pauseReason = E_BattlePauseReason.None;
+    byte _eliminatedPlayerMask;
+    bool _stageClearHandled;
 
     readonly BattlePrepareCharacterRegistry _prepareCharacterRegistry = new();
 
@@ -160,7 +295,384 @@ public class BattleManager : SingletonMono<BattleManager>
         Array.Clear(_activePlayers, 0, _activePlayers.Length);
         _prepareCharacterRegistry.Reset();
         CurrentStatus = E_BattleStatus.Prepare;
-        DisposeBattleWorld();
+        EndBattleSession();
+    }
+
+    /// <summary>释放战斗 ECS、表现桥接与对象池，供退出战斗或重新进战前调用。</summary>
+    public void EndBattleSession()
+    {
+        IsBattlePaused = false;
+        _pauseReason = E_BattlePauseReason.None;
+        _eliminatedPlayerMask = 0;
+        _stageClearHandled = false;
+
+        if (_battleWorld != null)
+        {
+            _battleWorld.GetSystem<StageTimelineSystem>()?.End();
+            _battleWorld.Dispose();
+            _battleWorld = null;
+        }
+
+        InputManager.Instance?.ClearAllInputs();
+
+        if (GameObjectPoolManager.Instance != null)
+            GameObjectPoolManager.Instance.ShutdownBattlePools();
+
+        BattleRuntimeMetrics.Reset();
+    }
+
+    public void SetBattlePaused(bool paused)
+    {
+        if (CurrentStatus != E_BattleStatus.InBattle || _battleWorld == null)
+            return;
+
+        if (!paused && IsTerminalBattlePaused)
+            return;
+
+        if (IsBattlePaused == paused)
+            return;
+
+        IsBattlePaused = paused;
+        if (paused)
+        {
+            if (_pauseReason == E_BattlePauseReason.None)
+                _pauseReason = E_BattlePauseReason.Manual;
+            _battleWorld.LogicFrameTimer.Pause();
+        }
+        else
+        {
+            _pauseReason = E_BattlePauseReason.None;
+            _battleWorld.LogicFrameTimer.Resume();
+        }
+    }
+
+    /// <summary>生命归零后的强制暂停（不可恢复）。</summary>
+    public void ForceGameOverPause(E_BattlePauseReason reason)
+    {
+        if (CurrentStatus != E_BattleStatus.InBattle || _battleWorld == null)
+            return;
+
+        if (reason != E_BattlePauseReason.GameOverSingle
+            && reason != E_BattlePauseReason.GameOverMulti)
+        {
+            return;
+        }
+
+        if (IsBattlePaused && _pauseReason == reason)
+            return;
+
+        if (reason == E_BattlePauseReason.GameOverMulti)
+            _eliminatedPlayerMask = BuildActivePlayerMask();
+
+        _pauseReason = reason;
+        IsBattlePaused = true;
+        _battleWorld.LogicFrameTimer.Pause();
+        Logger.Info($"[Battle] Game over pause ({reason}).", LogTag.Battle);
+    }
+
+    /// <summary>关卡通关后的强制暂停（由 <see cref="StageTimelineSystem"/> 在 Boss 击败或时间轴结束时调用）。</summary>
+    public void NotifyStageCleared()
+    {
+        if (_stageClearHandled || CurrentStatus != E_BattleStatus.InBattle || _battleWorld == null)
+            return;
+
+        _stageClearHandled = true;
+
+        if (isSinglePlayerMode)
+        {
+            ForceStageClearPause(E_BattlePauseReason.StageClearSingle);
+            return;
+        }
+
+        var net = NetworkManager.Instance;
+        if (net != null && net.NetworkRole == NetworkRole.Host)
+            net.Broadcast(new BattleStageClearMSG());
+
+        ForceStageClearPause(E_BattlePauseReason.StageClearMulti);
+    }
+
+    public void ClientApplyBattleStageClear()
+    {
+        if (_stageClearHandled)
+            return;
+
+        _stageClearHandled = true;
+        ForceStageClearPause(E_BattlePauseReason.StageClearMulti);
+    }
+
+    void ForceStageClearPause(E_BattlePauseReason reason)
+    {
+        if (CurrentStatus != E_BattleStatus.InBattle || _battleWorld == null)
+            return;
+
+        if (reason != E_BattlePauseReason.StageClearSingle
+            && reason != E_BattlePauseReason.StageClearMulti)
+        {
+            return;
+        }
+
+        if (IsBattlePaused && _pauseReason == reason)
+            return;
+
+        _pauseReason = reason;
+        IsBattlePaused = true;
+        _battleWorld.LogicFrameTimer.Pause();
+        Logger.Info($"[Battle] Stage clear pause ({reason}).", LogTag.Battle);
+    }
+
+    public bool IsPlayerEliminated(byte playerIndex)
+    {
+        if (playerIndex >= 8)
+            return false;
+        return (_eliminatedPlayerMask & (1 << playerIndex)) != 0;
+    }
+
+    /// <summary>玩家生命归零时由 <see cref="PlayerHitHandler"/> 调用。</summary>
+    public void NotifyPlayerEliminated(byte playerIndex)
+    {
+        if (_stageClearHandled || IsTerminalBattlePaused)
+            return;
+
+        if (!IsPlayerIndexActive(playerIndex))
+            return;
+
+        byte bit = (byte)(1 << playerIndex);
+        if ((_eliminatedPlayerMask & bit) != 0)
+            return;
+
+        _eliminatedPlayerMask |= bit;
+        Logger.Info($"[Battle] Player {playerIndex} eliminated.", LogTag.Battle);
+
+        if (isSinglePlayerMode)
+        {
+            ForceGameOverPause(E_BattlePauseReason.GameOverSingle);
+            return;
+        }
+
+        if (playerIndex == RoomManager.LocalPlayerIndex)
+            Logger.Info("[Battle] Local player eliminated; spectating.", LogTag.Battle);
+
+        TryTriggerMultiplayerGameOver();
+    }
+
+    void TryTriggerMultiplayerGameOver()
+    {
+        byte activeMask = BuildActivePlayerMask();
+        if (activeMask == 0 || (_eliminatedPlayerMask & activeMask) != activeMask)
+            return;
+
+        var net = NetworkManager.Instance;
+        if (net != null && net.NetworkRole == NetworkRole.Host)
+            net.Broadcast(new BattleGameOverMSG());
+
+        ForceGameOverPause(E_BattlePauseReason.GameOverMulti);
+    }
+
+    public void ClientApplyBattleGameOver()
+    {
+        ForceGameOverPause(E_BattlePauseReason.GameOverMulti);
+    }
+
+    /// <summary>单机 Game Over / 关卡通关后重新开始当前关卡。</summary>
+    public void RestartSinglePlayerBattle()
+    {
+        if (!isSinglePlayerMode || allPlayerDatas.Count == 0)
+            return;
+
+        if (_pauseReason != E_BattlePauseReason.GameOverSingle
+            && _pauseReason != E_BattlePauseReason.StageClearSingle)
+        {
+            return;
+        }
+
+        ResetBattleSessionForRestart();
+        BeginBattleSession(singlePlayer: true, logicStartFrame: 0, remotePlayerDatas: null);
+    }
+
+    /// <summary>联机关卡通关后，房主重新开始本关。</summary>
+    public void HostRequestRestartMultiplayerBattle()
+    {
+        if (!CanHostRestartAfterStageClear || allPlayerDatas.Count == 0)
+            return;
+
+        var playerDatas = allPlayerDatas.ToArray();
+        NetworkManager.Instance?.Broadcast(new BattleRestartMSG
+        {
+            startFrame = 0,
+            randomSeed = 0,
+            playerDatas = playerDatas
+        });
+
+        RestartMultiplayerBattle(playerDatas);
+    }
+
+    public void ClientApplyBattleRestart(PlayerBattleData[] playerDatas)
+    {
+        if (playerDatas == null || playerDatas.Length == 0)
+            return;
+
+        RestartMultiplayerBattle(playerDatas);
+    }
+
+    void RestartMultiplayerBattle(PlayerBattleData[] playerDatas)
+    {
+        if (isSinglePlayerMode)
+            return;
+
+        ResetBattleSessionForRestart();
+        BeginBattleSession(singlePlayer: false, logicStartFrame: 0, remotePlayerDatas: playerDatas);
+    }
+
+    void ResetBattleSessionForRestart()
+    {
+        IsBattlePaused = false;
+        _pauseReason = E_BattlePauseReason.None;
+        _eliminatedPlayerMask = 0;
+        _stageClearHandled = false;
+    }
+
+    #region 联机暂停（仅房主）
+
+    static bool IsLocalNetworkHost()
+    {
+        var net = NetworkManager.Instance;
+        return net != null && net.NetworkRole == NetworkRole.Host;
+    }
+
+    /// <summary>本地按暂停键：单机立即暂停；联机仅房主暂停并广播。</summary>
+    public void LocalRequestPause()
+    {
+        if (!CanPauseBattle || IsBattlePaused)
+            return;
+
+        if (isSinglePlayerMode)
+        {
+            SetBattlePaused(true);
+            return;
+        }
+
+        HostPauseAndBroadcast();
+    }
+
+    /// <summary>恢复战斗：单机本地恢复；联机仅房主广播恢复。</summary>
+    public void LocalRequestResumeBattle()
+    {
+        if (!CanResumeBattle)
+            return;
+
+        if (isSinglePlayerMode)
+        {
+            SetBattlePaused(false);
+            return;
+        }
+
+        HostResumeAndBroadcast();
+    }
+
+    void HostPauseAndBroadcast()
+    {
+        SetBattlePaused(true);
+        NetworkManager.Instance?.Broadcast(new BattlePauseApplyMSG());
+        Logger.Info("[BattlePause] Host paused battle.", LogTag.Battle);
+    }
+
+    void HostResumeAndBroadcast()
+    {
+        SetBattlePaused(false);
+        NetworkManager.Instance?.Broadcast(new BattlePauseResumeMSG());
+        Logger.Info("[BattlePause] Host resumed battle.", LogTag.Battle);
+    }
+
+    public void ClientApplyBattlePause()
+    {
+        SetBattlePaused(true);
+    }
+
+    public void ClientApplyBattleResume()
+    {
+        SetBattlePaused(false);
+    }
+
+    /// <summary>房主在联机手动暂停菜单选择返回房间：广播后本机与其它玩家一并回房。</summary>
+    public void HostRequestReturnToRoomFromPause()
+    {
+        if (isSinglePlayerMode || !CanResumeBattle || PauseReason != E_BattlePauseReason.Manual)
+            return;
+
+        NetworkManager.Instance?.Broadcast(new BattlePauseReturnToRoomMSG());
+        Logger.Info("[BattlePause] Host returning to room from pause.", LogTag.Battle);
+        QuitBattleToRoomAsync().Forget();
+    }
+
+    public void ClientApplyBattleReturnToRoom()
+    {
+        if (isSinglePlayerMode)
+            return;
+
+        Logger.Info("[BattlePause] Following host return to room.", LogTag.Battle);
+        QuitBattleToRoomAsync().Forget();
+    }
+
+    byte BuildActivePlayerMask()
+    {
+        byte mask = 0;
+        for (int i = 0; i < _activePlayers.Length; i++)
+        {
+            if (_activePlayers[i])
+                mask |= (byte)(1 << i);
+        }
+        return mask;
+    }
+
+    bool IsPlayerIndexActive(byte playerIndex)
+    {
+        return playerIndex < _activePlayers.Length && _activePlayers[playerIndex];
+    }
+
+    #endregion
+
+    /// <summary>从暂停菜单退出战斗，回到标题场景主菜单。</summary>
+    public async Task QuitBattleToMenuAsync()
+    {
+        if (UIManager.Instance != null)
+            UIManager.Instance.ClosePanel<BattleUIPanel>();
+
+        CurrentStatus = E_BattleStatus.Prepare;
+        EndBattleSession();
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.CloseAll();
+
+        if (!await SceneLoader.LoadSceneAsync("TitleScene"))
+        {
+            Logger.Error("[Battle] Failed to load TitleScene after quit.", LogTag.Battle);
+            return;
+        }
+
+        if (UIManager.Instance != null)
+            await UIManager.Instance.ShowPanelAsync<MenuPanel>();
+    }
+
+    /// <summary>联机全员 Game Over 后返回房间界面（保持网络连接）。</summary>
+    public async Task QuitBattleToRoomAsync()
+    {
+        if (UIManager.Instance != null)
+            UIManager.Instance.ClosePanel<BattleUIPanel>();
+
+        CurrentStatus = E_BattleStatus.Prepare;
+        EndBattleSession();
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.CloseAll();
+
+        if (!await SceneLoader.LoadSceneAsync("TitleScene"))
+        {
+            Logger.Error("[Battle] Failed to load TitleScene after quit to room.", LogTag.Battle);
+            return;
+        }
+
+        if (UIManager.Instance != null)
+            await UIManager.Instance.ShowPanelAsync<RoomPanel>();
     }
 
     public bool IsMultiplayerPrepare =>
@@ -353,8 +865,10 @@ public class BattleManager : SingletonMono<BattleManager>
         }
 
         RebuildActivePlayerMask();
-        InputManager.Instance?.ClearAllInputs();
+        if (InputManager.Instance != null)
+            InputManager.Instance.ClearAllInputs();
         BootstrapBattleSession(logicStartFrame);
+        InputManager.Instance?.PrepareLockstepInputBuffer(logicStartFrame, singlePlayer, _activePlayers);
     }
 
     void RebuildActivePlayerMask()
@@ -377,7 +891,12 @@ public class BattleManager : SingletonMono<BattleManager>
         _battleWorld.LogicFrameTimer.ResetToFrame(logicStartFrame);
         TryBeginStageTimeline();
         GeneratePlayer();
+        IsBattlePaused = false;
+        _pauseReason = E_BattlePauseReason.None;
+        _eliminatedPlayerMask = 0;
+        _stageClearHandled = false;
         CurrentStatus = E_BattleStatus.InBattle;
+        BattleRuntimeMetrics.Reset();
         ShowBattleUIPanelFireAndForget();
     }
 
@@ -404,6 +923,17 @@ public class BattleManager : SingletonMono<BattleManager>
         return timeline != null && timeline.TryGetStageState(out state);
     }
 
+    /// <summary>关底 Boss 登场（<see cref="E_StageState.BossIntro"/>）或中场 Boss 在场时返回 true。</summary>
+    public bool TryGetBossHudSnapshot(out BossHudSnapshot snap)
+    {
+        snap = default;
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        var timeline = _battleWorld.GetSystem<StageTimelineSystem>();
+        return timeline != null && timeline.TryGetBossHudSnapshot(out snap);
+    }
+
     void CreateBattleWorld()
     {
         _battleWorld = new World();
@@ -414,22 +944,19 @@ public class BattleManager : SingletonMono<BattleManager>
         _battleWorld.AddSystem<DropItemSystem>();
         _battleWorld.AddSystem<CollisionSystem>();
         _battleWorld.AddSystem<CollisionLogicSystem>();
+        _battleWorld.AddSystem<PlayerRespawnSystem>();
         _battleWorld.AddSystem<PlayerControlSystem>();
         _battleWorld.AddSystem<DropItemCollectSystem>();
         _battleWorld.AddSystem<DropItemMagnetSystem>();
         _battleWorld.AddSystem<DanmakuSystem>();
         _battleWorld.AddSystem<DanmakuEmitSystem>();
         _battleWorld.AddSystem<PresentationSystem>();
-        _battleWorld.AddSystem<PresentationPoseSystem>();
         Logger.Info("Battle ECS World initialized.");
     }
 
     void DisposeBattleWorld()
     {
-        if (_battleWorld == null) return;
-        _battleWorld.GetSystem<StageTimelineSystem>()?.End();
-        _battleWorld.Dispose();
-        _battleWorld = null;
+        EndBattleSession();
     }
 
     const string PrefabIdBattlePanel = "battlepanel";
@@ -459,6 +986,19 @@ public class BattleManager : SingletonMono<BattleManager>
         }
     }
 
+    static int ResolveCharacterMaxHealth(byte playerIndex)
+    {
+        if (BattleManager.Instance == null
+            || !BattleManager.Instance.TryGetPlayerBattleData(playerIndex, out var data))
+        {
+            return 0;
+        }
+
+        string characterId = StringHelper.NormalizeResourceId(data.characterId.ToString());
+        var cfg = GameResDB.Instance?.GetConfig<CharacterConfig>(characterId);
+        return cfg != null ? cfg.maxHealth : 0;
+    }
+
     public bool TryGetBattleHudSnapshot(out BattleHudSnapshot snap)
     {
         snap = default;
@@ -466,18 +1006,25 @@ public class BattleManager : SingletonMono<BattleManager>
             return false;
 
         int score = GlobalBattleData.SessionScore;
-        int hi = PlayerPrefs.GetInt("BattleHiScore", 0);
+
+        byte localIdx = RoomManager.LocalPlayerIndex;
+        if (IsPlayerEliminated(localIdx))
+        {
+            int maxHp = ResolveCharacterMaxHealth(localIdx);
+            snap = new BattleHudSnapshot(score, 0, maxHp, 0);
+            return true;
+        }
 
         var em = _battleWorld.EntityManager;
         Span<int> playerIndices = em.GetActiveIndices<CPlayer>();
         if (playerIndices.Length == 0)
         {
-            snap = new BattleHudSnapshot(score, hi, 0, 0, 0);
+            int maxHp = ResolveCharacterMaxHealth(localIdx);
+            snap = new BattleHudSnapshot(score, 0, maxHp, 0);
             return true;
         }
 
         int chosen = playerIndices[0];
-        byte localIdx = RoomManager.LocalPlayerIndex;
         for (int i = 0; i < playerIndices.Length; i++)
         {
             int idx = playerIndices[i];
@@ -491,7 +1038,21 @@ public class BattleManager : SingletonMono<BattleManager>
 
         ref readonly var pl = ref em.GetComponentSpan<CPlayer>()[chosen];
         ref readonly var hp = ref em.GetComponentSpan<CHealth>()[chosen];
-        snap = new BattleHudSnapshot(score, hi, hp.currentHealth, hp.maxHealth, pl.powerOrbs);
+        snap = new BattleHudSnapshot(score, hp.currentHealth, hp.maxHealth, pl.powerOrbs);
+        return true;
+    }
+
+    public bool TryGetBattleRuntimeSnapshot(out BattleRuntimeSnapshot snap)
+    {
+        snap = default;
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        snap = new BattleRuntimeSnapshot(
+            BattleRuntimeMetrics.RenderFps,
+            BattleRuntimeMetrics.LogicFps,
+            _battleWorld.EntityManager.ActiveEntityCount,
+            _battleWorld.GameObjectBridge.LinkedGameObjectCount);
         return true;
     }
 
@@ -655,39 +1216,66 @@ public class BattleManager : SingletonMono<BattleManager>
         if (_battleWorld == null) return;
         if (CurrentStatus != E_BattleStatus.InBattle) return;
 
+        if (IsBattlePaused) return;
+
         _battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
 
-        bool logicStalled = false;
-        if (_battleWorld.LogicFrameTimer.CanAdvance())
+        int maxCatchUpSteps = isSinglePlayerMode ? 8 : 8;
+        int steps = 0;
+        while (steps < maxCatchUpSteps && _battleWorld.LogicFrameTimer.CanAdvance())
         {
             uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
+            uint captureFrame = InputManager.Instance.ResolveCaptureFrame(frameToProcess, isSinglePlayerMode);
 
-            FrameInput input = InputManager.Instance.RecordLocalInput(RoomManager.LocalPlayerIndex, frameToProcess);
+            byte localIndex = RoomManager.LocalPlayerIndex;
+            byte eliminatedMask = _eliminatedPlayerMask;
 
             if (!isSinglePlayerMode)
-                InputManager.Instance.BroadcastLocalInput(input);
+                InputManager.Instance.FillNeutralInputsForEliminated(frameToProcess, _activePlayers, eliminatedMask);
 
-            if (isSinglePlayerMode || InputManager.Instance.AreAllInputsReady(frameToProcess, _activePlayers))
+            if (IsLocalSpectating)
+            {
+                InputManager.Instance.WriteNeutralInputForPlayer(localIndex, captureFrame);
+            }
+            else
+            {
+                InputManager.Instance.RecordLocalInput(localIndex, captureFrame);
+            }
+
+            if (!isSinglePlayerMode)
+                InputManager.Instance.BroadcastInputWindow(localIndex, frameToProcess, captureFrame);
+
+            if (isSinglePlayerMode
+                || InputManager.Instance.AreAllInputsReady(frameToProcess, _activePlayers, eliminatedMask))
             {
                 _battleWorld.LogicTick(frameToProcess);
                 _battleWorld.LogicFrameTimer.AdvanceFrame();
                 _battleWorld.LogicFrameTimer.ConsumeFrameTime();
+                InputManager.Instance.NotifyLogicTickSucceeded();
+                steps++;
             }
             else
             {
-                logicStalled = true;
+                InputManager.Instance.NotifyLogicTickStalled(frameToProcess, _activePlayers, eliminatedMask);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Logger.Debug($"[Frame {frameToProcess}] Time ready but inputs not ready.");
+                Logger.Debug(
+                    $"[Frame {frameToProcess}] Time ready but inputs not ready (missing P{InputManager.Instance.LastStalledPlayerIndex}).",
+                    LogTag.Battle);
 #endif
+                break;
             }
         }
 
-        _battleWorld.SetPresentationLogicStalled(logicStalled);
+        BattleRuntimeMetrics.RecordLogicTicks(steps);
         _battleWorld.Update(Time.deltaTime);
     }
 
     void LateUpdate()
     {
-        _battleWorld?.LateUpdate(Time.deltaTime);
+        if (_battleWorld == null) return;
+        if (CurrentStatus != E_BattleStatus.InBattle) return;
+        if (IsBattlePaused) return;
+
+        _battleWorld.LateUpdate(Time.deltaTime);
     }
 }

@@ -52,20 +52,38 @@ public class CollisionLogicSystem : BaseSystem
         // 须每帧清空：无碰撞事件时若提前 return，会导致索引复用后误判「已命中 / 已拾取」。
         TempBitSets.PlayerDanmakuHitConsumed.ClearAll();
         TempBitSets.DropItemPickupConsumed.ClearAll();
+        TempBitSets.PlayerHitConsumed.ClearAll();
 
         var events = CollisionEventBuffer.GetEvents();
         if (events.Length == 0) return;
 
         var colliders = EntityManager.GetComponentSpan<CCollider>();
+        int totalPlayers = BattleManager.Instance != null ? BattleManager.Instance.TotalPlayerCount : 1;
 
         for (int i = 0; i < events.Length; i++)
         {
             ref readonly var evt = ref events[i];
             TryApplyPlayerDanmakuVsEnemy(evt.EntityA, evt.EntityB, colliders);
             TryApplyPlayerDanmakuVsEnemy(evt.EntityB, evt.EntityA, colliders);
+            TryApplyPlayerHit(evt.EntityA, evt.EntityB, colliders, totalPlayers);
+            TryApplyPlayerHit(evt.EntityB, evt.EntityA, colliders, totalPlayers);
             TryApplyDropPickup(evt.EntityA, evt.EntityB, colliders);
             TryApplyDropPickup(evt.EntityB, evt.EntityA, colliders);
         }
+    }
+
+    void TryApplyPlayerHit(Entity playerEntity, Entity hazardEntity, Span<CCollider> colliders, int totalPlayers)
+    {
+        if (!EntityManager.HasComponent<CPlayer>(playerEntity))
+            return;
+
+        PlayerHitHandler.TryApplyHit(
+            EntityManager,
+            EntityFactory,
+            playerEntity,
+            hazardEntity,
+            colliders,
+            totalPlayers);
     }
 
     /// <summary>

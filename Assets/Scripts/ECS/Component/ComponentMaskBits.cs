@@ -8,7 +8,7 @@ public static class ComponentMaskBits
     public const uint CPoolGetTag             = 1u << 1;
     public const uint CNoOffscreenRecycleTag  = 1u << 2;
     public const uint CGameObjectLink         = 1u << 3;
-    public const uint CPresentationPose       = 1u << 4;
+    // bit 4 曾为 CPresentationPose（表现插值快照，已移除）
 
     public const uint CPlayerEmitterOwnership = 1u << 5;
     public const uint CDanmakuEmitter         = 1u << 6;
@@ -29,6 +29,7 @@ public static class ComponentMaskBits
     public const uint CDanmakuBezierHoming    = 1u << 21;
     public const uint CMidBossEncounter       = 1u << 22;
     public const uint CMainBossEncounter      = 1u << 23;
+    public const uint CPlayerRespawnPending   = 1u << 24;
 
     public static uint GetMask<T>() where T : struct, IComponent
     {
@@ -36,7 +37,6 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CPoolGetTag)) return CPoolGetTag;
         if (typeof(T) == typeof(CNoOffscreenRecycleTag)) return CNoOffscreenRecycleTag;
         if (typeof(T) == typeof(CGameObjectLink)) return CGameObjectLink;
-        if (typeof(T) == typeof(CPresentationPose)) return CPresentationPose;
 
         if (typeof(T) == typeof(CPlayerEmitterOwnership)) return CPlayerEmitterOwnership;
         if (typeof(T) == typeof(CDanmakuEmitter)) return CDanmakuEmitter;
@@ -57,6 +57,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CDanmakuBezierHoming)) return CDanmakuBezierHoming;
         if (typeof(T) == typeof(CMidBossEncounter)) return CMidBossEncounter;
         if (typeof(T) == typeof(CMainBossEncounter)) return CMainBossEncounter;
+        if (typeof(T) == typeof(CPlayerRespawnPending)) return CPlayerRespawnPending;
 
         return 0;
     }

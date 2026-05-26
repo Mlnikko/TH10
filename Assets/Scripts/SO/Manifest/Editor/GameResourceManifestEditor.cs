@@ -17,7 +17,7 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.enemyConfigIds),           ("/Configs/Enemy/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.dropItemConfigIds),        ("/Configs/DropItem/", typeof(ScriptableObject)) },
         { nameof(GameResourceManifest.poolConfigIds),            ("/Configs/Pool/", typeof(ScriptableObject)) },
-        { nameof(GameResourceManifest.stageTimelineConfigIds),   ("/Configs/Battle/Stage/", typeof(StageTimelineConfig)) },
+        { nameof(GameResourceManifest.stageTimelineConfigIds),   ("/Configs/Stage/", typeof(StageTimelineConfig)) },
 
         // Prefabs
         { nameof(GameResourceManifest.characterPrefabIds),       ("/Prefabs/Character/", typeof(GameObject)) },

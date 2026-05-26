@@ -41,6 +41,16 @@ public class DanmakuEmitterConfigAssetEditor : Editor
                 continue;
             }
 
+            if (prop.name == nameof(DanmakuEmitterConfig.emitterCamp))
+            {
+                EditorGUILayout.PropertyField(prop, true);
+                DanmakuEmitterModeInspectorUI.DrawAimAtPlayerIfEnemy(serializedObject);
+                continue;
+            }
+
+            if (prop.name == DanmakuEmitterModeInspectorUI.ConfigAimAtPlayerField)
+                continue;
+
             if (prop.name == DanmakuEmitterModeInspectorUI.ConfigEmitModeField)
             {
                 EditorGUILayout.PropertyField(prop);
@@ -67,6 +77,9 @@ public class DanmakuEmitterConfigAssetEditor : Editor
 
             EditorGUILayout.PropertyField(prop, true);
         }
+
+        if (target is DanmakuEmitterConfig singleConfig)
+            DanmakuEmitterModeInspectorUI.DrawEmitSalvoSummary(singleConfig);
 
         if (serializedObject.ApplyModifiedProperties())
         {

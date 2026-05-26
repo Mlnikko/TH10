@@ -17,11 +17,6 @@ public class World
     public GameObjectBridge GameObjectBridge => _gameObjectBridge;
     public LogicFrameDriver LogicFrameTimer => _logicFrameTimer;
 
-    /// <summary>本渲染帧逻辑是否因等待远程输入而停滞（用于本地玩家表现预测）。</summary>
-    public bool IsPresentationLogicStalled { get; private set; }
-
-    public void SetPresentationLogicStalled(bool stalled) => IsPresentationLogicStalled = stalled;
-
     public World()
     {
         _systems = new List<BaseSystem>();
@@ -120,8 +115,17 @@ public class World
 
     #endregion
 
+    /// <summary>归还表现层对象并销毁全部 ECS 实体（不销毁 System 列表）。</summary>
+    public void ShutdownBattleEntities()
+    {
+        _gameObjectBridge.ReleaseAllLinked(_entityManager);
+        _entityManager.DestroyAllActiveEntities();
+    }
+
     public void Dispose()
     {
+        ShutdownBattleEntities();
+
         for (int i = 0; i < _systems.Count; i++)
         {
             var sys = _systems[i];

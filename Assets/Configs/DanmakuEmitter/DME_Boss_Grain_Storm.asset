@@ -20,11 +20,12 @@ MonoBehaviour:
   launchIntervalSeconds: 1.25
   launchCount: -1
   launchSpeed: 5.5
-  displaySprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  displaySprite: {fileID: 0}
   displaySelfSpinDegreesPerSecond: 0
   displayScaleMin: 1
   displayScaleMax: 1
   displayScaleCyclesPerSecond: 0
+  presentationDescription: 
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 0

@@ -84,6 +84,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     uint _previewLastFireFrame;
     int _previewLaunchCountUsed;
     CDanmakuEmitter _previewEmitter;
+    int _previewEmitParamHash;
     int _previewSequentialBulletIndex;
     readonly List<DanmakuEmitterSpawnMath.SpawnSample> _lastBurstSamples = new();
     readonly List<PreviewBullet> _previewBullets = new();
@@ -135,7 +136,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         waveModeConfig = emitterConfig.waveModeConfig;
         grainModeConfig = emitterConfig.grainModeConfig;
         launchIntervalSeconds = emitterConfig.launchIntervalSeconds;
-        launchCount = emitterConfig.launchCount;
+        launchCount = DanmakuEmitterSalvoInfo.NormalizeLaunchCountMax(emitterConfig.launchCount);
         launchSpeed = emitterConfig.launchSpeed;
         launchAudio = emitterConfig.audio_Fire;
 
@@ -147,14 +148,22 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     {
         SyncDisplaySpriteFromConfig();
 #if UNITY_EDITOR
+        if (emitterConfig != null)
+            ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(emitterConfig);
+
         if (!_previewActive && !_spinPreviewActive)
             CaptureEmitBaseLocalRotation();
+        else if (_previewActive)
+            RefreshEmitterPreviewLive();
 #endif
     }
 
-    /// <summary>将当前 <see cref="displaySprite"/> 写入预制体上的 SpriteRenderer（编辑器用）。</summary>
-    public void SyncDisplaySpriteFromConfig() =>
-        DanmakuEmitterPresentation.Apply(displaySprite, gameObject);
+    /// <summary>将当前绑定 Config 的 displaySprite 写入 SpriteRenderer（编辑器用）。</summary>
+    public void SyncDisplaySpriteFromConfig()
+    {
+        Sprite sprite = emitterConfig != null ? emitterConfig.displaySprite : displaySprite;
+        DanmakuEmitterPresentation.Apply(sprite, gameObject);
+    }
 
 #if UNITY_EDITOR
     void OnValidate()
@@ -229,6 +238,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         emitterConfig.waveModeConfig = waveModeConfig;
         emitterConfig.grainModeConfig = grainModeConfig;
         emitterConfig.launchIntervalSeconds = launchIntervalSeconds;
+        launchCount = DanmakuEmitterSalvoInfo.NormalizeLaunchCountMax(launchCount);
         emitterConfig.launchCount = launchCount;
         emitterConfig.launchSpeed = launchSpeed;
         emitterConfig.audio_Fire = launchAudio;
@@ -344,7 +354,24 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
         if (emitterType == EmitMode.None)
         {
-            Logger.Warn("[DanmakuEmitterConfigViewer] 发射模式为 None，请改为 Line 或 Arc。", LogTag.Config);
+            Logger.Warn("[DanmakuEmitterConfigViewer] 发射模式为 None，请改为 Line / Arc / Wave / Grain。", LogTag.Config);
+            return;
+        }
+
+        if (launchCount == 0)
+        {
+            launchCount = -1;
+            Logger.Warn(
+                "[DanmakuEmitterConfigViewer] launchCount 为 0 已按无限齐射处理；请在 SO 中设为 -1 或正整数。",
+                LogTag.Config);
+        }
+
+        var previewEmitterProbe = BuildEmitterFromViewerFields();
+        if (DanmakuEmitterSalvoInfo.GetSalvoBulletCount(in previewEmitterProbe) <= 0)
+        {
+            Logger.Warn(
+                "[DanmakuEmitterConfigViewer] 当前模式每齐射弹数为 0，无法预览；请检查 lineCount / arcBulletCount / bulletCount。",
+                LogTag.Config);
             return;
         }
 
@@ -370,8 +397,10 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         _previewSequentialBulletIndex = 0;
         _previewBulletLifetimeFrames = LogicFramePreviewClock.SecondsToLogicFrames(previewBulletLifetime, fps);
         _previewEmitter = BuildEmitterFromViewerFields();
+        _previewEmitParamHash = ComputeEmitPreviewParameterHash();
         _previewActive = true;
         CaptureEmitBaseLocalRotation();
+        RefreshPreviewGizmoSamples();
 
         EditorApplication.update -= OnEditorPreviewUpdate;
         EditorApplication.update += OnEditorPreviewUpdate;
@@ -395,6 +424,91 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         _lastBurstSamples.Clear();
 
         SceneView.RepaintAll();
+    }
+
+    /// <summary>
+    /// 发射预览进行中时，将当前 Viewer / SO 字段同步到预览状态（无需停止再开）。
+    /// </summary>
+    public void RefreshEmitterPreviewLive()
+    {
+        if (!_previewActive)
+            return;
+
+        int newHash = ComputeEmitPreviewParameterHash();
+        if (newHash != _previewEmitParamHash)
+        {
+            _previewEmitParamHash = newHash;
+            ClearPreviewBullets();
+        }
+
+        _previewEmitter = BuildEmitterFromViewerFields();
+        uint fps = LogicFramePreviewClock.GetLogicFps();
+        _previewBulletLifetimeFrames =
+            LogicFramePreviewClock.SecondsToLogicFrames(previewBulletLifetime, fps);
+
+        SyncDisplaySpriteFromConfig();
+        RefreshPreviewGizmoSamples();
+        SceneView.RepaintAll();
+    }
+
+    int ComputeEmitPreviewParameterHash()
+    {
+        unchecked
+        {
+            int hash = 17;
+            hash = hash * 31 + (int)emitterType;
+            hash = hash * 31 + (int)emitterCamp;
+            hash = hash * 31 + (emitterConfig?.aimAtPlayer == true ? 1 : 0);
+            hash = hash * 31 + emitPosOffset.GetHashCode();
+            hash = hash * 31 + emitRotOffsetZ.GetHashCode();
+            hash = hash * 31 + danmakuRotOffsetZ.GetHashCode();
+            hash = hash * 31 + launchIntervalSeconds.GetHashCode();
+            hash = hash * 31 + launchCount;
+            hash = hash * 31 + launchSpeed.GetHashCode();
+            hash = hash * 31 + lineModeConfig.GetHashCode();
+            hash = hash * 31 + arcModeConfig.GetHashCode();
+            hash = hash * 31 + waveModeConfig.GetHashCode();
+            hash = hash * 31 + grainModeConfig.GetHashCode();
+
+            if (emitterConfig != null)
+            {
+                hash = hash * 31 + (int)emitterConfig.danmakuSelectMode;
+                hash = hash * 31 + emitterConfig.salvoAngleAdvanceDeg.GetHashCode();
+                hash = hash * 31 + HashDanmakuConfigIds(emitterConfig.danmakuConfigIds);
+            }
+
+            return hash;
+        }
+    }
+
+    static int HashDanmakuConfigIds(string[] ids)
+    {
+        if (ids == null || ids.Length == 0)
+            return 0;
+
+        int hash = 17;
+        for (int i = 0; i < ids.Length; i++)
+            hash = hash * 31 + (ids[i]?.GetHashCode() ?? 0);
+        return hash;
+    }
+
+    void RefreshPreviewGizmoSamples()
+    {
+        _lastBurstSamples.Clear();
+        if (emitterType == EmitMode.None)
+            return;
+
+        Vector3 origin = transform.position;
+        float emitRotRad = GetPreviewEmitRotRad();
+        uint logicFrame = _previewActive ? _previewClock.LogicFrame : 0;
+        DanmakuEmitterSpawnMath.CollectSpawns(
+            in _previewEmitter,
+            origin.x,
+            origin.y,
+            emitRotRad,
+            _lastBurstSamples,
+            logicFrame,
+            _previewLaunchCountUsed);
     }
 
     void OnEditorPreviewUpdate()
@@ -427,7 +541,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
     void TryFirePreviewOnLogicFrame()
     {
-        if (launchCount >= 0 && _previewLaunchCountUsed >= launchCount)
+        _previewEmitter = BuildEmitterFromViewerFields();
+
+        if (launchCount > 0 && _previewLaunchCountUsed >= launchCount)
             return;
 
         uint framesSinceLastFire = _previewClock.LogicFrame - _previewLastFireFrame;
@@ -448,8 +564,6 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
     void FirePreviewBurst(DanmakuConfig danmaku)
     {
-        _previewEmitter = BuildEmitterFromViewerFields();
-
         Vector3 origin = transform.position;
         float emitRotRad = GetPreviewEmitRotRad();
 
@@ -465,8 +579,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
         if (_lastBurstSamples.Count == 0)
         {
+            int salvo = DanmakuEmitterSalvoInfo.GetSalvoBulletCount(in _previewEmitter);
             Logger.Warn(
-                "[DanmakuEmitterConfigViewer] 本次计算到 0 发弹幕：请检查 Line 的 lineCount 或 Arc 的 arcBulletCount。",
+                $"[DanmakuEmitterConfigViewer] 本次齐射 0 发弹幕（模式 {_previewEmitter.emitMode}，配置弹数 {salvo}）。",
                 LogTag.Config);
             return;
         }
@@ -543,11 +658,24 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         _previewBullets.Clear();
     }
 
-    float GetPreviewEmitRotRad()
+    float GetPreviewEmitRotRad(in CDanmakuEmitter emitter)
     {
         float baseRad = GetEmitBaseRotZDeg() * Mathf.Deg2Rad;
-        return baseRad + _previewEmitter.emitterRotOffsetRad;
+        Vector3 origin = transform.position;
+        float? previewTargetY = emitter.aimAtPlayer ? origin.y - 3f : null;
+        float? previewTargetX = previewTargetY.HasValue ? origin.x : null;
+
+        return DanmakuEmitterAimAtPlayerLogic.ResolveEmitRotRad(
+            in emitter,
+            origin.x,
+            origin.y,
+            baseRad,
+            em: null,
+            overrideTargetX: previewTargetX,
+            overrideTargetY: previewTargetY);
     }
+
+    float GetPreviewEmitRotRad() => GetPreviewEmitRotRad(in _previewEmitter);
 
     DanmakuConfig ResolvePreviewDanmakuConfig()
     {
@@ -619,6 +747,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         temp.displayScaleMin = displayScaleMin;
         temp.displayScaleMax = displayScaleMax;
         temp.displayScaleCyclesPerSecond = displayScaleCyclesPerSecond;
+        temp.aimAtPlayer = emitterConfig?.aimAtPlayer ?? false;
         if (emitterConfig != null)
         {
             temp.danmakuSelectMode = emitterConfig.danmakuSelectMode;
@@ -647,41 +776,34 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(origin, 0.05f);
 
-        if (_lastBurstSamples.Count > 0)
-        {
-            for (int i = 0; i < _lastBurstSamples.Count; i++)
-            {
-                var s = _lastBurstSamples[i];
-                var pos = new Vector3(s.posX, s.posY, 0f);
-                Gizmos.color = Color.yellow;
-                Gizmos.DrawWireSphere(pos, 0.04f);
-
-                var velEnd = pos + new Vector3(s.velX, s.velY, 0f) * 0.25f;
-                Gizmos.color = new Color(1f, 0.4f, 0.1f, 0.9f);
-                Gizmos.DrawLine(pos, velEnd);
-            }
-
-            return;
-        }
-
         if (emitterType == EmitMode.None)
             return;
 
-        var emitter = BuildEmitterFromViewerFields();
-        float emitRotRad = GetEmitBaseRotZDeg() * Mathf.Deg2Rad + emitter.emitterRotOffsetRad;
+        var samples = _lastBurstSamples;
+        if (_previewActive || samples.Count == 0)
+        {
+            var emitter = BuildEmitterFromViewerFields();
+            float emitRotRad = GetPreviewEmitRotRad(in emitter);
+            samples = new List<DanmakuEmitterSpawnMath.SpawnSample>();
+            uint gizmoFrame = _previewActive ? _previewClock.LogicFrame : 0;
+            int salvoIndex = _previewActive ? _previewLaunchCountUsed : 0;
+            DanmakuEmitterSpawnMath.CollectSpawns(
+                in emitter, origin.x, origin.y, emitRotRad, samples, gizmoFrame, salvoIndex);
+        }
 
-        var samples = new List<DanmakuEmitterSpawnMath.SpawnSample>();
-        uint gizmoFrame = _previewActive ? _previewClock.LogicFrame : 0;
-        DanmakuEmitterSpawnMath.CollectSpawns(
-            in emitter, origin.x, origin.y, emitRotRad, samples, gizmoFrame, 0);
-
+        bool livePreview = _previewActive;
         for (int i = 0; i < samples.Count; i++)
         {
             var s = samples[i];
             var pos = new Vector3(s.posX, s.posY, 0f);
-            Gizmos.color = new Color(0.4f, 0.85f, 1f, 0.85f);
-            Gizmos.DrawWireSphere(pos, 0.035f);
-            Gizmos.DrawLine(pos, pos + new Vector3(s.velX, s.velY, 0f) * 0.2f);
+            Gizmos.color = livePreview ? Color.yellow : new Color(0.4f, 0.85f, 1f, 0.85f);
+            Gizmos.DrawWireSphere(pos, livePreview ? 0.04f : 0.035f);
+
+            var velEnd = pos + new Vector3(s.velX, s.velY, 0f) * (livePreview ? 0.25f : 0.2f);
+            Gizmos.color = livePreview
+                ? new Color(1f, 0.4f, 0.1f, 0.9f)
+                : new Color(0.4f, 0.85f, 1f, 0.85f);
+            Gizmos.DrawLine(pos, velEnd);
         }
 #endif
     }

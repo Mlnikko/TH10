@@ -13,6 +13,8 @@ public static class TempBitSets
     public static readonly BitSet PlayerDanmakuHitConsumed = new(EntityManager.MAX_ENTITIES);
     /// <summary>本逻辑帧内已被拾取的掉落物实体索引，防止同一帧重复触发效果。</summary>
     public static readonly BitSet DropItemPickupConsumed = new(EntityManager.MAX_ENTITIES);
+    /// <summary>本逻辑帧内已结算过受击的玩家实体索引，防止同帧多段伤害。</summary>
+    public static readonly BitSet PlayerHitConsumed = new(EntityManager.MAX_ENTITIES);
 }
 
 /// <summary>
@@ -41,6 +43,9 @@ public class EntityManager
     readonly ushort[] _versions;
     readonly uint[] _componentMasks;
     readonly Queue<int> _freeIds;
+    int _activeEntityCount;
+
+    public int ActiveEntityCount => _activeEntityCount;
 
     public EntityManager()
     {
@@ -72,6 +77,7 @@ public class EntityManager
             ClearComponentsFromMask(index, mask);
 
         _activeMask.Set(index, true);
+        _activeEntityCount++;
 
         Entity entity = Entity.FromIndexAndVersion(index, _versions[index]);
 
@@ -94,6 +100,7 @@ public class EntityManager
         // 销毁时递增 Version！这是防复用的关键
         _versions[index]++;
         _activeMask.Set(index, false);
+        _activeEntityCount--;
         _freeIds.Enqueue(index);
     }
 
@@ -182,6 +189,20 @@ public class EntityManager
         return ComponentStorage<T>.GetActiveIndices();
     }
 
+    /// <summary>销毁当前所有存活实体（战斗会话结束清理）。</summary>
+    public void DestroyAllActiveEntities()
+    {
+        int count = _activeMask.GetSetBits(TempBuffers.CollisionActive);
+        for (int i = count - 1; i >= 0; i--)
+        {
+            int index = TempBuffers.CollisionActive[i];
+            if (!IsIndexActive(index))
+                continue;
+
+            DestroyEntity(GetEntity(index));
+        }
+    }
+
     void ClearComponentsFromMask(int index, uint mask)
     {
         if (mask == 0)
@@ -191,7 +212,6 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CPoolGetTag) != 0) RemoveComponentAtSlot<CPoolGetTag>(index);
         if ((mask & ComponentMaskBits.CNoOffscreenRecycleTag) != 0) RemoveComponentAtSlot<CNoOffscreenRecycleTag>(index);
         if ((mask & ComponentMaskBits.CGameObjectLink) != 0) RemoveComponentAtSlot<CGameObjectLink>(index);
-        if ((mask & ComponentMaskBits.CPresentationPose) != 0) RemoveComponentAtSlot<CPresentationPose>(index);
 
         if ((mask & ComponentMaskBits.CPlayerEmitterOwnership) != 0) RemoveComponentAtSlot<CPlayerEmitterOwnership>(index);
         if ((mask & ComponentMaskBits.CDanmakuEmitter) != 0) RemoveComponentAtSlot<CDanmakuEmitter>(index);
@@ -212,6 +232,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CDanmakuBezierHoming) != 0) RemoveComponentAtSlot<CDanmakuBezierHoming>(index);
         if ((mask & ComponentMaskBits.CMidBossEncounter) != 0) RemoveComponentAtSlot<CMidBossEncounter>(index);
         if ((mask & ComponentMaskBits.CMainBossEncounter) != 0) RemoveComponentAtSlot<CMainBossEncounter>(index);
+        if ((mask & ComponentMaskBits.CPlayerRespawnPending) != 0) RemoveComponentAtSlot<CPlayerRespawnPending>(index);
 
         _componentMasks[index] = 0;
     }

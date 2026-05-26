@@ -17,7 +17,13 @@ public class PlayerControlSystem : BaseSystem
         {
             int playerEntityIdx = indices[i];
 
+            if (EntityManager.HasComponent<CPoolRecycleTag>(playerEntityIdx))
+                continue;
+
             ref var player = ref players[playerEntityIdx];
+
+            if (player.invincibleFramesRemaining > 0)
+                player.invincibleFramesRemaining--;
             var input = InputManager.Instance.GetInputForFrame(player.playerIndex, currentframe);
             player.isSlowMode = input.SlowMode;
             player.isShooting = input.Shoot;
@@ -35,8 +41,16 @@ public class PlayerControlSystem : BaseSystem
             pos.x += dx;
             pos.y += dy;
 
-            pos.x = Mathf.Clamp(pos.x, GlobalBattleData.AreaData.Left, GlobalBattleData.AreaData.Right);
-            pos.y = Mathf.Clamp(pos.y, GlobalBattleData.AreaData.Bottom, GlobalBattleData.AreaData.Top);
+            PlayerMoveBounds.ClampAnchorToBattleArea(
+                ref pos.x,
+                ref pos.y,
+                GlobalBattleData.AreaData,
+                player.moveColliderShape,
+                player.moveColliderOffsetX,
+                player.moveColliderOffsetY,
+                player.moveColliderRadius,
+                player.moveColliderHalfW,
+                player.moveColliderHalfH);
 
             var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
             if (weaponConfig != null)

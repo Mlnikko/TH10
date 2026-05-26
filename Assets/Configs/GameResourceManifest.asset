@@ -44,14 +44,6 @@ MonoBehaviour:
   - dm_star
   - dm_test
   danmakuEmitterConfigIds:
-  - dme_midboss_diag_spread
-  - dme_midboss_fan_narrow
-  - dme_midboss_fan_wide
-  - dme_midboss_grain_spray
-  - dme_midboss_ring_16_rotate
-  - dme_midboss_ring_8
-  - dme_midboss_stream
-  - dme_midboss_wave_lasher
   - dme_boss_fan_omni
   - dme_boss_fan_tight
   - dme_boss_four_way_rotate
@@ -87,6 +79,14 @@ MonoBehaviour:
   - dme_marisa_green
   - dme_marisa_main
   - dme_marisa_red
+  - dme_midboss_diag_spread
+  - dme_midboss_fan_narrow
+  - dme_midboss_fan_wide
+  - dme_midboss_grain_spray
+  - dme_midboss_ring_8
+  - dme_midboss_ring_16_rotate
+  - dme_midboss_stream
+  - dme_midboss_wave_lasher
   - dme_reimu_blue
   - dme_reimu_main_pink
   - dme_reimu_main_red

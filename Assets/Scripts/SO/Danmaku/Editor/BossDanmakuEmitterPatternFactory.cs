@@ -61,6 +61,7 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateRing24Rotate() =>
         Save(CreateBase("DME_Boss_Ring_24_Rotate", BulletStar, EmitMode.Arc, 1.15f, SpeedNormal,
+            presentationDescription: "全周 24 发星弹环，每齐射整体旋转 10°。",
             salvoAdvance: 10f, configureArc: arc =>
             {
                 arc.arcStartAngle = 0f;
@@ -72,6 +73,7 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateRing32Spiral() =>
         Save(CreateBase("DME_Boss_Ring_32_Spiral", BulletBoll, EmitMode.Arc, 0.85f, SpeedSlow,
+            presentationDescription: "全周 32 发玉弹螺旋环，每齐射旋转 15°。",
             salvoAdvance: 15f, configureArc: arc =>
             {
                 arc.arcStartAngle = 0f;
@@ -83,6 +85,7 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateRing16Fast() =>
         Save(CreateBase("DME_Boss_Ring_16_Fast", BulletStar, EmitMode.Arc, 0.5f, SpeedFast,
+            presentationDescription: "高速 16 发星弹环，每齐射快速旋转 22.5°。",
             salvoAdvance: 22.5f, configureArc: arc =>
             {
                 arc.arcStartAngle = 0f;
@@ -94,6 +97,7 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateRingSpreadHuge() =>
         Save(CreateBase("DME_Boss_Ring_Spread", BulletStar, EmitMode.Arc, 1.35f, SpeedSlow,
+            presentationDescription: "大半径稀疏 14 发星弹环，慢速可读。",
             salvoAdvance: 7.5f, configureArc: arc =>
             {
                 arc.arcStartAngle = 0f;
@@ -104,7 +108,9 @@ public static class BossDanmakuEmitterPatternFactory
             }));
 
     static DanmakuEmitterConfig CreateFanOmni() =>
-        Save(CreateBase("DME_Boss_Fan_Omni", BulletBoll, EmitMode.Arc, 0.95f, SpeedNormal, configureArc: arc =>
+        Save(CreateBase("DME_Boss_Fan_Omni", BulletBoll, EmitMode.Arc, 0.95f, SpeedNormal,
+            presentationDescription: "半圆 17 发玉弹扇，覆盖前方大半平面。",
+            configureArc: arc =>
         {
             arc.arcStartAngle = -180f;
             arc.arcAngle = 180f;
@@ -114,7 +120,9 @@ public static class BossDanmakuEmitterPatternFactory
         }));
 
     static DanmakuEmitterConfig CreateFanTight() =>
-        Save(CreateBase("DME_Boss_Fan_Tight", BulletStar, EmitMode.Arc, 0.62f, SpeedFast, configureArc: arc =>
+        Save(CreateBase("DME_Boss_Fan_Tight", BulletStar, EmitMode.Arc, 0.62f, SpeedFast,
+            presentationDescription: "窄角 13 发星弹扇，高密度压制。",
+            configureArc: arc =>
         {
             arc.arcStartAngle = -108f;
             arc.arcAngle = 36f;
@@ -124,7 +132,9 @@ public static class BossDanmakuEmitterPatternFactory
         }));
 
     static DanmakuEmitterConfig CreateWaveLasher() =>
-        Save(CreateBase("DME_Boss_Wave_Lasher", BulletBoll, EmitMode.Wave, 0.88f, SpeedNormal, configureWave: wave =>
+        Save(CreateBase("DME_Boss_Wave_Lasher", BulletBoll, EmitMode.Wave, 0.88f, SpeedNormal,
+            presentationDescription: "摆扇波弹：11 发扇形随中心角慢摆。",
+            configureWave: wave =>
         {
             wave.centerAngleDeg = -90f;
             wave.swingDegrees = 48f;
@@ -136,7 +146,9 @@ public static class BossDanmakuEmitterPatternFactory
         }));
 
     static DanmakuEmitterConfig CreateWaveSweep() =>
-        Save(CreateBase("DME_Boss_Wave_Sweep", BulletStar, EmitMode.Wave, 0.72f, SpeedNormal, configureWave: wave =>
+        Save(CreateBase("DME_Boss_Wave_Sweep", BulletStar, EmitMode.Wave, 0.72f, SpeedNormal,
+            presentationDescription: "宽幅快摆扇：9 发星弹，扫掠感强。",
+            configureWave: wave =>
         {
             wave.centerAngleDeg = -90f;
             wave.swingDegrees = 60f;
@@ -149,6 +161,7 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateWaveRotate() =>
         Save(CreateBase("DME_Boss_Wave_Rotate", BulletBoll, EmitMode.Wave, 0.8f, SpeedNormal,
+            presentationDescription: "摆扇 + 每齐射旋转 14°，螺旋摆扫。",
             salvoAdvance: 14f, configureWave: wave =>
             {
                 wave.centerAngleDeg = -90f;
@@ -161,7 +174,9 @@ public static class BossDanmakuEmitterPatternFactory
             }));
 
     static DanmakuEmitterConfig CreateStream() =>
-        Save(CreateBase("DME_Boss_Stream", BulletBoll, EmitMode.Line, 0.07f, SpeedNormal, configureLine: line =>
+        Save(CreateBase("DME_Boss_Stream", BulletBoll, EmitMode.Line, 0.07f, SpeedNormal,
+            presentationDescription: "单发直下流弹，高频率水柱。",
+            configureLine: line =>
         {
             line.lineDirection = Vector2.down;
             line.lineCount = 1;
@@ -169,7 +184,9 @@ public static class BossDanmakuEmitterPatternFactory
         }));
 
     static DanmakuEmitterConfig CreateStreamWall() =>
-        Save(CreateBase("DME_Boss_Stream_Wall", BulletStar, EmitMode.Line, 0.11f, SpeedBulletHell, configureLine: line =>
+        Save(CreateBase("DME_Boss_Stream_Wall", BulletStar, EmitMode.Line, 0.11f, SpeedBulletHell,
+            presentationDescription: "5 发平行流弹墙，高速压场。",
+            configureLine: line =>
         {
             line.lineDirection = Vector2.down;
             line.lineCount = 5;
@@ -177,7 +194,9 @@ public static class BossDanmakuEmitterPatternFactory
         }));
 
     static DanmakuEmitterConfig CreateGrainStorm() =>
-        Save(CreateBase("DME_Boss_Grain_Storm", BulletBoll, EmitMode.Grain, 1.25f, SpeedNormal, configureGrain: grain =>
+        Save(CreateBase("DME_Boss_Grain_Storm", BulletBoll, EmitMode.Grain, 1.25f, SpeedNormal,
+            presentationDescription: "22 发粒弹暴雨，宽锥随机散布。",
+            configureGrain: grain =>
         {
             grain.bulletCount = 22;
             grain.baseAngleDeg = -90f;
@@ -188,7 +207,9 @@ public static class BossDanmakuEmitterPatternFactory
         }));
 
     static DanmakuEmitterConfig CreateGrainCurtain() =>
-        Save(CreateBase("DME_Boss_Grain_Curtain", BulletStar, EmitMode.Grain, 0.55f, SpeedFast, configureGrain: grain =>
+        Save(CreateBase("DME_Boss_Grain_Curtain", BulletStar, EmitMode.Grain, 0.55f, SpeedFast,
+            presentationDescription: "18 发窄锥粒弹幕帘，下落感强。",
+            configureGrain: grain =>
         {
             grain.bulletCount = 18;
             grain.baseAngleDeg = -90f;
@@ -200,6 +221,7 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateFourWayRotate() =>
         Save(CreateBase("DME_Boss_Four_Way_Rotate", BulletBoll, EmitMode.Arc, 1.1f, SpeedNormal,
+            presentationDescription: "四向旋转十字弹，每齐射转 11.25°。",
             salvoAdvance: 11.25f, configureArc: arc =>
             {
                 arc.arcStartAngle = 45f;
@@ -211,7 +233,9 @@ public static class BossDanmakuEmitterPatternFactory
 
     static DanmakuEmitterConfig CreateRingDualColor() =>
         Save(CreateBase("DME_Boss_Ring_Dual", new[] { BulletBoll, BulletStar }, DanmakuSelectMode.Sequential,
-            EmitMode.Arc, 1f, SpeedNormal, salvoAdvance: 12f, configureArc: arc =>
+            EmitMode.Arc, 1f, SpeedNormal,
+            presentationDescription: "20 发双色交替环弹，每齐射旋转 12°。",
+            salvoAdvance: 12f, configureArc: arc =>
             {
                 arc.arcStartAngle = 0f;
                 arc.arcAngle = 360f;
@@ -227,12 +251,13 @@ public static class BossDanmakuEmitterPatternFactory
         float intervalSeconds,
         float speed,
         float salvoAdvance = 0f,
+        string presentationDescription = null,
         System.Action<LineModeConfig> configureLine = null,
         System.Action<ArcModeConfig> configureArc = null,
         System.Action<WaveModeConfig> configureWave = null,
         System.Action<GrainModeConfig> configureGrain = null) =>
         CreateBase(assetName, new[] { bulletId }, DanmakuSelectMode.First, mode, intervalSeconds, speed,
-            salvoAdvance, configureLine, configureArc, configureWave, configureGrain);
+            salvoAdvance, presentationDescription, configureLine, configureArc, configureWave, configureGrain);
 
     static DanmakuEmitterConfig CreateBase(
         string assetName,
@@ -242,6 +267,7 @@ public static class BossDanmakuEmitterPatternFactory
         float intervalSeconds,
         float speed,
         float salvoAdvance = 0f,
+        string presentationDescription = null,
         System.Action<LineModeConfig> configureLine = null,
         System.Action<ArcModeConfig> configureArc = null,
         System.Action<WaveModeConfig> configureWave = null,
@@ -292,6 +318,9 @@ public static class BossDanmakuEmitterPatternFactory
             configureGrain(grain);
             cfg.grainModeConfig = grain;
         }
+
+        if (!string.IsNullOrWhiteSpace(presentationDescription))
+            cfg.presentationDescription = presentationDescription.Trim();
 
         return cfg;
     }

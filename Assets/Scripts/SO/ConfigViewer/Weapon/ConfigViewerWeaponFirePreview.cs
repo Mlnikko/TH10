@@ -186,7 +186,7 @@ public sealed class ConfigViewerWeaponFirePreview
         for (int i = 0; i < _emitters.Count; i++)
         {
             var state = _emitters[i];
-            if (state.emitter.launchCountMax >= 0 &&
+            if (state.emitter.launchCountMax > 0 &&
                 state.emitter.launchCountUsed >= state.emitter.launchCountMax)
             {
                 continue;

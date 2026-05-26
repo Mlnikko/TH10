@@ -17,11 +17,9 @@ public class OnlineModePanel : UIPanel
 
     void OnCreateRoomClicked()
     {
-        // 自动创建房间（使用默认名称）
-        string hostName = "Player" + (Random.Range(10, 99)); // 简化命名
-        RoomManager.Instance.CreateRoom(hostName, maxPlayers: 4);
+        RoomManager.Instance.CreateRoom(maxPlayers: 4);
 
-        // 进入房间界面
+        UIManager.Instance.ClosePanel<OnlineModePanel>();
         UIManager.Instance.ShowPanelAsync<RoomPanel>().Forget();
     }
 

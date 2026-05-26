@@ -4,6 +4,8 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
+using Unity.Networking.Transport;
+
 public static class NetworkTool
 {
     public static string GetLocalIPAddress()
@@ -51,5 +53,38 @@ public static class NetworkTool
         if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
         if (bytes[0] == 192 && bytes[1] == 168) return true;
         return false;
+    }
+
+    public static bool IsValidHostAddress(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            return false;
+
+        ip = ip.Trim();
+        if (!IPAddress.TryParse(ip, out var address))
+            return false;
+
+        if (IPAddress.IsLoopback(address))
+            return true;
+
+        return address.AddressFamily == AddressFamily.InterNetwork;
+    }
+
+    public static bool TryCreateClientEndpoint(string ip, ushort port, out NetworkEndpoint endpoint)
+    {
+        endpoint = default;
+        if (!IsValidHostAddress(ip))
+            return false;
+
+        try
+        {
+            endpoint = NetworkEndpoint.Parse(ip.Trim(), port);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Failed to parse endpoint {ip}:{port} - {ex.Message}", LogTag.Net);
+            return false;
+        }
     }
 }

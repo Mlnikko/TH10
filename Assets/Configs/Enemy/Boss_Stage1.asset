@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Boss_Stage1
   m_EditorClassIdentifier: 
   enemyType: 3
+  displayName: "\u5173\u5E95Boss"
   displaySprite: {fileID: 484668414, guid: 96589b45dcb41de4da76a8c1baa402ca, type: 3}
   animatorController: {fileID: 9100000, guid: f914353b3558ee842bba94d07c300a43, type: 2}
   emitterConfigId: dme_boss_ring_24_rotate

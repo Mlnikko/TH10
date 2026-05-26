@@ -27,9 +27,7 @@ public static class DanmakuEmitterPresentation
         if (spriteRenderer == null)
             return;
 
-        if (displaySprite != null)
-            spriteRenderer.sprite = displaySprite;
-
+        spriteRenderer.sprite = displaySprite;
         spriteRenderer.color = Color.white;
     }
 }

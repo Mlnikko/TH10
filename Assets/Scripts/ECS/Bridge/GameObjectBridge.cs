@@ -24,6 +24,8 @@ public class GameObjectBridge
 
     const int MAX_QUERY_BUFFER = 8192;
 
+    public int LinkedGameObjectCount => _entityToGO.Count;
+
     public GameObjectBridge()
     {
         _entityToGO = new Dictionary<Entity, GameObject>(1024);
@@ -56,9 +58,6 @@ public class GameObjectBridge
             IsDirty = true
         });
 
-        em.AddComponent(entity, new CPresentationPose());
-        PresentationMotion.InitializePoseFromEntity(em, entity);
-
         //// 添加EntityLinkBehaviour（GO销毁时通知ECS）
         //var link = go.GetComponent<EntityLinkBehaviour>();
         //if (link == null) link = go.AddComponent<EntityLinkBehaviour>();
@@ -80,9 +79,6 @@ public class GameObjectBridge
             em.RemoveComponent<CGameObjectLink>(entity);
         }
 
-        if (em.IsValid(entity) && em.HasComponent<CPresentationPose>(entity))
-            em.RemoveComponent<CPresentationPose>(entity);
-
         // 2. 清除映射
         //_goIDToEntity.Remove(go.GetInstanceID());
         _entityToGO.Remove(entity);
@@ -98,6 +94,32 @@ public class GameObjectBridge
         {
             //UnityEngine.Object.Destroy(go);
         }
+    }
+
+    /// <summary>
+    /// 战斗结束：归还所有已桥接的表现对象并清空映射（须在销毁 ECS 实体之前调用）。
+    /// </summary>
+    public void ReleaseAllLinked(in EntityManager em)
+    {
+        Span<int> indices = em.GetActiveIndices<CGameObjectLink>();
+        if (indices.Length == 0)
+            return;
+
+        int count = indices.Length;
+        if (count > TempBuffers.CollisionActive.Length)
+            count = TempBuffers.CollisionActive.Length;
+
+        for (int i = 0; i < count; i++)
+            TempBuffers.CollisionActive[i] = indices[i];
+
+        for (int i = 0; i < count; i++)
+        {
+            Entity entity = em.GetEntity(TempBuffers.CollisionActive[i]);
+            if (em.IsValid(entity))
+                Unlink(entity, em, returnToPool: true);
+        }
+
+        _entityToGO.Clear();
     }
 
     /// <summary>

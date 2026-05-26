@@ -48,7 +48,12 @@ public class DanmakuEmitSystem : BaseSystem
 
 
 
-            float emitRotRad = rotation.angleRad + emitter.emitterRotOffsetRad;
+            float emitRotRad = DanmakuEmitterAimAtPlayerLogic.ResolveEmitRotRad(
+                in emitter,
+                position.x,
+                position.y,
+                rotation.angleRad,
+                EntityManager);
 
             ProcessEmission(ref emitter, position.x, position.y, emitRotRad, currentFrame);
 
@@ -60,7 +65,7 @@ public class DanmakuEmitSystem : BaseSystem
 
     void ProcessEmission(ref CDanmakuEmitter emitter, float emitPosX, float emitPosY, float emitRotRad, uint currentFrame)
     {
-        if (emitter.launchCountMax >= 0 && emitter.launchCountUsed >= emitter.launchCountMax)
+        if (emitter.launchCountMax > 0 && emitter.launchCountUsed >= emitter.launchCountMax)
         {
             emitter.isEmitting = false;
             return;
@@ -116,7 +121,7 @@ public class DanmakuEmitSystem : BaseSystem
 
         emitter.lastFireFrame = currentFrame;
         emitter.launchCountUsed++;
-        if (emitter.launchCountMax >= 0 && emitter.launchCountUsed >= emitter.launchCountMax)
+        if (emitter.launchCountMax > 0 && emitter.launchCountUsed >= emitter.launchCountMax)
             emitter.isEmitting = false;
     }
 

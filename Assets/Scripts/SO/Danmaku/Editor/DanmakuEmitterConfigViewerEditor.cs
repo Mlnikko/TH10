@@ -7,6 +7,48 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
 {
     const string EmitterConfigField = "emitterConfig";
 
+    static readonly string[] ViewerEditorOnlyFields =
+    {
+        "previewDuration",
+        "previewBulletLifetime",
+        "previewSpinDuration",
+        "drawPreviewSpawnGizmos",
+    };
+
+    static readonly string[] ConfigResourceFields =
+    {
+        nameof(DanmakuEmitterConfig.emitterPrefabId),
+        nameof(DanmakuEmitterConfig.danmakuConfigIds),
+        nameof(DanmakuEmitterConfig.danmakuSelectMode),
+    };
+
+    static readonly string[] ConfigPresentationNoteFields =
+    {
+        nameof(DanmakuEmitterConfig.presentationDescription),
+    };
+
+    static readonly string[] ConfigDisplayFields =
+    {
+        nameof(DanmakuEmitterConfig.displaySprite),
+        nameof(DanmakuEmitterConfig.displaySelfSpinDegreesPerSecond),
+        nameof(DanmakuEmitterConfig.displayScaleMin),
+        nameof(DanmakuEmitterConfig.displayScaleMax),
+        nameof(DanmakuEmitterConfig.displayScaleCyclesPerSecond),
+    };
+
+    static readonly string[] ConfigLaunchFields =
+    {
+        nameof(DanmakuEmitterConfig.emitterCamp),
+        nameof(DanmakuEmitterConfig.emitterPosOffset),
+        nameof(DanmakuEmitterConfig.emitterRotOffsetZ),
+        nameof(DanmakuEmitterConfig.danmakuRotOffsetZ),
+        nameof(DanmakuEmitterConfig.salvoAngleAdvanceDeg),
+        nameof(DanmakuEmitterConfig.launchIntervalSeconds),
+        nameof(DanmakuEmitterConfig.launchCount),
+        nameof(DanmakuEmitterConfig.launchSpeed),
+        nameof(DanmakuEmitterConfig.audio_Fire),
+    };
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
@@ -18,56 +60,157 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
             configRef,
             new GUIContent("配置文件"));
 
-        DrawEmitterConfigResourceFields(Viewer);
+        EditorGUI.BeginChangeCheck();
+        DrawViewerEditorPreviewSettings();
+        bool previewSettingsChanged = EditorGUI.EndChangeCheck();
 
-        bool inspectorChanged = DanmakuEmitterModeInspectorUI.DrawViewerInspector(
-            serializedObject,
-            new[] { EmitterConfigField });
+        if (Viewer.emitterConfig != null)
+            DrawEmitterConfigSections(Viewer);
+        else
+        {
+            EditorGUILayout.HelpBox(
+                "指定 DanmakuEmitterConfig 后可在下方编辑表现与发射参数，Scene 预览随修改即时更新。",
+                MessageType.Info);
+        }
 
         serializedObject.ApplyModifiedProperties();
 
-        if (inspectorChanged)
-        {
-            serializedObject.Update();
-            Repaint();
-        }
+        if (previewSettingsChanged && Viewer.IsPreviewingEmitter)
+            Viewer.RefreshEmitterPreviewLive();
 
-        ApplyConfigReferenceSync(previousConfig, Viewer.emitterConfig, emitterConfigRefChanged);
+        if (emitterConfigRefChanged && !serializedObject.isEditingMultipleObjects)
+        {
+            Viewer.StopAllEditorPreviews();
+            Viewer.SyncFromConfigInEditor();
+            EditorUtility.SetDirty(Viewer);
+            SceneView.RepaintAll();
+        }
+        else
+        {
+            ApplyConfigReferenceSync(previousConfig, Viewer.emitterConfig, emitterConfigRefChanged);
+        }
 
         ConfigViewerEditorUI.DrawSeparator();
         DrawViewerTools();
     }
 
-    static void DrawEmitterConfigResourceFields(DanmakuEmitterConfigViewer viewer)
+    void DrawViewerEditorPreviewSettings()
     {
-        var config = viewer != null ? viewer.emitterConfig : null;
-        if (config == null)
+        EditorGUILayout.Space(2);
+        EditorGUILayout.LabelField("编辑器预览", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+        for (int i = 0; i < ViewerEditorOnlyFields.Length; i++)
         {
-            EditorGUILayout.HelpBox("指定 DanmakuEmitterConfig 后可配置预制体 Id 与装填弹幕。", MessageType.None);
-            return;
+            var prop = serializedObject.FindProperty(ViewerEditorOnlyFields[i]);
+            if (prop != null)
+                EditorGUILayout.PropertyField(prop, true);
         }
 
-        var cfgSo = new SerializedObject(config);
-        cfgSo.Update();
+        EditorGUI.indentLevel--;
+    }
 
-        var prefabId = cfgSo.FindProperty(nameof(DanmakuEmitterConfig.emitterPrefabId));
-        var danmakuIds = cfgSo.FindProperty(nameof(DanmakuEmitterConfig.danmakuConfigIds));
-        var selectMode = cfgSo.FindProperty(nameof(DanmakuEmitterConfig.danmakuSelectMode));
+    static void DrawEmitterConfigSections(DanmakuEmitterConfigViewer viewer)
+    {
+        var config = viewer.emitterConfig;
+        var configSo = new SerializedObject(config);
+        configSo.Update();
 
+        EditorGUI.BeginChangeCheck();
+        DrawResourceSection(config, configSo);
+        DrawPresentationSection(config, configSo);
+        DrawEmitModeSection(configSo);
+        DrawLaunchSection(config, configSo);
+        bool changed = EditorGUI.EndChangeCheck();
+
+        if (configSo.ApplyModifiedProperties() | changed)
+        {
+            EditorUtility.SetDirty(config);
+            viewer.SyncFromConfigInEditor();
+            SceneView.RepaintAll();
+        }
+    }
+
+    static void DrawResourceSection(DanmakuEmitterConfig config, SerializedObject configSo)
+    {
+        EditorGUILayout.Space(2);
         EditorGUILayout.LabelField("资源引用", EditorStyles.boldLabel);
         EditorGUI.indentLevel++;
+
+        var prefabId = configSo.FindProperty(nameof(DanmakuEmitterConfig.emitterPrefabId));
+        var danmakuIds = configSo.FindProperty(nameof(DanmakuEmitterConfig.danmakuConfigIds));
+        var selectMode = configSo.FindProperty(nameof(DanmakuEmitterConfig.danmakuSelectMode));
+
         ResourceIdEditorPicker.DrawPrefabIdField(
             prefabId,
             nameof(GameResourceManifest.danmakuEmitterPrefabIds),
             "Prefabs/DanmakuEmitter");
         ResourceIdEditorPicker.DrawDanmakuConfigIdArray(danmakuIds);
-        EditorGUILayout.PropertyField(selectMode, new GUIContent("弹幕选择模式"));
-        EditorGUI.indentLevel--;
+        if (selectMode != null)
+            EditorGUILayout.PropertyField(selectMode, new GUIContent("弹幕选择模式"));
 
-        if (cfgSo.ApplyModifiedProperties())
+        EditorGUI.indentLevel--;
+    }
+
+    static void DrawPresentationSection(DanmakuEmitterConfig config, SerializedObject configSo)
+    {
+        EditorGUILayout.Space(2);
+        EditorGUILayout.LabelField("表现预览", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+
+        DrawConfigProperties(configSo, ConfigPresentationNoteFields);
+        DanmakuEmitterModeInspectorUI.DrawDisplayPreviewStatus(config);
+        DrawConfigProperties(configSo, ConfigDisplayFields);
+
+        EditorGUI.indentLevel--;
+    }
+
+    static void DrawEmitModeSection(SerializedObject configSo)
+    {
+        EditorGUILayout.Space(2);
+        DanmakuEmitterModeInspectorUI.DrawEmitModeSection(
+            configSo,
+            DanmakuEmitterModeInspectorUI.ConfigEmitModeField);
+    }
+
+    static void DrawLaunchSection(DanmakuEmitterConfig config, SerializedObject configSo)
+    {
+        EditorGUILayout.Space(2);
+        EditorGUILayout.LabelField("发射参数", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
+
+        var campProp = configSo.FindProperty(nameof(DanmakuEmitterConfig.emitterCamp));
+        if (campProp != null)
+            EditorGUILayout.PropertyField(campProp, true);
+        DanmakuEmitterModeInspectorUI.DrawAimAtPlayerIfEnemy(configSo);
+
+        for (int i = 0; i < ConfigLaunchFields.Length; i++)
         {
-            ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(config);
-            viewer.SyncDisplaySpriteFromConfig();
+            if (ConfigLaunchFields[i] == nameof(DanmakuEmitterConfig.emitterCamp)
+                || ConfigLaunchFields[i] == DanmakuEmitterModeInspectorUI.ConfigAimAtPlayerField)
+                continue;
+
+            var prop = configSo.FindProperty(ConfigLaunchFields[i]);
+            if (prop != null)
+                EditorGUILayout.PropertyField(prop, true);
+        }
+
+        if (config != null && config.launchCount == 0)
+        {
+            EditorGUILayout.HelpBox(
+                "launchCount 为 0 时不会发射；保存 SO 时会自动改为 -1（无限齐射）。",
+                MessageType.Warning);
+        }
+
+        EditorGUI.indentLevel--;
+    }
+
+    static void DrawConfigProperties(SerializedObject configSo, string[] propertyNames)
+    {
+        for (int i = 0; i < propertyNames.Length; i++)
+        {
+            var prop = configSo.FindProperty(propertyNames[i]);
+            if (prop != null)
+                EditorGUILayout.PropertyField(prop, true);
         }
     }
 
@@ -78,7 +221,9 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
         if (DrawMissingConfig(Viewer.emitterConfig, "DanmakuEmitterConfig"))
             return;
 
-        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 DanmakuEmitterConfig 同步发射参数与 displaySprite。");
+        DrawSyncHint(
+            "表现与发射参数在 DanmakuEmitterConfig 上编辑，Scene 中 Sprite 随修改即时更新。"
+            + "下方按钮可预览齐射轨迹与自转/缩放；修改后点保存将 Viewer 中编辑器项与 SO 对齐。");
 
         using (new EditorGUILayout.HorizontalScope())
         {
@@ -106,7 +251,7 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
         if (Viewer.IsPreviewingEmitter)
         {
             EditorGUILayout.HelpBox(
-                "正在预览发射：按逻辑帧间隔生成弹幕并沿每帧速度位移。",
+                "正在预览发射：按逻辑帧间隔生成弹幕；调节 Inspector 参数会即时更新轨迹与后续齐射（无需停止）。",
                 MessageType.Info);
 
             if (GUILayout.Button("停止发射预览", GUILayout.Height(24)))
@@ -119,7 +264,6 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
             if (GUILayout.Button("停止表现预览", GUILayout.Height(24)))
                 Viewer.StopPreviewDisplaySpin();
         }
-
     }
 }
 #endif

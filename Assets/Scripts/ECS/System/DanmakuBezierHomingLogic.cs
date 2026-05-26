@@ -3,6 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 追踪弹幕：每逻辑帧沿当前位置→目标的 cubic Bezier 推进，目标为掩码内最近实体（同距取索引较小）。
+/// 控制点同侧偏移，形成相对弦线的外弧（而非 S 形内弯）。
 /// </summary>
 public static class DanmakuBezierHomingLogic
 {
@@ -97,6 +98,39 @@ public static class DanmakuBezierHomingLogic
         return resolvedIndex >= 0;
     }
 
+    /// <summary>
+    /// 按发射点朝向与目标相对位置确定 Bezier 弯曲侧：目标在朝向左侧为 +1，右侧为 -1。
+    /// </summary>
+    public static sbyte ResolveCurveBendSign(
+        EntityManager em,
+        float emitX,
+        float emitY,
+        float forwardX,
+        float forwardY,
+        int targetIndex,
+        ushort targetLayerMask)
+    {
+        if (targetIndex < 0)
+            targetIndex = FindNearestTargetIndex(em, emitX, emitY, targetLayerMask);
+
+        if (targetIndex < 0)
+            return 1;
+
+        ref readonly var targetPos = ref em.GetComponentSpan<CPosition>()[targetIndex];
+        float toX = targetPos.x - emitX;
+        float toY = targetPos.y - emitY;
+
+        float forwardLenSq = forwardX * forwardX + forwardY * forwardY;
+        if (forwardLenSq < 1e-8f)
+            return toX >= 0f ? (sbyte)-1 : (sbyte)1;
+
+        float cross = forwardX * toY - forwardY * toX;
+        if (MathF.Abs(cross) < 1e-6f)
+            return 1;
+
+        return cross > 0f ? (sbyte)1 : (sbyte)-1;
+    }
+
     public static void AdvanceAlongBezier(
         EntityManager em,
         int entityIndex,
@@ -145,12 +179,13 @@ public static class DanmakuBezierHomingLogic
         float ny = dy * invDist;
         float perpX = -ny;
         float perpY = nx;
-        float bend = homing.curveStrength * dist * 0.25f;
+        float bendSign = homing.curveBendSign == 0 ? 1f : homing.curveBendSign;
+        float bend = homing.curveStrength * dist * 0.25f * bendSign;
 
         float p1x = p0x + dx * 0.33f + perpX * bend;
         float p1y = p0y + dy * 0.33f + perpY * bend;
-        float p2x = p0x + dx * 0.66f - perpX * bend;
-        float p2y = p0y + dy * 0.66f - perpY * bend;
+        float p2x = p0x + dx * 0.66f + perpX * bend;
+        float p2y = p0y + dy * 0.66f + perpY * bend;
 
         float nextT = homing.segmentT + homing.progressPerFrame;
         if (nextT > 1f)

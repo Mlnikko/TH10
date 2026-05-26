@@ -11,6 +11,8 @@ public static class DanmakuEmitterModeInspectorUI
 {
     public const string ViewerEmitModeField = "emitterType";
     public const string ConfigEmitModeField = nameof(DanmakuEmitterConfig.emitMode);
+    public const string ConfigEmitterCampField = nameof(DanmakuEmitterConfig.emitterCamp);
+    public const string ConfigAimAtPlayerField = nameof(DanmakuEmitterConfig.aimAtPlayer);
 
     static readonly string[] ViewerDisplayPropertyNames =
     {
@@ -33,6 +35,35 @@ public static class DanmakuEmitterModeInspectorUI
             return EmitMode.None;
 
         return (EmitMode)modeProp.enumValueIndex;
+    }
+
+    public static bool ShouldShowAimAtPlayer(SerializedObject serializedObject, string emitterCampPropertyName = ConfigEmitterCampField)
+    {
+        if (serializedObject == null)
+            return false;
+
+        var campProp = serializedObject.FindProperty(emitterCampPropertyName);
+        if (campProp == null || campProp.propertyType != SerializedPropertyType.Enum)
+            return false;
+
+        return (EmitterCamp)campProp.enumValueIndex == EmitterCamp.Enemy;
+    }
+
+    public static bool DrawAimAtPlayerIfEnemy(
+        SerializedObject serializedObject,
+        string emitterCampPropertyName = ConfigEmitterCampField,
+        string aimAtPlayerPropertyName = ConfigAimAtPlayerField)
+    {
+        if (!ShouldShowAimAtPlayer(serializedObject, emitterCampPropertyName))
+            return false;
+
+        var aimProp = serializedObject.FindProperty(aimAtPlayerPropertyName);
+        if (aimProp == null)
+            return false;
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(aimProp, new GUIContent("朝向玩家发射"));
+        return EditorGUI.EndChangeCheck();
     }
 
     public static bool IsModeConfigProperty(string propertyName) =>
@@ -81,6 +112,68 @@ public static class DanmakuEmitterModeInspectorUI
         EditorGUILayout.HelpBox(
             "发射模式为 None 时不会发射弹幕；选择 Line / Arc / Wave / Grain 后显示对应参数。",
             MessageType.Info);
+    }
+
+    /// <summary>表现区只读摘要：描述、发射统计、池预制体、Sprite、自转与循环缩放（Config / Viewer Inspector 共用）。</summary>
+    public static void DrawDisplayPreviewStatus(DanmakuEmitterConfig config)
+    {
+        if (config == null)
+            return;
+
+        DrawEmitSalvoSummary(config);
+
+        string prefabId = string.IsNullOrEmpty(config.emitterPrefabId)
+            ? DanmakuEmitterPrefabArchetypes.Sprite
+            : config.emitterPrefabId;
+
+        var lines = new System.Text.StringBuilder();
+        if (!string.IsNullOrWhiteSpace(config.presentationDescription))
+            lines.Append("表现说明：").Append(config.presentationDescription.Trim()).Append('\n');
+
+        lines.Append("池预制体：").Append(prefabId);
+
+        if (config.displaySprite != null)
+            lines.Append("\nSprite：").Append(config.displaySprite.name);
+        else
+            lines.Append("\nSprite：（未指定，Scene 中不显示发射器贴图）");
+
+        if (config.displaySelfSpinDegreesPerSecond > 0.01f)
+            lines.Append("\n自转：").Append(config.displaySelfSpinDegreesPerSecond.ToString("0.##")).Append(" °/s");
+
+        float scaleMin = Mathf.Max(0.01f, config.displayScaleMin);
+        float scaleMax = Mathf.Max(0.01f, config.displayScaleMax);
+        if (scaleMin > scaleMax)
+            (scaleMin, scaleMax) = (scaleMax, scaleMin);
+
+        if (!Mathf.Approximately(scaleMin, scaleMax) && config.displayScaleCyclesPerSecond > 0.01f)
+        {
+            lines.Append("\n循环缩放：×")
+                .Append(scaleMin.ToString("0.##"))
+                .Append(" ~ ×")
+                .Append(scaleMax.ToString("0.##"))
+                .Append(" @ ")
+                .Append(config.displayScaleCyclesPerSecond.ToString("0.##"))
+                .Append(" Hz");
+        }
+
+        lines.Append("\n修改后 Scene 与关联预制体会自动刷新。");
+
+        var messageType = config.displaySprite != null ? MessageType.None : MessageType.Warning;
+        EditorGUILayout.HelpBox(lines.ToString(), messageType);
+    }
+
+    public static void DrawEmitSalvoSummary(DanmakuEmitterConfig config)
+    {
+        int salvo = DanmakuEmitterSalvoInfo.GetSalvoBulletCount(in config);
+        var summary = new System.Text.StringBuilder();
+        summary.Append("发射：").Append(config.emitMode);
+        summary.Append(" · 每齐射 ").Append(salvo).Append(" 发");
+        summary.Append(" · ").Append(DanmakuEmitterSalvoInfo.FormatLaunchCountLabel(config.launchCount));
+
+        if (DanmakuEmitterSalvoInfo.TryGetSalvoIssue(in config, out string issue))
+            EditorGUILayout.HelpBox(summary + "\n" + issue, MessageType.Warning);
+        else
+            EditorGUILayout.HelpBox(summary.ToString(), MessageType.None);
     }
 
     /// <summary>
@@ -155,6 +248,7 @@ public static class DanmakuEmitterModeInspectorUI
             nameof(DanmakuEmitterConfig.waveModeConfig),
             nameof(DanmakuEmitterConfig.grainModeConfig),
             ViewerEmitterCampField,
+            ConfigAimAtPlayerField,
         };
 
         for (int i = 0; i < ViewerDisplayPropertyNames.Length; i++)
@@ -190,6 +284,7 @@ public static class DanmakuEmitterModeInspectorUI
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(campProp, true);
             changed |= EditorGUI.EndChangeCheck();
+            changed |= DrawAimAtPlayerIfEnemy(serializedObject, ViewerEmitterCampField, ConfigAimAtPlayerField);
         }
 
         EditorGUILayout.Space(4);

@@ -198,6 +198,19 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         Logger.Info("All pools cleared.");
     }
 
+    /// <summary>战斗会话结束：清空池并允许下次 <see cref="Initialize"/> 重新预热。</summary>
+    public void ShutdownBattlePools()
+    {
+        ClearAllPools();
+
+        for (int i = transform.childCount - 1; i >= 0; i--)
+            Destroy(transform.GetChild(i).gameObject);
+
+        _pools = null;
+        _poolRoots = null;
+        _maxPrefabIndex = -1;
+    }
+
     Transform GetOrCreatePoolRoot(int prefabIndex, string prefabName)
     {
         if (_poolRoots[prefabIndex] != null)

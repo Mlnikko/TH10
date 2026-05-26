@@ -20,11 +20,12 @@ MonoBehaviour:
   launchIntervalSeconds: 0.5
   launchCount: -1
   launchSpeed: 6.5
-  displaySprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  displaySprite: {fileID: 0}
   displaySelfSpinDegreesPerSecond: 0
   displayScaleMin: 1
   displayScaleMax: 1
   displayScaleCyclesPerSecond: 0
+  presentationDescription: 
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 0
@@ -39,7 +40,7 @@ MonoBehaviour:
     arcStartAngle: 0
     arcAngle: 360
     arcRadius: 0.15
-    arcBulletCount: 0
+    arcBulletCount: 10
     arcClockwise: 1
   waveModeConfig:
     centerAngleDeg: 0

@@ -59,6 +59,8 @@ public class StageTimelineConfigEditor : Editor
             TimelineConfigField,
             BattleAreaConfigField,
             "previewMidStageWaveIndex",
+            "timelineViewDurationSeconds",
+            "timelinePixelsPerSecond",
             "previewPathEditEntryIndex",
             "pathEditTarget",
             "previewMidBossPathPhase",
@@ -85,6 +87,10 @@ public class StageTimelineConfigEditor : Editor
         }
 
         serializedObject.Update();
+
+        ConfigViewerEditorUI.DrawSeparator();
+        if (viewer.stageTimelineConfig != null)
+            StageTimelineVisualTimelineEditor.Draw(viewer, serializedObject);
 
         ConfigViewerEditorUI.DrawSeparator();
         DrawPathNodeGridSection(viewer);

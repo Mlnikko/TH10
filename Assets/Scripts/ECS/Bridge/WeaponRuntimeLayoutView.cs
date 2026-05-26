@@ -271,6 +271,9 @@ public sealed class WeaponRuntimeLayoutView
             {
                 h = h * 31 + (points[i].label?.GetHashCode() ?? 0);
                 h = h * 31 + points[i].emitterPrefabIndex;
+                var cfg = points[i].emitterCfg;
+                h = h * 31 + (cfg != null ? cfg.GetInstanceID() : 0);
+                h = h * 31 + (cfg != null && cfg.displaySprite != null ? cfg.displaySprite.GetInstanceID() : 0);
             }
 
             return h;

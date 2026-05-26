@@ -64,7 +64,7 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
     [SerializeField] DropItemCollectData dropItemCollectData;
 
     [Header("Scene 可视化")]
-    [Tooltip("按 GridCellSize 绘制碰撞加速网格（与 DeterministicGrid 一致），便于调节格子大小")]
+    [Tooltip("按 GridCellSize 在 GO 回收区内绘制碰撞加速网格（与 DeterministicGrid 一致）")]
     [SerializeField] bool drawCollisionGrid = true;
 
     public void LoadBattleAreaData() => LoadFromConfig();

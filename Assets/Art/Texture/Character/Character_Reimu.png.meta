@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: ada309e2b84346e44a8667ad4ad0a576
+guid: a3cffb8b3d5456f428556ae9f08b5021
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -108,7 +108,49 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites: []
+    sprites:
+    - serializedVersion: 2
+      name: Reimu_1_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 271
+        width: 511
+        height: 172
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 58450c6f16beeb341962a587fa0f87be
+      internalID: -1547564206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Reimu_1_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 511
+        height: 480
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83d87bae2f5e765498d949c86f55dc16
+      internalID: 1769597657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -119,7 +161,9 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Reimu_1_0: -1547564206
+      Reimu_1_1: 1769597657
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

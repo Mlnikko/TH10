@@ -29,7 +29,22 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     public string description;
 
     [Header("生命配置")]
-    public int maxHealth;
+    public int maxHealth = 5;
+
+    [Tooltip("受击摧毁后至复活的等待（秒）")]
+    public float deathRespawnDelay = 0.5f;
+    [NonSerialized]
+    public int deathRespawnDelayFrames;
+
+    [Tooltip("受击复活后的无敌时间（秒）")]
+    public float postHitInvincibleDuration = 2f;
+    [NonSerialized]
+    public int postHitInvincibleFrames;
+
+    [Tooltip("死亡时散落的 Power 道具 ConfigId")]
+    public string deathPowerDropConfigId = "drop_rpr_s";
+    [NonSerialized]
+    public int deathPowerDropCfgIndex = -1;
 
     [Header("移速配置")]
     [Tooltip("移动速度（世界单位/秒）；烘焙为 moveDistancePerFrame")]
@@ -55,6 +70,7 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     void OnValidate()
     {
         characterPrefabId = characterPrefabId.ToLowerInvariantTrimmed();
+        deathPowerDropConfigId = StringHelper.NormalizeResourceId(deathPowerDropConfigId);
         NormalizeWeaponConfigIds();
     }
 
@@ -103,11 +119,23 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
         {
             weaponCfgIndices = Array.Empty<int>();
         }
+
+        string dropId = StringHelper.NormalizeResourceId(deathPowerDropConfigId);
+        deathPowerDropCfgIndex = string.IsNullOrEmpty(dropId) ? -1 : resDb.GetConfigIndex(dropId);
+        if (!string.IsNullOrEmpty(dropId) && deathPowerDropCfgIndex < 0)
+        {
+            Logger.Warn(
+                $"[CharacterConfig] DropItemConfig not found: '{dropId}' (character: {ConfigId})",
+                LogTag.Resource);
+        }
     }
 
     public void BakeLogicTiming(uint logicFPS)
     {
         moveDistancePerFrame = moveSpeed / logicFPS;
         moveSlowDistancePerFrame = moveSlowSpeed / logicFPS;
+
+        deathRespawnDelayFrames = Mathf.Max(1, Mathf.RoundToInt(deathRespawnDelay * logicFPS));
+        postHitInvincibleFrames = Mathf.Max(1, Mathf.RoundToInt(postHitInvincibleDuration * logicFPS));
     }
 }

@@ -27,6 +27,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     [Tooltip("预览时长（秒）；≤0 时按片段自动估算或使用关卡 maxStageDurationSeconds")]
     [SerializeField] float previewDurationSeconds = 120f;
 
+    [Header("可视化时间线")]
+    [Tooltip("Inspector 时间轴显示的总时长（秒）；≤0 时使用 StageTimelineConfig.maxStageDurationSeconds 或按内容自动估算")]
+    [SerializeField] float timelineViewDurationSeconds;
+
+    [SerializeField, Range(4f, 48f)] float timelinePixelsPerSecond = 10f;
+
     [SerializeField] int previewMidStageWaveIndex;
 
     [Tooltip("Scene 路径编辑/高亮所对应的出怪队列条目索引")]
@@ -87,6 +93,24 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     public bool PathNodeSnapToGrid => pathNodeSnapToGrid;
     public float PathNodeSnapCellSize => pathNodeSnapCellSize;
     public bool DrawPathNodeSnapGrid => drawPathNodeSnapGrid;
+    public float TimelineViewDurationSeconds => timelineViewDurationSeconds;
+    public float TimelinePixelsPerSecond => timelinePixelsPerSecond;
+
+    public void SetPreviewMidStageWaveIndex(int waveIndex)
+    {
+        var waves = stageTimelineConfig?.midStageWaves;
+        if (waves == null || waves.Count == 0)
+            return;
+
+        int clamped = Mathf.Clamp(waveIndex, 0, waves.Count - 1);
+        if (previewMidStageWaveIndex == clamped)
+            return;
+
+        previewMidStageWaveIndex = clamped;
+        pathEditTarget = E_StageTimelinePathEditTarget.MidStageWave;
+        EditorUtility.SetDirty(this);
+        RepaintPathGizmo();
+    }
 
     public void SetPreviewPathEditEntryIndex(int entryIndex)
     {
@@ -515,19 +539,8 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         }
     }
 
-    static float EstimateMovementDurationSeconds(PathRouteMovementData pathRoute, uint fps)
-    {
-        if (pathRoute == null)
-            return 0f;
-
-        pathRoute.BakeMovementTiming(fps);
-        var baked = EnemyPathMovementBaking.BakeRoute(pathRoute, fps);
-        if (baked.durationFrames > 0)
-            return baked.durationFrames / (float)fps;
-        if (pathRoute.durationSeconds >= 0f)
-            return pathRoute.durationSeconds;
-        return 0f;
-    }
+    static float EstimateMovementDurationSeconds(PathRouteMovementData pathRoute, uint fps) =>
+        StageTimelineVisualSchedule.EstimateMovementDurationSeconds(pathRoute, fps);
 
     static string DescribePreviewScope(E_StageTimelinePreviewScope scope, int waveIndex) => scope switch
     {
@@ -582,7 +595,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         world.AddSystem<DanmakuSystem>();
         world.AddSystem<DanmakuEmitSystem>();
         world.AddSystem<PresentationSystem>();
-        world.AddSystem<PresentationPoseSystem>();
         return world;
     }
 

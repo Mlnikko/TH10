@@ -45,6 +45,15 @@ public class EntityFactory
             return Entity.Null;
         }
 
+        PlayerMoveBounds.BakeFromConfig(
+            characterConfig.moveColliderConfig,
+            out byte moveShape,
+            out float moveOffsetX,
+            out float moveOffsetY,
+            out float moveRadius,
+            out float moveHalfW,
+            out float moveHalfH);
+
         _entityManager.AddComponent(e_player, new CPosition(posX, posY));
         _entityManager.AddComponent(e_player, new CRotation(0));
         _entityManager.AddComponent(e_player, new CVelocity(0, 0));
@@ -60,10 +69,18 @@ public class EntityFactory
             hitRadius = characterConfig.hitColliderConfig.radius,
             grazeRadius = characterConfig.grazeColliderConfig.radius,
 
+            moveColliderShape = moveShape,
+            moveColliderOffsetX = moveOffsetX,
+            moveColliderOffsetY = moveOffsetY,
+            moveColliderRadius = moveRadius,
+            moveColliderHalfW = moveHalfW,
+            moveColliderHalfH = moveHalfH,
+
             isShooting = false,
             isSlowMode = false,
             isBombing = false,
             isInvincible = false,
+            invincibleFramesRemaining = 0,
             powerOrbs = 0,
             primaryEmitterEntityIndex = -1,
             emitterSlotLayoutVariant = 0,
@@ -244,6 +261,29 @@ public class EntityFactory
         }
     }
 
+    public void DestroyPlayerWeaponEmitters(int ownerPlayerEntityIndex)
+    {
+        Span<int> ownedIndices = _entityManager.GetActiveIndices<CPlayerEmitterOwnership>();
+        if (ownedIndices.Length == 0)
+            return;
+
+        var ownerships = _entityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        var toDestroy = new System.Collections.Generic.List<Entity>(8);
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != ownerPlayerEntityIndex)
+                continue;
+
+            toDestroy.Add(_entityManager.GetEntity(emitterIdx));
+        }
+
+        for (int i = 0; i < toDestroy.Count; i++)
+            _entityManager.DestroyEntity(toDestroy[i]);
+    }
+
     void DestroyPlayerSecondaryEmitters(int ownerPlayerEntityIndex)
     {
         Span<int> ownedIndices = _entityManager.GetActiveIndices<CPlayerEmitterOwnership>();
@@ -340,14 +380,28 @@ public class EntityFactory
 
         if (danmakuCfg.danmakuType == E_DanmakuType.Homing)
         {
+            int targetIndex = DanmakuBezierHomingLogic.FindNearestTargetIndex(
+                _entityManager, posX, posY, danmakuCfg.homingTargetLayerMask);
+
+            float forwardX = velX;
+            float forwardY = velY;
+            if (forwardX * forwardX + forwardY * forwardY < 1e-8f)
+            {
+                forwardX = MathF.Cos(rotationRad);
+                forwardY = MathF.Sin(rotationRad);
+            }
+
+            sbyte curveBendSign = DanmakuBezierHomingLogic.ResolveCurveBendSign(
+                _entityManager, posX, posY, forwardX, forwardY, targetIndex, danmakuCfg.homingTargetLayerMask);
+
             _entityManager.AddComponent(e_danmaku, new CDanmakuBezierHoming
             {
-                targetEnemyIndex = DanmakuBezierHomingLogic.FindNearestTargetIndex(
-                    _entityManager, posX, posY, danmakuCfg.homingTargetLayerMask),
+                targetEnemyIndex = targetIndex,
                 segmentT = 0f,
                 progressPerFrame = danmakuCfg.homingProgressPerFrame,
                 curveStrength = danmakuCfg.homingCurveStrength,
                 homingTargetLayerMask = danmakuCfg.homingTargetLayerMask,
+                curveBendSign = curveBendSign,
             });
         }
 

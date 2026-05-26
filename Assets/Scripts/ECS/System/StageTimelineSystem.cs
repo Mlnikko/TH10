@@ -54,6 +54,78 @@ public class StageTimelineSystem : BaseSystem
         return true;
     }
 
+    /// <summary>
+    /// 关底 Boss（<see cref="E_StageState.BossIntro"/> / <see cref="E_StageState.BossFight"/>）
+    /// 或存活中的中场 Boss 血条快照。
+    /// </summary>
+    public bool TryGetBossHudSnapshot(out BossHudSnapshot snap)
+    {
+        snap = default;
+        if (!EntityManager.IsValid(_stageAuthority) || !GameResDB.IsInitialized)
+            return false;
+
+        ref readonly var st = ref EntityManager.GetComponent<CStageState>(_stageAuthority);
+        if (st.currentState == E_StageState.BossIntro || st.currentState == E_StageState.BossFight)
+        {
+            return TryBuildBossHudSnapshot(st.bossEntity, 1f, st.currentBossPhaseIndex, out snap);
+        }
+
+        if (TryGetActiveMidBossEntity(out Entity midEntity))
+        {
+            ref readonly var enemy = ref EntityManager.GetComponent<CEnemy>(midEntity);
+            var cfg = GameResDB.Instance.GetConfig<EnemyConfig>(enemy.enemyCfgIndex);
+            float hpMult = _config?.midBossEncounter?.ResolveHpMultiplier(cfg) ?? 1f;
+            return TryBuildBossHudSnapshot(midEntity, hpMult, -1, out snap);
+        }
+
+        return false;
+    }
+
+    bool TryGetActiveMidBossEntity(out Entity entity)
+    {
+        entity = _midBossEntity;
+        if (!EntityManager.IsValid(_midBossEntity))
+            return false;
+
+        if (EntityManager.HasComponent<CMidBossEncounter>(_midBossEntity))
+        {
+            ref readonly var mid = ref EntityManager.GetComponent<CMidBossEncounter>(_midBossEntity);
+            if (mid.phase == E_MidBossPhase.Done)
+                return false;
+        }
+
+        return true;
+    }
+
+    bool TryBuildBossHudSnapshot(
+        Entity bossEntity,
+        float hpMultiplier,
+        int phaseIndex,
+        out BossHudSnapshot snap)
+    {
+        snap = default;
+        if (!EntityManager.IsValid(bossEntity) || !EntityManager.HasComponent<CEnemy>(bossEntity))
+            return false;
+
+        ref readonly var enemy = ref EntityManager.GetComponent<CEnemy>(bossEntity);
+        if (enemy.currentHealth <= 0)
+            return false;
+
+        var cfg = GameResDB.Instance.GetConfig<EnemyConfig>(enemy.enemyCfgIndex);
+        if (cfg == null)
+            return false;
+
+        int maxHp = Mathf.Max(1, Mathf.RoundToInt(cfg.maxHealth * hpMultiplier));
+        string displayName = string.IsNullOrWhiteSpace(cfg.displayName) ? string.Empty : cfg.displayName.Trim();
+
+        ref readonly var pos = ref EntityManager.GetComponent<CPosition>(bossEntity);
+        var area = GlobalBattleData.IsInitialized ? GlobalBattleData.AreaData : BattleAreaData.Default;
+        float normalizedHorizontal = BossHudSnapshot.WorldXToNormalizedHorizontal(pos.x, area);
+
+        snap = new BossHudSnapshot(enemy.currentHealth, maxHp, phaseIndex, displayName, normalizedHorizontal);
+        return true;
+    }
+
     bool MidBossConfigured =>
         _config != null
         && _config.midBossEncounter != null
@@ -591,6 +663,7 @@ public class StageTimelineSystem : BaseSystem
 
         st.currentState = E_StageState.BossDefeated;
         st.bossEntity = Entity.Null;
+        BattleManager.Instance?.NotifyStageCleared();
     }
 
     void UpdateStageTimeout(uint stageElapsed, uint currentFrame)
@@ -607,5 +680,6 @@ public class StageTimelineSystem : BaseSystem
 
         st.currentState = E_StageState.StageClear;
         st.stateEnterFrame = currentFrame;
+        BattleManager.Instance?.NotifyStageCleared();
     }
 }

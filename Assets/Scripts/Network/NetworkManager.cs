@@ -17,6 +17,8 @@ public enum ConnectionState
     Connected
 }
 
+/// <summary>先于 <see cref="BattleManager"/> 收包，避免本渲染帧内输入晚于锁步就绪检查。</summary>
+[DefaultExecutionOrder(-100)]
 public class NetworkManager : SingletonMono<NetworkManager>
 {
     public NetworkRole NetworkRole => m_netRole;
@@ -35,8 +37,13 @@ public class NetworkManager : SingletonMono<NetworkManager>
     public static event Action OnSelfClientConnected;      // 客户端连接成功
     public static event Action OnSelfClientDisconnected;   // 客户端断开连接
     public static event Action<string> OnConnectionFailed; // 连接失败
+    public static event Action OnHostClientDisconnected;   // 主机端有客户端离开
 
     const int MAX_CONNECTIONS = 4;
+
+    public ConnectionState ClientConnectionState => ClientState;
+    public bool IsClientConnecting =>
+        m_netRole == NetworkRole.Client && ClientState == ConnectionState.Connecting;
 
     public void StartHost(ushort port = 7777)
     {
@@ -55,19 +62,33 @@ public class NetworkManager : SingletonMono<NetworkManager>
         Logger.Info("Host started.", LogTag.Net);
     }
 
-    public void StartClient(string ip, ushort port = 7777)
+    public bool StartClient(string ip, ushort port = 7777)
     {
         ShutDown();
-        m_Driver = NetworkDriver.Create();
 
-        var endpoint = NetworkEndpoint.Parse(ip, port);
+        if (!NetworkTool.TryCreateClientEndpoint(ip, port, out var endpoint))
+        {
+            Logger.Error($"Invalid client endpoint: {ip}:{port}", LogTag.Net);
+            return false;
+        }
+
+        m_Driver = NetworkDriver.Create();
         m_ClientConnection = m_Driver.Connect(endpoint);
 
         m_netRole = NetworkRole.Client;
         ClientState = ConnectionState.Connecting;
-        m_ConnectionStartTime = Time.time; // 记录连接开始时间
+        m_ConnectionStartTime = Time.time;
 
         Logger.Info($"Client connecting to {ip}:{port}", LogTag.Net);
+        return true;
+    }
+
+    public void DisconnectClient(NetworkConnection conn)
+    {
+        if (!m_Driver.IsCreated || !conn.IsCreated)
+            return;
+
+        conn.Disconnect(m_Driver);
     }
 
     public void SendToHost<T>(T message) where T : INetworkMessage
@@ -127,15 +148,23 @@ public class NetworkManager : SingletonMono<NetworkManager>
             NetworkConnection c;
             while ((c = m_Driver.Accept()) != default)
             {
-                if (m_Connections.Length < MAX_CONNECTIONS)
+                int maxClients = MAX_CONNECTIONS - 1;
+                if (RoomManager.Instance != null
+                    && RoomManager.Instance.IsInRoom
+                    && RoomManager.Instance.CurrentRoom.HasValue)
+                {
+                    maxClients = Math.Max(0, RoomManager.Instance.CurrentRoom.Value.MaxPlayers - 1);
+                }
+
+                if (m_Connections.Length < maxClients)
                 {
                     m_Connections.Add(c);
                     Logger.Info("New client connected.", LogTag.Net);
                 }
                 else
                 {
-                    c.Disconnect(m_Driver); // Reject if full
-                    Logger.Warn("Rejected client connection: host full.", LogTag.Net);
+                    c.Disconnect(m_Driver);
+                    Logger.Warn("Rejected client connection: room full.", LogTag.Net);
                 }
             }
 
@@ -234,10 +263,7 @@ public class NetworkManager : SingletonMono<NetworkManager>
             ClientState = ConnectionState.Connected;
             Logger.Info($"Connected to host successfully. Connection: {conn}", LogTag.Net);
 
-            SendToHost(new JoinRequestMSG()
-            {
-                playerName = "Player" + UnityEngine.Random.Range(1000, 9999)
-            });
+            SendToHost(new JoinRequestMSG());
 
             OnSelfClientConnected?.Invoke();
         }
@@ -253,17 +279,20 @@ public class NetworkManager : SingletonMono<NetworkManager>
     {
         if (m_netRole == NetworkRole.Client)
         {
-            // 客户端断开连接
+            bool wasConnecting = ClientState == ConnectionState.Connecting;
             ClientState = ConnectionState.Disconnected;
-            Logger.Warn($"Disconnected from host.", LogTag.Net);
-            OnSelfClientDisconnected?.Invoke();
+            Logger.Warn("Disconnected from host.", LogTag.Net);
             m_ClientConnection = default;
+
+            if (wasConnecting)
+                OnConnectionFailed?.Invoke("Connection failed");
+            else
+                OnSelfClientDisconnected?.Invoke();
         }
         else if (m_netRole == NetworkRole.Host)
         {
-            // 主机端的客户端断开
             Logger.Info($"Client disconnected. Connection: {conn}", LogTag.Net);
-            // 可以在主机端处理客户端离开的逻辑
+            OnHostClientDisconnected?.Invoke();
         }
     }
 
@@ -295,8 +324,8 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     var msg = new JoinRequestMSG();
                     msg.Deserialize(ref stream);
                                         
-                    RoomManager.Instance.HandlePlayerJoinRequest(conn, msg.playerName);
-                    Logger.Info($"Received JoinRequest from player: {msg.playerName}", LogTag.Net);
+                    RoomManager.Instance.HandlePlayerJoinRequest(conn);
+                    Logger.Info("Received JoinRequest.", LogTag.Net);
                     break;
                 }
 
@@ -305,8 +334,12 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     var msg = new JoinResponseMSG();
                     msg.Deserialize(ref stream);
 
-                    RoomManager.Instance.HandlePlayerJoinResponse(msg.assignedPlayerIndex);
-                    Logger.Info($"Received JoinResponse: assignedPlayerIndex = {msg.assignedPlayerIndex}", LogTag.Net);
+                    RoomManager.Instance.HandlePlayerJoinResponse(in msg);
+                    Logger.Info(
+                        msg.accepted
+                            ? $"Received JoinResponse: assignedPlayerIndex = {msg.assignedPlayerIndex}"
+                            : "Received JoinResponse: rejected",
+                        LogTag.Net);
                     break;
                 }
 
@@ -369,6 +402,54 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     break;
                 }
 
+            case MessageId.BattlePauseApply:
+                {
+                    var msg = new BattlePauseApplyMSG();
+                    msg.Deserialize(ref stream);
+                    BattleManager.Instance.ClientApplyBattlePause();
+                    break;
+                }
+
+            case MessageId.BattlePauseResume:
+                {
+                    var msg = new BattlePauseResumeMSG();
+                    msg.Deserialize(ref stream);
+                    BattleManager.Instance.ClientApplyBattleResume();
+                    break;
+                }
+
+            case MessageId.BattlePauseReturnToRoom:
+                {
+                    var msg = new BattlePauseReturnToRoomMSG();
+                    msg.Deserialize(ref stream);
+                    BattleManager.Instance.ClientApplyBattleReturnToRoom();
+                    break;
+                }
+
+            case MessageId.BattleGameOver:
+                {
+                    var msg = new BattleGameOverMSG();
+                    msg.Deserialize(ref stream);
+                    BattleManager.Instance.ClientApplyBattleGameOver();
+                    break;
+                }
+
+            case MessageId.BattleStageClear:
+                {
+                    var msg = new BattleStageClearMSG();
+                    msg.Deserialize(ref stream);
+                    BattleManager.Instance.ClientApplyBattleStageClear();
+                    break;
+                }
+
+            case MessageId.BattleRestart:
+                {
+                    var msg = new BattleRestartMSG();
+                    msg.Deserialize(ref stream);
+                    BattleManager.Instance.ClientApplyBattleRestart(msg.playerDatas);
+                    break;
+                }
+
             case MessageId.PingRequest:
                 {
                     var msg = new PingRequestMSG();
@@ -412,6 +493,9 @@ public class NetworkManager : SingletonMono<NetworkManager>
             if (m_Connections.IsCreated)
                 m_Connections.Dispose();
         }
+
+        m_ClientConnection = default;
+        ClientState = ConnectionState.Disconnected;
         m_netRole = NetworkRole.None;
         Logger.Info("Network shut down.", LogTag.Net);
     }

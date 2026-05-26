@@ -19,17 +19,6 @@ public struct CGameObjectLink : IComponent
 }
 
 /// <summary>
-/// 逻辑帧之间的表现插值快照（由 <see cref="PresentationPoseSystem"/> 在每逻辑帧末更新）。
-/// </summary>
-public struct CPresentationPose : IComponent
-{
-    public float prevX, prevY;
-    public float currX, currY;
-    public float prevAngleRad, currAngleRad;
-    public bool hasSnapshot;
-}
-
-/// <summary>
 /// 渲染系统使用的标记组件，标记实体需要在当前帧进行表现更新。系统会根据这个组件来决定哪些实体需要同步到GameObject。
 /// </summary>
 public struct CPoolGetTag : IComponent { }
@@ -101,6 +90,8 @@ public struct CDanmakuBezierHoming : IComponent
     public float progressPerFrame;
     public float curveStrength;
     public ushort homingTargetLayerMask;
+    /// <summary>曲线侧向弯曲符号（+1 / -1）；生成时按目标相对发射器朝向的左右确定。</summary>
+    public sbyte curveBendSign;
 }
 
 /// <summary>
@@ -187,6 +178,10 @@ public struct CDanmakuEmitter : IComponent
     public float salvoAngleAdvanceRad;
 
     public int emitterCamp;
+    /// <summary>敌人专用：齐射时朝向最近玩家调整发射角。</summary>
+    public bool aimAtPlayer;
+    /// <summary>各发射模式在未瞄准时的基准局部角（弧度），用于与玩家方向对齐。</summary>
+    public float aimReferenceLocalRad;
 
     // ================= Line 模式专用 (预计算向量) =================
     public float lineDirUnitX, lineDirUnitY;
@@ -226,7 +221,7 @@ public struct CDanmakuEmitter : IComponent
         lastFireFrame = 0;
 
         launchCooldownFrames = soConfig.launchCooldownFrames;
-        launchCountMax = soConfig.launchCount;
+        launchCountMax = DanmakuEmitterSalvoInfo.NormalizeLaunchCountMax(soConfig.launchCount);
         launchCountUsed = 0;
 
         sequentialIndex = 0;
@@ -243,9 +238,11 @@ public struct CDanmakuEmitter : IComponent
         danmakuRotOffsetRad = soConfig.danmakuRotOffsetZ * Mathf.Deg2Rad;
         salvoAngleAdvanceRad = soConfig.salvoAngleAdvanceRad;
         emitterCamp = (int)soConfig.emitterCamp;
+        aimAtPlayer = soConfig.aimAtPlayer && soConfig.emitterCamp == EmitterCamp.Enemy;
+        aimReferenceLocalRad = ComputeAimReferenceLocalRad(soConfig);
 
         // --- Line 模式烘焙 ---
-        lineCount = soConfig.lineModeConfig.lineCount;
+        lineCount = Mathf.Max(1, soConfig.lineModeConfig.lineCount);
         lineSpacingHalf = soConfig.lineModeConfig.lineSpacing * 0.5f; // 预计算常数
 
         // 预计算单位向量和垂直向量 (原代码逻辑: offsetX = ... * dirY, offsetY = ... * -dirX)
@@ -284,6 +281,34 @@ public struct CDanmakuEmitter : IComponent
         danmakuCfgIndices = soConfig.danmakuCfgIndices ?? Array.Empty<int>();
     }
 
+    static float ComputeAimReferenceLocalRad(DanmakuEmitterConfig soConfig)
+    {
+        switch (soConfig.emitMode)
+        {
+            case EmitMode.Line:
+            {
+                Vector2 dir = soConfig.lineModeConfig.lineDirection.normalized;
+                return Mathf.Atan2(dir.y, dir.x);
+            }
+            case EmitMode.Arc:
+            {
+                var arc = soConfig.arcModeConfig;
+                int count = Mathf.Max(1, arc.arcBulletCount);
+                float stepRad = count > 1
+                    ? arc.arcAngle * Mathf.Deg2Rad / (count - 1)
+                    : 0f;
+                int dirSign = arc.arcClockwise ? 1 : -1;
+                return arc.arcStartAngle * Mathf.Deg2Rad + stepRad * dirSign * ((count - 1) * 0.5f);
+            }
+            case EmitMode.Wave:
+                return soConfig.waveModeConfig.centerAngleDeg * Mathf.Deg2Rad;
+            case EmitMode.Grain:
+                return soConfig.grainModeConfig.baseAngleDeg * Mathf.Deg2Rad;
+            default:
+                return 0f;
+        }
+    }
+
     static (
         int bulletCount,
         float radius,
@@ -296,13 +321,14 @@ public struct CDanmakuEmitter : IComponent
             ? WaveToArc(soConfig.waveModeConfig)
             : soConfig.arcModeConfig;
 
+        int bulletCount = Mathf.Max(1, arc.arcBulletCount);
         float totalRad = arc.arcAngle * Mathf.Deg2Rad;
-        float stepRad = arc.arcBulletCount > 1
-            ? totalRad / (arc.arcBulletCount - 1)
+        float stepRad = bulletCount > 1
+            ? totalRad / (bulletCount - 1)
             : 0f;
 
         return (
-            arc.arcBulletCount,
+            bulletCount,
             arc.arcRadius,
             arc.arcStartAngle * Mathf.Deg2Rad,
             stepRad,
@@ -397,10 +423,21 @@ public struct CPlayer : IComponent
     public float hitRadius;       // 受击判定半径
     public float grazeRadius;     // 擦弹判定半径
 
+    /// <summary>移动碰撞盒（<see cref="CharacterConfig.moveColliderConfig"/>）烘焙，用于战斗区边缘限制。</summary>
+    public byte moveColliderShape;
+    public float moveColliderOffsetX;
+    public float moveColliderOffsetY;
+    public float moveColliderRadius;
+    public float moveColliderHalfW;
+    public float moveColliderHalfH;
+
     public bool isSlowMode;       // 是否处于慢速模式
     public bool isShooting;       // 是否正在射击
     public bool isBombing;        // 是否正在使用炸弹
     public bool isInvincible;     // 是否无敌
+
+    /// <summary>受击复活后的无敌剩余逻辑帧；>0 时忽略伤害并闪动表现。</summary>
+    public int invincibleFramesRemaining;
 
     /// <summary>P 道具 / 火力拾取累计（由 <see cref="DropItemPickupEffects"/> 写入）。</summary>
     public int powerOrbs;
@@ -419,6 +456,19 @@ public struct CPlayer : IComponent
 
     /// <summary>低速模式下已应用的主炮 Power 档 <see cref="WeaponPowerPrimarySlowLayout.minPowerOrbs"/>。</summary>
     public int appliedPrimarySlowPowerMinOrbs;
+}
+
+/// <summary>受击摧毁后等待复活的会话状态（无表现层）。</summary>
+public struct CPlayerRespawnPending : IComponent
+{
+    public byte playerIndex;
+    public byte characterCfgIndex;
+    public byte weaponCfgIndex;
+    public int remainingHealth;
+    public int invincibleFramesAfterSpawn;
+    public int framesUntilSpawn;
+    public float spawnX;
+    public float spawnY;
 }
 
 /// <summary>挂在玩家武器发射子实体上，用于同步位置与射击状态。</summary>

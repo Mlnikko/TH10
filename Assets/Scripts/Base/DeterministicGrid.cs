@@ -13,7 +13,7 @@ public class DeterministicGrid
     {
         _cellSize = battleAreaData.GridCellSize;
 
-        // 直接使用 BattleAreaData 提供的网格布局（与战斗区 Width/Height 对齐）
+        // 网格覆盖 GO 回收区（与刷怪外圈、越界回收一致），供 DeterministicGrid 粗测。
         _gridWidth = battleAreaData.GridColumns;
         _gridHeight = battleAreaData.GridRows;
 

@@ -27,9 +27,28 @@ public static class ConfigViewerPrefabSync
         DanmakuEmitterPresentation.Apply(config, prefab);
         MarkPrefabDirty(prefab);
 
-        var viewer = prefab.GetComponent<DanmakuEmitterConfigViewer>();
-        if (viewer != null && viewer.emitterConfig == config)
+        SyncAllViewersUsingConfig(config);
+    }
+
+    static void SyncAllViewersUsingConfig(DanmakuEmitterConfig config)
+    {
+        if (config == null)
+            return;
+
+#if UNITY_2023_1_OR_NEWER
+        var viewers = Object.FindObjectsByType<DanmakuEmitterConfigViewer>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#else
+        var viewers = Object.FindObjectsOfType<DanmakuEmitterConfigViewer>(true);
+#endif
+        for (int i = 0; i < viewers.Length; i++)
+        {
+            var viewer = viewers[i];
+            if (viewer == null || viewer.emitterConfig != config)
+                continue;
+
             viewer.SyncDisplaySpriteFromConfig();
+            EditorUtility.SetDirty(viewer);
+        }
     }
 
     /// <summary>

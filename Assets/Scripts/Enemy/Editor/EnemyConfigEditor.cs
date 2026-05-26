@@ -58,6 +58,10 @@ public class EnemyConfigEditor : Editor
     static void DrawEnemyConfigFields(SerializedObject configSo)
     {
         EditorGUILayout.Space(2);
+        EditorGUILayout.LabelField("标识", EditorStyles.boldLabel);
+        DrawProperty(configSo, nameof(EnemyConfig.displayName));
+
+        EditorGUILayout.Space(2);
         EditorGUILayout.LabelField("表现", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
             $"池预制体固定为 {EnemyPrefabArchetypes.Unit}；出池时由 EnemyPresentation 应用。",

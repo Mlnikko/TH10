@@ -12,9 +12,9 @@ public struct BattleAreaData
     public float Height;
     public Vector2 Center;
 
-    // === 网格加速参数（Scene Gizmo 与 DeterministicGrid 共用）===
+    // === 网格加速参数（Scene Gizmo 与 DeterministicGrid 共用；覆盖 GO 回收区）===
     [Min(0.01f)]
-    [Tooltip("单格边长（世界单位）。战斗区较小时可用 0.1～0.5；例如 4×5 区域设 0.25 约 16×20 格")]
+    [Tooltip("单格边长（世界单位）。网格在 GO 回收区（红框）内划分，供碰撞粗测与 Scene 参考。")]
     public float GridCellSize;
 
     // === GO回收边界（外扩区域）===
@@ -33,19 +33,22 @@ public struct BattleAreaData
     public float RecycleBottom => Bottom - GO_RecycleMargin.y;
     public float RecycleTop => Top + GO_RecycleMargin.y;
 
-    /// <summary>碰撞网格左下角，与 <see cref="BattleRect"/> 左下角对齐。</summary>
-    public Vector2 GridWorldOrigin => new Vector2(Left, Bottom);
+    public float RecycleWidth => RecycleRight - RecycleLeft;
+    public float RecycleHeight => RecycleTop - RecycleBottom;
 
-    /// <summary>覆盖战斗区的列数（向上取整，至少 1）。</summary>
-    public int GridColumns => Mathf.Max(1, Mathf.CeilToInt(Width / GridCellSize));
+    /// <summary>碰撞网格左下角，与 GO 回收区外框左下角对齐。</summary>
+    public Vector2 GridWorldOrigin => new Vector2(RecycleLeft, RecycleBottom);
 
-    /// <summary>覆盖战斗区的行数（向上取整，至少 1）。</summary>
-    public int GridRows => Mathf.Max(1, Mathf.CeilToInt(Height / GridCellSize));
+    /// <summary>覆盖回收区的列数（向上取整，至少 1）。</summary>
+    public int GridColumns => Mathf.Max(1, Mathf.CeilToInt(RecycleWidth / GridCellSize));
 
-    /// <summary>网格世界宽度（= GridColumns × GridCellSize，略大于等于 Width）。</summary>
+    /// <summary>覆盖回收区的行数（向上取整，至少 1）。</summary>
+    public int GridRows => Mathf.Max(1, Mathf.CeilToInt(RecycleHeight / GridCellSize));
+
+    /// <summary>网格世界宽度（= GridColumns × GridCellSize，略大于等于 <see cref="RecycleWidth"/>）。</summary>
     public float TotalWidth => GridColumns * GridCellSize;
 
-    /// <summary>网格世界高度（= GridRows × GridCellSize，略大于等于 Height）。</summary>
+    /// <summary>网格世界高度（= GridRows × GridCellSize，略大于等于 <see cref="RecycleHeight"/>）。</summary>
     public float TotalHeight => GridRows * GridCellSize;
 
     public float GridMaxX => GridWorldOrigin.x + TotalWidth;

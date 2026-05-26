@@ -16,7 +16,24 @@ public enum MessageId : byte
 
     BattleReady,
     BattlePrepareCancel,
-    BattleStart
+    BattleStart,
+
+    /// <summary>房主广播：全员进入手动暂停。</summary>
+    BattlePauseApply,
+    /// <summary>房主广播：全员恢复战斗。</summary>
+    BattlePauseResume,
+
+    /// <summary>房主在暂停菜单选择返回房间，全员退出战斗回房。</summary>
+    BattlePauseReturnToRoom,
+
+    /// <summary>联机全员生命归零，强制结束战斗。</summary>
+    BattleGameOver,
+
+    /// <summary>联机关卡通关，全员进入通关暂停。</summary>
+    BattleStageClear,
+
+    /// <summary>房主发起联机重新开始本关。</summary>
+    BattleRestart
 }
 
 /// <summary>
@@ -78,33 +95,43 @@ public struct JoinResponseMSG : INetworkMessage
 {
     public readonly MessageId Id => MessageId.JoinResponse;
 
+    public bool accepted;
     public byte assignedPlayerIndex;
+    public RoomInfo roomInfo;
 
     public void Serialize(ref DataStreamWriter writer)
     {
+        writer.WriteByte((byte)(accepted ? 1 : 0));
+        if (!accepted)
+            return;
+
         writer.WriteByte(assignedPlayerIndex);
+        writer.WriteFixedString32(roomInfo.IpAddress);
+        writer.WriteUShort(roomInfo.Port);
+        writer.WriteByte(roomInfo.PlayerCount);
+        writer.WriteByte(roomInfo.MaxPlayers);
     }
 
     public void Deserialize(ref DataStreamReader reader)
     {
+        accepted = reader.ReadByte() != 0;
+        if (!accepted)
+            return;
+
         assignedPlayerIndex = reader.ReadByte();
+        roomInfo.IpAddress = reader.ReadFixedString32().ToString();
+        roomInfo.Port = reader.ReadUShort();
+        roomInfo.PlayerCount = reader.ReadByte();
+        roomInfo.MaxPlayers = reader.ReadByte();
     }
 }
 public struct JoinRequestMSG : INetworkMessage
 {
-    public string playerName;
-
     public readonly MessageId Id => MessageId.JoinRequest;
 
-    public void Serialize(ref DataStreamWriter writer)
-    {
-        writer.WriteFixedString32(playerName);
-    }
+    public void Serialize(ref DataStreamWriter writer) { }
 
-    public void Deserialize(ref DataStreamReader reader)
-    {
-        playerName = reader.ReadFixedString32().ToString();
-    }
+    public void Deserialize(ref DataStreamReader reader) { }
 }
 public struct RoomStateMSG : INetworkMessage
 {
@@ -113,8 +140,6 @@ public struct RoomStateMSG : INetworkMessage
 
     public void Serialize(ref DataStreamWriter writer)
     {
-        writer.WriteInt(roomInfo.RoomId);
-        writer.WriteFixedString32(roomInfo.HostName);
         writer.WriteFixedString32(roomInfo.IpAddress);
         writer.WriteUShort(roomInfo.Port);
 
@@ -123,8 +148,6 @@ public struct RoomStateMSG : INetworkMessage
     }
     public void Deserialize(ref DataStreamReader reader)
     {
-        roomInfo.RoomId = reader.ReadInt();
-        roomInfo.HostName = reader.ReadFixedString32().ToString();
         roomInfo.IpAddress = reader.ReadFixedString32().ToString();
         roomInfo.Port = reader.ReadUShort();
 
@@ -262,6 +285,96 @@ public struct BattleStartMSG : INetworkMessage
         startFrame = reader.ReadUInt();
 
         // 4. 读取随机种子
+        randomSeed = reader.ReadUInt();
+    }
+}
+
+public struct BattlePauseApplyMSG : INetworkMessage
+{
+    public MessageId Id => MessageId.BattlePauseApply;
+
+    public void Serialize(ref DataStreamWriter writer) { }
+
+    public void Deserialize(ref DataStreamReader reader) { }
+}
+
+public struct BattlePauseResumeMSG : INetworkMessage
+{
+    public MessageId Id => MessageId.BattlePauseResume;
+
+    public void Serialize(ref DataStreamWriter writer) { }
+
+    public void Deserialize(ref DataStreamReader reader) { }
+}
+
+public struct BattlePauseReturnToRoomMSG : INetworkMessage
+{
+    public MessageId Id => MessageId.BattlePauseReturnToRoom;
+
+    public void Serialize(ref DataStreamWriter writer) { }
+
+    public void Deserialize(ref DataStreamReader reader) { }
+}
+
+/// <summary>房主广播：全员生命归零，各端进入 Game Over 暂停。</summary>
+public struct BattleGameOverMSG : INetworkMessage
+{
+    public MessageId Id => MessageId.BattleGameOver;
+
+    public void Serialize(ref DataStreamWriter writer) { }
+
+    public void Deserialize(ref DataStreamReader reader) { }
+}
+
+/// <summary>房主广播：关卡通关，各端进入通关暂停。</summary>
+public struct BattleStageClearMSG : INetworkMessage
+{
+    public MessageId Id => MessageId.BattleStageClear;
+
+    public void Serialize(ref DataStreamWriter writer) { }
+
+    public void Deserialize(ref DataStreamReader reader) { }
+}
+
+/// <summary>房主广播：重新开始当前关卡（载荷与 <see cref="BattleStartMSG"/> 相同）。</summary>
+public struct BattleRestartMSG : INetworkMessage
+{
+    public PlayerBattleData[] playerDatas;
+    public uint startFrame;
+    public uint randomSeed;
+
+    public MessageId Id => MessageId.BattleRestart;
+
+    public void Serialize(ref DataStreamWriter writer)
+    {
+        writer.WriteByte((byte)playerDatas.Length);
+        for (int i = 0; i < playerDatas.Length; i++)
+        {
+            var data = playerDatas[i];
+            writer.WriteByte(data.playerIndex);
+            writer.WriteByte((byte)data.characterId);
+            writer.WriteByte((byte)data.weaponId);
+        }
+
+        writer.WriteUInt(startFrame);
+        writer.WriteUInt(randomSeed);
+    }
+
+    public void Deserialize(ref DataStreamReader reader)
+    {
+        byte playerCount = reader.ReadByte();
+        playerDatas = new PlayerBattleData[playerCount];
+        for (int i = 0; i < playerCount; i++)
+        {
+            playerDatas[i] = new PlayerBattleData
+            {
+                playerIndex = reader.ReadByte(),
+                characterId = (E_Character)reader.ReadByte(),
+                weaponId = (E_Weapon)reader.ReadByte()
+            };
+        }
+
+        startFrame = reader.ReadUInt();
         randomSeed = reader.ReadUInt();
     }
 }

@@ -373,11 +373,13 @@ MonoBehaviour:
   stageTimelineConfig: {fileID: 11400000, guid: e971af894ed361447a6c40705e97b584, type: 2}
   battleAreaConfig: {fileID: 11400000, guid: aaf3a19affdf5c2408060432e85d27f3, type: 2}
   previewDurationSeconds: 120
-  previewMidStageWaveIndex: 0
+  timelineViewDurationSeconds: 360
+  timelinePixelsPerSecond: 4
+  previewMidStageWaveIndex: 1
   previewPathEditEntryIndex: 0
-  pathEditTarget: 1
-  previewMidBossPathPhase: 1
-  previewMainBossPathPhase: 1
+  pathEditTarget: 0
+  previewMidBossPathPhase: 0
+  previewMainBossPathPhase: 0
   pathNodeSnapToGrid: 1
   pathNodeSnapCellSize: 0.1
   drawPathNodeSnapGrid: 1

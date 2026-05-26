@@ -13,7 +13,6 @@ public class RoomPanel : UIPanel
     public GameObject playerInfoPrefab;
     public Transform playerInfoRoot;
 
-
     List<PlayerInfoItem> _playerItems = new();
 
     public override void Initialize()
@@ -27,10 +26,9 @@ public class RoomPanel : UIPanel
 
     public override void OnShow(object data = null)
     {
-        if(!RoomManager.Instance.IsHost)
-        {
-            startBattleBtn.gameObject.SetActive(false);
-        }
+        bool isHost = RoomManager.Instance != null && RoomManager.Instance.IsHost;
+        startBattleBtn.gameObject.SetActive(isHost);
+
         RefreshUI();
         SetupEventListeners();
     }
@@ -42,22 +40,28 @@ public class RoomPanel : UIPanel
 
     void SetupEventListeners()
     {
-        var rm = RoomManager.Instance;     
+        var rm = RoomManager.Instance;
+        if (rm == null)
+            return;
+
         rm.OnRoomInfoUpdated += OnRoomInfoChanged;
+        rm.OnDisconnectedFromHost += OnDisconnectedFromHost;
     }
 
     void RemoveEventListeners()
     {
         var rm = RoomManager.Instance;
-        if (rm == null) return;
+        if (rm == null)
+            return;
+
         rm.OnRoomInfoUpdated -= OnRoomInfoChanged;
+        rm.OnDisconnectedFromHost -= OnDisconnectedFromHost;
     }
 
     void RefreshUI()
     {
         var rm = RoomManager.Instance;
-
-        if (!rm.IsInRoom)
+        if (rm == null || !rm.IsInRoom)
         {
             roomInfoText.text = "未加入任何房间";
             startBattleBtn.interactable = false;
@@ -67,23 +71,19 @@ public class RoomPanel : UIPanel
         }
 
         var roomInfo = rm.CurrentRoom.Value;
+        string roleLabel = rm.IsHost ? "房主" : $"玩家 {RoomManager.LocalPlayerIndex + 1}";
         roomInfoText.text =
-            $"房间 ID: {roomInfo.RoomId}\n" +
-            $"主机: {roomInfo.HostName}\n" +
+            $"身份: {roleLabel}\n" +
             $"人数: {roomInfo.PlayerCount}/{roomInfo.MaxPlayers}\n" +
-            $"IP: {roomInfo.IpAddress}";
+            $"地址: {roomInfo.IpAddress}:{roomInfo.Port}";
 
-        // 刷新玩家列表
-        UpdatePlayerList(roomInfo.PlayerCount, roomInfo.MaxPlayers, roomInfo.HostName);
-
-        // 只有房主且至少2人才能开始
+        UpdatePlayerList(roomInfo.PlayerCount, roomInfo.MaxPlayers);
         startBattleBtn.interactable = rm.IsHost && roomInfo.PlayerCount >= 2;
         leaveRoomBtn.interactable = true;
     }
 
-    void UpdatePlayerList(int playerCount, int maxPlayers, string hostName)
+    void UpdatePlayerList(int playerCount, int maxPlayers)
     {
-        // 确保预制体数量匹配 maxPlayers
         while (_playerItems.Count < maxPlayers)
         {
             var go = Instantiate(playerInfoPrefab, playerInfoRoot);
@@ -94,36 +94,22 @@ public class RoomPanel : UIPanel
                 Destroy(go);
                 continue;
             }
+
             _playerItems.Add(item);
         }
 
-        // 超出部分隐藏（通常不会发生）
         for (int i = maxPlayers; i < _playerItems.Count; i++)
-        {
             _playerItems[i].gameObject.SetActive(false);
-        }
 
-        // 更新每个槽位
         for (int i = 0; i < maxPlayers; i++)
         {
             var item = _playerItems[i];
             item.gameObject.SetActive(true);
 
-            if (i == 0)
-            {
-                // 槽位 0 固定为房主
-                item.SetInfo(hostName, isHost: true);
-            }
-            else if (i < playerCount)
-            {
-                // 其他已加入玩家（简化命名）
-                item.SetInfo($"Player {i + 1}", isHost: false);
-            }
+            if (i < playerCount)
+                item.SetOccupied(i, isHost: i == 0);
             else
-            {
-                // 空槽位
                 item.SetEmpty(i);
-            }
         }
     }
 
@@ -136,7 +122,6 @@ public class RoomPanel : UIPanel
         }
     }
 
-    // ====== 按钮回调 ======
     void OnStartBattleClicked()
     {
         RoomManager.Instance.EnterBattleScene();
@@ -149,14 +134,15 @@ public class RoomPanel : UIPanel
         UIManager.Instance.GoBack();
     }
 
-    // ====== 事件响应 ======
-    void OnLocalLeaveRoom()
-    {
-        UIManager.Instance.GoBack();
-    }
-
     void OnRoomInfoChanged(RoomInfo roomInfo)
     {
         RefreshUI();
+    }
+
+    void OnDisconnectedFromHost(string message)
+    {
+        Logger.Warn(message, LogTag.Room);
+        UIManager.Instance.ClosePanel<RoomPanel>();
+        UIManager.Instance.GoBack();
     }
 }

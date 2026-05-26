@@ -1,5 +1,5 @@
 /// <summary>
-/// 表现 Updater 共用的插值/预测采样。
+/// 表现 Updater 共用：直接读取当前逻辑帧的 <see cref="CPosition"/> / <see cref="CRotation"/>。
 /// </summary>
 internal static class PresentationUpdaterHelper
 {
@@ -10,27 +10,12 @@ internal static class PresentationUpdaterHelper
         out float y,
         out float angleRad)
     {
-        var battle = BattleManager.Instance;
-        var world = battle != null ? battle.ActiveBattleWorld : null;
-        if (world == null)
-        {
-            ref readonly var pos = ref em.GetComponent<CPosition>(entity);
-            x = pos.x;
-            y = pos.y;
-            angleRad = em.HasComponent<CRotation>(entity)
-                ? em.GetComponent<CRotation>(entity).angleRad
-                : 0f;
-            return true;
-        }
-
-        return PresentationMotion.TrySampleDisplayTransform(
-            em,
-            entity,
-            world.LogicFrameTimer,
-            world.IsPresentationLogicStalled,
-            RoomManager.LocalPlayerIndex,
-            out x,
-            out y,
-            out angleRad);
+        ref readonly var pos = ref em.GetComponent<CPosition>(entity);
+        x = pos.x;
+        y = pos.y;
+        angleRad = em.HasComponent<CRotation>(entity)
+            ? em.GetComponent<CRotation>(entity).angleRad
+            : 0f;
+        return true;
     }
 }

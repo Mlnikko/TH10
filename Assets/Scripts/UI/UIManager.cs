@@ -322,10 +322,11 @@ public class UIManager : SingletonMono<UIManager>
     {
         foreach (var panel in activePanels.Values)
         {
-            if (panel != null)
-            {
-                Destroy(panel.gameObject);
-            }
+            if (panel == null)
+                continue;
+
+            panel.OnHide();
+            Destroy(panel.gameObject);
         }
         activePanels.Clear();
         panelStack.Clear();

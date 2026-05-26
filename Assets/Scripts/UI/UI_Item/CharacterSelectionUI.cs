@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class CharacterSelectionUI : MonoBehaviour
 {
+    const bool ShowCharacterIcon = false;
+
     [SerializeField] TMP_Text playerId;
     [SerializeField] TMP_Text nameLabel;
     [SerializeField] Image iconImage;
@@ -24,6 +26,20 @@ public class CharacterSelectionUI : MonoBehaviour
         nameLabel.text = config.description;
         characterName = config.character;
 
+        if (iconImage == null)
+        {
+            SetOccupyingPlayerId(null);
+            return;
+        }
+
+        if (!ShowCharacterIcon)
+        {
+            iconImage.gameObject.SetActive(false);
+            SetOccupyingPlayerId(null);
+            return;
+        }
+
+        iconImage.gameObject.SetActive(true);
         string characterId = characterName.ToString().ToLowerInvariant();
         Sprite sprite = GameResDB.Instance.GetSpriteFromTexture(characterId);
 

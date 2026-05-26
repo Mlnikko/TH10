@@ -70,8 +70,8 @@ public class InputManager : SingletonMono<InputManager>
 {
     const int MAX_PLAYERS = 4;
     // 【关键优化 1】环形缓冲区大小
-    // 假设最大网络延迟 + 重传窗口为 2 秒 (120 帧 @ 60fps)。
-    // 即使延迟达到 1 秒，只要 buffer > 60，旧数据被覆盖前肯定已经被消费了。
+    // 假设最大网络延迟 + 重传窗口约 2 秒（120 帧 @ 60fps）。
+    // 即使延迟达到 1 秒，只要 buffer 足够大，旧数据被覆盖前肯定已经被消费了。
     // 设为 256 (2 的幂) 可以让编译器优化 % 运算为位运算 (& 255)，性能极致。
     const int BUFFER_SIZE = 256;
     const int BUFFER_MASK = BUFFER_SIZE - 1; // 用于快速取模
@@ -87,6 +87,25 @@ public class InputManager : SingletonMono<InputManager>
 
     FrameInput[] _currentConsumedInputs;
     bool _isInitialized = false;
+
+    const uint InvalidFrameSlot = uint.MaxValue;
+    const int SyncStatsWindowSize = 300;
+    const int MaxReasonableInputDelayFrames = 8;
+
+    [Header("联机锁步")]
+    [SerializeField]
+    [Tooltip("联机锁步输入前瞻帧数。值越高越抗网络抖动，但操作延迟会增加。推荐 2~4。")]
+    [Range(0, MaxReasonableInputDelayFrames)]
+    int _multiplayerInputDelayFrames = 2;
+
+    int _logicTickSuccessCount;
+    int _logicTickStallCount;
+    uint _lastStalledLogicFrame;
+    int _lastStalledPlayerIndex = -1;
+    readonly bool[] _syncStallWindow = new bool[SyncStatsWindowSize];
+    int _syncWindowWriteIndex;
+    int _syncWindowCount;
+    int _syncWindowStallCount;
 
     protected override void OnSingletonInit()
     {
@@ -128,7 +147,8 @@ public class InputManager : SingletonMono<InputManager>
             _inputFrames[i] = new FrameInput[BUFFER_SIZE];
             // 初始化为 None (默认 struct 值通常是 0，相当于 None，但为了保险可以显式填充)
             // Array.Fill(_inputFrames[i], FrameInput.None); // Unity 2020+ 支持，或者用循环
-            for (int j = 0; j < BUFFER_SIZE; j++) _inputFrames[i][j] = FrameInput.None;
+            for (int j = 0; j < BUFFER_SIZE; j++)
+                _inputFrames[i][j] = CreateInvalidSlot();
 
             _latestReceivedFrame[i] = 0;
             _currentConsumedInputs[i] = FrameInput.None;
@@ -140,13 +160,176 @@ public class InputManager : SingletonMono<InputManager>
     public void ClearAllInputs()
     {
         if (!_isInitialized) return;
+        ResetSyncDiagnostics();
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
-            // 只需重置最大帧号，并将缓冲区标记为无效（可选，因为逻辑依赖帧号判断）
             _latestReceivedFrame[i] = 0;
-            // 如果需要彻底清空数据以防读取脏数据：
-            // Array.Fill(_inputFrames[i], FrameInput.None); 
+            for (int j = 0; j < BUFFER_SIZE; j++)
+                _inputFrames[i][j] = CreateInvalidSlot();
         }
+    }
+
+    static FrameInput CreateInvalidSlot()
+    {
+        return new FrameInput
+        {
+            frame = InvalidFrameSlot,
+            playerIndex = 0,
+            directionPacked = 0,
+            buttons = 0
+        };
+    }
+
+    public void ResetSyncDiagnostics()
+    {
+        _logicTickSuccessCount = 0;
+        _logicTickStallCount = 0;
+        _lastStalledLogicFrame = 0;
+        _lastStalledPlayerIndex = -1;
+        _syncWindowWriteIndex = 0;
+        _syncWindowCount = 0;
+        _syncWindowStallCount = 0;
+        Array.Clear(_syncStallWindow, 0, _syncStallWindow.Length);
+    }
+
+    public void NotifyLogicTickStalled(uint logicFrame, bool[] activePlayers, byte eliminatedMask = 0)
+    {
+        _logicTickStallCount++;
+        RecordSyncSample(stalled: true);
+        _lastStalledLogicFrame = logicFrame;
+        _lastStalledPlayerIndex = TryFindFirstMissingPlayer(logicFrame, activePlayers, eliminatedMask);
+    }
+
+    public void NotifyLogicTickSucceeded()
+    {
+        _logicTickSuccessCount++;
+        RecordSyncSample(stalled: false);
+    }
+
+    void RecordSyncSample(bool stalled)
+    {
+        if (_syncWindowCount == SyncStatsWindowSize)
+        {
+            if (_syncStallWindow[_syncWindowWriteIndex])
+                _syncWindowStallCount--;
+        }
+        else
+        {
+            _syncWindowCount++;
+        }
+
+        _syncStallWindow[_syncWindowWriteIndex] = stalled;
+        if (stalled)
+            _syncWindowStallCount++;
+
+        _syncWindowWriteIndex++;
+        if (_syncWindowWriteIndex >= SyncStatsWindowSize)
+            _syncWindowWriteIndex = 0;
+    }
+
+    public float RecentStallRatio
+    {
+        get
+        {
+            int total = _syncWindowCount;
+            return total > 0 ? (float)_syncWindowStallCount / total : 0f;
+        }
+    }
+
+    public int RecentStallCount => _syncWindowStallCount;
+    public int RecentSuccessCount => _syncWindowCount - _syncWindowStallCount;
+    public int RecentSampleCount => _syncWindowCount;
+    public int MultiplayerInputDelayFrames => Mathf.Clamp(_multiplayerInputDelayFrames, 0, MaxReasonableInputDelayFrames);
+
+    public uint LastStalledLogicFrame => _lastStalledLogicFrame;
+    public int LastStalledPlayerIndex => _lastStalledPlayerIndex;
+
+    public uint ResolveCaptureFrame(uint logicFrameToProcess, bool singlePlayerMode)
+    {
+        if (singlePlayerMode)
+            return logicFrameToProcess;
+
+        return logicFrameToProcess + (uint)MultiplayerInputDelayFrames;
+    }
+
+    /// <summary>
+    /// 开局预热前瞻输入窗口，保证锁步起始若干帧不因“未来输入”缺失而卡住。
+    /// 预热帧会写入中性输入；真实输入从 <see cref="ResolveCaptureFrame"/> 产出的未来帧开始生效。
+    /// </summary>
+    public void PrepareLockstepInputBuffer(uint startLogicFrame, bool singlePlayerMode, bool[] activePlayers)
+    {
+        if (!_isInitialized || singlePlayerMode || activePlayers == null)
+            return;
+
+        int delay = MultiplayerInputDelayFrames;
+        if (delay <= 0)
+            return;
+
+        for (int p = 0; p < MAX_PLAYERS; p++)
+        {
+            if (!activePlayers[p])
+                continue;
+
+            for (int i = 0; i < delay; i++)
+            {
+                uint warmupFrame = startLogicFrame + (uint)i;
+                WriteNeutralInputForPlayer((byte)p, warmupFrame);
+            }
+        }
+    }
+
+    int TryFindFirstMissingPlayer(uint logicFrame, bool[] activePlayers, byte eliminatedMask = 0)
+    {
+        if (!_isInitialized || activePlayers == null)
+            return -1;
+
+        for (int i = 0; i < MAX_PLAYERS; i++)
+        {
+            if (!activePlayers[i])
+                continue;
+
+            if ((eliminatedMask & (1 << i)) != 0)
+                continue;
+
+            if (_latestReceivedFrame[i] < logicFrame)
+                return i;
+
+            int index = (int)(logicFrame & BUFFER_MASK);
+            if (_inputFrames[i][index].frame != logicFrame)
+                return i;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// 已淘汰玩家不再发网包时，各端本地注入中性输入，避免锁步永久等待。
+    /// </summary>
+    public void FillNeutralInputsForEliminated(uint logicFrame, bool[] activePlayers, byte eliminatedMask)
+    {
+        if (!_isInitialized || activePlayers == null || eliminatedMask == 0)
+            return;
+
+        for (int i = 0; i < MAX_PLAYERS; i++)
+        {
+            if (!activePlayers[i] || (eliminatedMask & (1 << i)) == 0)
+                continue;
+
+            WriteNeutralInputForPlayer((byte)i, logicFrame);
+        }
+    }
+
+    public void WriteNeutralInputForPlayer(byte playerIndex, uint logicFrame)
+    {
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS)
+            return;
+
+        int index = (int)(logicFrame & BUFFER_MASK);
+        _inputFrames[playerIndex][index] = FrameInput.Create(
+            logicFrame, playerIndex, 0, 0, false, false, false, false);
+
+        if (logicFrame > _latestReceivedFrame[playerIndex])
+            _latestReceivedFrame[playerIndex] = logicFrame;
     }
 
     // --- 核心逻辑修改 ---
@@ -210,6 +393,36 @@ public class InputManager : SingletonMono<InputManager>
         }
     }
 
+    /// <summary>
+    /// 重发本地输入窗口，提升 UDP 丢包下的锁步恢复能力。
+    /// 通常在 BattleManager 每次尝试推进时调用，范围为 [等待帧, 前瞻采集帧]。
+    /// </summary>
+    public void BroadcastInputWindow(byte playerIndex, uint minFrameInclusive, uint maxFrameInclusive)
+    {
+        if (!_isInitialized || playerIndex >= MAX_PLAYERS)
+            return;
+
+        var net = NetworkManager.Instance;
+        if (net == null || net.NetworkRole == NetworkRole.None)
+            return;
+
+        if (maxFrameInclusive < minFrameInclusive)
+            return;
+
+        uint frame = minFrameInclusive;
+        while (true)
+        {
+            int index = (int)(frame & BUFFER_MASK);
+            var input = _inputFrames[playerIndex][index];
+            if (input.frame == frame)
+                BroadcastLocalInput(input);
+
+            if (frame == maxFrameInclusive || frame == uint.MaxValue)
+                break;
+            frame++;
+        }
+    }
+
     public void AddRemoteInput(FrameInput input)
     {
         if (!_isInitialized || input.playerIndex >= MAX_PLAYERS) return;
@@ -242,31 +455,27 @@ public class InputManager : SingletonMono<InputManager>
     }
 
     // --- 就绪检查优化 ---
-    public bool AreAllInputsReady(uint logicFrame, bool[] activePlayers)
+    /// <param name="eliminatedMask">已生命归零、不再参与锁步的玩家位掩码。</param>
+    public bool AreAllInputsReady(uint logicFrame, bool[] activePlayers, byte eliminatedMask = 0)
     {
         if (!_isInitialized || activePlayers == null) return false;
 
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
-            if (activePlayers[i])
-            {
-                // 【优化】直接比较最大帧号，O(1) 复杂度，无哈希查找
-                if (_latestReceivedFrame[i] < logicFrame)
-                {
-                    return false;
-                }
+            if (!activePlayers[i])
+                continue;
 
-                // 双重保险：防止环形缓冲覆盖导致读取到错误的旧帧 (虽然逻辑帧号检查通常足够)
-                // 如果逻辑帧号比最新帧小很多，可能已经被覆盖了？
-                // 只要 BUFFER_SIZE > 最大延迟帧数，这里取到的 frame 一定匹配 logicFrame
-                int index = (int)(logicFrame & BUFFER_MASK);
-                if (_inputFrames[i][index].frame != logicFrame)
-                {
-                    // 这种情况说明帧号回绕了且新数据还没到，或者数据丢失
-                    return false;
-                }
-            }
+            if ((eliminatedMask & (1 << i)) != 0)
+                continue;
+
+            if (_latestReceivedFrame[i] < logicFrame)
+                return false;
+
+            int index = (int)(logicFrame & BUFFER_MASK);
+            if (_inputFrames[i][index].frame != logicFrame)
+                return false;
         }
+
         return true;
     }
     public FrameInput GetInputForFrame(byte playerIndex, uint logicFrame)
@@ -341,6 +550,32 @@ public class InputManager : SingletonMono<InputManager>
         _inputDebugHud.SetVisible(true);
 
         _debugSb.Clear();
+
+        var battle = BattleManager.Instance;
+        if (battle != null
+            && battle.CurrentStatus == E_BattleStatus.InBattle
+            && !battle.isSinglePlayerMode)
+        {
+            float stallPct = RecentStallRatio * 100f;
+            _debugSb.Append("<color=#ffaa66>锁步(最近")
+                .Append(RecentSampleCount)
+                .Append("样本): 等待 ")
+                .Append(RecentStallCount)
+                .Append(" / 推进 ")
+                .Append(RecentSuccessCount)
+                .Append(" (")
+                .Append(stallPct.ToString("F0"))
+                .Append("%)")
+                .Append("  延迟缓冲:")
+                .Append(MultiplayerInputDelayFrames)
+                .Append("f</color>\n");
+            if (_lastStalledPlayerIndex >= 0)
+            {
+                _debugSb.Append("  缺输入: F").Append(_lastStalledLogicFrame)
+                    .Append(" P").Append(_lastStalledPlayerIndex).Append('\n');
+            }
+        }
+
         for (int i = 0; i < MAX_PLAYERS; i++)
         {
             var inp = GetDebugInput((byte)i);

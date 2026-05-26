@@ -1,11 +1,16 @@
 using System;
 using Unity.Networking.Transport;
 
+public enum RoomJoinState
+{
+    None,
+    Connecting,
+    InRoom,
+}
+
 [Serializable]
 public struct RoomInfo
 {
-    public int RoomId;
-    public string HostName;
     public string IpAddress;
     public ushort Port;
 
@@ -14,69 +19,135 @@ public struct RoomInfo
 
     public override readonly string ToString()
     {
-        return $"[{RoomId}] {HostName} ({PlayerCount}/{MaxPlayers}) @ {IpAddress}:{Port}";
+        return $"({PlayerCount}/{MaxPlayers}) @ {IpAddress}:{Port}";
     }
 }
 
 public class RoomManager : SingletonMono<RoomManager>
 {
-    // ====== 事件（UI 用）======
-    //public event Action OnRoomCreated;
-    public event Action<RoomInfo> OnRoomInfoUpdated; // 房间信息更新事件
+    public event Action<RoomInfo> OnRoomInfoUpdated;
+    public event Action OnJoinStarted;
+    public event Action OnJoinSucceeded;
+    public event Action<string> OnJoinFailed;
+    public event Action OnRoomLeft;
+    public event Action<string> OnDisconnectedFromHost;
 
-    // ====== 状态 ======
     public RoomInfo? CurrentRoom { get; private set; }
-    public bool IsInRoom => CurrentRoom.HasValue;
-    public bool IsHost => NetworkManager.Instance.NetworkRole == NetworkRole.Host;
+    public RoomJoinState JoinState { get; private set; } = RoomJoinState.None;
+    public bool IsInRoom => JoinState == RoomJoinState.InRoom && CurrentRoom.HasValue;
+    public bool IsHost => NetworkManager.Instance != null
+        && NetworkManager.Instance.NetworkRole == NetworkRole.Host;
     public int PlayerCount => CurrentRoom?.PlayerCount ?? 0;
 
     public static byte LocalPlayerIndex;
 
-    // ====== 房间操作 ======
+    string _pendingJoinIp;
+    ushort _pendingJoinPort;
+    bool _networkEventsBound;
 
-    public void CreateRoom(string hostName, ushort port = 7777, byte maxPlayers = 4)
+    protected override void OnSingletonInit()
     {
-        if (IsInRoom) LeaveRoom();
+        BindNetworkEvents();
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        UnbindNetworkEvents();
+        base.OnSingletonDestroy();
+    }
+
+    void BindNetworkEvents()
+    {
+        if (_networkEventsBound)
+            return;
+
+        NetworkManager.OnConnectionFailed += HandleConnectionFailed;
+        NetworkManager.OnSelfClientDisconnected += HandleSelfClientDisconnected;
+        NetworkManager.OnHostClientDisconnected += HandleHostClientDisconnected;
+        _networkEventsBound = true;
+    }
+
+    void UnbindNetworkEvents()
+    {
+        if (!_networkEventsBound)
+            return;
+
+        NetworkManager.OnConnectionFailed -= HandleConnectionFailed;
+        NetworkManager.OnSelfClientDisconnected -= HandleSelfClientDisconnected;
+        NetworkManager.OnHostClientDisconnected -= HandleHostClientDisconnected;
+        _networkEventsBound = false;
+    }
+
+    public void CreateRoom(ushort port = 7777, byte maxPlayers = 4)
+    {
+        ResetSession();
 
         LocalPlayerIndex = 0;
 
-        // 获取本机局域网 IP
         string localIP = NetworkTool.GetLocalIPAddress();
 
         CurrentRoom = new RoomInfo
         {
-            RoomId = UnityEngine.Random.Range(10000, 99999),
-            HostName = hostName,
             PlayerCount = 1,
             MaxPlayers = maxPlayers,
             IpAddress = localIP,
             Port = port
         };
 
-        // 启动主机
         NetworkManager.Instance.StartHost(port);
+        JoinState = RoomJoinState.InRoom;
 
         Logger.Info($"Created: {CurrentRoom}", LogTag.Room);
+        OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
     }
 
-    public void TryJoinRoom(string ip, ushort port)
+    public bool TryJoinRoom(string ip, ushort port)
     {
-        if (IsInRoom) LeaveRoom();
+        BindNetworkEvents();
 
-        NetworkManager.Instance.StartClient(ip, port);
+        ip = ip?.Trim();
+        if (!NetworkTool.IsValidHostAddress(ip))
+        {
+            NotifyJoinFailed("IP 地址格式无效");
+            return false;
+        }
+
+        ResetSession();
+
+        _pendingJoinIp = ip;
+        _pendingJoinPort = port;
+        JoinState = RoomJoinState.Connecting;
+        OnJoinStarted?.Invoke();
+
+        if (!NetworkManager.Instance.StartClient(ip, port))
+        {
+            FailJoin("无法连接到目标地址，请检查 IP 和端口");
+            return false;
+        }
+
+        Logger.Info($"Joining room at {ip}:{port}", LogTag.Room);
+        return true;
+    }
+
+    public void CancelJoinAttempt()
+    {
+        if (JoinState != RoomJoinState.Connecting)
+            return;
+
+        ResetSession();
+        Logger.Info("Join attempt cancelled.", LogTag.Room);
     }
 
     public void LeaveRoom()
     {
-        if (!IsInRoom) return;
+        if (JoinState == RoomJoinState.None)
+            return;
 
-        NetworkManager.Instance.ShutDown();
-        CurrentRoom = null;
-
+        ResetSession();
         Logger.Info("Left room", LogTag.Room);
+        OnRoomLeft?.Invoke();
     }
 
-    /// <summary>房主开始游戏：广播后进战斗场景（与客户端共用 <see cref="HandleEnterBattleScene"/>）。</summary>
     public void EnterBattleScene()
     {
         if (!IsHost || !IsInRoom) return;
@@ -85,24 +156,34 @@ public class RoomManager : SingletonMono<RoomManager>
         HandleEnterBattleScene();
     }
 
-    public void HandlePlayerJoinRequest(NetworkConnection conn, string playerName)
+    public void HandlePlayerJoinRequest(NetworkConnection conn)
     {
-        if(!IsInRoom) return;
+        if (!IsHost || !IsInRoom)
+            return;
+
+        var room = CurrentRoom.Value;
+        if (room.PlayerCount >= room.MaxPlayers)
+        {
+            NetworkManager.Instance.SendToClient(conn, new JoinResponseMSG { accepted = false });
+            NetworkManager.Instance.DisconnectClient(conn);
+            Logger.Warn("Rejected join request: room full.", LogTag.Room);
+            return;
+        }
 
         CurrentRoom = new RoomInfo
         {
-            RoomId = CurrentRoom.Value.RoomId,
-            HostName = CurrentRoom.Value.HostName,
-            IpAddress = CurrentRoom.Value.IpAddress,
-            Port = CurrentRoom.Value.Port,
-            MaxPlayers = CurrentRoom.Value.MaxPlayers,
-            PlayerCount = (byte)(CurrentRoom.Value.PlayerCount + 1)
+            IpAddress = room.IpAddress,
+            Port = room.Port,
+            MaxPlayers = room.MaxPlayers,
+            PlayerCount = (byte)(room.PlayerCount + 1)
         };
 
-
-        NetworkManager.Instance.SendToClient(conn, new JoinResponseMSG()
+        byte assignedIndex = (byte)(CurrentRoom.Value.PlayerCount - 1);
+        NetworkManager.Instance.SendToClient(conn, new JoinResponseMSG
         {
-            assignedPlayerIndex = (byte)(CurrentRoom.Value.PlayerCount - 1)
+            accepted = true,
+            assignedPlayerIndex = assignedIndex,
+            roomInfo = CurrentRoom.Value
         });
 
         NetworkManager.Instance.Broadcast(new RoomStateMSG
@@ -110,19 +191,42 @@ public class RoomManager : SingletonMono<RoomManager>
             roomInfo = CurrentRoom.Value
         });
 
-        Logger.Debug(CurrentRoom.Value.ToString());
-
+        Logger.Debug(CurrentRoom.Value.ToString(), LogTag.Room);
         OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
     }
 
-    public void HandlePlayerJoinResponse(byte playerIndex)
+    public void HandlePlayerJoinResponse(in JoinResponseMSG response)
     {
-        LocalPlayerIndex = playerIndex;
-        UIManager.Instance.ShowPanelAsync<RoomPanel>().Forget();
+        if (JoinState != RoomJoinState.Connecting)
+            return;
+
+        if (!response.accepted)
+        {
+            FailJoin("房间已满或无法加入");
+            return;
+        }
+
+        LocalPlayerIndex = response.assignedPlayerIndex;
+        CurrentRoom = response.roomInfo;
+        JoinState = RoomJoinState.InRoom;
+        _pendingJoinIp = null;
+
+        Logger.Info($"Joined room as player {LocalPlayerIndex}: {CurrentRoom}", LogTag.Room);
+        OnJoinSucceeded?.Invoke();
+        OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ClosePanel<JoinRoomInputPanel>();
+            UIManager.Instance.ShowPanelAsync<RoomPanel>().Forget();
+        }
     }
 
     public void HandleRoomStateUpdate(RoomInfo roomInfo)
     {
+        if (JoinState == RoomJoinState.None)
+            return;
+
         CurrentRoom = roomInfo;
         OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
     }
@@ -131,4 +235,85 @@ public class RoomManager : SingletonMono<RoomManager>
     {
         BattleManager.Instance.LoadBattleSceneAndShowPrepareAsync().Forget();
     }
+
+    void HandleConnectionFailed(string reason)
+    {
+        if (JoinState != RoomJoinState.Connecting)
+            return;
+
+        FailJoin(TranslateConnectionError(reason));
+    }
+
+    void HandleSelfClientDisconnected()
+    {
+        if (JoinState == RoomJoinState.Connecting)
+        {
+            FailJoin("连接已断开");
+            return;
+        }
+
+        if (IsInRoom && !IsHost)
+        {
+            string message = "已与主机断开连接";
+            ResetSession();
+            OnDisconnectedFromHost?.Invoke(message);
+        }
+    }
+
+    void HandleHostClientDisconnected()
+    {
+        if (!IsHost || !IsInRoom || !CurrentRoom.HasValue)
+            return;
+
+        var room = CurrentRoom.Value;
+        if (room.PlayerCount <= 1)
+            return;
+
+        CurrentRoom = new RoomInfo
+        {
+            IpAddress = room.IpAddress,
+            Port = room.Port,
+            MaxPlayers = room.MaxPlayers,
+            PlayerCount = (byte)(room.PlayerCount - 1)
+        };
+
+        NetworkManager.Instance.Broadcast(new RoomStateMSG
+        {
+            roomInfo = CurrentRoom.Value
+        });
+
+        Logger.Info($"Client left room. PlayerCount={CurrentRoom.Value.PlayerCount}", LogTag.Room);
+        OnRoomInfoUpdated?.Invoke(CurrentRoom.Value);
+    }
+
+    void ResetSession()
+    {
+        if (NetworkManager.Instance != null)
+            NetworkManager.Instance.ShutDown();
+
+        CurrentRoom = null;
+        JoinState = RoomJoinState.None;
+        _pendingJoinIp = null;
+        _pendingJoinPort = 0;
+    }
+
+    void FailJoin(string message)
+    {
+        ResetSession();
+        NotifyJoinFailed(message);
+    }
+
+    void NotifyJoinFailed(string message)
+    {
+        Logger.Warn(message, LogTag.Room);
+        OnJoinFailed?.Invoke(message);
+    }
+
+    static string TranslateConnectionError(string reason) =>
+        reason switch
+        {
+            "Connection timeout" => "连接超时，请检查 IP 和端口",
+            "Connection failed" => "连接失败，请检查 IP 和端口",
+            _ => string.IsNullOrEmpty(reason) ? "连接失败" : reason
+        };
 }

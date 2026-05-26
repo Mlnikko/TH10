@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class WeaponSelectionUI : MonoBehaviour
 {
+    const bool ShowWeaponIcon = false;
+
     public TMP_Text nameLabel;
     public Image iconImage;
     public Button selectButton;
@@ -22,6 +24,16 @@ public class WeaponSelectionUI : MonoBehaviour
         nameLabel.text = config.GetSelectionDisplayName();
         weaponId = config.weaponID;
 
+        if (iconImage == null)
+            return;
+
+        if (!ShowWeaponIcon)
+        {
+            iconImage.gameObject.SetActive(false);
+            return;
+        }
+
+        iconImage.gameObject.SetActive(true);
         string spriteId = config.ConfigId;
         var sprite = GameResDB.Instance.GetSpriteFromAtlas("weapon", spriteId);
 

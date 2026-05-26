@@ -25,6 +25,10 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 {
     public EnemyType enemyType;
 
+    [Header("标识")]
+    [Tooltip("战斗 HUD 等处显示的敌人名称；Boss 建议填写，留空则不显示名称。")]
+    public string displayName;
+
     /// <summary>池 archetype 固定为 <see cref="EnemyPrefabArchetypes.Unit"/>。</summary>
     [NonSerialized] public int enemyPrefabIndex;
 

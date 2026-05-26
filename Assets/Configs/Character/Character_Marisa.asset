@@ -19,7 +19,10 @@ MonoBehaviour:
   - weapon_marisa_red
   - weapon_marisa_blue
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"
-  maxHealth: 1
+  maxHealth: 999
+  deathRespawnDelay: 0.5
+  postHitInvincibleDuration: 2
+  deathPowerDropConfigId: drop_rpr_s
   moveSpeed: 2.2
   moveSlowSpeed: 1.1
   moveColliderConfig:
