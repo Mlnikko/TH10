@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: Boss_Stage1
   m_EditorClassIdentifier: 
   enemyType: 3
-  enemyPrefabId: boss_stage1
+  enemyPrefabId: enemy_tpl_unit
+  displaySprite: {fileID: 484668414, guid: 96589b45dcb41de4da76a8c1baa402ca, type: 3}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  displayScale: 1
+  animatorController: {fileID: 9100000, guid: f914353b3558ee842bba94d07c300a43, type: 2}
   emitterConfigId: dme_enemy_ring_spread
   maxHealth: 1000
   colliderConfig:

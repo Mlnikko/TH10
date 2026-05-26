@@ -27,33 +27,9 @@ MonoBehaviour:
   - categoryName: "\u654C\u4EBA"
     category: 1
     entries:
-    - prefabId: minion_fariy_blue
-      maxCapacity: 200
-      defaultWarmupCount: 50
-      allowForceRecycle: 0
-    - prefabId: minion_fariy_green
-      maxCapacity: 200
-      defaultWarmupCount: 50
-      allowForceRecycle: 0
-    - prefabId: minion_fariy_red
-      maxCapacity: 200
-      defaultWarmupCount: 50
-      allowForceRecycle: 0
-    - prefabId: minion_fariy_yellow
-      maxCapacity: 200
-      defaultWarmupCount: 50
-      allowForceRecycle: 0
-    - prefabId: elite_fariy
-      maxCapacity: 50
-      defaultWarmupCount: 50
-      allowForceRecycle: 0
-    - prefabId: boss_stage1
-      maxCapacity: 1
-      defaultWarmupCount: 1
-      allowForceRecycle: 0
-    - prefabId: midboss_stage1
-      maxCapacity: 1
-      defaultWarmupCount: 1
+    - prefabId: enemy_tpl_unit
+      maxCapacity: 250
+      defaultWarmupCount: 200
       allowForceRecycle: 0
   - categoryName: "\u5F39\u5E55"
     category: 2
@@ -77,107 +53,23 @@ MonoBehaviour:
   - categoryName: "\u6389\u843D\u7269"
     category: 3
     entries:
-    - prefabId: drop_bpt_s
-      maxCapacity: 100
-      defaultWarmupCount: 100
-      allowForceRecycle: 0
-    - prefabId: drop_bpt_b
-      maxCapacity: 100
-      defaultWarmupCount: 100
-      allowForceRecycle: 0
-    - prefabId: drop_gpt_s
-      maxCapacity: 100
-      defaultWarmupCount: 100
-      allowForceRecycle: 0
-    - prefabId: drop_rpr_s
-      maxCapacity: 100
-      defaultWarmupCount: 100
-      allowForceRecycle: 0
-    - prefabId: drop_rpr_b
-      maxCapacity: 100
-      defaultWarmupCount: 100
-      allowForceRecycle: 0
-    - prefabId: drop_fpr
-      maxCapacity: 10
-      defaultWarmupCount: 10
-      allowForceRecycle: 0
-    - prefabId: drop_hp
-      maxCapacity: 10
-      defaultWarmupCount: 10
+    - prefabId: drop_tpl_pickup
+      maxCapacity: 620
+      defaultWarmupCount: 620
       allowForceRecycle: 0
   - categoryName: "\u6B66\u5668"
     category: 5
     entries:
-    - prefabId: weapon_reimu_blue
-      maxCapacity: 4
-      defaultWarmupCount: 4
-      allowForceRecycle: 0
-    - prefabId: weapon_reimu_pink
-      maxCapacity: 4
-      defaultWarmupCount: 4
-      allowForceRecycle: 0
-    - prefabId: weapon_reimu_red
-      maxCapacity: 4
-      defaultWarmupCount: 4
-      allowForceRecycle: 0
-    - prefabId: weapon_marisa_blue
-      maxCapacity: 4
-      defaultWarmupCount: 4
-      allowForceRecycle: 0
-    - prefabId: weapon_marisa_green
-      maxCapacity: 4
-      defaultWarmupCount: 4
-      allowForceRecycle: 0
-    - prefabId: weapon_marisa_red
+    - prefabId: weapon_tpl_layout
       maxCapacity: 4
       defaultWarmupCount: 4
       allowForceRecycle: 0
   - categoryName: "\u53D1\u5C04\u5668"
     category: 6
     entries:
-    - prefabId: dme_test
-      maxCapacity: 32
-      defaultWarmupCount: 32
-      allowForceRecycle: 0
-    - prefabId: dme_reimu_main_red
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_reimu_main_pink
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_reimu_blue
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_reimu_red
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_reimu_pink
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_marisa_blue
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_marisa_green
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_marisa_main
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_marisa_red
-      maxCapacity: 16
-      defaultWarmupCount: 16
-      allowForceRecycle: 0
-    - prefabId: dme_enemy_toplayer
-      maxCapacity: 30
-      defaultWarmupCount: 30
+    - prefabId: dme_tpl_sprite
+      maxCapacity: 64
+      defaultWarmupCount: 48
       allowForceRecycle: 0
   - categoryName: "\u7279\u6548"
     category: 4

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Weapon_Marisa_Green
   m_EditorClassIdentifier: 
   weaponID: 20
-  weaponPrefabId: weapon_marisa_green
+  weaponPrefabId: weapon_tpl_layout
   display:
     selectionName: 
     description: 

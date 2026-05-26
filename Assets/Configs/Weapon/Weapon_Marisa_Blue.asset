@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Weapon_Marisa_Blue
   m_EditorClassIdentifier: 
   weaponID: 10
-  weaponPrefabId: weapon_marisa_blue
+  weaponPrefabId: weapon_tpl_layout
   display:
     selectionName: 
     description: 

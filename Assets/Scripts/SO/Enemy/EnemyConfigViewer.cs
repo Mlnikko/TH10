@@ -12,6 +12,12 @@ public class EnemyConfigViewer : GameConfigViewerBase
     [Header("敌人预制体")]
     [SerializeField] string enemyPrefabId;
 
+    [Header("表现")]
+    [SerializeField] Sprite displaySprite;
+    [SerializeField] Color displayColor = Color.white;
+    [SerializeField] float displayScale = 1f;
+    [SerializeField] RuntimeAnimatorController animatorController;
+
     [Header("敌人属性设置")]
     [SerializeField] EnemyType enemyType;
     [SerializeField] int maxHealth;
@@ -39,6 +45,10 @@ public class EnemyConfigViewer : GameConfigViewerBase
             return;
 
         enemyPrefabId = enemyConfig.enemyPrefabId;
+        displaySprite = enemyConfig.displaySprite;
+        displayColor = enemyConfig.displayColor;
+        displayScale = enemyConfig.displayScale;
+        animatorController = enemyConfig.animatorController;
         enemyType = enemyConfig.enemyType;
         maxHealth = enemyConfig.maxHealth;
         colliderConfig = enemyConfig.colliderConfig;
@@ -47,8 +57,12 @@ public class EnemyConfigViewer : GameConfigViewerBase
             : System.Array.Empty<DeathDropEntry>();
         deathEffectPrefabId = enemyConfig.deathEffectPrefabId;
 
+        ApplyEditorPreview();
         Logger.Debug($"已加载敌人配置：{enemyConfig.name}");
     }
+
+    protected override void ApplyEditorPreview() =>
+        EnemyPresentation.Apply(displaySprite, displayColor, displayScale, animatorController, gameObject);
 
     public void SaveEnemyConfig()
     {
@@ -56,6 +70,10 @@ public class EnemyConfigViewer : GameConfigViewerBase
         enemyConfig.enemyPrefabId = string.IsNullOrWhiteSpace(enemyPrefabId)
             ? string.Empty
             : enemyPrefabId.ToLowerInvariantTrimmed();
+        enemyConfig.displaySprite = displaySprite;
+        enemyConfig.displayColor = displayColor;
+        enemyConfig.displayScale = displayScale;
+        enemyConfig.animatorController = animatorController;
         enemyConfig.enemyType = enemyType;
         enemyConfig.maxHealth = maxHealth;
         enemyConfig.colliderConfig = colliderConfig;

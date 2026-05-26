@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: Minion_Fariy_Yellow
   m_EditorClassIdentifier: 
   enemyType: 1
-  enemyPrefabId: minion_fariy_yellow
+  enemyPrefabId: enemy_tpl_unit
+  displaySprite: {fileID: -388034061, guid: 10d6831266fa6db499680189a87e8523, type: 3}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  displayScale: 1
+  animatorController: {fileID: 22100000, guid: 4685a415f11dc834f903ba680fe84149, type: 2}
   emitterConfigId: dme_enemy_wave_fan
   maxHealth: 10
   colliderConfig:
@@ -24,6 +28,9 @@ MonoBehaviour:
     radius: 0.08
     boxSize: {x: 0, y: 0}
     offset: {x: 0, y: 0}
+  dropOnDeathEntries:
+  - dropConfigId: drop_gpt_s
+    count: 1
   dropOnDeathConfigIds:
   - drop_gpt_s
   deathEffectPrefabId: effect_dead_red

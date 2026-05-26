@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: MidBoss_Stage1
   m_EditorClassIdentifier: 
   enemyType: 3
-  enemyPrefabId: midboss_stage1
+  enemyPrefabId: enemy_tpl_unit
+  displaySprite: {fileID: -1459827311, guid: 96589b45dcb41de4da76a8c1baa402ca, type: 3}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  displayScale: 1
+  animatorController: {fileID: 22100000, guid: 99cc94f8a272a7f44addc3b347c3a28d, type: 2}
   emitterConfigId: dme_enemy_wave_fan
   maxHealth: 1000
   colliderConfig:

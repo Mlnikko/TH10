@@ -24,9 +24,7 @@ public static class ConfigViewerPrefabSync
         if (prefab == null)
             return;
 
-        if (!TryApplySprite(prefab, config.displaySprite))
-            return;
-
+        DanmakuEmitterPresentation.Apply(config, prefab);
         MarkPrefabDirty(prefab);
 
         var viewer = prefab.GetComponent<DanmakuEmitterConfigViewer>();

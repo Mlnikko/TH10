@@ -14,38 +14,28 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
         var previousConfig = Viewer.emitterConfig;
 
         var configRef = serializedObject.FindProperty(EmitterConfigField);
-        EditorGUI.BeginChangeCheck();
-        EditorGUILayout.PropertyField(configRef, new GUIContent("配置文件"));
-        bool emitterConfigRefChanged = EditorGUI.EndChangeCheck();
+        bool emitterConfigRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(
+            configRef,
+            new GUIContent("配置文件"));
 
         DrawEmitterConfigResourceFields(Viewer);
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", EmitterConfigField);
+        bool inspectorChanged = DanmakuEmitterModeInspectorUI.DrawViewerInspector(
+            serializedObject,
+            new[] { EmitterConfigField });
 
         serializedObject.ApplyModifiedProperties();
 
-        if (emitterConfigRefChanged && !serializedObject.isEditingMultipleObjects)
-            SyncViewerWhenEmitterConfigChanged(Viewer, previousConfig);
+        if (inspectorChanged)
+        {
+            serializedObject.Update();
+            Repaint();
+        }
 
-        serializedObject.Update();
+        ApplyConfigReferenceSync(previousConfig, Viewer.emitterConfig, emitterConfigRefChanged);
 
         ConfigViewerEditorUI.DrawSeparator();
         DrawViewerTools();
-    }
-
-    static void SyncViewerWhenEmitterConfigChanged(
-        DanmakuEmitterConfigViewer viewer,
-        DanmakuEmitterConfig previousConfig)
-    {
-        if (viewer == null || viewer.emitterConfig == previousConfig)
-            return;
-
-        viewer.StopAllEditorPreviews();
-        if (viewer.emitterConfig != null)
-            viewer.SyncFromConfigInEditor();
-
-        EditorUtility.SetDirty(viewer);
-        SceneView.RepaintAll();
     }
 
     static void DrawEmitterConfigResourceFields(DanmakuEmitterConfigViewer viewer)
@@ -88,7 +78,7 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
         if (DrawMissingConfig(Viewer.emitterConfig, "DanmakuEmitterConfig"))
             return;
 
-        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 DanmakuEmitterConfig 同步发射参数。");
+        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 DanmakuEmitterConfig 同步发射参数与 displaySprite。");
 
         using (new EditorGUILayout.HorizontalScope())
         {

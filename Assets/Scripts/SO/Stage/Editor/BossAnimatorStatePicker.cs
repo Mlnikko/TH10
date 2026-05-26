@@ -92,18 +92,18 @@ static class BossAnimatorStatePicker
             return names;
 
         var enemyCfg = LoadEnemyConfig(enemyConfigId);
-        if (enemyCfg == null || string.IsNullOrWhiteSpace(enemyCfg.enemyPrefabId))
+        if (enemyCfg == null)
             return names;
 
-        var prefab = LoadEnemyPrefab(enemyCfg.enemyPrefabId);
-        if (prefab == null)
-            return names;
+        AnimatorController controller = enemyCfg.animatorController as AnimatorController;
+        if (controller == null && !string.IsNullOrWhiteSpace(enemyCfg.enemyPrefabId))
+        {
+            var prefab = LoadEnemyPrefab(enemyCfg.enemyPrefabId);
+            if (prefab != null
+                && prefab.TryGetComponent<Animator>(out var animator))
+                controller = ResolveAnimatorController(animator.runtimeAnimatorController);
+        }
 
-        var animator = prefab.GetComponent<Animator>();
-        if (animator == null)
-            return names;
-
-        var controller = ResolveAnimatorController(animator.runtimeAnimatorController);
         if (controller == null)
             return names;
 

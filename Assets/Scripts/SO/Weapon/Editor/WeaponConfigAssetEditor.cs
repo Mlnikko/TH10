@@ -14,6 +14,10 @@ public class WeaponConfigAssetEditor : Editor
     {
         serializedObject.Update();
 
+        EditorGUILayout.HelpBox(
+            "武器池化预制体共用 WeaponPrefabArchetypes.Layout；发射器挂点由 WeaponRuntimeLayoutView 按本配置动态创建。",
+            MessageType.Info);
+
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))

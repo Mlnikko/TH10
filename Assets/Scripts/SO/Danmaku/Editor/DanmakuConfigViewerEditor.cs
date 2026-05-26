@@ -13,9 +13,10 @@ public class DanmakuConfigViewerEditor : GameConfigViewerEditor<DanmakuConfigVie
     {
         serializedObject.Update();
 
+        var previousConfig = Viewer.danmakuConfig;
+
         var configRef = serializedObject.FindProperty(ConfigField);
-        if (configRef != null)
-            EditorGUILayout.PropertyField(configRef);
+        bool configRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(configRef);
 
         var prefabId = serializedObject.FindProperty(PrefabIdField);
         if (prefabId != null)
@@ -35,6 +36,7 @@ public class DanmakuConfigViewerEditor : GameConfigViewerEditor<DanmakuConfigVie
         DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField, PrefabIdField, HitEffectField);
 
         serializedObject.ApplyModifiedProperties();
+        ApplyConfigReferenceSync(previousConfig, Viewer.danmakuConfig, configRefChanged);
 
         ConfigViewerEditorUI.DrawSeparator();
         DrawViewerTools();
@@ -45,7 +47,7 @@ public class DanmakuConfigViewerEditor : GameConfigViewerEditor<DanmakuConfigVie
         if (DrawMissingConfig(Viewer.danmakuConfig, "DanmakuConfig"))
             return;
 
-        DrawSyncHint();
+        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 DanmakuConfig 同步参数与 Sprite 预览。");
 
         using (new EditorGUILayout.HorizontalScope())
         {

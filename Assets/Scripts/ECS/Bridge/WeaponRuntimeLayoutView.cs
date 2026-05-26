@@ -126,6 +126,7 @@ public sealed class WeaponRuntimeLayoutView
             instance.transform.SetParent(_layoutRoot, true);
             instance.name = point.label;
             instance.SetActive(true);
+            DanmakuEmitterPresentation.Apply(point.emitterCfg, instance);
 
             _visuals.Add(new VisualEntry
             {
@@ -133,7 +134,7 @@ public sealed class WeaponRuntimeLayoutView
                 prefabIndex = point.emitterPrefabIndex,
                 emitterCfg = point.emitterCfg,
                 spinStateKey = GetSpinStateKey(point),
-                baseLocalScale = instance.transform.localScale,
+                baseLocalScale = Vector3.one,
             });
         }
 

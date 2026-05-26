@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DME_Enemy_Wave_Fan
   m_EditorClassIdentifier: 
-  emitterPrefabId: dme_enemy_toplayer
+  emitterPrefabId: dme_tpl_sprite
   danmakuConfigIds:
   - dm_boll
   danmakuSelectMode: 0
@@ -20,7 +20,7 @@ MonoBehaviour:
   launchIntervalSeconds: 0.75
   launchCount: -1
   launchSpeed: 7
-  displaySprite: {fileID: 0}
+  displaySprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
   displaySelfSpinDegreesPerSecond: 0
   displayScaleMin: 1
   displayScaleMax: 1

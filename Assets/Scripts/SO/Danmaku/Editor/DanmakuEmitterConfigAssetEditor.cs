@@ -10,6 +10,11 @@ public class DanmakuEmitterConfigAssetEditor : Editor
     {
         serializedObject.Update();
 
+        EditorGUILayout.HelpBox(
+            "emitterPrefabId 为池 archetype（见 DanmakuEmitterPrefabArchetypes）；"
+            + "displaySprite 在出池/武器布局时由 DanmakuEmitterPresentation 应用。",
+            MessageType.None);
+
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))
@@ -36,7 +41,28 @@ public class DanmakuEmitterConfigAssetEditor : Editor
                 continue;
             }
 
-            if (ShouldSkipModeProperty(serializedObject, prop.name))
+            if (prop.name == DanmakuEmitterModeInspectorUI.ConfigEmitModeField)
+            {
+                EditorGUILayout.PropertyField(prop);
+                var mode = DanmakuEmitterModeInspectorUI.ReadEmitMode(
+                    serializedObject,
+                    DanmakuEmitterModeInspectorUI.ConfigEmitModeField);
+                DanmakuEmitterModeInspectorUI.DrawEmitModeHint(mode);
+                var modeConfigName = DanmakuEmitterModeInspectorUI.GetModeConfigPropertyName(mode);
+                if (!string.IsNullOrEmpty(modeConfigName))
+                {
+                    var modeConfigProp = serializedObject.FindProperty(modeConfigName);
+                    if (modeConfigProp != null)
+                        EditorGUILayout.PropertyField(modeConfigProp, true);
+                }
+
+                continue;
+            }
+
+            if (DanmakuEmitterModeInspectorUI.ShouldSkipProperty(
+                    serializedObject,
+                    prop.name,
+                    DanmakuEmitterModeInspectorUI.ConfigEmitModeField))
                 continue;
 
             EditorGUILayout.PropertyField(prop, true);
@@ -50,23 +76,6 @@ public class DanmakuEmitterConfigAssetEditor : Editor
                     ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(cfg);
             }
         }
-    }
-
-    static bool ShouldSkipModeProperty(SerializedObject so, string propertyName)
-    {
-        var modeProp = so?.FindProperty(nameof(DanmakuEmitterConfig.emitMode));
-        if (modeProp == null)
-            return false;
-
-        var mode = (EmitMode)modeProp.enumValueIndex;
-        return propertyName switch
-        {
-            nameof(DanmakuEmitterConfig.lineModeConfig) => mode != EmitMode.Line,
-            nameof(DanmakuEmitterConfig.arcModeConfig) => mode != EmitMode.Arc,
-            nameof(DanmakuEmitterConfig.waveModeConfig) => mode != EmitMode.Wave,
-            nameof(DanmakuEmitterConfig.grainModeConfig) => mode != EmitMode.Grain,
-            _ => false,
-        };
     }
 }
 #endif

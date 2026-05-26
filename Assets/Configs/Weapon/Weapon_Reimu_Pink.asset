@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Weapon_Reimu_Pink
   m_EditorClassIdentifier: 
   weaponID: 12
-  weaponPrefabId: weapon_reimu_pink
+  weaponPrefabId: weapon_tpl_layout
   display:
     selectionName: 
     description: 

@@ -88,37 +88,16 @@ MonoBehaviour:
   - character_marisa
   - character_reimu
   weaponPrefabIds:
-  - weapon_marisa_blue
-  - weapon_marisa_green
-  - weapon_marisa_red
-  - weapon_reimu_blue
-  - weapon_reimu_pink
-  - weapon_reimu_red
+  - weapon_tpl_layout
   enemyPrefabIds:
-  - boss_stage1
-  - elite_fariy
-  - midboss_stage1
-  - minion_fariy_blue
-  - minion_fariy_green
-  - minion_fariy_red
-  - minion_fariy_yellow
+  - enemy_tpl_unit
   danmakuPrefabIds:
   - dm_boll
   - dm_star
   - dm_tpl_player_needle
   - dm_tpl_player_orb
   danmakuEmitterPrefabIds:
-  - dme_enemy_toplayer
-  - dme_marisa_blue
-  - dme_marisa_green
-  - dme_marisa_main
-  - dme_marisa_red
-  - dme_reimu_blue
-  - dme_reimu_main_pink
-  - dme_reimu_main_red
-  - dme_reimu_pink
-  - dme_reimu_red
-  - dme_test
+  - dme_tpl_sprite
   effectPrefabIds:
   - effect_dead_blue
   - effect_dead_green
@@ -127,13 +106,7 @@ MonoBehaviour:
   - effect_dm_marisa_main_dm_hit
   - effect_reimu_main_dm_red_hit
   dropItemPrefabIds:
-  - drop_bpt_b
-  - drop_bpt_s
-  - drop_fpr
-  - drop_gpt_s
-  - drop_hp
-  - drop_rpr_b
-  - drop_rpr_s
+  - drop_tpl_pickup
   characterImages:
   - character_marisa
   - character_reimu

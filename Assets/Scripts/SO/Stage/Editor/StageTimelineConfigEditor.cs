@@ -37,12 +37,32 @@ public class StageTimelineConfigEditor : Editor
         StageTimelineEmbeddedConfigEditor.Cleanup();
     }
 
+    const string TimelineConfigField = "stageTimelineConfig";
+    const string BattleAreaConfigField = "battleAreaConfig";
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
+
+        var viewer = (StageTimelineConfigViewer)target;
+        var previousTimeline = viewer.stageTimelineConfig;
+        var previousBattleArea = viewer.battleAreaConfig;
+
+        var timelineRef = serializedObject.FindProperty(TimelineConfigField);
+        bool timelineRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(
+            timelineRef,
+            new GUIContent("关卡时间轴配置"));
+
+        var battleAreaRef = serializedObject.FindProperty(BattleAreaConfigField);
+        bool battleAreaRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(
+            battleAreaRef,
+            new GUIContent("战斗区配置"));
+
         DrawPropertiesExcluding(
             serializedObject,
             "m_Script",
+            TimelineConfigField,
+            BattleAreaConfigField,
             "previewMidStageWaveIndex",
             "previewPathEditEntryIndex",
             "drawWavePathGizmo",
@@ -55,7 +75,24 @@ public class StageTimelineConfigEditor : Editor
             "pathNodeSnapCellSize",
             "drawPathNodeSnapGrid");
 
-        var viewer = (StageTimelineConfigViewer)target;
+        serializedObject.ApplyModifiedProperties();
+
+        ConfigViewerEditorUI.SyncViewerOnConfigReferenceChanged(
+            viewer,
+            previousTimeline,
+            viewer.stageTimelineConfig,
+            serializedObject,
+            timelineRefChanged);
+
+        if (battleAreaRefChanged && !serializedObject.isEditingMultipleObjects
+            && viewer.battleAreaConfig != previousBattleArea)
+        {
+            viewer.StopAllEditorPreviews();
+            EditorUtility.SetDirty(viewer);
+            SceneView.RepaintAll();
+        }
+
+        serializedObject.Update();
 
         ConfigViewerEditorUI.DrawSeparator();
         DrawPathViewSection(viewer);

@@ -60,12 +60,7 @@ public class PresentationSystem : BaseSystem
                     {
                         go.transform.position = spawnPos;
                         go.SetActive(true);
-                        if (dropCfg.pickupSprite != null)
-                        {
-                            var sr = go.GetComponentInChildren<SpriteRenderer>();
-                            if (sr != null)
-                                sr.sprite = dropCfg.pickupSprite;
-                        }
+                        DropItemPresentation.Apply(dropCfg, go);
                         updater = new DropItemUpdater(go);
                     }
                 }
@@ -146,6 +141,7 @@ public class PresentationSystem : BaseSystem
                         {
                             go.transform.position = spawnPos;
                             go.SetActive(true);
+                            EnemyPresentation.Apply(config, go);
                             if (EntityManager.HasComponent<CMidBossEncounter>(entity))
                             {
                                 ref readonly var mid = ref EntityManager.GetComponent<CMidBossEncounter>(entity);
@@ -198,6 +194,7 @@ public class PresentationSystem : BaseSystem
             return;
         }
 
+        WeaponPresentation.Apply(weaponConfig, weaponGo);
         playerUpdater.AttachWeapon(weaponGo);
     }
 

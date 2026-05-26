@@ -128,7 +128,9 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
     void ApplyDropItemSprite()
     {
-        if (pickupSprite != null && TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+        if (dropItemConfig != null)
+            DropItemPresentation.Apply(dropItemConfig, gameObject);
+        else if (pickupSprite != null && TryGetComponent<SpriteRenderer>(out var spriteRenderer))
             spriteRenderer.sprite = pickupSprite;
     }
 

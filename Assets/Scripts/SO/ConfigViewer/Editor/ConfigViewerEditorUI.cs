@@ -31,6 +31,53 @@ public static class ConfigViewerEditorUI
         EditorGUILayout.HelpBox(message ?? PrefabSyncHint, MessageType.None);
     }
 
+    /// <summary>
+    /// 绘制 Config SO 引用字段；在 <see cref="SerializedObject.ApplyModifiedProperties"/> 之前调用。
+    /// </summary>
+    public static bool DrawConfigReferenceProperty(
+        SerializedProperty configProperty,
+        GUIContent label = null)
+    {
+        if (configProperty == null)
+            return false;
+
+        EditorGUI.BeginChangeCheck();
+        if (label != null)
+            EditorGUILayout.PropertyField(configProperty, label);
+        else
+            EditorGUILayout.PropertyField(configProperty);
+
+        return EditorGUI.EndChangeCheck();
+    }
+
+    /// <summary>
+    /// Inspector 切换 Config 引用后：停止预览并从 SO 同步 Viewer 字段与表现。
+    /// </summary>
+    public static void SyncViewerOnConfigReferenceChanged(
+        GameConfigViewerBase viewer,
+        UnityEngine.Object previousConfig,
+        UnityEngine.Object currentConfig,
+        SerializedObject serializedObject,
+        bool configReferenceChanged)
+    {
+        if (!configReferenceChanged
+            || viewer == null
+            || serializedObject == null
+            || serializedObject.isEditingMultipleObjects)
+            return;
+
+        if (currentConfig == previousConfig)
+            return;
+
+        viewer.StopAllEditorPreviews();
+        if (currentConfig != null)
+            viewer.SyncFromConfigInEditor();
+
+        EditorUtility.SetDirty(viewer);
+        serializedObject.Update();
+        SceneView.RepaintAll();
+    }
+
     public static void DrawSaveButton(
         UnityEngine.Object configAsset,
         Action save,

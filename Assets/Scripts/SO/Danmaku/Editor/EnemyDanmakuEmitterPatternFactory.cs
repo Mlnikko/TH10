@@ -9,7 +9,7 @@ using UnityEngine;
 public static class EnemyDanmakuEmitterPatternFactory
 {
     const string OutputFolder = "Assets/Configs/DanmakuEmitter";
-    const string EmitterPrefabId = "dme_enemy_toplayer";
+    const string EmitterPrefabId = DanmakuEmitterPrefabArchetypes.Sprite;
     const string BulletBoll = "dm_boll";
     const string BulletStar = "dm_star";
 
@@ -18,7 +18,7 @@ public static class EnemyDanmakuEmitterPatternFactory
     const float SpeedNormal = 7f;
     const float SpeedFast = 8.5f;
 
-    [MenuItem("TH10/Danmaku/Create Enemy Emitter Patterns")]
+    /// <summary>批量生成敌人发射器 Config（仓库已含成品资产；需重建时在测试或临时 Editor 脚本中调用）。</summary>
     public static void CreateAllPatterns()
     {
         var created = new List<DanmakuEmitterConfig>();

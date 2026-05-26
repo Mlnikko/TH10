@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DME_Test
   m_EditorClassIdentifier: 
-  emitterPrefabId: dme_test
+  emitterPrefabId: dme_tpl_sprite
   danmakuConfigIds:
   - dm_test
   danmakuSelectMode: 0

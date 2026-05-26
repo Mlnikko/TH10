@@ -4,11 +4,31 @@ using UnityEngine;
 [CustomEditor(typeof(BattleAreaConfigViewer))]
 public class BattleAreaConfigEditor : Editor
 {
+    const string ConfigField = "battleAreaConfig";
+
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();
-
         var viewer = (BattleAreaConfigViewer)target;
+
+        serializedObject.Update();
+
+        var previousConfig = viewer.battleAreaConfig;
+
+        var configRef = serializedObject.FindProperty(ConfigField);
+        bool configRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(configRef);
+
+        DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField);
+
+        serializedObject.ApplyModifiedProperties();
+
+        ConfigViewerEditorUI.SyncViewerOnConfigReferenceChanged(
+            viewer,
+            previousConfig,
+            viewer.battleAreaConfig,
+            serializedObject,
+            configRefChanged);
+
+        serializedObject.Update();
 
         ConfigViewerEditorUI.DrawSeparator();
 
@@ -16,7 +36,7 @@ public class BattleAreaConfigEditor : Editor
             return;
 
         ConfigViewerEditorUI.DrawPrefabSyncHint(
-            "双击进入预制体编辑后自动同步；Scene 视图选中物体可查看 Gizmo。调节 GridCellSize 时可见淡绿色碰撞网格。");
+            "切换配置文件或双击进入预制体编辑后，会自动从 BattleAreaConfig 同步战斗区/出生点等参数。");
         ConfigViewerEditorUI.DrawSaveButton(
             viewer.battleAreaConfig,
             () =>

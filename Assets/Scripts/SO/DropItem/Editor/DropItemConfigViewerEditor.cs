@@ -5,16 +5,17 @@ using UnityEngine;
 [CustomEditor(typeof(DropItemConfigViewer), true)]
 public class DropItemConfigViewerEditor : GameConfigViewerEditor<DropItemConfigViewer>
 {
+    const string ConfigField = "dropItemConfig";
+    const string PickupPrefabIdField = "pickupPrefabId";
+
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        const string ConfigField = "dropItemConfig";
-        const string PickupPrefabIdField = "pickupPrefabId";
+        var previousConfig = Viewer.dropItemConfig;
 
         var configRef = serializedObject.FindProperty(ConfigField);
-        if (configRef != null)
-            EditorGUILayout.PropertyField(configRef);
+        bool configRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(configRef);
 
         var prefabId = serializedObject.FindProperty(PickupPrefabIdField);
         if (prefabId != null)
@@ -23,6 +24,7 @@ public class DropItemConfigViewerEditor : GameConfigViewerEditor<DropItemConfigV
         DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField, PickupPrefabIdField);
 
         serializedObject.ApplyModifiedProperties();
+        ApplyConfigReferenceSync(previousConfig, Viewer.dropItemConfig, configRefChanged);
 
         ConfigViewerEditorUI.DrawSeparator();
         DrawViewerTools();
@@ -35,7 +37,7 @@ public class DropItemConfigViewerEditor : GameConfigViewerEditor<DropItemConfigV
         if (DrawMissingConfig(Viewer.dropItemConfig, "DropItemConfig"))
             return;
 
-        DrawSyncHint();
+        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 DropItemConfig 同步参数与 Sprite 预览。");
 
         using (new EditorGUILayout.HorizontalScope())
         {

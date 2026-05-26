@@ -14,7 +14,6 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     [Header("配置文件")]
     public DanmakuEmitterConfig emitterConfig;
 
-    [Header("发射器类型")]
     [SerializeField] EmitMode emitterType;
 
     [Header("发射器阵营")]
@@ -154,13 +153,8 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     }
 
     /// <summary>将当前 <see cref="displaySprite"/> 写入预制体上的 SpriteRenderer（编辑器用）。</summary>
-    public void SyncDisplaySpriteFromConfig()
-    {
-        if (!TryGetComponent<SpriteRenderer>(out var spriteRenderer))
-            return;
-
-        spriteRenderer.sprite = displaySprite;
-    }
+    public void SyncDisplaySpriteFromConfig() =>
+        DanmakuEmitterPresentation.Apply(displaySprite, gameObject);
 
 #if UNITY_EDITOR
     void OnValidate()

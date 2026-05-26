@@ -18,9 +18,10 @@ public class EnemyConfigEditor : Editor
 
         serializedObject.Update();
 
+        var previousConfig = viewer.EnemyConfig;
+
         var configRef = serializedObject.FindProperty(ConfigField);
-        if (configRef != null)
-            EditorGUILayout.PropertyField(configRef);
+        bool configRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(configRef);
 
         if (inPrefabStage && viewer.EnemyConfig != null)
             DrawEnemyPrefabIdFromConfig(viewer);
@@ -40,6 +41,15 @@ public class EnemyConfigEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
 
+        ConfigViewerEditorUI.SyncViewerOnConfigReferenceChanged(
+            viewer,
+            previousConfig,
+            viewer.EnemyConfig,
+            serializedObject,
+            configRefChanged);
+
+        serializedObject.Update();
+
         ConfigViewerEditorUI.DrawSeparator();
 
         if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.EnemyConfig, "EnemyConfig"))
@@ -48,7 +58,7 @@ public class EnemyConfigEditor : Editor
         ConfigViewerEditorUI.DrawPrefabSyncHint(
             inPrefabStage
                 ? "正在预制体编辑模式：掉落/死亡特效直接读写 EnemyConfig 资产。"
-                : "双击进入预制体编辑后，将自动从 EnemyConfig 同步并可编辑掉落/死亡特效。");
+                : "切换配置文件或双击进入预制体编辑后，将自动从 EnemyConfig 同步参数、Sprite 与 Animator。");
 
         ConfigViewerEditorUI.DrawSaveButton(
             viewer.EnemyConfig,

@@ -15,8 +15,15 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 {
     public EnemyType enemyType;
 
+    [Tooltip("池化预制体 archetype Id；多条 EnemyConfig 可共用，表现见下方 display* / animatorController")]
     public string enemyPrefabId;
     [NonSerialized] public int enemyPrefabIndex;
+
+    [Header("表现（出池时应用）")]
+    public Sprite displaySprite;
+    public Color displayColor = Color.white;
+    public float displayScale = 1f;
+    public RuntimeAnimatorController animatorController;
 
     public string emitterConfigId;
     [NonSerialized] public int emitterConfigIndex;

@@ -407,21 +407,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 802840e8e27e2074c99245aa3174458e
-    m_Address: prefab_dme_reimu_blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f93a67310d0fd8243af32fc357b9b4a1
-    m_Address: prefab_dme_reimu_main_red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a53889af21e396c40b0b51624e423dc8
-    m_Address: prefab_minion_fariy_blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d0aea53085226174ab2268c02d0ff896
     m_Address: prefab_characterselectionui
     m_ReadOnly: 0
@@ -844,11 +829,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cd231b9b33107bd4ea4b04ecb4e95deb
-    m_Address: prefab_dme_test
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e971af894ed361447a6c40705e97b584
     m_Address: cfg_stagetimeline_1
     m_ReadOnly: 0
@@ -969,33 +949,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1fac62fe9338dd4cbf729365b418520
-    m_Address: prefab_dme_reimu_red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 508691782c2c5ad4db2bb141614ccffa
-    m_Address: prefab_dme_reimu_pink
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bb1b1a7b53da69142b08d05dcee79fb9
-    m_Address: prefab_weapon_reimu_blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cce96cd2b75c6b64ab429113be53d686
-    m_Address: prefab_weapon_reimu_red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ff7a72542d89bd84dacdb2fb3349e601
     m_Address: prefab_effect_dead_blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 137ee34c5b6ee844c8b3eba812dbde6c
-    m_Address: prefab_minion_fariy_red
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1006,16 +961,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6844340f30ee8bd4a990a8eee33ae5f3
     m_Address: prefab_effect_dead_red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d7e48f48d1655f9448558c9c5bde4ba8
-    m_Address: prefab_minion_fariy_green
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1d05ca36f396d324abcd5bf14119bc32
-    m_Address: prefab_minion_fariy_yellow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1039,16 +984,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4d1548e85b3444b458ed48c1197ffa7e
-    m_Address: prefab_dme_marisa_main
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 63fd077dda7c2aa499b1d01a60f20239
-    m_Address: prefab_weapon_reimu_pink
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a74469bab00925d44ac65f170d8fa97f
     m_Address: cfg_dm_marisa_main
     m_ReadOnly: 0
@@ -1056,16 +991,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 34f53a9f0a85014418109c1ab821b759
     m_Address: cfg_dme_marisa_main
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c234de98dffd50b4ca41b72aad1a35db
-    m_Address: prefab_weapon_marisa_green
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 67a1719170dfb9943b1d8502df6614a0
-    m_Address: prefab_dme_marisa_green
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1089,16 +1014,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a8e61e3af7af51747bd73395b3eb9f47
-    m_Address: prefab_dme_marisa_blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 21bc7cc7eb3a7b3499d5c020d49abcb5
-    m_Address: prefab_weapon_marisa_blue
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2e7a2bf1530adc24d8a6e06d0940d6f9
     m_Address: cfg_dm_marisa_red
     m_ReadOnly: 0
@@ -1106,16 +1021,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7654e97c93892df49ba7bfa697794cf3
     m_Address: cfg_dme_marisa_red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6c02d4918879bdb4b8c38a0038e1f7f9
-    m_Address: prefab_dme_marisa_red
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3f670112a83031c48ab4d68172b59023
-    m_Address: prefab_weapon_marisa_red
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1164,11 +1069,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 91a2972afbf8d924aa52a351281ae790
-    m_Address: prefab_dme_reimu_main_pink
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 185f8222acffbb64c9658564b60c6a7e
     m_Address: cfg_dme_reimu_main_pink
     m_ReadOnly: 0
@@ -1184,11 +1084,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d393575cd764cfc4a95ffb02533fdfe5
-    m_Address: prefab_elite_fariy
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c88dbedc3d6ae5d409bdcb884f53c5bc
     m_Address: prefab_effect_dm_marisa_main_dm_hit
     m_ReadOnly: 0
@@ -1196,6 +1091,21 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5149b7ffd13c15d4692a36b5a29fd75b
     m_Address: cfg_dm_boll
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 294bbd94992f416894b763e60938f5f8
+    m_Address: prefab_enemy_tpl_unit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9251ce62752c4088a551a15d648e07e4
+    m_Address: prefab_dme_tpl_sprite
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6e4c58a14e54830b86764d767c153ac
+    m_Address: prefab_weapon_tpl_layout
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1229,11 +1139,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e1ba0bc2a60e3a64c806def9c65256b8
-    m_Address: prefab_dme_enemy_toplayer
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96589b45dcb41de4da76a8c1baa402ca
     m_Address: tex_stg1enm
     m_ReadOnly: 0
@@ -1241,16 +1146,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9a8c2b9b7f4eca04a83403af09379ebf
     m_Address: cfg_midboss_stage1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0f645b3c540e3a84d858a0bd92789d75
-    m_Address: prefab_boss_stage1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 167cbc7a89a800c4fbc1da27fce7ed3b
-    m_Address: prefab_midboss_stage1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1326,6 +1221,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 51c716d0c1c065a408482fd348ad1e77
     m_Address: cfg_dme_enemy_wave_fan
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1dadbc6948564a40beb43555435ad42
+    m_Address: prefab_drop_tpl_pickup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

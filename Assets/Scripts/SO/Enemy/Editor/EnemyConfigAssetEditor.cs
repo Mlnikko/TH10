@@ -10,6 +10,11 @@ public class EnemyConfigAssetEditor : Editor
     {
         serializedObject.Update();
 
+        EditorGUILayout.HelpBox(
+            "enemyPrefabId 为池 archetype（见 EnemyPrefabArchetypes）；"
+            + "displaySprite / animatorController 在出池时由 EnemyPresentation 应用。",
+            MessageType.None);
+
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))

@@ -79,6 +79,7 @@ public sealed class ConfigViewerWeaponLayoutPreview
             instance.transform.SetPositionAndRotation(
                 point.worldPosition,
                 Quaternion.Euler(0f, 0f, point.worldRotZDeg));
+            DanmakuEmitterPresentation.Apply(emitterCfg, instance);
             ApplyLayoutTint(instance, point.isSlowModeLayout);
         }
 

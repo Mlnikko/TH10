@@ -10,6 +10,11 @@ public class DropItemConfigAssetEditor : Editor
     {
         serializedObject.Update();
 
+        EditorGUILayout.HelpBox(
+            "pickupPrefabId 为池 archetype（见 DropItemPrefabArchetypes），与资产名无关；"
+            + "pickupSprite 在出池时由 DropItemPresentation 应用。",
+            MessageType.None);
+
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))

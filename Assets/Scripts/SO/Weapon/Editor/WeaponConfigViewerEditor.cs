@@ -5,6 +5,7 @@ using UnityEngine;
 [CustomEditor(typeof(WeaponConfigViewer))]
 public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewer>
 {
+    const string ConfigField = "weaponConfig";
     const string PrimaryEmittersField = "primaryEmitters";
     const string PowerPrimarySlowField = "powerPrimarySlowLayouts";
     const string PowerSecondaryField = "powerSecondaryLayouts";
@@ -18,9 +19,17 @@ public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewe
     {
         serializedObject.Update();
 
+        var previousConfig = Viewer.WeaponConfig;
+
+        var configRef = serializedObject.FindProperty(ConfigField);
+        bool configRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(
+            configRef,
+            new GUIContent("配置文件"));
+
         DrawPropertiesExcluding(
             serializedObject,
             "m_Script",
+            ConfigField,
             PrimaryEmittersField,
             PowerPrimarySlowField,
             PowerSecondaryField,
@@ -52,6 +61,7 @@ public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewe
         EditorGUILayout.PropertyField(serializedObject.FindProperty(PreviewBulletLifetimeField));
 
         serializedObject.ApplyModifiedProperties();
+        ApplyConfigReferenceSync(previousConfig, Viewer.WeaponConfig, configRefChanged);
 
         EditorGUI.BeginChangeCheck();
         ConfigViewerEditorUI.DrawSeparator();
@@ -72,7 +82,7 @@ public class WeaponConfigViewerEditor : GameConfigViewerEditor<WeaponConfigViewe
         if (DrawMissingConfig(Viewer.WeaponConfig, "WeaponConfig"))
             return;
 
-        DrawSyncHint("将 Viewer 放在角色发射原点；双击进入预制体后自动同步。");
+        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 WeaponConfig 同步参数与布局预览。");
 
         EditorGUILayout.LabelField("发射预览", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(

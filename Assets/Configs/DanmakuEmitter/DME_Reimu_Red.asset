@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DME_Reimu_Red
   m_EditorClassIdentifier: 
-  emitterPrefabId: dme_reimu_red
+  emitterPrefabId: dme_tpl_sprite
   danmakuConfigIds:
   - dm_reimu_red
   danmakuSelectMode: 0

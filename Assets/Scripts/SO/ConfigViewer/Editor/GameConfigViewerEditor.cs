@@ -30,5 +30,21 @@ public abstract class GameConfigViewerEditor<TViewer> : Editor
 
     protected void DrawSave(UnityEngine.Object configAsset, Action save, string configTypeName) =>
         ConfigViewerEditorUI.DrawSaveButton(configAsset, save, configTypeName);
+
+    /// <summary>
+    /// 在 ApplyModifiedProperties 之后调用：若本帧切换了 Config 引用则同步 Viewer。
+    /// </summary>
+    protected void ApplyConfigReferenceSync(
+        UnityEngine.Object previousConfig,
+        UnityEngine.Object currentConfig,
+        bool configReferenceChanged)
+    {
+        ConfigViewerEditorUI.SyncViewerOnConfigReferenceChanged(
+            Viewer,
+            previousConfig,
+            currentConfig,
+            serializedObject,
+            configReferenceChanged);
+    }
 }
 #endif

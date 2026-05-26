@@ -128,7 +128,7 @@ public struct GrainModeConfig
 public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("发射器预制体")]
-    [Tooltip("预制体 Id（小写）；Inspector 中从 GameResourceManifest / Prefabs/DanmakuEmitter 下拉选择")]
+    [Tooltip("池化 archetype Id（小写）；多条 EmitterConfig 可共用，displaySprite 在出池时应用。见 DanmakuEmitterPrefabArchetypes。")]
     public string emitterPrefabId;
     [NonSerialized]
     public int emitterPrefabIndex;

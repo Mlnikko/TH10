@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: Elite_Fariy
   m_EditorClassIdentifier: 
   enemyType: 3
-  enemyPrefabId: elite_fariy
+  enemyPrefabId: enemy_tpl_unit
+  displaySprite: {fileID: 726823929, guid: 10d6831266fa6db499680189a87e8523, type: 3}
+  displayColor: {r: 1, g: 1, b: 1, a: 1}
+  displayScale: 1
+  animatorController: {fileID: 22100000, guid: af845749c7625d146a7b380c7519235f, type: 2}
   emitterConfigId: dme_enemy_grain_dense
   maxHealth: 100
   colliderConfig:

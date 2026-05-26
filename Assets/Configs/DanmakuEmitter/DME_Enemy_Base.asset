@@ -12,14 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
   m_Name: DME_Enemy_Base
   m_EditorClassIdentifier: 
-  configId: 
-  emitterPrefabId: dme_test
+  emitterPrefabId: dme_tpl_sprite
   danmakuConfigIds:
   - dm_test
   danmakuSelectMode: 0
   emitMode: 1
   launchIntervalSeconds: 5
+  launchCount: -1
   launchSpeed: 60
+  displaySprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  displaySelfSpinDegreesPerSecond: 0
+  displayScaleMin: 1
+  displayScaleMax: 1
+  displayScaleCyclesPerSecond: 0
   emitterPosOffset: {x: 0, y: 0}
   emitterRotOffsetZ: 0
   danmakuRotOffsetZ: 90
@@ -35,3 +40,19 @@ MonoBehaviour:
     arcRadius: 0
     arcBulletCount: 0
     arcClockwise: 0
+  waveModeConfig:
+    centerAngleDeg: 0
+    swingDegrees: 0
+    swingHz: 0
+    phaseOffsetDeg: 0
+    spreadAngleDeg: 0
+    bulletCount: 0
+    arcRadius: 0
+    clockwise: 0
+  grainModeConfig:
+    bulletCount: 0
+    baseAngleDeg: 0
+    coneHalfAngleDeg: 0
+    speedMinScale: 0.85
+    speedMaxScale: 1.15
+    spawnScatterRadius: 0

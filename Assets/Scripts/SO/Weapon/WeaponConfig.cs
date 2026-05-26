@@ -121,7 +121,7 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     public E_Weapon weaponID;
 
     [Header("预制体")]
-    [Tooltip("战斗表现用武器预制体 id；为空时默认与 ConfigId 相同（如 weapon_reimu_blue）")]
+    [Tooltip("池化武器挂点 archetype Id（见 WeaponPrefabArchetypes.Layout）；多条 WeaponConfig 共用，发射器由 WeaponRuntimeLayoutView 按本配置动态挂载")]
     public string weaponPrefabId;
 
     [NonSerialized] public int weaponPrefabIndex = -1;

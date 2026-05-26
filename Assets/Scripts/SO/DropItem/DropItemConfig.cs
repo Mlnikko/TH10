@@ -28,7 +28,7 @@ public enum E_DropMotionMode : byte
 public class DropItemConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("表现")]
-    [Tooltip("掉落物表现预制体 id（Drop 池，须在 Manifest.dropItemPrefabIds 登记）")]
+    [Tooltip("池化预制体 archetype Id（小写）；与 ConfigId 无关。多条 DropItemConfig 可共用，表现见 pickupSprite。见 DropItemPrefabArchetypes。")]
     [PoolPrefabId(E_PoolCategory.Drop)]
     public string pickupPrefabId;
     [NonSerialized] public int pickupPrefabIndex = -1;
@@ -121,6 +121,7 @@ public class DropItemConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 #if UNITY_EDITOR
     void Reset()
     {
+        pickupPrefabId = DropItemPrefabArchetypes.Pickup;
         colliderConfig = new ColliderConfig
         {
             shape = E_ColliderShape.Circle,
