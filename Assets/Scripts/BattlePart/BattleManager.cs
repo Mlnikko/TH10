@@ -313,6 +313,8 @@ public class BattleManager : SingletonMono<BattleManager>
             _battleWorld = null;
         }
 
+        PresentationRuntime.Reset();
+
         InputManager.Instance?.ClearAllInputs();
 
         if (GameObjectPoolManager.Instance != null)
@@ -837,6 +839,7 @@ public class BattleManager : SingletonMono<BattleManager>
     void BeginBattleSession(bool singlePlayer, uint logicStartFrame, PlayerBattleData[] remotePlayerDatas)
     {
         isSinglePlayerMode = singlePlayer;
+        PresentationRuntime.SetSmoothingEnabled(!singlePlayer);
 
         if (remotePlayerDatas != null)
         {
@@ -950,6 +953,8 @@ public class BattleManager : SingletonMono<BattleManager>
         _battleWorld.AddSystem<DropItemMagnetSystem>();
         _battleWorld.AddSystem<DanmakuSystem>();
         _battleWorld.AddSystem<DanmakuEmitSystem>();
+        if (!isSinglePlayerMode)
+            _battleWorld.AddSystem<PresentationPoseSystem>();
         _battleWorld.AddSystem<PresentationSystem>();
         Logger.Info("Battle ECS World initialized.");
     }
@@ -1222,6 +1227,7 @@ public class BattleManager : SingletonMono<BattleManager>
 
         int maxCatchUpSteps = isSinglePlayerMode ? 8 : 8;
         int steps = 0;
+        bool logicStalledThisRenderFrame = false;
         while (steps < maxCatchUpSteps && _battleWorld.LogicFrameTimer.CanAdvance())
         {
             uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
@@ -1256,6 +1262,7 @@ public class BattleManager : SingletonMono<BattleManager>
             }
             else
             {
+                logicStalledThisRenderFrame = true;
                 InputManager.Instance.NotifyLogicTickStalled(frameToProcess, _activePlayers, eliminatedMask);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Logger.Debug(
@@ -1266,6 +1273,8 @@ public class BattleManager : SingletonMono<BattleManager>
             }
         }
 
+        if (!isSinglePlayerMode)
+            PresentationRuntime.Sync(_battleWorld.LogicFrameTimer, logicStalledThisRenderFrame);
         BattleRuntimeMetrics.RecordLogicTicks(steps);
         _battleWorld.Update(Time.deltaTime);
     }

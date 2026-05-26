@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class WeaponSelectionUI : MonoBehaviour
 {
-    const bool ShowWeaponIcon = false;
+    [SerializeField] bool showWeaponIcon;
 
     public TMP_Text nameLabel;
     public Image iconImage;
@@ -27,7 +27,7 @@ public class WeaponSelectionUI : MonoBehaviour
         if (iconImage == null)
             return;
 
-        if (!ShowWeaponIcon)
+        if (!showWeaponIcon)
         {
             iconImage.gameObject.SetActive(false);
             return;

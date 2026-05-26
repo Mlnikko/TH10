@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class CharacterSelectionUI : MonoBehaviour
 {
-    const bool ShowCharacterIcon = false;
+    [SerializeField] bool showCharacterIcon;
 
     [SerializeField] TMP_Text playerId;
     [SerializeField] TMP_Text nameLabel;
@@ -32,7 +32,7 @@ public class CharacterSelectionUI : MonoBehaviour
             return;
         }
 
-        if (!ShowCharacterIcon)
+        if (!showCharacterIcon)
         {
             iconImage.gameObject.SetActive(false);
             SetOccupyingPlayerId(null);

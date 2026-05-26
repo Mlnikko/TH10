@@ -212,6 +212,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CPoolGetTag) != 0) RemoveComponentAtSlot<CPoolGetTag>(index);
         if ((mask & ComponentMaskBits.CNoOffscreenRecycleTag) != 0) RemoveComponentAtSlot<CNoOffscreenRecycleTag>(index);
         if ((mask & ComponentMaskBits.CGameObjectLink) != 0) RemoveComponentAtSlot<CGameObjectLink>(index);
+        if ((mask & ComponentMaskBits.CPresentationPose) != 0) RemoveComponentAtSlot<CPresentationPose>(index);
 
         if ((mask & ComponentMaskBits.CPlayerEmitterOwnership) != 0) RemoveComponentAtSlot<CPlayerEmitterOwnership>(index);
         if ((mask & ComponentMaskBits.CDanmakuEmitter) != 0) RemoveComponentAtSlot<CDanmakuEmitter>(index);

@@ -8,7 +8,7 @@ public static class ComponentMaskBits
     public const uint CPoolGetTag             = 1u << 1;
     public const uint CNoOffscreenRecycleTag  = 1u << 2;
     public const uint CGameObjectLink         = 1u << 3;
-    // bit 4 曾为 CPresentationPose（表现插值快照，已移除）
+    public const uint CPresentationPose          = 1u << 4;
 
     public const uint CPlayerEmitterOwnership = 1u << 5;
     public const uint CDanmakuEmitter         = 1u << 6;
@@ -37,6 +37,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CPoolGetTag)) return CPoolGetTag;
         if (typeof(T) == typeof(CNoOffscreenRecycleTag)) return CNoOffscreenRecycleTag;
         if (typeof(T) == typeof(CGameObjectLink)) return CGameObjectLink;
+        if (typeof(T) == typeof(CPresentationPose)) return CPresentationPose;
 
         if (typeof(T) == typeof(CPlayerEmitterOwnership)) return CPlayerEmitterOwnership;
         if (typeof(T) == typeof(CDanmakuEmitter)) return CDanmakuEmitter;

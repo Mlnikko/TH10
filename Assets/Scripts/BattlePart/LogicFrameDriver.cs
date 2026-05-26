@@ -60,4 +60,15 @@ public class LogicFrameDriver
     public bool IsRunning => _isRunning;
 
     public double GetAccumulatedTime() => _accumulatedTime;
+
+    /// <summary>当前逻辑帧内的插值进度 [0,1]。</summary>
+    public float GetFrameAlpha()
+    {
+        if (FrameIntervalSeconds <= 1e-9)
+            return 0f;
+        double alpha = _accumulatedTime / FrameIntervalSeconds;
+        if (alpha < 0) return 0f;
+        if (alpha > 1) return 1f;
+        return (float)alpha;
+    }
 }

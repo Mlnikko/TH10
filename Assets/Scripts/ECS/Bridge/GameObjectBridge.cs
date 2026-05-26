@@ -58,6 +58,16 @@ public class GameObjectBridge
             IsDirty = true
         });
 
+        if (PresentationRuntime.SmoothingEnabled && em.HasComponent<CPosition>(entity))
+        {
+            ref readonly var pos = ref em.GetComponent<CPosition>(entity);
+            float angleRad = 0f;
+            bool withRotation = em.HasComponent<CRotation>(entity);
+            if (withRotation)
+                angleRad = em.GetComponent<CRotation>(entity).angleRad;
+            em.AddComponent(entity, CPresentationPose.FromPosition(pos.x, pos.y, angleRad, withRotation));
+        }
+
         //// 添加EntityLinkBehaviour（GO销毁时通知ECS）
         //var link = go.GetComponent<EntityLinkBehaviour>();
         //if (link == null) link = go.AddComponent<EntityLinkBehaviour>();

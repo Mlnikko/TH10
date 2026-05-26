@@ -23,7 +23,7 @@ description: 指导在 TH10 仓库中开发东方风 STG 弹幕与 2–4 人帧�
 
 **2D 碰撞专项**（DeterministicGrid、CCollider、扫掠检测、CollisionLogicSystem）→ [th10-collision-2d](../th10-collision-2d/SKILL.md)。
 
-**弹幕专项**（DanmakuEmitSystem、Line/Arc 发射、DanmakuConfig/DanmakuEmitterConfig）→ [th10-danmaku-system](../th10-danmaku-system/SKILL.md)。
+**弹幕专项**（DanmakuEmitSystem、Line/Arc/Wave/Grain 发射、DanmakuConfig/DanmakuEmitterConfig）→ [th10-danmaku-system](../th10-danmaku-system/SKILL.md)。
 
 **关卡出怪专项**（StageTimelineSystem、EnemyWave、Boss、CEnemyMovement）→ [th10-stage-enemy](../th10-stage-enemy/SKILL.md)。
 
@@ -202,7 +202,7 @@ flowchart TB
 
 - 阅读 `DropItemConfig`、`DropItemConfigViewer`、`DropItemSystem`、`DropItemMotionSimulator`、`CollisionLogicSystem`（拾取）。
 - 运动逻辑与编辑器预览共用 `DropItemMotionSimulator`；配置字段经 `ILogicTimingBake` 烘焙为 per-frame 量。
-- 在 Manifest 登记 `dropItemConfigIds` 与 `dropItemPrefabIds`（或与弹幕等共用 prefab 数组）。
+- 新建 Config 时复用 `drop_tpl_pickup`，在 SO 上指定 `pickupSprite`；Manifest 登记 `dropItemConfigIds`，`dropItemPrefabIds` 保持单 archetype。
 
 ### 添加网络消息
 
@@ -240,6 +240,6 @@ flowchart TB
 | [th10-collision-2d](../th10-collision-2d/SKILL.md) | 确定性 2D 碰撞：网格粗测、窄相、扫掠、玩法响应 |
 | [th10-collision-2d/reference.md](../th10-collision-2d/reference.md) | 层掩码、TempBuffers、扩展模板 |
 | [th10-danmaku-system](../th10-danmaku-system/SKILL.md) | 弹幕/发射器：SpawnMath、CDanmakuEmitter、开火管线 |
-| [th10-danmaku-system/reference.md](../th10-danmaku-system/reference.md) | Line/Arc 几何、Config 字段、扩展模板 |
+| [th10-danmaku-system/reference.md](../th10-danmaku-system/reference.md) | Line/Arc/Wave/Grain 几何、Config 字段、扩展模板 |
 | [th10-stage-enemy](../th10-stage-enemy/SKILL.md) | 关卡时间轴、波次/Boss 出怪、敌人运动轨迹 |
 | [th10-stage-enemy/reference.md](../th10-stage-enemy/reference.md) | 状态机、Movement 类型、Boss 阶段扩展 |

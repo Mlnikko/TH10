@@ -19,6 +19,28 @@ public struct CGameObjectLink : IComponent
 }
 
 /// <summary>
+/// 上一逻辑帧与当前逻辑帧的位置/朝向快照（<see cref="PresentationPoseSystem"/> 维护）。
+/// </summary>
+public struct CPresentationPose : IComponent
+{
+    public float prevX, prevY, currX, currY;
+    public float prevAngleRad, currAngleRad;
+    public bool hasRotation;
+
+    public static CPresentationPose FromPosition(float x, float y, float angleRad, bool withRotation) =>
+        new()
+        {
+            prevX = x,
+            currX = x,
+            prevY = y,
+            currY = y,
+            prevAngleRad = angleRad,
+            currAngleRad = angleRad,
+            hasRotation = withRotation,
+        };
+}
+
+/// <summary>
 /// 渲染系统使用的标记组件，标记实体需要在当前帧进行表现更新。系统会根据这个组件来决定哪些实体需要同步到GameObject。
 /// </summary>
 public struct CPoolGetTag : IComponent { }
