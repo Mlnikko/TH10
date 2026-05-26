@@ -13,7 +13,7 @@ public enum E_StageTimelinePreviewScope
 
 /// <summary>
 /// 按 <see cref="StageTimelineConfig"/> 在逻辑帧上驱动道中波次、道中 BOSS、关底 BOSS 登场与阶段状态（<see cref="CStageState"/>）。
-/// 出怪位置基于 <see cref="GlobalBattleData.AreaData"/>；<see cref="EnemyWaveConfig.movementData"/> 由 <see cref="EnemyMovementBaking"/> 烘焙为 <see cref="CEnemyMovement"/>。
+/// 出怪位置基于 <see cref="GlobalBattleData.AreaData"/>；<see cref="EnemyWaveConfig.pathRoute"/> 烘焙为 <see cref="CEnemyPathMovement"/>。
 /// 关底/中场 Boss 参数来自独立的 <see cref="MidBossEncounterConfig"/> / <see cref="MainBossEncounterConfig"/> 资产。
 /// </summary>
 public class StageTimelineSystem : BaseSystem
@@ -146,6 +146,11 @@ public class StageTimelineSystem : BaseSystem
             wave.BakeLogicTiming(fps);
             wave.BakePathRouteIfNeeded(fps);
         }
+
+        _config.midBossEncounter?.BakeLogicTiming(fps);
+        _config.midBossEncounter?.BakePathRoutesIfNeeded(fps);
+        _config.mainBossEncounter?.BakeLogicTiming(fps);
+        _config.mainBossEncounter?.BakePathRoutesIfNeeded(fps);
     }
 
     /// <summary>
@@ -268,10 +273,10 @@ public class StageTimelineSystem : BaseSystem
 
     void SpawnWave(EnemyWaveConfig wave, int waveIndexInSorted, uint currentFrame)
     {
-        if (string.IsNullOrEmpty(wave.enemyConfigId)
-            && (wave.spawnQueue == null || wave.spawnQueue.Length == 0))
+        wave.EnsureSpawnQueueMigrated();
+        if (wave.spawnQueue == null || wave.spawnQueue.Length == 0)
         {
-            Logger.Warn("[StageTimeline] Wave skipped: empty enemyConfigId.", LogTag.Battle);
+            Logger.Warn("[StageTimeline] Wave skipped: empty spawn queue.", LogTag.Battle);
             return;
         }
 
@@ -368,15 +373,14 @@ public class StageTimelineSystem : BaseSystem
         if (e.IsNull)
             return false;
 
-        EnemyMovementBaking.TryAttachMovementFromWave(
-            EntityManager, e, wave, currentFrame, pos.x, pos.y, entryIndex);
+        EnemyMovementBaking.TryAttachMovementFromWave(EntityManager, e, wave, entryIndex, currentFrame, pos.x, pos.y);
 
         if (wave.waveDropMode != E_WaveDropOverrideMode.UseEnemyConfig)
         {
             EntityManager.AddComponent(e, new CEnemyDeathLoot
             {
                 waveDropMode = wave.waveDropMode,
-                waveDropCfgIndices = wave.waveDropOnDeathCfgIndices ?? Array.Empty<int>()
+                waveDrops = wave.waveDropOnDeathBaked ?? Array.Empty<BakedDeathDropEntry>()
             });
         }
 
@@ -396,18 +400,13 @@ public class StageTimelineSystem : BaseSystem
         enemyCfg = null;
         pos = default;
 
-        string enemyId = wave.enemyConfigId;
-        int slot = entryIndex;
-        if (wave.spawnQueue != null && wave.spawnQueue.Length > 0)
-        {
-            if (entryIndex < 0 || entryIndex >= wave.spawnQueue.Length)
-                return false;
-            var entry = wave.spawnQueue[entryIndex];
-            if (!string.IsNullOrWhiteSpace(entry.enemyConfigId))
-                enemyId = entry.enemyConfigId;
-            if (entry.spawnSlotIndex >= 0)
-                slot = entry.spawnSlotIndex;
-        }
+        wave.EnsureSpawnQueueMigrated();
+        if (wave.spawnQueue == null || entryIndex < 0 || entryIndex >= wave.spawnQueue.Length)
+            return false;
+
+        var entry = wave.spawnQueue[entryIndex];
+        string enemyId = entry.enemyConfigId;
+        int slot = entry.spawnSlotIndex >= 0 ? entry.spawnSlotIndex : entryIndex;
 
         if (string.IsNullOrWhiteSpace(enemyId))
             return false;
@@ -454,13 +453,12 @@ public class StageTimelineSystem : BaseSystem
 
         var area = GlobalBattleData.IsInitialized ? GlobalBattleData.AreaData : BattleAreaData.Default;
         Vector2 pos = area.Center + encounter.spawnOffset + new Vector2(0f, area.Height * encounter.yHeightNorm);
-        _midBossEntity = EntityFactory.CreateEnemy(cfg, pos.x, pos.y, 1f);
+        float hpMult = encounter.ResolveHpMultiplier(cfg);
+        _midBossEntity = EntityFactory.CreateEnemy(cfg, pos.x, pos.y, hpMult);
         if (!_midBossEntity.IsNull)
         {
-            if (encounter.introMovement != null
-                && EnemyMovementBaking.TryBakeFromProfile(
-                    encounter.introMovement, currentFrame, pos.x, pos.y, 0, out var motion))
-                EntityManager.AddComponent(_midBossEntity, motion);
+            MidBossEncounterSpawn.ApplyToEntity(
+                EntityManager, _midBossEntity, encounter, cfg, currentFrame, pos.x, pos.y);
 
             EntityManager.AddComponent(_midBossEntity, new CNoOffscreenRecycleTag());
             EntityManager.AddComponent(_midBossEntity, new CPoolGetTag());

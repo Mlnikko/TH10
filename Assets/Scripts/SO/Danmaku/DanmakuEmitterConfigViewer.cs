@@ -45,6 +45,12 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     [Header("Arc Mode 参数")]
     [SerializeField] ArcModeConfig arcModeConfig;
 
+    [Header("Wave Mode 参数（波弹）")]
+    [SerializeField] WaveModeConfig waveModeConfig;
+
+    [Header("Grain Mode 参数（粒弹）")]
+    [SerializeField] GrainModeConfig grainModeConfig;
+
     [Header("发射音效")]
     [SerializeField] AudioName launchAudio;
 
@@ -127,6 +133,8 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         danmakuRotOffsetZ = emitterConfig.danmakuRotOffsetZ;
         lineModeConfig = emitterConfig.lineModeConfig;
         arcModeConfig = emitterConfig.arcModeConfig;
+        waveModeConfig = emitterConfig.waveModeConfig;
+        grainModeConfig = emitterConfig.grainModeConfig;
         launchIntervalSeconds = emitterConfig.launchIntervalSeconds;
         launchCount = emitterConfig.launchCount;
         launchSpeed = emitterConfig.launchSpeed;
@@ -224,6 +232,8 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         emitterConfig.danmakuRotOffsetZ = danmakuRotOffsetZ;
         emitterConfig.lineModeConfig = lineModeConfig;
         emitterConfig.arcModeConfig = arcModeConfig;
+        emitterConfig.waveModeConfig = waveModeConfig;
+        emitterConfig.grainModeConfig = grainModeConfig;
         emitterConfig.launchIntervalSeconds = launchIntervalSeconds;
         emitterConfig.launchCount = launchCount;
         emitterConfig.launchSpeed = launchSpeed;
@@ -455,7 +465,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
             origin.x,
             origin.y,
             emitRotRad,
-            _lastBurstSamples);
+            _lastBurstSamples,
+            _previewClock.LogicFrame,
+            _previewLaunchCountUsed);
 
         if (_lastBurstSamples.Count == 0)
         {
@@ -481,13 +493,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         if (!ConfigViewerEditorScene.AttachTransientObject(go, transform, ref _previewRoot, $"{name}_EmitterPreview"))
             return;
 
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = danmaku.sprite;
-        sr.color = danmaku.color;
+        go.AddComponent<SpriteRenderer>();
         ConfigViewerSpritePreview.ApplySortingFrom(go.transform, transform);
-
-        float scale = Mathf.Max(danmaku.scale, 0.01f);
-        go.transform.localScale = Vector3.one * scale;
+        DanmakuPresentation.Apply(danmaku, go);
         go.transform.position = new Vector3(x, y, transform.position.z);
         go.transform.rotation = Quaternion.Euler(0f, 0f, rotRad * Mathf.Rad2Deg);
 
@@ -607,6 +615,8 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         temp.danmakuRotOffsetZ = danmakuRotOffsetZ;
         temp.lineModeConfig = lineModeConfig;
         temp.arcModeConfig = arcModeConfig;
+        temp.waveModeConfig = waveModeConfig;
+        temp.grainModeConfig = grainModeConfig;
         temp.launchIntervalSeconds = launchIntervalSeconds;
         temp.launchCount = launchCount;
         temp.launchSpeed = launchSpeed;
@@ -666,7 +676,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         float emitRotRad = GetEmitBaseRotZDeg() * Mathf.Deg2Rad + emitter.emitterRotOffsetRad;
 
         var samples = new List<DanmakuEmitterSpawnMath.SpawnSample>();
-        DanmakuEmitterSpawnMath.CollectSpawns(in emitter, origin.x, origin.y, emitRotRad, samples);
+        uint gizmoFrame = _previewActive ? _previewClock.LogicFrame : 0;
+        DanmakuEmitterSpawnMath.CollectSpawns(
+            in emitter, origin.x, origin.y, emitRotRad, samples, gizmoFrame, 0);
 
         for (int i = 0; i < samples.Count; i++)
         {

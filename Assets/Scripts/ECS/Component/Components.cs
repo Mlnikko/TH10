@@ -117,15 +117,27 @@ public struct CDropItem : IComponent
 }
 
 /// <summary>
-/// 掉落物竖直上抛运动（每逻辑帧竖直位移：上正下负）；受重力并限制终端下落速度。
+/// 掉落物出场运动（竖直上抛或定向散射后匀速下落）。
 /// </summary>
 public struct CDropItemMotion : IComponent
 {
+    public E_DropMotionMode motionMode;
+
+    /// <summary>竖直上抛：每逻辑帧竖直速度（上正下负）。</summary>
     public float vyPerFrame;
     public float gravityPerFrame;
     public float maxFallPerFrame;
-    /// <summary>上升阶段每逻辑帧自转弧度（由 <see cref="DropItemConfig"/> 烘焙）。</summary>
+    /// <summary>上升阶段每逻辑帧自转弧度。</summary>
     public float spinRadPerFrame;
+
+    /// <summary>定向散射：0=沿方向减速，1=匀速下落。</summary>
+    public byte motionPhase;
+    public float burstSpeedPerFrame;
+    public float burstDirX;
+    public float burstDirY;
+    public float burstDecelPerFrame;
+    /// <summary>散射结束后的竖直速度（每逻辑帧，负值向下）。</summary>
+    public float fallVyPerFrame;
 }
 
 /// <summary>
@@ -157,7 +169,7 @@ public struct CDanmakuEmitter : IComponent
     /// <summary>已完成的发射轮次（一次 Line/Arc 齐射计 1 次）。</summary>
     public int launchCountUsed;
 
-    public EmitMode emitMode;           // Line, Arc
+    public EmitMode emitMode;           // Line, Arc, Wave, Grain
     public DanmakuSelectMode selectMode; // First, Sequential, Random
 
     // 弹幕选择器的状态机变量
@@ -186,6 +198,21 @@ public struct CDanmakuEmitter : IComponent
     public float arcStartAngleRad;      // 起始角度 (弧度)
     public float arcAngleStepRad;       // 预计算: (arcAngle / (count-1)) * Deg2Rad
     public int arcDirectionSign;        // 1 或 -1，替代 clockwise 布尔判断
+
+    // ================= Wave 模式专用 =================
+    public float waveCenterAngleRad;
+    public float waveSwingRad;
+    public float waveOmegaRadPerFrame;
+    public float wavePhaseOffsetRad;
+    public float waveArcHalfSpreadRad;
+
+    // ================= Grain 模式专用 =================
+    public int grainBulletCount;
+    public float grainBaseAngleRad;
+    public float grainConeHalfRad;
+    public float grainSpeedMin;
+    public float grainSpeedMax;
+    public float grainSpawnScatterRadius;
 
     // 指向 SO 中的索引数组
     public int[] danmakuCfgIndices;
@@ -225,22 +252,69 @@ public struct CDanmakuEmitter : IComponent
         lineDirPerpX = -dir.y; // 垂直向量 X
         lineDirPerpY = dir.x;  // 垂直向量 Y
 
-        // --- Arc 模式烘焙 ---
-        arcBulletCount = soConfig.arcModeConfig.arcBulletCount;
-        arcRadius = soConfig.arcModeConfig.arcRadius;
-        arcDirectionSign = soConfig.arcModeConfig.arcClockwise ? 1 : -1;
+        // --- Arc / Wave 共用弧几何（Wave 在发射时动态偏移中心角）---
+        var arcGeom = ComputeArcGeometry(soConfig);
+        arcBulletCount = arcGeom.bulletCount;
+        arcRadius = arcGeom.radius;
+        arcStartAngleRad = arcGeom.startAngleRad;
+        arcAngleStepRad = arcGeom.angleStepRad;
+        arcDirectionSign = arcGeom.directionSign;
+        waveArcHalfSpreadRad = arcGeom.halfSpreadRad;
 
-        // 角度转弧度，并预计算步长 (避免循环内除法)
-        float totalRad = soConfig.arcModeConfig.arcAngle * Mathf.Deg2Rad;
-        arcStartAngleRad = soConfig.arcModeConfig.arcStartAngle * Mathf.Deg2Rad;
-        if (soConfig.arcModeConfig.arcBulletCount > 1)
-            arcAngleStepRad = totalRad / (soConfig.arcModeConfig.arcBulletCount - 1);
-        else
-            arcAngleStepRad = 0f;
+        // --- Wave 模式烘焙 ---
+        var wave = soConfig.waveModeConfig;
+        waveCenterAngleRad = wave.centerAngleDeg * Mathf.Deg2Rad;
+        waveSwingRad = wave.swingDegrees * Mathf.Deg2Rad;
+        waveOmegaRadPerFrame = soConfig.waveOmegaRadPerFrame;
+        wavePhaseOffsetRad = wave.phaseOffsetDeg * Mathf.Deg2Rad;
+
+        // --- Grain 模式烘焙 ---
+        var grain = soConfig.grainModeConfig;
+        grainBulletCount = Mathf.Max(1, grain.bulletCount);
+        grainBaseAngleRad = grain.baseAngleDeg * Mathf.Deg2Rad;
+        grainConeHalfRad = grain.coneHalfAngleDeg * Mathf.Deg2Rad;
+        grainSpeedMin = soConfig.launchSpeedPerFrame * grain.ResolveSpeedMinScale();
+        grainSpeedMax = soConfig.launchSpeedPerFrame * grain.ResolveSpeedMaxScale();
+        grainSpawnScatterRadius = grain.spawnScatterRadius;
 
         // 资源引用
         danmakuCfgIndices = soConfig.danmakuCfgIndices ?? Array.Empty<int>();
     }
+
+    static (
+        int bulletCount,
+        float radius,
+        float startAngleRad,
+        float angleStepRad,
+        int directionSign,
+        float halfSpreadRad) ComputeArcGeometry(DanmakuEmitterConfig soConfig)
+    {
+        ArcModeConfig arc = soConfig.emitMode == EmitMode.Wave
+            ? WaveToArc(soConfig.waveModeConfig)
+            : soConfig.arcModeConfig;
+
+        float totalRad = arc.arcAngle * Mathf.Deg2Rad;
+        float stepRad = arc.arcBulletCount > 1
+            ? totalRad / (arc.arcBulletCount - 1)
+            : 0f;
+
+        return (
+            arc.arcBulletCount,
+            arc.arcRadius,
+            arc.arcStartAngle * Mathf.Deg2Rad,
+            stepRad,
+            arc.arcClockwise ? 1 : -1,
+            totalRad * 0.5f);
+    }
+
+    static ArcModeConfig WaveToArc(WaveModeConfig wave) => new()
+    {
+        arcStartAngle = 0f,
+        arcAngle = wave.spreadAngleDeg,
+        arcRadius = wave.arcRadius,
+        arcBulletCount = wave.bulletCount,
+        arcClockwise = wave.clockwise,
+    };
 }
 
 #endregion
@@ -373,8 +447,31 @@ public struct CEnemy : IComponent
 public struct CEnemyDeathLoot : IComponent
 {
     public E_WaveDropOverrideMode waveDropMode;
-    /// <summary>烘焙后的 DropItemConfig 索引；Replace/Append 时使用。</summary>
-    public int[] waveDropCfgIndices;
+    /// <summary>烘焙后的掉落条目；Replace/Append 时使用。</summary>
+    public BakedDeathDropEntry[] waveDrops;
+}
+
+public enum E_MidBossPhase : byte
+{
+    Entry = 0,
+    OnField = 1,
+    Exit = 2,
+    Done = 3,
+}
+
+/// <summary>中场 Boss 遭遇阶段与路径烘焙索引（由 <see cref="MidBossEncounterSystem"/> 驱动）。</summary>
+public struct CMidBossEncounter : IComponent
+{
+    public E_MidBossPhase phase;
+    public uint phaseStartFrame;
+    /// <summary>逻辑帧：到达后进入退场（入场结束帧 + 在场时长）。</summary>
+    public uint onFieldEndFrame;
+    public int encounterCfgIndex;
+    public int entryRouteBakeIndex;
+    public int loopRouteBakeIndex;
+    public int exitRouteBakeIndex;
+    public int entryDurationFrames;
+    public int exitDurationFrames;
 }
 #endregion
 

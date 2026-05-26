@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc0f72b4a83c61e45bae45cce91b5368, type: 3}
   m_Name: Elite_Fariy
   m_EditorClassIdentifier: 
-  enemyType: 2
+  enemyType: 3
   enemyPrefabId: elite_fariy
-  emitterConfigId: dme_enemy_base
+  emitterConfigId: dme_enemy_grain_dense
   maxHealth: 100
   colliderConfig:
     isTrigger: 0
@@ -24,6 +24,13 @@ MonoBehaviour:
     radius: 0.12
     boxSize: {x: 0, y: 0}
     offset: {x: -0, y: -0.04}
+  dropOnDeathEntries:
+  - dropConfigId: drop_bpt_b
+    count: 1
+  - dropConfigId: drop_gpt_s
+    count: 1
+  - dropConfigId: drop_rpr_b
+    count: 1
   dropOnDeathConfigIds:
   - drop_bpt_b
   - drop_gpt_s

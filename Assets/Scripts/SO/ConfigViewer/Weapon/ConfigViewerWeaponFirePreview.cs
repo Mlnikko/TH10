@@ -235,13 +235,9 @@ public sealed class ConfigViewerWeaponFirePreview
         var go = new GameObject("PreviewDanmaku");
         ConfigViewerEditorScene.AttachTransientObject(go, _anchor, ref _previewRoot, _rootName);
 
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = danmaku.sprite;
-        sr.color = danmaku.color;
+        go.AddComponent<SpriteRenderer>();
         ConfigViewerSpritePreview.ApplySortingFrom(go.transform, _anchor);
-
-        float scale = Mathf.Max(danmaku.scale, 0.01f);
-        go.transform.localScale = Vector3.one * scale;
+        DanmakuPresentation.Apply(danmaku, go);
         go.transform.position = new Vector3(x, y, _anchor.position.z);
         go.transform.rotation = Quaternion.Euler(0f, 0f, rotRad * Mathf.Rad2Deg);
 

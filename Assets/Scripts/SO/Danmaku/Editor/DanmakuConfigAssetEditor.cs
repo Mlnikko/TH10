@@ -13,6 +13,11 @@ public class DanmakuConfigAssetEditor : Editor
     {
         serializedObject.Update();
 
+        EditorGUILayout.HelpBox(
+            "danmakuPrefabId 为池 archetype（见 DanmakuPrefabArchetypes），与资产名无关；"
+            + "sprite/color/scale 在出池时由 DanmakuPresentation 应用。",
+            MessageType.None);
+
         SerializedProperty prop = serializedObject.GetIterator();
         bool enterChildren = true;
         while (prop.NextVisible(enterChildren))

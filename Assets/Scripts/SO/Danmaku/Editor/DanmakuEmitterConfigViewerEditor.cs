@@ -11,8 +11,12 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
     {
         serializedObject.Update();
 
+        var previousConfig = Viewer.emitterConfig;
+
         var configRef = serializedObject.FindProperty(EmitterConfigField);
+        EditorGUI.BeginChangeCheck();
         EditorGUILayout.PropertyField(configRef, new GUIContent("配置文件"));
+        bool emitterConfigRefChanged = EditorGUI.EndChangeCheck();
 
         DrawEmitterConfigResourceFields(Viewer);
 
@@ -20,8 +24,28 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
 
         serializedObject.ApplyModifiedProperties();
 
+        if (emitterConfigRefChanged && !serializedObject.isEditingMultipleObjects)
+            SyncViewerWhenEmitterConfigChanged(Viewer, previousConfig);
+
+        serializedObject.Update();
+
         ConfigViewerEditorUI.DrawSeparator();
         DrawViewerTools();
+    }
+
+    static void SyncViewerWhenEmitterConfigChanged(
+        DanmakuEmitterConfigViewer viewer,
+        DanmakuEmitterConfig previousConfig)
+    {
+        if (viewer == null || viewer.emitterConfig == previousConfig)
+            return;
+
+        viewer.StopAllEditorPreviews();
+        if (viewer.emitterConfig != null)
+            viewer.SyncFromConfigInEditor();
+
+        EditorUtility.SetDirty(viewer);
+        SceneView.RepaintAll();
     }
 
     static void DrawEmitterConfigResourceFields(DanmakuEmitterConfigViewer viewer)
@@ -64,7 +88,21 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
         if (DrawMissingConfig(Viewer.emitterConfig, "DanmakuEmitterConfig"))
             return;
 
-        DrawSyncHint("双击进入预制体编辑后自动同步发射参数。");
+        DrawSyncHint("切换配置文件或双击进入预制体编辑后，会自动从 DanmakuEmitterConfig 同步发射参数。");
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("从配置加载", GUILayout.Height(28)))
+            {
+                Viewer.StopAllEditorPreviews();
+                Viewer.LoadEmitterConfig();
+                EditorUtility.SetDirty(Viewer);
+                serializedObject.Update();
+                SceneView.RepaintAll();
+            }
+
+            DrawSave(Viewer.emitterConfig, Viewer.SaveEmitterConfig, "DanmakuEmitterConfig");
+        }
 
         using (new EditorGUILayout.HorizontalScope())
         {
@@ -92,8 +130,6 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
                 Viewer.StopPreviewDisplaySpin();
         }
 
-        ConfigViewerEditorUI.DrawSeparator();
-        DrawSave(Viewer.emitterConfig, Viewer.SaveEmitterConfig, "DanmakuEmitterConfig");
     }
 }
 #endif

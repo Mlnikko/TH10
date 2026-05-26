@@ -5,7 +5,11 @@ public enum EmitMode
 { 
     None,
     Line,
-    Arc
+    Arc,
+    /// <summary>波弹：扇形中心角随时间正弦摆动（东方常见的摆动 N-Way / 摆扇）。</summary>
+    Wave,
+    /// <summary>粒弹：锥形范围内随机方向与速度的霰弹散布。</summary>
+    Grain,
 }
 
 public enum DanmakuSelectMode
@@ -40,6 +44,83 @@ public struct ArcModeConfig
     [Min(0f)]
     public int arcBulletCount;    // 弧线上子弹数
     public bool arcClockwise;
+}
+
+/// <summary>波弹：每齐射为一扇形，扇形中心角按正弦规律摆动。</summary>
+[Serializable]
+public struct WaveModeConfig
+{
+    [Tooltip("扇形中心基准角（度）；-90=正下，0=右")]
+    public float centerAngleDeg;
+
+    [Tooltip("中心角摆动半幅（度）")]
+    [Min(0f)]
+    public float swingDegrees;
+
+    [Tooltip("摆动频率（Hz）")]
+    [Min(0f)]
+    public float swingHz;
+
+    [Tooltip("摆动初相（度）")]
+    public float phaseOffsetDeg;
+
+    [Tooltip("每齐射的扇形展开角（度）")]
+    [Min(0f)]
+    public float spreadAngleDeg;
+
+    [Min(1)]
+    public int bulletCount;
+
+    [Min(0f)]
+    public float arcRadius;
+
+    public bool clockwise;
+}
+
+/// <summary>粒弹：锥形内随机方向与速度的霰弹（东方妖精粒弹/撒弹）。</summary>
+[Serializable]
+public struct GrainModeConfig
+{
+    [Min(1)]
+    public int bulletCount;
+
+    [Tooltip("锥形中心方向（度）；-90=正下")]
+    public float baseAngleDeg;
+
+    [Tooltip("锥形半角（度）")]
+    [Min(0f)]
+    public float coneHalfAngleDeg;
+
+    [Tooltip("相对 launchSpeed 的速度下限倍率（≤0 时烘焙使用 0.85）")]
+    [Range(0.1f, 2f)]
+    public float speedMinScale;
+
+    [Tooltip("相对 launchSpeed 的速度上限倍率（≤0 时烘焙使用 1.15）")]
+    [Range(0.1f, 2f)]
+    public float speedMaxScale;
+
+    [Tooltip("出生点相对发射点的随机散布半径（世界单位）")]
+    [Min(0f)]
+    public float spawnScatterRadius;
+
+    public const float DefaultSpeedMinScale = 0.85f;
+    public const float DefaultSpeedMaxScale = 1.15f;
+
+    public static void NormalizeSpeedScales(ref GrainModeConfig grain)
+    {
+        if (grain.speedMinScale <= 0f)
+            grain.speedMinScale = DefaultSpeedMinScale;
+        if (grain.speedMaxScale <= 0f)
+            grain.speedMaxScale = DefaultSpeedMaxScale;
+        if (grain.speedMinScale > grain.speedMaxScale)
+            (grain.speedMinScale, grain.speedMaxScale) = (grain.speedMaxScale, grain.speedMinScale);
+    }
+
+    public float ResolveSpeedMinScale() =>
+        speedMinScale > 0f ? speedMinScale : DefaultSpeedMinScale;
+
+    public float ResolveSpeedMaxScale() =>
+        speedMaxScale > 0f ? speedMaxScale : DefaultSpeedMaxScale;
 }
 
 
@@ -119,6 +200,14 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Header("Arc Mode 参数")]
     public ArcModeConfig arcModeConfig;
 
+    [Header("Wave Mode 参数（波弹）")]
+    public WaveModeConfig waveModeConfig;
+
+    [Header("Grain Mode 参数（粒弹）")]
+    public GrainModeConfig grainModeConfig;
+
+    [NonSerialized] public float waveOmegaRadPerFrame;
+
 #if UNITY_EDITOR
     void OnValidate()
     {
@@ -136,6 +225,10 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
 
         if (displayScaleMin > displayScaleMax)
             (displayScaleMin, displayScaleMax) = (displayScaleMax, displayScaleMin);
+
+        var grain = grainModeConfig;
+        GrainModeConfig.NormalizeSpeedScales(ref grain);
+        grainModeConfig = grain;
     }
 #endif
 
@@ -185,5 +278,6 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
         launchSpeedPerFrame = launchSpeed / fps;
         displaySelfSpinRadPerFrame = displaySelfSpinDegreesPerSecond * Mathf.Deg2Rad / fps;
         displayScalePhaseRadPerFrame = displayScaleCyclesPerSecond * Mathf.PI * 2f / fps;
+        waveOmegaRadPerFrame = waveModeConfig.swingHz * Mathf.PI * 2f / fps;
     }
 }

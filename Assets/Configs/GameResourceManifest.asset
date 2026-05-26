@@ -16,7 +16,9 @@ MonoBehaviour:
   - character_marisa
   - character_reimu
   enemyConfigIds:
+  - boss_stage1
   - elite_fariy
+  - midboss_stage1
   - minion_fariy_blue
   - minion_fariy_green
   - minion_fariy_red
@@ -43,7 +45,21 @@ MonoBehaviour:
   - dm_test
   danmakuEmitterConfigIds:
   - dme_enemy_base
+  - dme_enemy_diag_spread
+  - dme_enemy_down_single
+  - dme_enemy_down_stream
+  - dme_enemy_down_triple
+  - dme_enemy_fan_dense
+  - dme_enemy_fan_narrow
+  - dme_enemy_fan_wide
+  - dme_enemy_four_way
+  - dme_enemy_grain_dense
+  - dme_enemy_grain_spray
+  - dme_enemy_ring_8
+  - dme_enemy_ring_16
+  - dme_enemy_ring_spread
   - dme_enemy_toplayer
+  - dme_enemy_wave_fan
   - dme_marisa_blue
   - dme_marisa_green
   - dme_marisa_main
@@ -67,7 +83,6 @@ MonoBehaviour:
   - stagepool_1
   stageTimelineConfigIds:
   - stagetimeline_1
-  - stagetimeline_example
   battleAreaConfigId: battlearea
   characterPrefabIds:
   - character_marisa
@@ -80,24 +95,18 @@ MonoBehaviour:
   - weapon_reimu_pink
   - weapon_reimu_red
   enemyPrefabIds:
+  - boss_stage1
   - elite_fariy
+  - midboss_stage1
   - minion_fariy_blue
   - minion_fariy_green
   - minion_fariy_red
   - minion_fariy_yellow
   danmakuPrefabIds:
   - dm_boll
-  - dm_marisa_blue
-  - dm_marisa_green
-  - dm_marisa_main
-  - dm_marisa_red
-  - dm_reimu_blue
-  - dm_reimu_main_pink
-  - dm_reimu_main_red
-  - dm_reimu_pink
-  - dm_reimu_red
   - dm_star
-  - dm_test
+  - dm_tpl_player_needle
+  - dm_tpl_player_orb
   danmakuEmitterPrefabIds:
   - dme_enemy_toplayer
   - dme_marisa_blue

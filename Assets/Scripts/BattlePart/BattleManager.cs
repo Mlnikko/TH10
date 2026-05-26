@@ -408,6 +408,7 @@ public class BattleManager : SingletonMono<BattleManager>
     {
         _battleWorld = new World();
         _battleWorld.AddSystem<StageTimelineSystem>();
+        _battleWorld.AddSystem<MidBossEncounterSystem>();
         _battleWorld.AddSystem<EnemyMovementSystem>();
         _battleWorld.AddSystem<DropItemSystem>();
         _battleWorld.AddSystem<CollisionSystem>();

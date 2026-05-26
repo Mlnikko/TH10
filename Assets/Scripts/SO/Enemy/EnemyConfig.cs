@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using System.Collections.Generic;
 
 public enum EnemyType
 {
@@ -29,11 +28,12 @@ public class EnemyConfig : GameConfig , IReferenceResolver
     public ColliderConfig colliderConfig;
 
     [Header("掉落物")]
-    [Tooltip("被击杀时在死亡位置生成的 DropItemConfig 的 ConfigId（小写）；留空则不掉落")]
-    public string[] dropOnDeathConfigIds = Array.Empty<string>();
+    [Tooltip("被击杀时生成的掉落物种类与数量")]
+    public DeathDropEntry[] dropOnDeathEntries = Array.Empty<DeathDropEntry>();
 
-    [NonSerialized]
-    public int[] dropOnDeathCfgIndices = Array.Empty<int>();
+    [NonSerialized] public BakedDeathDropEntry[] dropOnDeathBaked = Array.Empty<BakedDeathDropEntry>();
+
+    [SerializeField, HideInInspector] string[] dropOnDeathConfigIds;
 
     [Header("死亡表现")]
     [Tooltip("击杀时在死亡位置生成的纯粒子特效 prefab id（Effect 池，根节点挂 PooledEffectLifetime）；留空则不播放")]
@@ -44,7 +44,6 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 
     public void ResolveReferences(GameResDB resDb)
     {
-        // 1. 解析发射器预制体索引
         enemyPrefabIndex = resDb.GetPrefabIndex(enemyPrefabId);
         if (enemyPrefabIndex == -1)
         {
@@ -55,7 +54,6 @@ public class EnemyConfig : GameConfig , IReferenceResolver
             );
         }
 
-        // 2. 解析发射器配置索引
         emitterConfigIndex = resDb.GetConfigIndex(emitterConfigId);
         if (emitterConfigIndex == -1)
         {
@@ -66,24 +64,8 @@ public class EnemyConfig : GameConfig , IReferenceResolver
             );
         }
 
-        if (dropOnDeathConfigIds != null && dropOnDeathConfigIds.Length > 0)
-        {
-            var indices = new List<int>(dropOnDeathConfigIds.Length);
-            for (int i = 0; i < dropOnDeathConfigIds.Length; i++)
-            {
-                string id = dropOnDeathConfigIds[i];
-                if (string.IsNullOrWhiteSpace(id))
-                    continue;
-                int idx = resDb.GetConfigIndex(id.ToLowerInvariantTrimmed());
-                if (idx >= 0)
-                    indices.Add(idx);
-                else
-                    Logger.Warn($"[EnemyConfig] DropItemConfig not found: '{id}' (enemy {ConfigId})", LogTag.Resource);
-            }
-            dropOnDeathCfgIndices = indices.ToArray();
-        }
-        else
-            dropOnDeathCfgIndices = Array.Empty<int>();
+        EnsureDropEntriesMigrated();
+        dropOnDeathBaked = DeathDropBaking.BakeEntries(dropOnDeathEntries, resDb, $"EnemyConfig {ConfigId}");
 
         deathEffectPrefabIndex = -1;
         if (!string.IsNullOrWhiteSpace(deathEffectPrefabId))
@@ -99,20 +81,32 @@ public class EnemyConfig : GameConfig , IReferenceResolver
         }
     }
 
+    void EnsureDropEntriesMigrated()
+    {
+        if (dropOnDeathEntries != null && dropOnDeathEntries.Length > 0)
+            return;
+        if (dropOnDeathConfigIds == null || dropOnDeathConfigIds.Length == 0)
+            return;
+
+        dropOnDeathEntries = new DeathDropEntry[dropOnDeathConfigIds.Length];
+        for (int i = 0; i < dropOnDeathConfigIds.Length; i++)
+        {
+            dropOnDeathEntries[i] = new DeathDropEntry
+            {
+                dropConfigId = dropOnDeathConfigIds[i],
+                count = 1,
+            };
+        }
+    }
+
 #if UNITY_EDITOR
     void OnValidate()
     {
         enemyPrefabId = enemyPrefabId.ToLowerInvariantTrimmed();
         emitterConfigId = emitterConfigId.ToLowerInvariantTrimmed();
         deathEffectPrefabId = deathEffectPrefabId.ToLowerInvariantTrimmed();
-        if (dropOnDeathConfigIds != null)
-        {
-            for (int i = 0; i < dropOnDeathConfigIds.Length; i++)
-            {
-                if (!string.IsNullOrEmpty(dropOnDeathConfigIds[i]))
-                    dropOnDeathConfigIds[i] = dropOnDeathConfigIds[i].ToLowerInvariantTrimmed();
-            }
-        }
+        EnsureDropEntriesMigrated();
+        DeathDropBaking.NormalizeEntries(dropOnDeathEntries);
     }
 #endif
 }

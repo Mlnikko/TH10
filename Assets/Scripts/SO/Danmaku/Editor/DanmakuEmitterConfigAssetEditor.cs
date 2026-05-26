@@ -36,6 +36,9 @@ public class DanmakuEmitterConfigAssetEditor : Editor
                 continue;
             }
 
+            if (ShouldSkipModeProperty(serializedObject, prop.name))
+                continue;
+
             EditorGUILayout.PropertyField(prop, true);
         }
 
@@ -47,6 +50,23 @@ public class DanmakuEmitterConfigAssetEditor : Editor
                     ConfigViewerPrefabSync.ApplyDanmakuEmitterDisplaySprite(cfg);
             }
         }
+    }
+
+    static bool ShouldSkipModeProperty(SerializedObject so, string propertyName)
+    {
+        var modeProp = so?.FindProperty(nameof(DanmakuEmitterConfig.emitMode));
+        if (modeProp == null)
+            return false;
+
+        var mode = (EmitMode)modeProp.enumValueIndex;
+        return propertyName switch
+        {
+            nameof(DanmakuEmitterConfig.lineModeConfig) => mode != EmitMode.Line,
+            nameof(DanmakuEmitterConfig.arcModeConfig) => mode != EmitMode.Arc,
+            nameof(DanmakuEmitterConfig.waveModeConfig) => mode != EmitMode.Wave,
+            nameof(DanmakuEmitterConfig.grainModeConfig) => mode != EmitMode.Grain,
+            _ => false,
+        };
     }
 }
 #endif

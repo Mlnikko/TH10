@@ -95,10 +95,8 @@ public class DanmakuConfigViewer : GameConfigViewerBase
 
     protected override void ApplyEditorPreview() => ApplyDanmakuVisual();
 
-    void ApplyDanmakuVisual()
-    {
-        ConfigViewerSpritePreview.Apply(transform, sprite, color, scale);
-    }
+    void ApplyDanmakuVisual() =>
+        DanmakuPresentation.Apply(sprite, color, scale, gameObject);
 
     public void PreviewDanmaku()
     {

@@ -200,7 +200,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CDropItemMotion) != 0) RemoveComponentAtSlot<CDropItemMotion>(index);
         if ((mask & ComponentMaskBits.CDropItem) != 0) RemoveComponentAtSlot<CDropItem>(index);
         if ((mask & ComponentMaskBits.CEnemyDeathLoot) != 0) RemoveComponentAtSlot<CEnemyDeathLoot>(index);
-        if ((mask & ComponentMaskBits.CEnemyMovement) != 0) RemoveComponentAtSlot<CEnemyMovement>(index);
+        if ((mask & ComponentMaskBits.CEnemyPathMovement) != 0) RemoveComponentAtSlot<CEnemyPathMovement>(index);
         if ((mask & ComponentMaskBits.CEnemy) != 0) RemoveComponentAtSlot<CEnemy>(index);
         if ((mask & ComponentMaskBits.CPlayer) != 0) RemoveComponentAtSlot<CPlayer>(index);
         if ((mask & ComponentMaskBits.CHealth) != 0) RemoveComponentAtSlot<CHealth>(index);
@@ -210,6 +210,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CPosition) != 0) RemoveComponentAtSlot<CPosition>(index);
         if ((mask & ComponentMaskBits.CStageState) != 0) RemoveComponentAtSlot<CStageState>(index);
         if ((mask & ComponentMaskBits.CDanmakuBezierHoming) != 0) RemoveComponentAtSlot<CDanmakuBezierHoming>(index);
+        if ((mask & ComponentMaskBits.CMidBossEncounter) != 0) RemoveComponentAtSlot<CMidBossEncounter>(index);
 
         _componentMasks[index] = 0;
     }

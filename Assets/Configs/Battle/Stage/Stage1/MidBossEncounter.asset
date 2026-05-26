@@ -14,6 +14,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   spawnTimeSeconds: 50
-  enemyConfigId: 
-  spawnOffset: {x: 0, y: 0}
-  yHeightNorm: 0.25
+  onFieldDurationSeconds: 45
+  enemyConfigId: midboss_stage1
+  spawnOffset: {x: 0, y: 0.25}
+  yHeightNorm: 0.5
+  entryPathRoute:
+    durationSeconds: -1
+    moveSpeed: 3.6
+    spawnHoldSeconds: 0
+    nodes:
+    - positionLocal: {x: 0, y: -0.85}
+      holdSeconds: 0
+    legs: []
+    defaultLegDurationSeconds: 1
+  loopPathRoute:
+    durationSeconds: -1
+    moveSpeed: 3.6
+    spawnHoldSeconds: 0
+    nodes:
+    - positionLocal: {x: -0.8, y: 0}
+      holdSeconds: 0
+    - positionLocal: {x: 0, y: -0.19999993}
+      holdSeconds: 0
+    - positionLocal: {x: 0.8, y: 0}
+      holdSeconds: 0
+    - positionLocal: {x: 0, y: 0}
+      holdSeconds: 0
+    legs: []
+    defaultLegDurationSeconds: 1
+  exitPathRoute:
+    durationSeconds: -1
+    moveSpeed: 3.6
+    spawnHoldSeconds: 0
+    nodes:
+    - positionLocal: {x: 0, y: 1.4}
+      holdSeconds: 0
+    legs: []
+    defaultLegDurationSeconds: 1
+  maxHealthOverride: 0
+  emitterConfigIdOverride: 
+  dropOverrideMode: 0
+  dropOnDeathEntries: []
+  dropOnDeathConfigIds: []
+  animatorStateEntry: Enter
+  animatorStateLoop: Loop
+  animatorStateExit: Exit
+  animatorStateIdle: Idle
+  animatorStateMove: Move

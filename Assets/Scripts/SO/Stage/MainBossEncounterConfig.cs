@@ -26,10 +26,31 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
     [Range(-0.5f, 0.5f)]
     public float yHeightNorm = 0.2f;
 
+    [Header("轨迹")]
+    [Tooltip("登场路径；为空则直接在登场点出现")]
+    public PathRouteMovementData entryPathRoute;
+
+    [Tooltip("符卡战阶段循环路径；为空则在场阶段静止")]
+    public PathRouteMovementData loopPathRoute;
+
+    [NonSerialized] public int entryPathRouteBakeIndex = -1;
+    [NonSerialized] public int loopPathRouteBakeIndex = -1;
+    [NonSerialized] public int entryDurationFrames;
+
     [Tooltip("BOSS 登场后的对话/无敌时间（秒）；加载时烘焙为 bossIntroDurationFrames")]
     public float bossIntroDurationSeconds = 3f;
 
     [NonSerialized] public int bossIntroDurationFrames;
+
+    [Header("Animator")]
+    [Tooltip("登场/无敌（BossIntro）：Animator 状态名（非 AnimationClip）；留空不切换")]
+    public string animatorStateIntro;
+
+    [Tooltip("符卡战（BossFight）：Animator 状态名")]
+    public string animatorStateFight = "Boss_Idle";
+
+    [Tooltip("击破（BossDefeated，可选）：Animator 状态名")]
+    public string animatorStateDefeated;
 
     [Tooltip("BOSS 阶段 / 符卡（独立 BossPhase 资产）")]
     public List<BossPhaseConfig> bossPhases = new();
@@ -40,6 +61,13 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
         bossIntroDurationFrames = bossIntroDurationSeconds <= 0f
             ? 0
             : Mathf.Max(0, Mathf.RoundToInt(bossIntroDurationSeconds * logicFPS));
+
+        entryPathRoute?.BakeMovementTiming(logicFPS);
+        loopPathRoute?.BakeMovementTiming(logicFPS);
+        entryDurationFrames = 0;
+        entryPathRouteBakeIndex = -1;
+        loopPathRouteBakeIndex = -1;
+
         if (bossPhases == null)
             return;
         for (int i = 0; i < bossPhases.Count; i++)
@@ -47,6 +75,24 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
             if (bossPhases[i] is ILogicTimingBake phaseBake)
                 phaseBake.BakeLogicTiming(logicFPS);
         }
+    }
+
+    /// <summary>将路径注册到 <see cref="EnemyPathBakeCache"/>（时间轴 Begin 时调用）。</summary>
+    public void BakePathRoutesIfNeeded(uint logicFps)
+    {
+        entryPathRouteBakeIndex = BakeRouteIndex(entryPathRoute, logicFps, out entryDurationFrames);
+        loopPathRouteBakeIndex = BakeRouteIndex(loopPathRoute, logicFps, out _);
+    }
+
+    static int BakeRouteIndex(PathRouteMovementData route, uint logicFps, out int durationFrames)
+    {
+        durationFrames = 0;
+        if (route == null)
+            return -1;
+
+        var baked = EnemyPathMovementBaking.BakeRoute(route, logicFps);
+        durationFrames = baked.durationFrames > 0 ? baked.durationFrames : 0;
+        return EnemyPathBakeCache.Register(baked);
     }
 
 #if UNITY_EDITOR

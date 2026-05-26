@@ -1,7 +1,7 @@
 using System;
 
 /// <summary>
-/// 掉落物竖直上抛（至终端速度后匀速下落）；越界回收。
+/// 掉落物出场运动（竖直上抛或定向散射后匀速下落）；越界回收。
 /// </summary>
 public class DropItemSystem : BaseSystem
 {
@@ -27,8 +27,9 @@ public class DropItemSystem : BaseSystem
             ref var pos = ref positions[idx];
             ref var motion = ref motions[idx];
 
-            bool wasRising = motion.vyPerFrame > 0f;
-            pos.y += DropItemMotionSimulator.StepVertical(ref motion);
+            DropItemMotionSimulator.StepMotion(ref motion, out float dx, out float dy, out bool wasRising);
+            pos.x += dx;
+            pos.y += dy;
 
             if (idx < rotations.Length)
                 DropItemMotionSimulator.StepAscentRotation(wasRising, in motion, ref rotations[idx]);

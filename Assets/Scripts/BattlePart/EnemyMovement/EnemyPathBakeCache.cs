@@ -7,7 +7,11 @@ public static class EnemyPathBakeCache
 {
     static readonly List<BakedPathRoute> s_routes = new();
 
-    public static void Clear() => s_routes.Clear();
+    public static void Clear()
+    {
+        s_routes.Clear();
+        EnemyMovementBaking.ResetCachedRoutes();
+    }
 
     public static int Register(BakedPathRoute route)
     {
@@ -37,7 +41,12 @@ public sealed class BakedPathRoute
 
 public struct BakedPathLeg
 {
+    public const byte KindBezier = 0;
+    public const byte KindSineOnChord = 1;
+
+    public byte kind;
     /// <summary>相对 spawnFrame 的累计结束帧（不含）。</summary>
     public int endFrame;
     public float p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y;
+    public float sineAmp, sineOmega, sinePhase0;
 }

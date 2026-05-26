@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyType: 1
   enemyPrefabId: minion_fariy_green
-  emitterConfigId: dme_enemy_base
+  emitterConfigId: dme_enemy_grain_spray
   maxHealth: 10
   colliderConfig:
     isTrigger: 0

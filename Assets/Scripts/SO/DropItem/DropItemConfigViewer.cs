@@ -22,11 +22,20 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
     [SerializeField] Sprite pickupSprite;
 
-    [Header("竖直上抛运动")]
+    [Header("出场运动")]
+    [SerializeField] E_DropMotionMode motionMode;
+
+    [Header("竖直上抛")]
     [SerializeField] float initialUpSpeed;
     [SerializeField] float fallGravity;
     [SerializeField] float maxFallSpeed;
     [SerializeField] float riseSpinDegreesPerSecond;
+
+    [Header("定向散射后下落")]
+    [SerializeField] float burstInitialSpeed;
+    [SerializeField] Vector2 burstDirection;
+    [SerializeField] float burstDeceleration;
+    [SerializeField] float fallSpeedAfterBurst;
 
     [Header("碰撞")]
     [SerializeField] ColliderConfig colliderConfig;
@@ -49,6 +58,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
     Quaternion _previewSpawnWorldRot;
     CDropItemMotion _previewMotion;
     LogicFramePreviewRunner _previewClock;
+    float _previewOffsetX;
     float _previewOffsetY;
     float _previewAngleRad;
     Vector3[] _previewPathPoints;
@@ -68,10 +78,15 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         pickupPrefabId = dropItemConfig.pickupPrefabId;
         pickupSprite = dropItemConfig.pickupSprite;
+        motionMode = dropItemConfig.motionMode;
         initialUpSpeed = dropItemConfig.initialUpSpeed;
         fallGravity = dropItemConfig.fallGravity;
         maxFallSpeed = dropItemConfig.maxFallSpeed;
         riseSpinDegreesPerSecond = dropItemConfig.riseSpinDegreesPerSecond;
+        burstInitialSpeed = dropItemConfig.burstInitialSpeed;
+        burstDirection = dropItemConfig.burstDirection;
+        burstDeceleration = dropItemConfig.burstDeceleration;
+        fallSpeedAfterBurst = dropItemConfig.fallSpeedAfterBurst;
         colliderConfig = dropItemConfig.colliderConfig;
         dropKind = dropItemConfig.dropKind;
         effectAmount = dropItemConfig.effectAmount;
@@ -89,10 +104,15 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         dropItemConfig.pickupPrefabId = pickupPrefabId;
         dropItemConfig.pickupSprite = pickupSprite;
+        dropItemConfig.motionMode = motionMode;
         dropItemConfig.initialUpSpeed = initialUpSpeed;
         dropItemConfig.fallGravity = fallGravity;
         dropItemConfig.maxFallSpeed = maxFallSpeed;
         dropItemConfig.riseSpinDegreesPerSecond = riseSpinDegreesPerSecond;
+        dropItemConfig.burstInitialSpeed = burstInitialSpeed;
+        dropItemConfig.burstDirection = burstDirection;
+        dropItemConfig.burstDeceleration = burstDeceleration;
+        dropItemConfig.fallSpeedAfterBurst = fallSpeedAfterBurst;
         dropItemConfig.colliderConfig = colliderConfig;
         dropItemConfig.dropKind = dropKind;
         dropItemConfig.effectAmount = effectAmount;
@@ -130,10 +150,15 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         dropItemConfig.pickupPrefabId = pickupPrefabId;
         dropItemConfig.pickupSprite = pickupSprite;
+        dropItemConfig.motionMode = motionMode;
         dropItemConfig.initialUpSpeed = initialUpSpeed;
         dropItemConfig.fallGravity = fallGravity;
         dropItemConfig.maxFallSpeed = maxFallSpeed;
         dropItemConfig.riseSpinDegreesPerSecond = riseSpinDegreesPerSecond;
+        dropItemConfig.burstInitialSpeed = burstInitialSpeed;
+        dropItemConfig.burstDirection = burstDirection;
+        dropItemConfig.burstDeceleration = burstDeceleration;
+        dropItemConfig.fallSpeedAfterBurst = fallSpeedAfterBurst;
         dropItemConfig.colliderConfig = colliderConfig;
         dropItemConfig.dropKind = dropKind;
         dropItemConfig.effectAmount = effectAmount;
@@ -156,6 +181,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
         _previewMotion = DropItemMotionSimulator.CreateMotionFromConfig(dropItemConfig, fps);
         _previewClock = LogicFramePreviewClock.CreateRealTimeSession(previewMotionDuration, fps);
         _previewClock.Reset();
+        _previewOffsetX = 0f;
         _previewOffsetY = 0f;
         _previewAngleRad = 0f;
         _previewSpawnWorldPos = transform.position;
@@ -180,6 +206,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         transform.position = _previewSpawnWorldPos;
         transform.rotation = _previewSpawnWorldRot;
+        _previewOffsetX = 0f;
         _previewOffsetY = 0f;
         _previewAngleRad = 0f;
 
@@ -206,15 +233,16 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         for (int i = 0; i < steps; i++)
         {
-            bool wasRising = _previewMotion.vyPerFrame > 0f;
-            _previewOffsetY += DropItemMotionSimulator.StepVertical(ref _previewMotion);
+            DropItemMotionSimulator.StepMotion(ref _previewMotion, out float dx, out float dy, out bool wasRising);
+            _previewOffsetX += dx;
+            _previewOffsetY += dy;
 
             var rotation = new CRotation(_previewAngleRad);
             DropItemMotionSimulator.StepAscentRotation(wasRising, in _previewMotion, ref rotation);
             _previewAngleRad = rotation.angleRad;
         }
 
-        transform.position = _previewSpawnWorldPos + new Vector3(0f, _previewOffsetY, 0f);
+        transform.position = _previewSpawnWorldPos + new Vector3(_previewOffsetX, _previewOffsetY, 0f);
         transform.rotation = _previewSpawnWorldRot * Quaternion.Euler(0f, 0f, _previewAngleRad * Mathf.Rad2Deg);
         if (steps > 0)
             SceneView.RepaintAll();
@@ -226,6 +254,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
             _previewPathPoints = new Vector3[MaxPreviewPathPoints];
 
         var motion = DropItemMotionSimulator.CreateMotionFromConfig(dropItemConfig, logicFps);
+        float x = 0f;
         float y = 0f;
         _previewPathPoints[0] = _previewSpawnWorldPos;
         _previewPathCount = 1;
@@ -236,8 +265,10 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         for (int frame = 0; frame < maxFrames; frame++)
         {
-            y += DropItemMotionSimulator.StepVertical(ref motion);
-            _previewPathPoints[_previewPathCount++] = _previewSpawnWorldPos + new Vector3(0f, y, 0f);
+            DropItemMotionSimulator.StepMotion(ref motion, out float dx, out float dy, out _);
+            x += dx;
+            y += dy;
+            _previewPathPoints[_previewPathCount++] = _previewSpawnWorldPos + new Vector3(x, y, 0f);
         }
     }
 

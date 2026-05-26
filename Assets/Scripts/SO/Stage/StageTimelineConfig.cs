@@ -33,13 +33,16 @@ public class StageTimelineConfig : GameConfig, ILogicTimingBake, IReferenceResol
 
     public void ResolveReferences(GameResDB resDb)
     {
-        if (midStageWaves == null)
-            return;
-        for (int i = 0; i < midStageWaves.Count; i++)
+        if (midStageWaves != null)
         {
-            if (midStageWaves[i] != null)
-                midStageWaves[i].ResolveDropReferences(resDb);
+            for (int i = 0; i < midStageWaves.Count; i++)
+            {
+                if (midStageWaves[i] != null)
+                    midStageWaves[i].ResolveDropReferences(resDb);
+            }
         }
+
+        midBossEncounter?.ResolveReferences(resDb);
     }
 
     public void BakeLogicTiming(uint logicFPS)

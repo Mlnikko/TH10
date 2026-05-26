@@ -138,7 +138,7 @@ public static class EntityPresentationDiagnostics
         AppendFlag<CCollider>(sb, ref first, em, entity);
         AppendFlag<CHealth>(sb, ref first, em, entity);
         AppendFlag<CDanmakuEmitter>(sb, ref first, em, entity);
-        AppendFlag<CEnemyMovement>(sb, ref first, em, entity);
+        AppendFlag<CEnemyPathMovement>(sb, ref first, em, entity);
         sb.Append(']');
     }
 

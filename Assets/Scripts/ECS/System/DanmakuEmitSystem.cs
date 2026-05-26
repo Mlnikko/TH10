@@ -74,6 +74,7 @@ public class DanmakuEmitSystem : BaseSystem
         if (danmakuCfgIndex == -1)
             return;
 
+        int salvoIndex = emitter.launchCountUsed;
         bool fired = false;
         switch (emitter.emitMode)
         {
@@ -87,6 +88,20 @@ public class DanmakuEmitSystem : BaseSystem
             case EmitMode.Arc:
                 DanmakuEmitterSpawnMath.EmitArc(
                     in emitter, emitPosX, emitPosY, emitRotRad,
+                    (x, y, rot, vx, vy) => SpawnDanmaku(x, y, rot, vx, vy, danmakuCfgIndex));
+                fired = true;
+                break;
+
+            case EmitMode.Wave:
+                DanmakuEmitterSpawnMath.EmitWave(
+                    in emitter, emitPosX, emitPosY, emitRotRad, currentFrame,
+                    (x, y, rot, vx, vy) => SpawnDanmaku(x, y, rot, vx, vy, danmakuCfgIndex));
+                fired = true;
+                break;
+
+            case EmitMode.Grain:
+                DanmakuEmitterSpawnMath.EmitGrain(
+                    in emitter, emitPosX, emitPosY, emitRotRad, salvoIndex,
                     (x, y, rot, vx, vy) => SpawnDanmaku(x, y, rot, vx, vy, danmakuCfgIndex));
                 fired = true;
                 break;

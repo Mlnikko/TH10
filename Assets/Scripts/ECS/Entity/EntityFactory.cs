@@ -385,6 +385,7 @@ public class EntityFactory
             if (emitterCfg != null)
             {
                 var emitter = new CDanmakuEmitter(emitterCfg);
+                emitter.randomSeed = (uint)((e_enemy.Index + 1) * 2246822519u);
                 emitter.isEmitting = true;
                 _entityManager.AddComponent(e_enemy, emitter);
             }

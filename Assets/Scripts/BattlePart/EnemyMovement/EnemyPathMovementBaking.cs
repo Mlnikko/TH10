@@ -3,25 +3,50 @@ using UnityEngine;
 
 /// <summary>
 /// 将 <see cref="PathRouteMovementData"/> 烘焙为 <see cref="BakedPathRoute"/>。
+/// 路径起点为生成点（局部原点），<see cref="PathRouteMovementData.nodes"/> 仅含目标路径点。
 /// </summary>
 public static class EnemyPathMovementBaking
 {
     public static BakedPathRoute BakeRoute(PathRouteMovementData data, uint logicFps)
     {
         var route = new BakedPathRoute();
-        if (data == null || data.nodes == null || data.nodes.Count < 2)
+        if (data == null)
             return route;
+
+        data.EnsureSpawnAnchoredFormat();
+        if (data.nodes == null || data.nodes.Count < 1)
+        {
+            if (data.spawnHoldSeconds <= 0f)
+                return route;
+        }
 
         data.BakeMovementTiming(logicFps);
         float fps = Mathf.Max(1f, logicFps);
-        int nodeCount = data.nodes.Count;
+        int nodeCount = data.nodes != null ? data.nodes.Count : 0;
         int legConfigCount = data.legs != null ? data.legs.Count : 0;
         int cumulative = 0;
+
+        if (data.spawnHoldSeconds > 0f)
+        {
+            int spawnHoldFrames = Mathf.Max(1, Mathf.RoundToInt(data.spawnHoldSeconds * fps));
+            cumulative += spawnHoldFrames;
+            route.legs.Add(MakeHoldLeg(Vector2.zero, cumulative));
+        }
 
         for (int i = 0; i < nodeCount; i++)
         {
             MovementPathNode node = data.nodes[i];
             Vector2 pos = node.positionLocal;
+            Vector2 from = i == 0 ? Vector2.zero : data.nodes[i - 1].positionLocal;
+
+            if (Vector2.Distance(from, pos) > 1e-6f)
+            {
+                bool hasLeg = data.legs != null && i < legConfigCount;
+                MovementPathLeg legCfg = hasLeg ? data.legs[i] : default;
+                int travelFrames = ResolveTravelFrames(hasLeg, legCfg, data, from, pos, fps);
+                cumulative += travelFrames;
+                route.legs.Add(MakeTravelLeg(from, pos, hasLeg, legCfg, cumulative, fps));
+            }
 
             int holdFrames = node.holdSeconds > 0f
                 ? Mathf.Max(1, Mathf.RoundToInt(node.holdSeconds * fps))
@@ -31,18 +56,6 @@ public static class EnemyPathMovementBaking
                 cumulative += holdFrames;
                 route.legs.Add(MakeHoldLeg(pos, cumulative));
             }
-
-            if (i >= nodeCount - 1)
-                continue;
-
-            MovementPathLeg legCfg = default;
-            bool hasLeg = data.legs != null && i < legConfigCount;
-            if (hasLeg)
-                legCfg = data.legs[i];
-            Vector2 next = data.nodes[i + 1].positionLocal;
-            int travelFrames = ResolveTravelFrames(hasLeg, legCfg, data, pos, next, fps);
-            cumulative += travelFrames;
-            route.legs.Add(MakeTravelLeg(pos, next, hasLeg, legCfg, cumulative));
         }
 
         route.legCount = (byte)Mathf.Min(route.legs.Count, byte.MaxValue);
@@ -65,6 +78,7 @@ public static class EnemyPathMovementBaking
 
     static BakedPathLeg MakeHoldLeg(Vector2 pos, int endFrame) => new()
     {
+        kind = BakedPathLeg.KindBezier,
         endFrame = endFrame,
         p0x = pos.x, p0y = pos.y,
         p1x = pos.x, p1y = pos.y,
@@ -72,9 +86,28 @@ public static class EnemyPathMovementBaking
         p3x = pos.x, p3y = pos.y
     };
 
-    static BakedPathLeg MakeTravelLeg(Vector2 a, Vector2 b, bool hasLeg, MovementPathLeg cfg, int endFrame)
+    static BakedPathLeg MakeTravelLeg(
+        Vector2 a, Vector2 b, bool hasLeg, MovementPathLeg cfg, int endFrame, float logicFps)
     {
         E_PathSegmentCurve curve = hasLeg ? cfg.curve : E_PathSegmentCurve.Linear;
+        if (curve == E_PathSegmentCurve.Sine)
+        {
+            float fps = Mathf.Max(1f, logicFps);
+            float amp = hasLeg ? Mathf.Max(0f, cfg.sineAmplitude) : PathMovementLegDefaults.SineAmplitudeFallback;
+            float hz = hasLeg ? Mathf.Max(0f, cfg.sineHz) : PathMovementLegDefaults.SineHzFallback;
+            float phase = hasLeg ? cfg.sinePhaseRad : 0f;
+            return new BakedPathLeg
+            {
+                kind = BakedPathLeg.KindSineOnChord,
+                endFrame = endFrame,
+                p0x = a.x, p0y = a.y,
+                p3x = b.x, p3y = b.y,
+                sineAmp = amp,
+                sineOmega = (Mathf.PI * 2f * hz) / fps,
+                sinePhase0 = phase
+            };
+        }
+
         Vector2 p1, p2;
         switch (curve)
         {
@@ -83,7 +116,7 @@ public static class EnemyPathMovementBaking
                 p2 = hasLeg ? b + cfg.bezierHandle2Local : b - (b - a) * 0.33f;
                 break;
             case E_PathSegmentCurve.Arc:
-                ArcToBezierHandles(a, b, hasLeg ? cfg.arcBulge : 0.5f, out p1, out p2);
+                ArcToBezierHandles(a, b, hasLeg ? cfg.arcBulge : PathMovementLegDefaults.ArcBulgeFallback, out p1, out p2);
                 break;
             default:
                 p1 = a + (b - a) * (1f / 3f);
@@ -93,6 +126,7 @@ public static class EnemyPathMovementBaking
 
         return new BakedPathLeg
         {
+            kind = BakedPathLeg.KindBezier,
             endFrame = endFrame,
             p0x = a.x, p0y = a.y,
             p1x = p1.x, p1y = p1.y,

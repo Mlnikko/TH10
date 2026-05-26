@@ -468,6 +468,141 @@ public static class ResourceIdEditorPicker
         EditorGUILayout.Space(2);
     }
 
+    public static void DrawDeathDropEntryArray(SerializedProperty arrayProp, bool drawSectionHeader = true)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return;
+
+        if (drawSectionHeader)
+            EditorGUILayout.LabelField("死亡掉落", EditorStyles.boldLabel);
+
+        var ids = CollectDropItemConfigIds();
+        const float removeButtonWidth = 24f;
+        const float countFieldWidth = 52f;
+
+        for (int i = 0; i < arrayProp.arraySize; i++)
+        {
+            var element = arrayProp.GetArrayElementAtIndex(i);
+            var idProp = element.FindPropertyRelative(nameof(DeathDropEntry.dropConfigId));
+            var countProp = element.FindPropertyRelative(nameof(DeathDropEntry.count));
+
+            EditorGUILayout.BeginHorizontal();
+            DrawIdPopup(idProp, ids, $"种类 [{i}]");
+            EditorGUILayout.LabelField("×", GUILayout.Width(14));
+            if (countProp != null)
+                EditorGUILayout.PropertyField(countProp, GUIContent.none, GUILayout.Width(countFieldWidth));
+            if (GUILayout.Button("−", GUILayout.Width(removeButtonWidth)))
+            {
+                arrayProp.DeleteArrayElementAtIndex(i);
+                EditorGUILayout.EndHorizontal();
+                break;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("+ 添加掉落", GUILayout.Width(100)))
+        {
+            arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize);
+            var last = arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1);
+            var countProp = last.FindPropertyRelative(nameof(DeathDropEntry.count));
+            if (countProp != null && countProp.intValue < 1)
+                countProp.intValue = 1;
+        }
+
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space(2);
+    }
+
+    public static void DrawWaveSpawnQueueArray(
+        SerializedProperty arrayProp,
+        SerializedProperty pathAssignmentProp = null,
+        bool drawSectionHeader = true,
+        StageTimelineConfigViewer pathEditViewer = null)
+    {
+        if (arrayProp == null || !arrayProp.isArray)
+            return;
+
+        if (drawSectionHeader)
+            EditorGUILayout.LabelField("出怪队列", EditorStyles.boldLabel);
+
+        var enemyIds = CollectEnemyConfigIds();
+        const float removeButtonWidth = 24f;
+        const float delayFieldWidth = 52f;
+        const float slotFieldWidth = 40f;
+        const float pathPickButtonWidth = 36f;
+        bool showPathPick = pathEditViewer != null;
+
+        for (int i = 0; i < arrayProp.arraySize; i++)
+        {
+            var element = arrayProp.GetArrayElementAtIndex(i);
+            var enemyProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.enemyConfigId));
+            var slotProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.spawnSlotIndex));
+            var delayProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.delayAfterPreviousSeconds));
+
+            bool isActivePathEntry = showPathPick && pathEditViewer.PreviewPathEditEntryIndex == i;
+            Color prevBg = GUI.backgroundColor;
+            if (isActivePathEntry)
+                GUI.backgroundColor = new Color(0.72f, 0.88f, 1f);
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            GUI.backgroundColor = prevBg;
+
+            EditorGUILayout.BeginHorizontal();
+            DrawIdPopup(enemyProp, enemyIds, $"敌人 [{i}]");
+            if (showPathPick)
+            {
+                if (GUILayout.Button(isActivePathEntry ? "▶" : "路径", GUILayout.Width(pathPickButtonWidth)))
+                {
+                    pathEditViewer.SetPreviewPathEditEntryIndex(i);
+                    StageTimelinePathRouteSceneHandles.KeepViewerSelected(pathEditViewer);
+                }
+            }
+
+            if (GUILayout.Button("−", GUILayout.Width(removeButtonWidth)))
+            {
+                arrayProp.DeleteArrayElementAtIndex(i);
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndVertical();
+                break;
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            if (slotProp != null)
+            {
+                EditorGUILayout.LabelField("槽位", GUILayout.Width(28));
+                EditorGUILayout.PropertyField(slotProp, GUIContent.none, GUILayout.Width(slotFieldWidth));
+            }
+
+            if (i > 0 && delayProp != null)
+            {
+                EditorGUILayout.LabelField("延迟(s)", GUILayout.Width(40));
+                EditorGUILayout.PropertyField(delayProp, GUIContent.none, GUILayout.Width(delayFieldWidth));
+            }
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+        }
+
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("+ 添加入队", GUILayout.Width(100)))
+        {
+            arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize);
+            var last = arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1);
+            var slotProp = last.FindPropertyRelative(nameof(WaveSpawnQueueEntry.spawnSlotIndex));
+            if (slotProp != null)
+                slotProp.intValue = -1;
+        }
+
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space(2);
+    }
+
     static void DrawDropItemConfigIdArrayRowsGUILayout(SerializedProperty arrayProp, IReadOnlyList<string> ids)
     {
         const float removeButtonWidth = 24f;

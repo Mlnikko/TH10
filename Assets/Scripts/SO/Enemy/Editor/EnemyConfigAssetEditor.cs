@@ -36,16 +36,16 @@ public class EnemyConfigAssetEditor : Editor
                 continue;
             }
 
-            if (prop.name == nameof(EnemyConfig.dropOnDeathConfigIds))
+            if (prop.name == nameof(EnemyConfig.dropOnDeathEntries))
             {
                 EditorGUILayout.Space(2);
                 EditorGUILayout.LabelField("掉落物", EditorStyles.boldLabel);
-                ResourceIdEditorPicker.DrawDropItemConfigIdArray(prop, drawSectionHeader: false);
+                ResourceIdEditorPicker.DrawDeathDropEntryArray(prop, drawSectionHeader: false);
                 EditorGUILayout.Space(2);
                 continue;
             }
 
-            if (prop.propertyPath.StartsWith(nameof(EnemyConfig.dropOnDeathConfigIds) + ".", System.StringComparison.Ordinal))
+            if (prop.propertyPath.StartsWith(nameof(EnemyConfig.dropOnDeathEntries) + ".", System.StringComparison.Ordinal))
                 continue;
 
             if (prop.name == nameof(EnemyConfig.deathEffectPrefabId))
@@ -54,10 +54,9 @@ public class EnemyConfigAssetEditor : Editor
                 continue;
             }
 
-            if (prop.name == nameof(EnemyConfig.dropOnDeathCfgIndices))
-                continue;
-
-            if (prop.name == nameof(EnemyConfig.deathEffectPrefabIndex))
+            if (prop.name == nameof(EnemyConfig.dropOnDeathBaked)
+                || prop.name == "dropOnDeathConfigIds"
+                || prop.name == nameof(EnemyConfig.deathEffectPrefabIndex))
                 continue;
 
             EditorGUILayout.PropertyField(prop, true);

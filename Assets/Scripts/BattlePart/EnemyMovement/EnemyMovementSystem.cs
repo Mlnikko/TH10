@@ -1,7 +1,7 @@
 using System;
 
 /// <summary>
-/// 逻辑帧上根据 <see cref="CEnemyMovement"/> 写入 <see cref="CPosition"/>（东方系可配置轨迹）。
+/// 逻辑帧上根据 <see cref="CEnemyPathMovement"/> 写入 <see cref="CPosition"/>。
 /// 需在 <see cref="StageTimelineSystem"/> 之后运行，以便当帧新生成的敌人也被推进。
 /// </summary>
 public class EnemyMovementSystem : BaseSystem
@@ -9,7 +9,6 @@ public class EnemyMovementSystem : BaseSystem
     public override void OnLogicTick(uint frame)
     {
         AdvancePathRoutedEnemies(frame);
-        AdvanceLegacyMovementEnemies(frame);
     }
 
     void AdvancePathRoutedEnemies(uint frame)
@@ -30,7 +29,7 @@ public class EnemyMovementSystem : BaseSystem
             float prevX = pos.x;
             float prevY = pos.y;
             if (!EnemyPathMotionEvaluator.TryEvaluate(
-                    path.routeBakeIndex, path.spawnFrame, path.originX, path.originY, frame, out float nx, out float ny))
+                    path.routeBakeIndex, path.spawnFrame, path.originX, path.originY, frame, path.loopRoute, out float nx, out float ny))
                 continue;
 
             ref var vel = ref velocities[idx];
@@ -38,35 +37,6 @@ public class EnemyMovementSystem : BaseSystem
             vel.vy = ny - prevY;
             pos.x = nx;
             pos.y = ny;
-            TryRecycleEnemyOutOfRecycleArea(idx, nx, ny);
-        }
-    }
-
-    void AdvanceLegacyMovementEnemies(uint frame)
-    {
-        Span<int> indices = EntityManager.GetActiveIndices<CEnemyMovement>();
-        if (indices.Length == 0)
-            return;
-
-        var motions = EntityManager.GetComponentSpan<CEnemyMovement>();
-        var positions = EntityManager.GetComponentSpan<CPosition>();
-        var velocities = EntityManager.GetComponentSpan<CVelocity>();
-
-        for (int i = 0; i < indices.Length; i++)
-        {
-            int idx = indices[i];
-            ref var m = ref motions[idx];
-            ref var pos = ref positions[idx];
-            float prevX = pos.x;
-            float prevY = pos.y;
-            EnemyMotionEvaluator.Evaluate(in m, frame, out float nx, out float ny);
-
-            ref var vel = ref velocities[idx];
-            vel.vx = nx - prevX;
-            vel.vy = ny - prevY;
-            pos.x = nx;
-            pos.y = ny;
-
             TryRecycleEnemyOutOfRecycleArea(idx, nx, ny);
         }
     }

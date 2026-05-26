@@ -8,7 +8,7 @@ public class EnemyConfigEditor : Editor
 {
     const string ConfigField = "enemyConfig";
     const string PrefabIdField = "enemyPrefabId";
-    const string DropIdsField = "dropOnDeathConfigIds";
+    const string DropIdsField = "dropOnDeathEntries";
     const string DeathFxField = "deathEffectPrefabId";
 
     public override void OnInspectorGUI()
@@ -92,7 +92,7 @@ public class EnemyConfigEditor : Editor
 
         var dropIds = configSo.FindProperty(DropIdsField);
         if (dropIds != null)
-            ResourceIdEditorPicker.DrawDropItemConfigIdArray(dropIds, drawSectionHeader: false);
+            ResourceIdEditorPicker.DrawDeathDropEntryArray(dropIds, drawSectionHeader: false);
 
         var deathFx = configSo.FindProperty(DeathFxField);
         if (deathFx != null)
@@ -115,7 +115,7 @@ public class EnemyConfigEditor : Editor
         {
             EditorGUILayout.Space(2);
             EditorGUILayout.LabelField("死亡掉落（预制体缓存）", EditorStyles.boldLabel);
-            ResourceIdEditorPicker.DrawDropItemConfigIdArray(dropIds, drawSectionHeader: false);
+            ResourceIdEditorPicker.DrawDeathDropEntryArray(dropIds, drawSectionHeader: false);
         }
 
         var deathFx = serializedObject.FindProperty(DeathFxField);

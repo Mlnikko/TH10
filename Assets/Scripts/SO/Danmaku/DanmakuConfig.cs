@@ -5,7 +5,7 @@ using UnityEngine;
 public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("弹幕预制体")]
-    [Tooltip("预制体 Id（小写）；Inspector 中从 GameResourceManifest / Prefabs/Danmaku 下拉选择")]
+    [Tooltip("池化预制体 archetype Id（小写），与 ConfigId 无关；多条弹幕 Config 可共用同一 prefab，表现由下方 sprite/color/scale 驱动。见 DanmakuPrefabArchetypes。")]
     public string danmakuPrefabId;
     [NonSerialized]
     public int danmakuPrefabIndex;

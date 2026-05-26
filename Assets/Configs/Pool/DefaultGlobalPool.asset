@@ -47,47 +47,23 @@ MonoBehaviour:
       maxCapacity: 50
       defaultWarmupCount: 50
       allowForceRecycle: 0
+    - prefabId: boss_stage1
+      maxCapacity: 1
+      defaultWarmupCount: 1
+      allowForceRecycle: 0
+    - prefabId: midboss_stage1
+      maxCapacity: 1
+      defaultWarmupCount: 1
+      allowForceRecycle: 0
   - categoryName: "\u5F39\u5E55"
     category: 2
     entries:
-    - prefabId: dm_test
-      maxCapacity: 5000
-      defaultWarmupCount: 5000
+    - prefabId: dm_tpl_player_needle
+      maxCapacity: 6000
+      defaultWarmupCount: 2000
       allowForceRecycle: 1
-    - prefabId: dm_reimu_main_red
-      maxCapacity: 500
-      defaultWarmupCount: 300
-      allowForceRecycle: 0
-    - prefabId: dm_reimu_main_pink
-      maxCapacity: 500
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_reimu_red
+    - prefabId: dm_tpl_player_orb
       maxCapacity: 1000
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_reimu_blue
-      maxCapacity: 500
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_reimu_pink
-      maxCapacity: 500
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_marisa_blue
-      maxCapacity: 500
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_marisa_green
-      maxCapacity: 500
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_marisa_main
-      maxCapacity: 500
-      defaultWarmupCount: 500
-      allowForceRecycle: 1
-    - prefabId: dm_marisa_red
-      maxCapacity: 500
       defaultWarmupCount: 500
       allowForceRecycle: 1
     - prefabId: dm_boll

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyType: 1
   enemyPrefabId: minion_fariy_blue
-  emitterConfigId: dme_enemy_base
+  emitterConfigId: dme_enemy_down_single
   maxHealth: 10
   colliderConfig:
     isTrigger: 0

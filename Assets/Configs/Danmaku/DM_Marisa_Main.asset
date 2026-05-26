@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb0659cc521f3714da71df64a0ef43b3, type: 3}
   m_Name: DM_Marisa_Main
   m_EditorClassIdentifier: 
-  danmakuPrefabId: dm_marisa_main
+  danmakuPrefabId: dm_tpl_player_needle
   danmakuType: 0
   scale: 1
   sprite: {fileID: -1616953828, guid: 26ced90f533491b4baf77b785ea6b010, type: 3}

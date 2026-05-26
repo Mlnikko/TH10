@@ -91,6 +91,7 @@ public class PresentationSystem : BaseSystem
                         {
                             go.transform.position = spawnPos;
                             go.SetActive(true);
+                            DanmakuPresentation.Apply(config, go);
                             updater = new DanmakuUpdater(go);
                         }
                     }
@@ -145,7 +146,16 @@ public class PresentationSystem : BaseSystem
                         {
                             go.transform.position = spawnPos;
                             go.SetActive(true);
-                            updater = new EnemyUpdater(go);
+                            if (EntityManager.HasComponent<CMidBossEncounter>(entity))
+                            {
+                                ref readonly var mid = ref EntityManager.GetComponent<CMidBossEncounter>(entity);
+                                var encounterCfg = GameResDB.Instance.GetConfig<MidBossEncounterConfig>(mid.encounterCfgIndex);
+                                updater = encounterCfg != null
+                                    ? new MidBossUpdater(go, encounterCfg)
+                                    : new EnemyUpdater(go);
+                            }
+                            else
+                                updater = new EnemyUpdater(go);
                         }
                     }
                 }

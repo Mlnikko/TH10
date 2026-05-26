@@ -8,6 +8,29 @@ public static class EnemyWaveSpawnMath
 {
     const float EdgeEpsilon = 0.02f;
 
+    public static bool TryResolveQueueEntrySpawn(
+        EnemyWaveConfig wave,
+        in BattleAreaData area,
+        int waveIndex,
+        uint spawnFrame,
+        int entryIndex,
+        out Vector2 pos)
+    {
+        pos = default;
+        wave.EnsureSpawnQueueMigrated();
+        if (wave.spawnQueue == null || entryIndex < 0 || entryIndex >= wave.spawnQueue.Length)
+            return false;
+
+        var positions = ComputeSpawnPositions(wave, area, waveIndex, spawnFrame);
+        if (positions.Count == 0)
+            return false;
+
+        var entry = wave.spawnQueue[entryIndex];
+        int slot = entry.spawnSlotIndex >= 0 ? entry.spawnSlotIndex : entryIndex;
+        pos = positions[Mathf.Clamp(slot, 0, positions.Count - 1)];
+        return true;
+    }
+
     public static List<Vector2> ComputeSpawnPositions(
         EnemyWaveConfig wave,
         in BattleAreaData area,

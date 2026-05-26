@@ -17,7 +17,7 @@ public static class ComponentMaskBits
     public const uint CDropItemMotion         = 1u << 9;
     public const uint CDropItem               = 1u << 10;
     public const uint CEnemyDeathLoot         = 1u << 11;
-    public const uint CEnemyMovement          = 1u << 12;
+    public const uint CEnemyPathMovement      = 1u << 12;
     public const uint CEnemy                  = 1u << 13;
     public const uint CPlayer                 = 1u << 14;
     public const uint CHealth                 = 1u << 15;
@@ -27,6 +27,7 @@ public static class ComponentMaskBits
     public const uint CPosition               = 1u << 19;
     public const uint CStageState             = 1u << 20;
     public const uint CDanmakuBezierHoming    = 1u << 21;
+    public const uint CMidBossEncounter       = 1u << 22;
 
     public static uint GetMask<T>() where T : struct, IComponent
     {
@@ -43,7 +44,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CDropItemMotion)) return CDropItemMotion;
         if (typeof(T) == typeof(CDropItem)) return CDropItem;
         if (typeof(T) == typeof(CEnemyDeathLoot)) return CEnemyDeathLoot;
-        if (typeof(T) == typeof(CEnemyMovement)) return CEnemyMovement;
+        if (typeof(T) == typeof(CEnemyPathMovement)) return CEnemyPathMovement;
         if (typeof(T) == typeof(CEnemy)) return CEnemy;
         if (typeof(T) == typeof(CPlayer)) return CPlayer;
         if (typeof(T) == typeof(CHealth)) return CHealth;
@@ -53,6 +54,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CPosition)) return CPosition;
         if (typeof(T) == typeof(CStageState)) return CStageState;
         if (typeof(T) == typeof(CDanmakuBezierHoming)) return CDanmakuBezierHoming;
+        if (typeof(T) == typeof(CMidBossEncounter)) return CMidBossEncounter;
 
         return 0;
     }

@@ -124,93 +124,59 @@ public class CollisionLogicSystem : BaseSystem
         var enemyCfg = GameResDB.Instance.GetConfig<EnemyConfig>(ce.enemyCfgIndex);
         ref readonly var pos = ref EntityManager.GetComponent<CPosition>(enemyEntity);
 
-        int[] enemyDrops = null;
-        if (enemyCfg != null && enemyCfg.dropOnDeathCfgIndices != null && enemyCfg.dropOnDeathCfgIndices.Length > 0)
-            enemyDrops = enemyCfg.dropOnDeathCfgIndices;
+        BakedDeathDropEntry[] enemyDrops = null;
+        if (enemyCfg != null && enemyCfg.dropOnDeathBaked != null && enemyCfg.dropOnDeathBaked.Length > 0)
+            enemyDrops = enemyCfg.dropOnDeathBaked;
 
         E_WaveDropOverrideMode mode = E_WaveDropOverrideMode.UseEnemyConfig;
-        int[] waveDrops = null;
+        BakedDeathDropEntry[] waveDrops = null;
         if (EntityManager.HasComponent<CEnemyDeathLoot>(enemyEntity))
         {
             ref readonly var loot = ref EntityManager.GetComponent<CEnemyDeathLoot>(enemyEntity);
             mode = loot.waveDropMode;
-            waveDrops = loot.waveDropCfgIndices;
+            waveDrops = loot.waveDrops;
         }
 
         switch (mode)
         {
             case E_WaveDropOverrideMode.UseEnemyConfig:
-                SpawnDropsFromIndexArray(pos.x, pos.y, enemyDrops);
+                SpawnDropsFromBakedEntries(pos.x, pos.y, enemyDrops);
                 break;
             case E_WaveDropOverrideMode.Replace:
-                SpawnDropsFromIndexArray(pos.x, pos.y, waveDrops);
+                SpawnDropsFromBakedEntries(pos.x, pos.y, waveDrops);
                 break;
             case E_WaveDropOverrideMode.Append:
-                SpawnDropsFromTwoIndexArrays(pos.x, pos.y, enemyDrops, waveDrops);
+                SpawnDropsFromBakedEntries(pos.x, pos.y, DeathDropBaking.MergeAppend(enemyDrops, waveDrops));
                 break;
         }
     }
 
-    static int CountPositiveDropIndices(int[] arr)
+    void SpawnDropsFromBakedEntries(float x, float y, BakedDeathDropEntry[] entries)
     {
-        if (arr == null)
-            return 0;
-        int c = 0;
-        for (int i = 0; i < arr.Length; i++)
-        {
-            if (arr[i] >= 0)
-                c++;
-        }
-        return c;
-    }
-
-    void SpawnDropsFromIndexArray(float x, float y, int[] indices)
-    {
-        if (indices == null || indices.Length == 0)
+        if (entries == null || entries.Length == 0)
             return;
-        int total = CountPositiveDropIndices(indices);
+
+        int total = DeathDropBaking.CountSpawnInstances(entries);
         if (total == 0)
             return;
-        int k = 0;
-        for (int i = 0; i < indices.Length; i++)
-        {
-            int di = indices[i];
-            if (di < 0)
-                continue;
-            float spread = (k - (total - 1) * 0.5f) * 0.14f;
-            k++;
-            Entity drop = EntityFactory.CreateDropItem(di, x + spread, y);
-            if (!drop.IsNull)
-                EntityManager.AddComponent(drop, new CPoolGetTag());
-        }
-    }
 
-    void SpawnDropsFromTwoIndexArrays(float x, float y, int[] first, int[] second)
-    {
-        int total = CountPositiveDropIndices(first) + CountPositiveDropIndices(second);
-        if (total == 0)
-            return;
         int k = 0;
-        k = EmitDropIndexArray(x, y, first, k, total);
-        EmitDropIndexArray(x, y, second, k, total);
-    }
-
-    int EmitDropIndexArray(float x, float y, int[] indices, int k, int total)
-    {
-        if (indices == null)
-            return k;
-        for (int i = 0; i < indices.Length; i++)
+        for (int i = 0; i < entries.Length; i++)
         {
-            int di = indices[i];
-            if (di < 0)
+            var entry = entries[i];
+            if (entry.cfgIndex < 0)
                 continue;
-            float spread = (k - (total - 1) * 0.5f) * 0.14f;
-            k++;
-            Entity drop = EntityFactory.CreateDropItem(di, x + spread, y);
-            if (!drop.IsNull)
-                EntityManager.AddComponent(drop, new CPoolGetTag());
+
+            int count = entry.count <= 0 ? 1 : entry.count;
+            for (int c = 0; c < count; c++)
+            {
+                float spread = (k - (total - 1) * 0.5f) * 0.14f;
+                k++;
+                Entity drop = EntityFactory.CreateDropItem(entry.cfgIndex, x + spread, y);
+                if (!drop.IsNull)
+                    EntityManager.AddComponent(drop, new CPoolGetTag());
+            }
         }
-        return k;
     }
 
     void TryApplyDropPickup(Entity dropEntity, Entity playerEntity, Span<CCollider> colliders)
