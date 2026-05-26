@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -12,13 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc0f72b4a83c61e45bae45cce91b5368, type: 3}
   m_Name: MidBoss_Stage1
   m_EditorClassIdentifier: 
-  enemyType: 3
-  enemyPrefabId: enemy_tpl_unit
+  enemyType: 4
   displaySprite: {fileID: -1459827311, guid: 96589b45dcb41de4da76a8c1baa402ca, type: 3}
-  displayColor: {r: 1, g: 1, b: 1, a: 1}
-  displayScale: 1
   animatorController: {fileID: 22100000, guid: 99cc94f8a272a7f44addc3b347c3a28d, type: 2}
-  emitterConfigId: dme_enemy_wave_fan
+  emitterConfigId: dme_midboss_wave_lasher
   maxHealth: 1000
   colliderConfig:
     isTrigger: 0

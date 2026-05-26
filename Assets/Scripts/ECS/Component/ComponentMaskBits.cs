@@ -28,6 +28,7 @@ public static class ComponentMaskBits
     public const uint CStageState             = 1u << 20;
     public const uint CDanmakuBezierHoming    = 1u << 21;
     public const uint CMidBossEncounter       = 1u << 22;
+    public const uint CMainBossEncounter      = 1u << 23;
 
     public static uint GetMask<T>() where T : struct, IComponent
     {
@@ -55,6 +56,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CStageState)) return CStageState;
         if (typeof(T) == typeof(CDanmakuBezierHoming)) return CDanmakuBezierHoming;
         if (typeof(T) == typeof(CMidBossEncounter)) return CMidBossEncounter;
+        if (typeof(T) == typeof(CMainBossEncounter)) return CMainBossEncounter;
 
         return 0;
     }

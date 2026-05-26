@@ -18,7 +18,6 @@ public class DanmakuConfigViewer : GameConfigViewerBase
 
     [Header("弹幕渲染设置")]
     [SerializeField] Sprite sprite;
-    [SerializeField] Color color;
 
     [Header("弹幕碰撞器设置")]
     [SerializeField] ColliderConfig colliderConfig;
@@ -47,8 +46,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
 
         danmakuPrefabId = danmakuConfig.danmakuPrefabId;
         sprite = danmakuConfig.sprite;
-        color = danmakuConfig.color;
-       
+
         danmakuType = danmakuConfig.danmakuType;
 
         colliderConfig = danmakuConfig.colliderConfig;
@@ -74,8 +72,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
 
         danmakuConfig.danmakuPrefabId = danmakuPrefabId;
         danmakuConfig.sprite = sprite;
-        danmakuConfig.color = color;
-       
+
         danmakuConfig.danmakuType = danmakuType;
 
         danmakuConfig.colliderConfig = colliderConfig;
@@ -96,7 +93,7 @@ public class DanmakuConfigViewer : GameConfigViewerBase
     protected override void ApplyEditorPreview() => ApplyDanmakuVisual();
 
     void ApplyDanmakuVisual() =>
-        DanmakuPresentation.Apply(sprite, color, scale, gameObject);
+        DanmakuPresentation.Apply(sprite, scale, gameObject);
 
     public void PreviewDanmaku()
     {

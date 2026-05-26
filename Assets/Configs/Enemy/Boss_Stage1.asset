@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -13,12 +13,9 @@ MonoBehaviour:
   m_Name: Boss_Stage1
   m_EditorClassIdentifier: 
   enemyType: 3
-  enemyPrefabId: enemy_tpl_unit
   displaySprite: {fileID: 484668414, guid: 96589b45dcb41de4da76a8c1baa402ca, type: 3}
-  displayColor: {r: 1, g: 1, b: 1, a: 1}
-  displayScale: 1
   animatorController: {fileID: 9100000, guid: f914353b3558ee842bba94d07c300a43, type: 2}
-  emitterConfigId: dme_enemy_ring_spread
+  emitterConfigId: dme_boss_ring_24_rotate
   maxHealth: 1000
   colliderConfig:
     isTrigger: 0

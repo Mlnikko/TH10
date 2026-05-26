@@ -87,14 +87,14 @@ public class DanmakuEmitSystem : BaseSystem
 
             case EmitMode.Arc:
                 DanmakuEmitterSpawnMath.EmitArc(
-                    in emitter, emitPosX, emitPosY, emitRotRad,
+                    in emitter, emitPosX, emitPosY, emitRotRad, salvoIndex,
                     (x, y, rot, vx, vy) => SpawnDanmaku(x, y, rot, vx, vy, danmakuCfgIndex));
                 fired = true;
                 break;
 
             case EmitMode.Wave:
                 DanmakuEmitterSpawnMath.EmitWave(
-                    in emitter, emitPosX, emitPosY, emitRotRad, currentFrame,
+                    in emitter, emitPosX, emitPosY, emitRotRad, currentFrame, salvoIndex,
                     (x, y, rot, vx, vy) => SpawnDanmaku(x, y, rot, vx, vy, danmakuCfgIndex));
                 fired = true;
                 break;

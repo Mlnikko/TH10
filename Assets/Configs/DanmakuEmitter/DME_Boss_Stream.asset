@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81a58d3ce870804cb57375fe834504d, type: 3}
+  m_Name: DME_Boss_Stream
+  m_EditorClassIdentifier: 
+  emitterPrefabId: dme_tpl_sprite
+  danmakuConfigIds:
+  - dm_boll
+  danmakuSelectMode: 0
+  emitMode: 1
+  launchIntervalSeconds: 0.07
+  launchCount: -1
+  launchSpeed: 5.5
+  displaySprite: {fileID: -497600987, guid: ff5475af0712d5f4ab3fc3f13ec03629, type: 3}
+  displaySelfSpinDegreesPerSecond: 0
+  displayScaleMin: 1
+  displayScaleMax: 1
+  displayScaleCyclesPerSecond: 0
+  emitterPosOffset: {x: 0, y: 0}
+  emitterRotOffsetZ: 0
+  danmakuRotOffsetZ: 0
+  salvoAngleAdvanceDeg: 0
+  emitterCamp: 2
+  audio_Fire: 0
+  lineModeConfig:
+    lineDirection: {x: 0, y: -1}
+    lineCount: 1
+    lineSpacing: 0
+  arcModeConfig:
+    arcStartAngle: 0
+    arcAngle: 0
+    arcRadius: 0
+    arcBulletCount: 0
+    arcClockwise: 1
+  waveModeConfig:
+    centerAngleDeg: 0
+    swingDegrees: 0
+    swingHz: 0
+    phaseOffsetDeg: 0
+    spreadAngleDeg: 0
+    bulletCount: 0
+    arcRadius: 0
+    clockwise: 0
+  grainModeConfig:
+    bulletCount: 1
+    baseAngleDeg: 0
+    coneHalfAngleDeg: 0
+    speedMinScale: 0.85
+    speedMaxScale: 1.15
+    spawnScatterRadius: 0

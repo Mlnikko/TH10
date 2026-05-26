@@ -359,10 +359,12 @@ public class EntityFactory
         Entity e_enemy = _entityManager.CreateEntity();
         var enemyCfgIndex = GameResDB.Instance.GetConfigIndex(enemyConfig.ConfigId);
         int hp = Mathf.Max(1, Mathf.RoundToInt(enemyConfig.maxHealth * hpMultiplier));
-        _entityManager.AddComponent(e_enemy, new CEnemy{
+        _entityManager.AddComponent(e_enemy, new CEnemy
+        {
             enemyCfgIndex = enemyCfgIndex,
-            currentHealth = hp
-            });
+            currentHealth = hp,
+            enemyType = (byte)enemyConfig.enemyType,
+        });
         _entityManager.AddComponent(e_enemy, new CPosition(posX, posY));
         _entityManager.AddComponent(e_enemy, new CVelocity(0, 0));
         _entityManager.AddComponent(e_enemy, new CRotation(0));

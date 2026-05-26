@@ -251,12 +251,12 @@ public static class StageTimelineWaveGizmo
         return true;
     }
 
-    static void FinalizeSpawnPathExit(in BattleAreaData area, ref SpawnPathVisual visual)
+    static void FinalizeSpawnPathExit(in BattleAreaData area, ref SpawnPathVisual visual, bool loopRoute = false)
     {
-        visual.hasExit = TryResolveLeaveRecycleCrossing(area, visual, out visual.exit);
+        visual.hasExit = !loopRoute && TryResolveLeaveRecycleCrossing(area, visual, out visual.exit);
     }
 
-    /// <summary>回收交点使用精确边界求交，不吸附网格；采样路径未命中时回退到路径关键点折线。</summary>
+    /// <summary>回收交点：仅当采样/关键点折线真实穿出 GO 回收矩形时返回（不外推末段方向）。</summary>
     static bool TryResolveLeaveRecycleCrossing(
         in BattleAreaData area,
         in SpawnPathVisual visual,
@@ -266,11 +266,7 @@ public static class StageTimelineWaveGizmo
             return true;
 
         var keypoints = BuildWorldKeypointPath(visual);
-        if (keypoints.Count >= 2 && TryFindLeaveRecycleCrossing(area, keypoints, out crossing))
-            return true;
-
-        return keypoints.Count >= 2
-               && TryFindLeaveRecycleCrossingExtrapolated(area, keypoints, out crossing);
+        return keypoints.Count >= 2 && TryFindLeaveRecycleCrossing(area, keypoints, out crossing);
     }
 
     static List<Vector2> BuildWorldKeypointPath(in SpawnPathVisual visual)
@@ -282,42 +278,6 @@ public static class StageTimelineWaveGizmo
         for (int i = 0; i < visual.nodes.Count; i++)
             pts.Add(visual.nodes[i].worldPos);
         return pts;
-    }
-
-    static bool TryFindLeaveRecycleCrossingExtrapolated(
-        in BattleAreaData area,
-        IReadOnlyList<Vector2> keypoints,
-        out Vector2 crossing)
-    {
-        crossing = default;
-        int count = keypoints.Count;
-        if (count < 2)
-            return false;
-
-        Vector2 a = keypoints[count - 2];
-        Vector2 b = keypoints[count - 1];
-        if (!area.IsPointInRecycleArea(a.x, a.y))
-            return false;
-
-        Vector2 d = b - a;
-        if (d.sqrMagnitude < 1e-8f)
-            return false;
-
-        Vector2 dir = d.normalized;
-        Vector2 extended = b;
-        const int maxSteps = 128;
-        const float step = 0.25f;
-        for (int i = 0; i < maxSteps; i++)
-        {
-            if (!area.IsPointInRecycleArea(extended.x, extended.y))
-                break;
-            extended += dir * step;
-        }
-
-        if (area.IsPointInRecycleArea(extended.x, extended.y))
-            return false;
-
-        return TryFindLeaveRecycleCrossingOnSegment(area, a, extended, out crossing, out _);
     }
 
     static bool TryFindLeaveRecycleCrossingOnSegment(
@@ -695,10 +655,7 @@ public static class StageTimelineWaveGizmo
         }
 
         if (encounter.loopPathRoute != null)
-        {
             AddMidBossRoute(result, 1, "循环", new Color(0.35f, 0.75f, 1f, 0.9f), encounter.loopPathRoute, phaseOrigin, area, logicFps, maxPathSamples, true);
-            phaseOrigin = EvaluateRouteEndWorld(encounter.loopPathRoute, phaseOrigin, logicFps, false);
-        }
 
         if (encounter.exitPathRoute != null)
             AddMidBossRoute(result, 2, "退场", new Color(1f, 0.35f, 0.95f, 0.9f), encounter.exitPathRoute, phaseOrigin, area, logicFps, maxPathSamples, false);
@@ -760,7 +717,7 @@ public static class StageTimelineWaveGizmo
 
         FillSampledPathFromBakedRoute(baked, origin, visual.sampledPath, maxPathSamples, loopRoute: loopSample);
 
-        FinalizeSpawnPathExit(area, ref visual);
+        FinalizeSpawnPathExit(area, ref visual, loopSample);
         PopulateRouteAnnotations(ref visual, route, logicFps, label, baked);
         result.Add(new MidBossPathVisual { phaseIndex = phaseIndex, label = label, lineColor = lineColor, path = visual });
     }
@@ -884,7 +841,7 @@ public static class StageTimelineWaveGizmo
         };
 
         FillSampledPathFromBakedRoute(baked, origin, visual.sampledPath, maxPathSamples, loopRoute: loopSample);
-        FinalizeSpawnPathExit(area, ref visual);
+        FinalizeSpawnPathExit(area, ref visual, loopSample);
         PopulateRouteAnnotations(ref visual, route, logicFps, label, baked);
         result.Add(new MainBossPathVisual { phaseIndex = phaseIndex, label = label, lineColor = lineColor, path = visual });
     }

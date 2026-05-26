@@ -451,6 +451,13 @@ public class StageTimelineSystem : BaseSystem
             return;
         }
 
+        if (!cfg.enemyType.IsMidBoss())
+        {
+            Logger.Warn(
+                $"[StageTimeline] Mid boss '{encounter.enemyConfigId}' enemyType={cfg.enemyType}，期望 {EnemyType.MidBoss}",
+                LogTag.Battle);
+        }
+
         var area = GlobalBattleData.IsInitialized ? GlobalBattleData.AreaData : BattleAreaData.Default;
         Vector2 pos = area.Center + encounter.spawnOffset + new Vector2(0f, area.Height * encounter.yHeightNorm);
         float hpMult = encounter.ResolveHpMultiplier(cfg);
@@ -483,11 +490,21 @@ public class StageTimelineSystem : BaseSystem
             return;
         }
 
+        if (!cfg.enemyType.IsMainBoss())
+        {
+            Logger.Warn(
+                $"[StageTimeline] Main boss '{encounter.enemyConfigId}' enemyType={cfg.enemyType}，期望 {EnemyType.Boss}",
+                LogTag.Battle);
+        }
+
         var area = GlobalBattleData.IsInitialized ? GlobalBattleData.AreaData : BattleAreaData.Default;
         Vector2 pos = area.Center + encounter.spawnOffset + new Vector2(0f, area.Height * encounter.yHeightNorm);
         _mainBossEntity = EntityFactory.CreateEnemy(cfg, pos.x, pos.y, 1f);
         if (!_mainBossEntity.IsNull)
         {
+            MainBossEncounterSpawn.ApplyToEntity(
+                EntityManager, _mainBossEntity, encounter, currentFrame, pos.x, pos.y);
+
             EntityManager.AddComponent(_mainBossEntity, new CNoOffscreenRecycleTag());
             EntityManager.AddComponent(_mainBossEntity, new CPoolGetTag());
         }
@@ -516,6 +533,10 @@ public class StageTimelineSystem : BaseSystem
             : (uint)encounter.spawnFrameOffset + (uint)encounter.bossIntroDurationFrames;
         if (stageElapsed < introEnd)
             return;
+
+        if (EntityManager.IsValid(_mainBossEntity))
+            MainBossEncounterSystem.EnsureLoopPathForFight(
+                EntityManager, _mainBossEntity, encounter, currentFrame);
 
         st.currentState = E_StageState.BossFight;
         st.stateEnterFrame = currentFrame;

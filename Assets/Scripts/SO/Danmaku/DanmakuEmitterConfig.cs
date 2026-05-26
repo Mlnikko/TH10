@@ -191,6 +191,9 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Tooltip("弹幕生成时的旋转偏移（度）；烘焙为 danmakuRotOffsetRad")]
     public float danmakuRotOffsetZ = 90f;
 
+    [Tooltip("每次齐射后 Arc/Wave 起始角递增量（度），用于旋转环/螺旋；0 表示固定朝向")]
+    public float salvoAngleAdvanceDeg;
+
     public EmitterCamp emitterCamp = EmitterCamp.Enemy;
     public AudioName audio_Fire = AudioName.None;
 
@@ -207,6 +210,7 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     public GrainModeConfig grainModeConfig;
 
     [NonSerialized] public float waveOmegaRadPerFrame;
+    [NonSerialized] public float salvoAngleAdvanceRad;
 
 #if UNITY_EDITOR
     void OnValidate()
@@ -279,5 +283,6 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
         displaySelfSpinRadPerFrame = displaySelfSpinDegreesPerSecond * Mathf.Deg2Rad / fps;
         displayScalePhaseRadPerFrame = displayScaleCyclesPerSecond * Mathf.PI * 2f / fps;
         waveOmegaRadPerFrame = waveModeConfig.swingHz * Mathf.PI * 2f / fps;
+        salvoAngleAdvanceRad = salvoAngleAdvanceDeg * Mathf.Deg2Rad;
     }
 }

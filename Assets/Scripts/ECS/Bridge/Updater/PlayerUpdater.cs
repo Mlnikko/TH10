@@ -10,11 +10,11 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
 {
     readonly Transform _transform;
     readonly Animator _animator;
+    readonly PresentationVelocityAnimatorSync.Driver _velocityAnimator;
 
     GameObject _weaponGo;
     readonly WeaponRuntimeLayoutView _weaponLayout = new();
 
-    int _lastDirection = 0;
     bool _lastIsSlowMode = false;
     readonly int _slowEffectLayerIndex;
 
@@ -22,13 +22,16 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
     {
         _transform = gameObject.transform;
         _animator = gameObject.GetComponent<Animator>();
+        _velocityAnimator = _animator != null
+            ? new PresentationVelocityAnimatorSync.Driver(
+                _animator,
+                PresentationVelocityAnimatorSync.MotionProfile.HorizontalIdleLeftRight)
+            : null;
 
         // 缓存图层索引（避免每帧字符串查找）
-        _slowEffectLayerIndex = _animator.GetLayerIndex("Slow Effect");
-        if (_slowEffectLayerIndex == -1)
-        {
+        _slowEffectLayerIndex = _animator != null ? _animator.GetLayerIndex("Slow Effect") : -1;
+        if (_slowEffectLayerIndex == -1 && _animator != null)
             Logger.Warn("Animator missing 'SlowEffect' layer!");
-        }
     }
 
     public void AttachWeapon(GameObject weaponGo)
@@ -105,24 +108,7 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
                 moveH = velocity.vx > 0 ? (sbyte)1 : (velocity.vx < 0 ? (sbyte)-1 : (sbyte)0);
             }
 
-            // --- 方向动画 ---
-            int currentDirection = moveH > 0 ? 1 : (moveH < 0 ? -1 : 0);
-            if (currentDirection != _lastDirection)
-            {
-                _lastDirection = currentDirection;
-                switch (currentDirection)
-                {
-                    case 1:
-                        _animator.Play("Player_Move_Right");
-                        break;
-                    case -1:
-                        _animator.Play("Player_Move_Left");
-                        break;
-                    default:
-                        _animator.Play("Player_Idle");
-                        break;
-                }
-            }
+            _velocityAnimator?.TickHorizontal(moveH);
 
             // --- 慢速模式特效图层 ---
             bool isSlowMode = player.isSlowMode;

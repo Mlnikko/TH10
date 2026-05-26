@@ -70,6 +70,24 @@ public static class DeathDropBaking
         return total;
     }
 
+    public static DeathDropEntry[] CloneEntries(DeathDropEntry[] entries)
+    {
+        if (entries == null || entries.Length == 0)
+            return Array.Empty<DeathDropEntry>();
+
+        var copy = new DeathDropEntry[entries.Length];
+        for (int i = 0; i < entries.Length; i++)
+        {
+            copy[i] = entries[i];
+            if (!string.IsNullOrWhiteSpace(copy[i].dropConfigId))
+                copy[i].dropConfigId = copy[i].dropConfigId.ToLowerInvariantTrimmed();
+            if (copy[i].count < 1)
+                copy[i].count = 1;
+        }
+
+        return copy;
+    }
+
     public static BakedDeathDropEntry[] MergeAppend(BakedDeathDropEntry[] first, BakedDeathDropEntry[] second)
     {
         int lenA = first?.Length ?? 0;

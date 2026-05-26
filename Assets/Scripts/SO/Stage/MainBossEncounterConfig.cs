@@ -42,16 +42,7 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
 
     [NonSerialized] public int bossIntroDurationFrames;
 
-    [Header("Animator")]
-    [Tooltip("登场/无敌（BossIntro）：Animator 状态名（非 AnimationClip）；留空不切换")]
-    public string animatorStateIntro;
-
-    [Tooltip("符卡战（BossFight）：Animator 状态名")]
-    public string animatorStateFight = "Boss_Idle";
-
-    [Tooltip("击破（BossDefeated，可选）：Animator 状态名")]
-    public string animatorStateDefeated;
-
+    [Header("符卡阶段")]
     [Tooltip("BOSS 阶段 / 符卡（独立 BossPhase 资产）")]
     public List<BossPhaseConfig> bossPhases = new();
 
@@ -99,6 +90,8 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
     void OnValidate()
     {
         enemyConfigId = enemyConfigId.ToLowerInvariantTrimmed();
+        EnemyEncounterConfigValidation.WarnEnemyTypeMismatch(
+            this, enemyConfigId, EnemyType.Boss, "MainBossEncounter");
     }
 #endif
 }

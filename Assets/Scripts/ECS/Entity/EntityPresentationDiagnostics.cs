@@ -99,7 +99,7 @@ public static class EntityPresentationDiagnostics
         if (cfg != null)
         {
             sb.Append($"enemyType={cfg.enemyType} ");
-            AppendPrefab(sb, cfg.enemyPrefabIndex, cfg.enemyPrefabId);
+            AppendPrefab(sb, cfg.enemyPrefabIndex, EnemyPrefabArchetypes.Unit);
         }
     }
 

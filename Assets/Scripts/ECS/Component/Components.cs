@@ -183,6 +183,8 @@ public struct CDanmakuEmitter : IComponent
     public float emitterRotOffsetRad;
     /// <summary>弹幕生成时的旋转偏移（弧度）；由 <see cref="DanmakuEmitterConfig.danmakuRotOffsetZ"/>（度）在构造时烘焙。</summary>
     public float danmakuRotOffsetRad;
+    /// <summary>每次齐射后 Arc/Wave 起始角递增量（弧度）。</summary>
+    public float salvoAngleAdvanceRad;
 
     public int emitterCamp;
 
@@ -239,6 +241,7 @@ public struct CDanmakuEmitter : IComponent
         emitterPosOffsetY = soConfig.emitterPosOffset.y;
         emitterRotOffsetRad = soConfig.emitterRotOffsetZ * Mathf.Deg2Rad;
         danmakuRotOffsetRad = soConfig.danmakuRotOffsetZ * Mathf.Deg2Rad;
+        salvoAngleAdvanceRad = soConfig.salvoAngleAdvanceRad;
         emitterCamp = (int)soConfig.emitterCamp;
 
         // --- Line 模式烘焙 ---
@@ -439,6 +442,8 @@ public struct CEnemy : IComponent
 {
     public int enemyCfgIndex;          // 配置索引, 与敌人配置表对应
     public int currentHealth;            // 当前生命值
+    /// <summary>烘焙自 <see cref="EnemyConfig.enemyType"/>，逻辑帧内只读。</summary>
+    public byte enemyType;
 }
 
 /// <summary>
@@ -472,6 +477,25 @@ public struct CMidBossEncounter : IComponent
     public int exitRouteBakeIndex;
     public int entryDurationFrames;
     public int exitDurationFrames;
+    /// <summary>场内循环路径起点（入场结束或登场点），退场路径以此为原点。</summary>
+    public float loopOriginX;
+    public float loopOriginY;
+}
+
+/// <summary>关底 Boss 登场/场内路径（由 <see cref="MainBossEncounterSystem"/> 驱动）。</summary>
+public struct CMainBossEncounter : IComponent
+{
+    public E_MainBossPathPhase pathPhase;
+    public int encounterCfgIndex;
+    public int entryRouteBakeIndex;
+    public int loopRouteBakeIndex;
+    public int entryDurationFrames;
+}
+
+public enum E_MainBossPathPhase : byte
+{
+    Entry = 0,
+    Loop = 1,
 }
 #endregion
 

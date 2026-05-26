@@ -625,6 +625,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
             temp.danmakuConfigIds = emitterConfig.danmakuConfigIds != null
                 ? (string[])emitterConfig.danmakuConfigIds.Clone()
                 : System.Array.Empty<string>();
+            temp.salvoAngleAdvanceDeg = emitterConfig.salvoAngleAdvanceDeg;
         }
 
         temp.BakeLogicTiming(LogicFramePreviewClock.GetLogicFps());

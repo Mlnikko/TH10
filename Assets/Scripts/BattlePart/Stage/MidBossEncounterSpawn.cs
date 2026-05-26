@@ -59,6 +59,8 @@ public static class MidBossEncounterSpawn
             exitRouteBakeIndex = encounter.exitPathRouteBakeIndex,
             entryDurationFrames = encounter.entryDurationFrames,
             exitDurationFrames = encounter.exitDurationFrames,
+            loopOriginX = spawnX,
+            loopOriginY = spawnY,
         });
 
         if (hasEntry)
@@ -79,5 +81,18 @@ public static class MidBossEncounterSpawn
                 loopRoute = true,
             });
         }
+
+        if (!hasEntry)
+            SetLoopOriginOnComponent(em, entity, spawnX, spawnY);
+    }
+
+    static void SetLoopOriginOnComponent(EntityManager em, Entity entity, float x, float y)
+    {
+        if (!em.HasComponent<CMidBossEncounter>(entity))
+            return;
+
+        ref var mid = ref em.GetComponent<CMidBossEncounter>(entity);
+        mid.loopOriginX = x;
+        mid.loopOriginY = y;
     }
 }

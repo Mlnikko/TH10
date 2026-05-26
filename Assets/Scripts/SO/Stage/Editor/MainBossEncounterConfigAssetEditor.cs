@@ -12,13 +12,6 @@ public class MainBossEncounterConfigAssetEditor : Editor
         nameof(MainBossEncounterConfig.loopPathRoute),
     };
 
-    static readonly string[] AnimatorStateNames =
-    {
-        nameof(MainBossEncounterConfig.animatorStateIntro),
-        nameof(MainBossEncounterConfig.animatorStateFight),
-        nameof(MainBossEncounterConfig.animatorStateDefeated),
-    };
-
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
@@ -34,25 +27,15 @@ public class MainBossEncounterConfigAssetEditor : Editor
                 continue;
             }
 
-            if (StageTimelinePathEditScope.IsActive
-                && StageTimelinePathEditScope.Target == E_StageTimelinePathEditTarget.MainBoss
+            if (StageTimelinePathEditScope.ShouldHidePathRoutes(E_StageTimelinePathEditTarget.MainBoss)
                 && IsPathRouteProperty(prop.name))
                 continue;
 
             if (prop.name == nameof(MainBossEncounterConfig.enemyConfigId))
             {
-                ResourceIdEditorPicker.DrawEnemyConfigIdField(prop);
+                ResourceIdEditorPicker.DrawEnemyConfigIdField(prop, EnemyType.Boss);
                 continue;
             }
-
-            if (prop.name == nameof(MainBossEncounterConfig.animatorStateIntro))
-            {
-                DrawAnimatorSection();
-                continue;
-            }
-
-            if (IsAnimatorStateProperty(prop.name))
-                continue;
 
             if (IsBakeField(prop.name))
                 continue;
@@ -63,36 +46,11 @@ public class MainBossEncounterConfigAssetEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    void DrawAnimatorSection()
-    {
-        BossAnimatorStatePicker.DrawAnimatorStateSection(
-            serializedObject,
-            serializedObject.FindProperty(nameof(MainBossEncounterConfig.enemyConfigId)),
-            "Animator 状态",
-            new[]
-            {
-                (serializedObject.FindProperty(nameof(MainBossEncounterConfig.animatorStateIntro)), "登场 BossIntro"),
-                (serializedObject.FindProperty(nameof(MainBossEncounterConfig.animatorStateFight)), "符卡战 BossFight"),
-                (serializedObject.FindProperty(nameof(MainBossEncounterConfig.animatorStateDefeated)), "击破 BossDefeated"),
-            });
-    }
-
     static bool IsPathRouteProperty(string name)
     {
         for (int i = 0; i < PathRouteNames.Length; i++)
         {
             if (PathRouteNames[i] == name)
-                return true;
-        }
-
-        return false;
-    }
-
-    static bool IsAnimatorStateProperty(string name)
-    {
-        for (int i = 0; i < AnimatorStateNames.Length; i++)
-        {
-            if (AnimatorStateNames[i] == name)
                 return true;
         }
 

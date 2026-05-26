@@ -14,8 +14,82 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   spawnTimeSeconds: 120
-  enemyConfigId: 
-  spawnOffset: {x: 0, y: 0}
+  enemyConfigId: boss_stage1
+  spawnOffset: {x: 0, y: 0.2}
   yHeightNorm: 0.5
+  entryPathRoute:
+    durationSeconds: -1
+    moveSpeed: 3.6
+    spawnHoldSeconds: 0
+    nodes:
+    - positionLocal: {x: 0, y: -0.5999999}
+      holdSeconds: 0
+    legs:
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    defaultLegDurationSeconds: 1.5
+  loopPathRoute:
+    durationSeconds: -1
+    moveSpeed: 1
+    spawnHoldSeconds: 0
+    nodes:
+    - positionLocal: {x: 1.2, y: -0.30000007}
+      holdSeconds: 1
+    - positionLocal: {x: 0.4, y: -0.60000014}
+      holdSeconds: 1
+    - positionLocal: {x: -0.4, y: -0.60000014}
+      holdSeconds: 1
+    - positionLocal: {x: -1.2, y: -0.30000007}
+      holdSeconds: 1
+    - positionLocal: {x: 0, y: 0}
+      holdSeconds: 1
+    legs:
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    defaultLegDurationSeconds: 1.5
   bossIntroDurationSeconds: 3
   bossPhases: []

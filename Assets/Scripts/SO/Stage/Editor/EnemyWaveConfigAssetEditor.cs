@@ -39,8 +39,7 @@ public class EnemyWaveConfigAssetEditor : Editor
                 continue;
 
             if (prop.name == nameof(EnemyWaveConfig.pathRoute)
-                && StageTimelinePathEditScope.IsActive
-                && StageTimelinePathEditScope.Target == E_StageTimelinePathEditTarget.MidStageWave
+                && StageTimelinePathEditScope.ShouldHidePathRoutes(E_StageTimelinePathEditTarget.MidStageWave)
                 && serializedObject.targetObject is EnemyWaveConfig scopedWave
                 && !scopedWave.UsesPerQueueEntryPaths)
                 continue;

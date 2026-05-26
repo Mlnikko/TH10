@@ -21,15 +21,6 @@ public static class ResourceIdEditorPicker
         DrawIdPopup(stringProp, ids, "预制体 Id");
     }
 
-    public static void DrawEnemyPrefabIdField(SerializedProperty stringProp)
-    {
-        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
-            return;
-
-        var ids = CollectPrefabIds(nameof(GameResourceManifest.enemyPrefabIds), "Prefabs/Enemy");
-        DrawIdPopup(stringProp, ids, "敌人预制体Id");
-    }
-
     public static void DrawDanmakuPrefabIdField(SerializedProperty stringProp)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
@@ -66,13 +57,20 @@ public static class ResourceIdEditorPicker
         DrawIdPopupAtRect(rect, stringProp, ids, label ?? GUIContent.none);
     }
 
-    public static void DrawEnemyConfigIdField(SerializedProperty stringProp)
+    public static void DrawEnemyConfigIdField(SerializedProperty stringProp) =>
+        DrawEnemyConfigIdField(stringProp, null);
+
+    /// <param name="enemyTypeFilter">非 null 时仅列出对应 <see cref="EnemyType"/> 的敌人 Config。</param>
+    public static void DrawEnemyConfigIdField(SerializedProperty stringProp, EnemyType? enemyTypeFilter)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
             return;
 
-        var ids = CollectEnemyConfigIds();
-        DrawIdPopup(stringProp, ids, "敌人 Config Id");
+        var ids = CollectEnemyConfigIds(enemyTypeFilter);
+        string label = enemyTypeFilter.HasValue
+            ? $"敌人 Config Id ({enemyTypeFilter.Value})"
+            : "敌人 Config Id";
+        DrawIdPopup(stringProp, ids, label);
     }
 
     public static void DrawDropItemConfigIdField(SerializedProperty stringProp)
@@ -125,13 +123,20 @@ public static class ResourceIdEditorPicker
         EditorGUILayout.Space(4);
     }
 
-    public static void DrawDanmakuEmitterConfigIdField(SerializedProperty stringProp)
+    public static void DrawDanmakuEmitterConfigIdField(SerializedProperty stringProp) =>
+        DrawDanmakuEmitterConfigIdField(stringProp, null);
+
+    /// <param name="configIdPrefix">非空时仅列出 ConfigId 以此前缀开头的发射器（如 dme_midboss_ / dme_boss_）。</param>
+    public static void DrawDanmakuEmitterConfigIdField(SerializedProperty stringProp, string configIdPrefix)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
             return;
 
-        var ids = CollectDanmakuEmitterConfigIds();
-        DrawIdPopup(stringProp, ids, "发射器 Config Id");
+        var ids = CollectDanmakuEmitterConfigIds(configIdPrefix);
+        string label = string.IsNullOrEmpty(configIdPrefix)
+            ? "发射器 Config Id"
+            : $"发射器 Config Id ({configIdPrefix}*)";
+        DrawIdPopup(stringProp, ids, label);
     }
 
     public static void DrawDanmakuEmitterConfigIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label)
@@ -759,7 +764,7 @@ public static class ResourceIdEditorPicker
         }
 
         current = StringHelper.NormalizeResourceId(current);
-        if (!string.IsNullOrEmpty(current) && !valueList.Contains(current))
+        if (!string.IsNullOrEmpty(current) && !ContainsIdIgnoreCase(valueList, current))
         {
             valueList.Add(current);
             labelList.Add($"(未在 Manifest) {current}");
@@ -793,12 +798,76 @@ public static class ResourceIdEditorPicker
         return SortIds(set);
     }
 
-    static List<string> CollectEnemyConfigIds()
+    static bool ContainsIdIgnoreCase(List<string> ids, string id)
+    {
+        for (int i = 0; i < ids.Count; i++)
+        {
+            if (string.Equals(ids[i], id, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    static List<string> CollectEnemyConfigIds(EnemyType? enemyTypeFilter = null)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        AddManifestIds(set, nameof(GameResourceManifest.enemyConfigIds));
-        AddConfigIdsFromFolder<EnemyConfig>(set, "Assets/Configs/Enemy");
+        AddManifestEnemyIds(set, enemyTypeFilter);
+        AddEnemyConfigIdsFromFolder(set, enemyTypeFilter);
         return SortIds(set);
+    }
+
+    static void AddManifestEnemyIds(HashSet<string> set, EnemyType? enemyTypeFilter)
+    {
+        var manifest = LoadManifest();
+        if (manifest == null)
+            return;
+
+        var so = new SerializedObject(manifest);
+        var prop = so.FindProperty(nameof(GameResourceManifest.enemyConfigIds));
+        if (prop == null || !prop.isArray)
+            return;
+
+        for (int i = 0; i < prop.arraySize; i++)
+        {
+            string id = prop.GetArrayElementAtIndex(i).stringValue;
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+
+            id = StringHelper.NormalizeResourceId(id);
+            if (PassesEnemyTypeFilter(id, enemyTypeFilter))
+                set.Add(id);
+        }
+    }
+
+    static void AddEnemyConfigIdsFromFolder(HashSet<string> set, EnemyType? enemyTypeFilter)
+    {
+        const string folder = "Assets/Configs/Enemy";
+        if (!AssetDatabase.IsValidFolder(folder))
+            return;
+
+        string[] guids = AssetDatabase.FindAssets($"t:{nameof(EnemyConfig)}", new[] { folder });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            var cfg = AssetDatabase.LoadAssetAtPath<EnemyConfig>(path);
+            if (cfg == null)
+                continue;
+
+            if (enemyTypeFilter.HasValue && cfg.enemyType != enemyTypeFilter.Value)
+                continue;
+
+            set.Add(cfg.ConfigId);
+        }
+    }
+
+    static bool PassesEnemyTypeFilter(string configId, EnemyType? enemyTypeFilter)
+    {
+        if (!enemyTypeFilter.HasValue)
+            return true;
+
+        var cfg = ConfigViewerAssetLookup.FindConfig<EnemyConfig>(configId, "Assets/Configs/Enemy");
+        return cfg != null && cfg.enemyType == enemyTypeFilter.Value;
     }
 
     static List<string> CollectDropItemConfigIds()
@@ -809,13 +878,62 @@ public static class ResourceIdEditorPicker
         return SortIds(set);
     }
 
-    static List<string> CollectDanmakuEmitterConfigIds()
+    static List<string> CollectDanmakuEmitterConfigIds(string configIdPrefix = null)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        AddManifestIds(set, nameof(GameResourceManifest.danmakuEmitterConfigIds));
-        AddConfigIdsFromFolder<DanmakuEmitterConfig>(set, "Assets/Configs/DanmakuEmitter");
+        AddManifestEmitterIds(set, configIdPrefix);
+        AddEmitterConfigIdsFromFolder(set, configIdPrefix);
         return SortIds(set);
     }
+
+    static void AddManifestEmitterIds(HashSet<string> set, string configIdPrefix)
+    {
+        var manifest = LoadManifest();
+        if (manifest == null)
+            return;
+
+        var so = new SerializedObject(manifest);
+        var prop = so.FindProperty(nameof(GameResourceManifest.danmakuEmitterConfigIds));
+        if (prop == null || !prop.isArray)
+            return;
+
+        for (int i = 0; i < prop.arraySize; i++)
+        {
+            string id = prop.GetArrayElementAtIndex(i).stringValue;
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+
+            id = StringHelper.NormalizeResourceId(id);
+            if (PassesEmitterPrefixFilter(id, configIdPrefix))
+                set.Add(id);
+        }
+    }
+
+    static void AddEmitterConfigIdsFromFolder(HashSet<string> set, string configIdPrefix)
+    {
+        const string folder = "Assets/Configs/DanmakuEmitter";
+        if (!AssetDatabase.IsValidFolder(folder))
+            return;
+
+        string[] guids = AssetDatabase.FindAssets($"t:{nameof(DanmakuEmitterConfig)}", new[] { folder });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            var cfg = AssetDatabase.LoadAssetAtPath<DanmakuEmitterConfig>(path);
+            if (cfg == null)
+                continue;
+
+            string id = cfg.ConfigId;
+            if (!PassesEmitterPrefixFilter(id, configIdPrefix))
+                continue;
+
+            set.Add(id);
+        }
+    }
+
+    static bool PassesEmitterPrefixFilter(string configId, string prefix) =>
+        string.IsNullOrEmpty(prefix)
+        || configId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
 
     static void AddManifestIds(HashSet<string> set, string fieldName)
     {

@@ -44,10 +44,15 @@ public static class StageTimelineBossPathEdit
         if (encounter == null)
             return;
 
-        if (PathRouteMovementData.HasAnyPathContent(GetMidBossRoute(encounter, phaseIndex)))
+        var existing = GetMidBossRoute(encounter, phaseIndex);
+        if (PathRouteMovementData.HasEditablePathNodes(existing))
+        {
+            existing.EnsureLegsMatchNodeCount();
             return;
+        }
 
         var route = PathRouteMovementData.CreateLinearDown(32f, 2.4f);
+        route.EnsureLegsMatchNodeCount();
         switch (phaseIndex)
         {
             case 0: encounter.entryPathRoute = route; break;
@@ -61,10 +66,15 @@ public static class StageTimelineBossPathEdit
         if (encounter == null)
             return;
 
-        if (PathRouteMovementData.HasAnyPathContent(GetMainBossRoute(encounter, phaseIndex)))
+        var existing = GetMainBossRoute(encounter, phaseIndex);
+        if (PathRouteMovementData.HasEditablePathNodes(existing))
+        {
+            existing.EnsureLegsMatchNodeCount();
             return;
+        }
 
         var route = PathRouteMovementData.CreateLinearDown(phaseIndex == 0 ? 24f : 16f, 2f);
+        route.EnsureLegsMatchNodeCount();
         if (phaseIndex == 0)
             encounter.entryPathRoute = route;
         else if (phaseIndex == 1)
@@ -83,9 +93,6 @@ public static class StageTimelineBossPathEdit
 
         if (phaseIndex >= 1)
             origin = EvaluateRouteEndIfAny(encounter.entryPathRoute, origin, logicFps, loopSample: false);
-
-        if (phaseIndex >= 2)
-            origin = EvaluateRouteEndIfAny(encounter.loopPathRoute, origin, logicFps, loopSample: false);
 
         return origin;
     }

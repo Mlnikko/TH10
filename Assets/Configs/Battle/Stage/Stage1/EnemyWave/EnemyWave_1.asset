@@ -38,6 +38,14 @@ MonoBehaviour:
         sineAmplitude: 0
         sineHz: 0
         sinePhaseRad: 0
+      - curve: 1
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 0.3
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
       defaultLegDurationSeconds: 1
   - enemyConfigId: minion_fariy_red
     spawnSlotIndex: -1
@@ -51,7 +59,23 @@ MonoBehaviour:
         holdSeconds: 0
       - positionLocal: {x: -2.1000001, y: -3.2}
         holdSeconds: 0
-      legs: []
+      legs:
+      - curve: 0
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+      - curve: 1
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 0.3
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
       defaultLegDurationSeconds: 1
   - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
@@ -65,7 +89,23 @@ MonoBehaviour:
         holdSeconds: 0
       - positionLocal: {x: -2.4, y: -3.2}
         holdSeconds: 0
-      legs: []
+      legs:
+      - curve: 0
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+      - curve: 1
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 0.3
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
       defaultLegDurationSeconds: 1
   - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
@@ -102,7 +142,7 @@ MonoBehaviour:
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
       durationSeconds: -1
-      moveSpeed: 3.6
+      moveSpeed: 2
       spawnHoldSeconds: 0
       nodes:
       - positionLocal: {x: -0, y: -1.2}

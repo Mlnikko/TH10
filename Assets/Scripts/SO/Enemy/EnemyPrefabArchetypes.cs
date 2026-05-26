@@ -1,6 +1,6 @@
 /// <summary>
 /// 敌人池化预制体 archetype id（小写，与 <see cref="GameResourceManifest.enemyPrefabIds"/> 一致）。
-/// 多条 <see cref="EnemyConfig"/> 共用；表现由 Config 的 sprite / Animator 等驱动。
+/// 全部 <see cref="EnemyConfig"/> 共用；Sprite / Animator 由 Config 在出池时应用。
 /// </summary>
 public static class EnemyPrefabArchetypes
 {

@@ -5,7 +5,7 @@ using UnityEngine;
 public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
     [Header("弹幕预制体")]
-    [Tooltip("池化预制体 archetype Id（小写），与 ConfigId 无关；多条弹幕 Config 可共用同一 prefab，表现由下方 sprite/color/scale 驱动。见 DanmakuPrefabArchetypes。")]
+    [Tooltip("池化预制体 archetype Id（小写），与 ConfigId 无关；多条弹幕 Config 可共用同一 prefab，表现由下方 sprite/scale 驱动。见 DanmakuPrefabArchetypes。")]
     public string danmakuPrefabId;
     [NonSerialized]
     public int danmakuPrefabIndex;
@@ -18,7 +18,6 @@ public class DanmakuConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 
     [Header("弹幕渲染设置")]
     public Sprite sprite = null;
-    public Color color = Color.white;
 
     [Header("弹幕碰撞器设置")]
     public ColliderConfig colliderConfig = new();

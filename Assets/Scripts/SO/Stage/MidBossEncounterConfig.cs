@@ -68,22 +68,6 @@ public class MidBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceRe
 
     [SerializeField, HideInInspector] string[] dropOnDeathConfigIds;
 
-    [Header("Animator")]
-    [Tooltip("入场：Animator 状态名（非 AnimationClip）；留空则该阶段不 Play")]
-    public string animatorStateEntry = "Enter";
-
-    [Tooltip("场内循环：Animator 状态名")]
-    public string animatorStateLoop = "Loop";
-
-    [Tooltip("退场：Animator 状态名")]
-    public string animatorStateExit = "Exit";
-
-    [Tooltip("回退默认：Animator 状态名")]
-    public string animatorStateIdle = "Idle";
-
-    [Tooltip("移动表现（可选，当前逻辑未使用）：Animator 状态名")]
-    public string animatorStateMove = "Move";
-
     public void BakeLogicTiming(uint logicFPS)
     {
         float fps = Mathf.Max(1f, logicFPS);
@@ -185,6 +169,8 @@ public class MidBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceRe
         emitterConfigIdOverride = emitterConfigIdOverride.ToLowerInvariantTrimmed();
         EnsureDropEntriesMigrated();
         DeathDropBaking.NormalizeEntries(dropOnDeathEntries);
+        EnemyEncounterConfigValidation.WarnEnemyTypeMismatch(
+            this, enemyConfigId, EnemyType.MidBoss, "MidBossEncounter");
     }
 #endif
 }

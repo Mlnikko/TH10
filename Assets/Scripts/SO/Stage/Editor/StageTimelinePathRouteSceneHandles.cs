@@ -200,7 +200,13 @@ static class StageTimelinePathRouteSceneHandles
 
 
 
-        DrawRouteNodeHandles(viewer, encounter, route, origin, area, contextKey: phase);
+        DrawRouteNodeHandles(
+            viewer,
+            encounter,
+            route,
+            origin,
+            area,
+            contextKey: MakeBossPathContextKey(E_StageTimelinePathEditTarget.MidBoss, phase));
 
     }
 
@@ -252,9 +258,20 @@ static class StageTimelinePathRouteSceneHandles
 
 
 
-        DrawRouteNodeHandles(viewer, encounter, route, origin, area, contextKey: phase);
+        DrawRouteNodeHandles(
+            viewer,
+            encounter,
+            route,
+            origin,
+            area,
+            contextKey: MakeBossPathContextKey(E_StageTimelinePathEditTarget.MainBoss, phase));
 
     }
+
+
+
+    static int MakeBossPathContextKey(E_StageTimelinePathEditTarget target, int phase) =>
+        (int)target * 16 + phase;
 
 
 
@@ -438,9 +455,37 @@ static class StageTimelinePathRouteSceneHandles
 
         route?.EnsureSpawnAnchoredFormat();
 
-        if (route?.nodes == null || route.nodes.Count < 1)
+        if (route == null)
 
             return;
+
+
+
+        if (route.nodes == null || route.nodes.Count < 1)
+
+        {
+
+            route.nodes = new System.Collections.Generic.List<MovementPathNode>
+
+            {
+
+                new() { positionLocal = UnityEngine.Vector2.down * 16f }
+
+            };
+
+            route.EnsureLegsMatchNodeCount();
+
+            EditorUtility.SetDirty(undoTarget);
+
+        }
+
+        else
+
+        {
+
+            route.EnsureLegsMatchNodeCount();
+
+        }
 
 
 
@@ -493,6 +538,8 @@ static class StageTimelinePathRouteSceneHandles
         if (changed)
 
         {
+
+            route.EnsureLegsMatchNodeCount();
 
             EditorUtility.SetDirty(undoTarget);
 

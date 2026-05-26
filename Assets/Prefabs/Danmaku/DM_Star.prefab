@@ -102,7 +102,6 @@ MonoBehaviour:
   danmakuType: 0
   scale: 1
   sprite: {fileID: -1349712159, guid: 984f553d7043b73418103409ec53f2b7, type: 3}
-  color: {r: 1, g: 1, b: 1, a: 1}
   colliderConfig:
     isTrigger: 0
     shape: 2

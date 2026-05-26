@@ -41,15 +41,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     [Tooltip("关底 Boss 路径阶段：0=登场 1=场内")]
     [SerializeField] int previewMainBossPathPhase;
 
-    [Tooltip("在 Scene 视图绘制战斗区、各路径节点与采样轨迹（无需进入 Play）")]
-    [SerializeField] bool drawWavePathGizmo = true;
-
-    [Tooltip("在 Scene 视图绘制中场 Boss 登场点与入场/循环/退场路径")]
-    [SerializeField] bool drawMidBossPathGizmo = true;
-
-    [Tooltip("在 Scene 视图绘制关底 Boss 登场点与路径")]
-    [SerializeField] bool drawMainBossPathGizmo = true;
-
     [Header("路径编辑（Scene）")]
     [Tooltip("拖拽路径点时吸附到以战斗区中心为原点的世界网格")]
     [SerializeField] bool pathNodeSnapToGrid = true;
@@ -586,6 +577,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         var world = new World();
         world.AddSystem<StageTimelineSystem>();
         world.AddSystem<MidBossEncounterSystem>();
+        world.AddSystem<MainBossEncounterSystem>();
         world.AddSystem<EnemyMovementSystem>();
         world.AddSystem<DanmakuSystem>();
         world.AddSystem<DanmakuEmitSystem>();
@@ -660,36 +652,42 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         StageTimelineWaveGizmo.DrawBattleAreaFrames(area);
 
         uint fps = LogicFramePreviewClock.GetLogicFps();
-
-        if (drawMidBossPathGizmo)
+        switch (pathEditTarget)
         {
-            var mid = stageTimelineConfig.midBossEncounter;
-            if (mid != null && mid.enabled && !string.IsNullOrEmpty(mid.enemyConfigId))
-            {
-                int emph = pathEditTarget == E_StageTimelinePathEditTarget.MidBoss
-                    ? previewMidBossPathPhase
-                    : -1;
-                var midVisuals = StageTimelineWaveGizmo.BuildMidBossEditorPathVisuals(mid, area, fps);
-                StageTimelineWaveGizmo.DrawMidBossPathVisuals(midVisuals, mid, area, emph);
-            }
+            case E_StageTimelinePathEditTarget.MidBoss:
+                DrawSelectedMidBossPathGizmo(area, fps);
+                break;
+            case E_StageTimelinePathEditTarget.MainBoss:
+                DrawSelectedMainBossPathGizmo(area, fps);
+                break;
+            default:
+                DrawSelectedWavePathGizmo(area, fps);
+                break;
         }
+    }
 
-        if (drawMainBossPathGizmo)
-        {
-            var main = stageTimelineConfig.mainBossEncounter;
-            if (main != null && main.enabled && !string.IsNullOrEmpty(main.enemyConfigId))
-            {
-                int emph = pathEditTarget == E_StageTimelinePathEditTarget.MainBoss
-                    ? previewMainBossPathPhase
-                    : -1;
-                var mainVisuals = StageTimelineWaveGizmo.BuildMainBossEditorPathVisuals(main, area, fps);
-                StageTimelineWaveGizmo.DrawMainBossPathVisuals(mainVisuals, main, area, emph);
-            }
-        }
-
-        if (!drawWavePathGizmo)
+    void DrawSelectedMidBossPathGizmo(in BattleAreaData area, uint fps)
+    {
+        var mid = stageTimelineConfig.midBossEncounter;
+        if (mid == null || !mid.enabled || string.IsNullOrEmpty(mid.enemyConfigId))
             return;
 
+        var midVisuals = StageTimelineWaveGizmo.BuildMidBossEditorPathVisuals(mid, area, fps);
+        StageTimelineWaveGizmo.DrawMidBossPathVisuals(midVisuals, mid, area, previewMidBossPathPhase);
+    }
+
+    void DrawSelectedMainBossPathGizmo(in BattleAreaData area, uint fps)
+    {
+        var main = stageTimelineConfig.mainBossEncounter;
+        if (main == null || !main.enabled || string.IsNullOrEmpty(main.enemyConfigId))
+            return;
+
+        var mainVisuals = StageTimelineWaveGizmo.BuildMainBossEditorPathVisuals(main, area, fps);
+        StageTimelineWaveGizmo.DrawMainBossPathVisuals(mainVisuals, main, area, previewMainBossPathPhase);
+    }
+
+    void DrawSelectedWavePathGizmo(in BattleAreaData area, uint fps)
+    {
         int waveIndex = ResolveGizmoWaveIndex();
         if (waveIndex < 0)
             return;
@@ -701,12 +699,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         var wave = waves[waveIndex];
         wave.EnsureSpawnQueueMigrated();
         int pathEntry = wave.ResolvePathDisplayEntryIndex(previewPathEditEntryIndex);
-        StageTimelineWaveGizmo.DrawEditorWavePathPreview(
-            wave,
-            area,
-            waveIndex,
-            LogicFramePreviewClock.GetLogicFps(),
-            pathEntry);
+        StageTimelineWaveGizmo.DrawEditorWavePathPreview(wave, area, waveIndex, fps, pathEntry);
     }
 
     public void RepaintPathGizmo()
@@ -721,7 +714,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         waveIndex = -1;
         area = default;
 
-        if (!drawWavePathGizmo || stageTimelineConfig == null || !TryResolveGizmoBattleArea(out area))
+        if (pathEditTarget != E_StageTimelinePathEditTarget.MidStageWave
+            || stageTimelineConfig == null
+            || !TryResolveGizmoBattleArea(out area))
             return false;
 
         waveIndex = ResolveGizmoWaveIndex();

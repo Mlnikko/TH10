@@ -211,6 +211,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CStageState) != 0) RemoveComponentAtSlot<CStageState>(index);
         if ((mask & ComponentMaskBits.CDanmakuBezierHoming) != 0) RemoveComponentAtSlot<CDanmakuBezierHoming>(index);
         if ((mask & ComponentMaskBits.CMidBossEncounter) != 0) RemoveComponentAtSlot<CMidBossEncounter>(index);
+        if ((mask & ComponentMaskBits.CMainBossEncounter) != 0) RemoveComponentAtSlot<CMainBossEncounter>(index);
 
         _componentMasks[index] = 0;
     }

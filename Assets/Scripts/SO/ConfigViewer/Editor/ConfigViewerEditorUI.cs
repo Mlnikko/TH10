@@ -78,6 +78,36 @@ public static class ConfigViewerEditorUI
         SceneView.RepaintAll();
     }
 
+    /// <summary>
+    /// 在 Viewer Inspector 上直接编辑 Config SO 字段；有修改时刷新 Viewer 与场景预览。
+    /// </summary>
+    /// <returns>是否写入了 Config 资产。</returns>
+    public static bool DrawDirectConfigEditor(
+        UnityEngine.Object configAsset,
+        GameConfigViewerBase viewer,
+        SerializedObject viewerSerializedObject,
+        Action<SerializedObject> drawFields)
+    {
+        if (configAsset == null || drawFields == null)
+            return false;
+
+        var configSo = new SerializedObject(configAsset);
+        configSo.Update();
+        drawFields(configSo);
+        if (!configSo.ApplyModifiedProperties())
+            return false;
+
+        EditorUtility.SetDirty(configAsset);
+        if (viewer != null)
+        {
+            viewer.SyncFromConfigInEditor();
+            viewerSerializedObject?.Update();
+            SceneView.RepaintAll();
+        }
+
+        return true;
+    }
+
     public static void DrawSaveButton(
         UnityEngine.Object configAsset,
         Action save,

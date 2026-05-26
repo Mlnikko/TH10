@@ -18,7 +18,10 @@ public static class EnemyDanmakuEmitterPatternFactory
     const float SpeedNormal = 7f;
     const float SpeedFast = 8.5f;
 
-    /// <summary>批量生成敌人发射器 Config（仓库已含成品资产；需重建时在测试或临时 Editor 脚本中调用）。</summary>
+    [MenuItem("TH10/弹幕/生成道中敌人弹幕发射器配置")]
+    public static void CreateAllPatternsMenu() => CreateAllPatterns();
+
+    /// <summary>批量生成敌人发射器 Config（仓库已含成品资产；需重建时在菜单或测试中调用）。</summary>
     public static void CreateAllPatterns()
     {
         var created = new List<DanmakuEmitterConfig>();

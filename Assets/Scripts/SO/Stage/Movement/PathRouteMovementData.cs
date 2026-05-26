@@ -238,6 +238,42 @@ public class PathRouteMovementData
 
     }
 
+
+
+    public static bool HasEditablePathNodes(PathRouteMovementData route) =>
+
+        route != null && route.nodes != null && route.nodes.Count >= 1;
+
+
+
+#if UNITY_EDITOR
+
+    /// <summary>保证 legs 数量与 nodes 一致，便于 Scene / 烘焙编辑。</summary>
+
+    public void EnsureLegsMatchNodeCount()
+
+    {
+
+        if (nodes == null)
+
+            return;
+
+
+
+        legs ??= new List<MovementPathLeg>();
+
+        while (legs.Count < nodes.Count)
+
+            legs.Add(new MovementPathLeg { curve = E_PathSegmentCurve.Linear, travelSeconds = 0f });
+
+        while (legs.Count > nodes.Count)
+
+            legs.RemoveAt(legs.Count - 1);
+
+    }
+
+#endif
+
     /// <summary>
     /// PerQueueEntry：条目仅改节点时，用波次 <paramref name="shared"/> 的路段曲线/时长配置补全 legs（不修改原资产）。
     /// </summary>

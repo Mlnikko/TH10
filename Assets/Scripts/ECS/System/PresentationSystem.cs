@@ -131,7 +131,7 @@ public class PresentationSystem : BaseSystem
                 {
                     int prefabIndex = config.enemyPrefabIndex;
                     if (prefabIndex < 0)
-                        failureReason = $"invalid enemyPrefabIndex ({prefabIndex}), prefabId='{config.enemyPrefabId}'";
+                        failureReason = $"invalid enemyPrefabIndex ({prefabIndex}), prefabId='{EnemyPrefabArchetypes.Unit}'";
                     else
                     {
                         go = GameObjectPoolManager.Instance.Get(prefabIndex);
@@ -142,16 +142,7 @@ public class PresentationSystem : BaseSystem
                             go.transform.position = spawnPos;
                             go.SetActive(true);
                             EnemyPresentation.Apply(config, go);
-                            if (EntityManager.HasComponent<CMidBossEncounter>(entity))
-                            {
-                                ref readonly var mid = ref EntityManager.GetComponent<CMidBossEncounter>(entity);
-                                var encounterCfg = GameResDB.Instance.GetConfig<MidBossEncounterConfig>(mid.encounterCfgIndex);
-                                updater = encounterCfg != null
-                                    ? new MidBossUpdater(go, encounterCfg)
-                                    : new EnemyUpdater(go);
-                            }
-                            else
-                                updater = new EnemyUpdater(go);
+                            updater = new EnemyUpdater(go);
                         }
                     }
                 }

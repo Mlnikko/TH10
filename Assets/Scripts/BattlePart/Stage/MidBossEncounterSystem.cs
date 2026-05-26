@@ -67,6 +67,8 @@ public class MidBossEncounterSystem : BaseSystem
     {
         mid.phase = E_MidBossPhase.OnField;
         mid.phaseStartFrame = frame;
+        mid.loopOriginX = pos.x;
+        mid.loopOriginY = pos.y;
 
         if (mid.loopRouteBakeIndex < 0)
         {
@@ -98,8 +100,8 @@ public class MidBossEncounterSystem : BaseSystem
         }
 
         path.spawnFrame = frame;
-        path.originX = pos.x;
-        path.originY = pos.y;
+        path.originX = mid.loopOriginX;
+        path.originY = mid.loopOriginY;
         path.routeBakeIndex = mid.exitRouteBakeIndex;
         path.loopRoute = false;
     }

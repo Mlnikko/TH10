@@ -13,15 +13,6 @@ public class MidBossEncounterConfigAssetEditor : Editor
         nameof(MidBossEncounterConfig.exitPathRoute),
     };
 
-    static readonly string[] AnimatorStateNames =
-    {
-        nameof(MidBossEncounterConfig.animatorStateEntry),
-        nameof(MidBossEncounterConfig.animatorStateLoop),
-        nameof(MidBossEncounterConfig.animatorStateExit),
-        nameof(MidBossEncounterConfig.animatorStateIdle),
-        nameof(MidBossEncounterConfig.animatorStateMove),
-    };
-
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
@@ -37,25 +28,21 @@ public class MidBossEncounterConfigAssetEditor : Editor
                 continue;
             }
 
-            if (StageTimelinePathEditScope.IsActive
-                && StageTimelinePathEditScope.Target == E_StageTimelinePathEditTarget.MidBoss
+            if (StageTimelinePathEditScope.ShouldHidePathRoutes(E_StageTimelinePathEditTarget.MidBoss)
                 && IsPathRouteProperty(prop.name))
                 continue;
 
             if (prop.name == nameof(MidBossEncounterConfig.enemyConfigId))
             {
-                ResourceIdEditorPicker.DrawEnemyConfigIdField(prop);
+                ResourceIdEditorPicker.DrawEnemyConfigIdField(prop, EnemyType.MidBoss);
                 continue;
             }
 
-            if (prop.name == nameof(MidBossEncounterConfig.animatorStateEntry))
+            if (prop.name == nameof(MidBossEncounterConfig.emitterConfigIdOverride))
             {
-                DrawAnimatorSection();
+                ResourceIdEditorPicker.DrawDanmakuEmitterConfigIdField(prop, "dme_midboss_");
                 continue;
             }
-
-            if (IsAnimatorStateProperty(prop.name))
-                continue;
 
             if (prop.name == nameof(MidBossEncounterConfig.dropOnDeathEntries))
             {
@@ -81,38 +68,11 @@ public class MidBossEncounterConfigAssetEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    void DrawAnimatorSection()
-    {
-        BossAnimatorStatePicker.DrawAnimatorStateSection(
-            serializedObject,
-            serializedObject.FindProperty(nameof(MidBossEncounterConfig.enemyConfigId)),
-            "Animator 状态",
-            new[]
-            {
-                (serializedObject.FindProperty(nameof(MidBossEncounterConfig.animatorStateEntry)), "入场 Entry"),
-                (serializedObject.FindProperty(nameof(MidBossEncounterConfig.animatorStateLoop)), "场内 Loop"),
-                (serializedObject.FindProperty(nameof(MidBossEncounterConfig.animatorStateExit)), "退场 Exit"),
-                (serializedObject.FindProperty(nameof(MidBossEncounterConfig.animatorStateIdle)), "回退 Idle"),
-                (serializedObject.FindProperty(nameof(MidBossEncounterConfig.animatorStateMove)), "移动 Move（未接入）"),
-            });
-    }
-
     static bool IsPathRouteProperty(string name)
     {
         for (int i = 0; i < PathRouteNames.Length; i++)
         {
             if (PathRouteNames[i] == name)
-                return true;
-        }
-
-        return false;
-    }
-
-    static bool IsAnimatorStateProperty(string name)
-    {
-        for (int i = 0; i < AnimatorStateNames.Length; i++)
-        {
-            if (AnimatorStateNames[i] == name)
                 return true;
         }
 

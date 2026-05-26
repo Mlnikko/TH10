@@ -10,10 +10,10 @@ public static class DanmakuPresentation
         if (config == null)
             return;
 
-        Apply(config.sprite, config.color, config.scale, root);
+        Apply(config.sprite, config.scale, root);
     }
 
-    public static void Apply(Sprite sprite, Color color, float scale, GameObject root)
+    public static void Apply(Sprite sprite, float scale, GameObject root)
     {
         if (root == null)
             return;
@@ -30,6 +30,6 @@ public static class DanmakuPresentation
         if (sprite != null)
             spriteRenderer.sprite = sprite;
 
-        spriteRenderer.color = color;
+        spriteRenderer.color = Color.white;
     }
 }

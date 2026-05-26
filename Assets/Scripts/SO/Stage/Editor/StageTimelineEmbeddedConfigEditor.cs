@@ -14,7 +14,8 @@ static class StageTimelineEmbeddedConfigEditor
         ScriptableObject asset,
         StageTimelineConfigViewer viewer,
         string title,
-        bool defaultExpanded = true)
+        bool defaultExpanded = true,
+        System.Action<StageTimelineConfigViewer> onExpanded = null)
     {
         if (asset == null)
         {
@@ -23,7 +24,11 @@ static class StageTimelineEmbeddedConfigEditor
         }
 
         bool expanded = EditorPrefs.GetBool(PrefKey(asset), defaultExpanded);
+        EditorGUI.BeginChangeCheck();
         expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, title);
+        if (EditorGUI.EndChangeCheck() && expanded)
+            onExpanded?.Invoke(viewer);
+
         EditorPrefs.SetBool(PrefKey(asset), expanded);
         if (!expanded)
         {
@@ -61,6 +66,13 @@ static class StageTimelineEmbeddedConfigEditor
     }
 
     static string PrefKey(Object asset) => $"TH10.StageTimeline.Embedded.{asset.GetInstanceID()}";
+
+    public static bool IsFoldoutExpanded(ScriptableObject asset, bool defaultExpanded = true)
+    {
+        if (asset == null)
+            return false;
+        return EditorPrefs.GetBool(PrefKey(asset), defaultExpanded);
+    }
 
     static Editor GetOrCreateEditor(Object target)
     {

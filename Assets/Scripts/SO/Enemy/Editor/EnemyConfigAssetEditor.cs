@@ -11,8 +11,8 @@ public class EnemyConfigAssetEditor : Editor
         serializedObject.Update();
 
         EditorGUILayout.HelpBox(
-            "enemyPrefabId 为池 archetype（见 EnemyPrefabArchetypes）；"
-            + "displaySprite / animatorController 在出池时由 EnemyPresentation 应用。",
+            $"敌人统一从池 archetype「{EnemyPrefabArchetypes.Unit}」出池；"
+            + "displaySprite / animatorController 由 EnemyPresentation 应用。",
             MessageType.None);
 
         SerializedProperty prop = serializedObject.GetIterator();
@@ -23,15 +23,6 @@ public class EnemyConfigAssetEditor : Editor
             if (prop.name == "m_Script")
             {
                 EditorGUILayout.PropertyField(prop);
-                continue;
-            }
-
-            if (prop.name == nameof(EnemyConfig.enemyPrefabId))
-            {
-                ResourceIdEditorPicker.DrawPrefabIdField(
-                    prop,
-                    nameof(GameResourceManifest.enemyPrefabIds),
-                    "Prefabs/Enemy");
                 continue;
             }
 
@@ -61,7 +52,8 @@ public class EnemyConfigAssetEditor : Editor
 
             if (prop.name == nameof(EnemyConfig.dropOnDeathBaked)
                 || prop.name == "dropOnDeathConfigIds"
-                || prop.name == nameof(EnemyConfig.deathEffectPrefabIndex))
+                || prop.name == nameof(EnemyConfig.deathEffectPrefabIndex)
+                || prop.name == nameof(EnemyConfig.enemyPrefabIndex))
                 continue;
 
             EditorGUILayout.PropertyField(prop, true);

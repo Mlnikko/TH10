@@ -6,7 +6,17 @@ public enum EnemyType
     None = 0,
     Minion = 1,
     Elite = 2,
-    Boss = 3
+    /// <summary>关底 Boss（<see cref="MainBossEncounterConfig"/>）。</summary>
+    Boss = 3,
+    /// <summary>中场 Boss（<see cref="MidBossEncounterConfig"/>）；与关底 Boss 分档，避免共用类型与弹幕池。</summary>
+    MidBoss = 4,
+}
+
+public static class EnemyTypeExtensions
+{
+    public static bool IsMainBoss(this EnemyType type) => type == EnemyType.Boss;
+    public static bool IsMidBoss(this EnemyType type) => type == EnemyType.MidBoss;
+    public static bool IsBossTier(this EnemyType type) => type.IsMainBoss() || type.IsMidBoss();
 }
 
 
@@ -15,14 +25,11 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 {
     public EnemyType enemyType;
 
-    [Tooltip("池化预制体 archetype Id；多条 EnemyConfig 可共用，表现见下方 display* / animatorController")]
-    public string enemyPrefabId;
+    /// <summary>池 archetype 固定为 <see cref="EnemyPrefabArchetypes.Unit"/>。</summary>
     [NonSerialized] public int enemyPrefabIndex;
 
-    [Header("表现（出池时应用）")]
+    [Header("表现（出池时应用到 enemy_tpl_unit）")]
     public Sprite displaySprite;
-    public Color displayColor = Color.white;
-    public float displayScale = 1f;
     public RuntimeAnimatorController animatorController;
 
     public string emitterConfigId;
@@ -51,11 +58,11 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 
     public void ResolveReferences(GameResDB resDb)
     {
-        enemyPrefabIndex = resDb.GetPrefabIndex(enemyPrefabId);
+        enemyPrefabIndex = resDb.GetPrefabIndex(EnemyPrefabArchetypes.Unit);
         if (enemyPrefabIndex == -1)
         {
             Logger.Warn(
-                $"[EnemyConfig] Prefab not found: '{enemyPrefabId}' " +
+                $"[EnemyConfig] Prefab not found: '{EnemyPrefabArchetypes.Unit}' " +
                 $"(configId: {ConfigId})",
                 LogTag.Resource
             );
@@ -109,7 +116,6 @@ public class EnemyConfig : GameConfig , IReferenceResolver
 #if UNITY_EDITOR
     void OnValidate()
     {
-        enemyPrefabId = enemyPrefabId.ToLowerInvariantTrimmed();
         emitterConfigId = emitterConfigId.ToLowerInvariantTrimmed();
         deathEffectPrefabId = deathEffectPrefabId.ToLowerInvariantTrimmed();
         EnsureDropEntriesMigrated();

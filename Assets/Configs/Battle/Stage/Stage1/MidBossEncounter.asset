@@ -25,39 +25,82 @@ MonoBehaviour:
     nodes:
     - positionLocal: {x: 0, y: -0.85}
       holdSeconds: 0
-    legs: []
+    legs:
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
     defaultLegDurationSeconds: 1
   loopPathRoute:
     durationSeconds: -1
-    moveSpeed: 3.6
+    moveSpeed: 1
     spawnHoldSeconds: 0
     nodes:
     - positionLocal: {x: -0.8, y: 0}
-      holdSeconds: 0
+      holdSeconds: 1
     - positionLocal: {x: 0, y: -0.19999993}
-      holdSeconds: 0
+      holdSeconds: 1
     - positionLocal: {x: 0.8, y: 0}
-      holdSeconds: 0
+      holdSeconds: 1
     - positionLocal: {x: 0, y: 0}
-      holdSeconds: 0
-    legs: []
+      holdSeconds: 1
+    legs:
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
     defaultLegDurationSeconds: 1
   exitPathRoute:
     durationSeconds: -1
     moveSpeed: 3.6
     spawnHoldSeconds: 0
     nodes:
-    - positionLocal: {x: 0, y: 1.4}
+    - positionLocal: {x: 0, y: 1.5000001}
       holdSeconds: 0
-    legs: []
+    legs:
+    - curve: 0
+      travelSeconds: 0
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: 1.2
+      sineAmplitude: 0.65
+      sineHz: 1.2
+      sinePhaseRad: 0
     defaultLegDurationSeconds: 1
   maxHealthOverride: 0
   emitterConfigIdOverride: 
   dropOverrideMode: 0
   dropOnDeathEntries: []
   dropOnDeathConfigIds: []
-  animatorStateEntry: Enter
-  animatorStateLoop: Loop
-  animatorStateExit: Exit
-  animatorStateIdle: Idle
-  animatorStateMove: Move

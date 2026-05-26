@@ -44,6 +44,29 @@ MonoBehaviour:
   - dm_star
   - dm_test
   danmakuEmitterConfigIds:
+  - dme_midboss_diag_spread
+  - dme_midboss_fan_narrow
+  - dme_midboss_fan_wide
+  - dme_midboss_grain_spray
+  - dme_midboss_ring_16_rotate
+  - dme_midboss_ring_8
+  - dme_midboss_stream
+  - dme_midboss_wave_lasher
+  - dme_boss_fan_omni
+  - dme_boss_fan_tight
+  - dme_boss_four_way_rotate
+  - dme_boss_grain_curtain
+  - dme_boss_grain_storm
+  - dme_boss_ring_16_fast
+  - dme_boss_ring_24_rotate
+  - dme_boss_ring_32_spiral
+  - dme_boss_ring_dual
+  - dme_boss_ring_spread
+  - dme_boss_stream
+  - dme_boss_stream_wall
+  - dme_boss_wave_lasher
+  - dme_boss_wave_rotate
+  - dme_boss_wave_sweep
   - dme_enemy_base
   - dme_enemy_diag_spread
   - dme_enemy_down_single

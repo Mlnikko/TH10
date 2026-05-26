@@ -73,11 +73,11 @@ public static class DanmakuEmitterSpawnMath
         float emitPosX,
         float emitPosY,
         float emitRotRad,
+        int salvoIndex,
         SpawnHandler spawn)
     {
-        EmitArcWithStart(
-            in emitter, emitPosX, emitPosY, emitRotRad,
-            emitter.arcStartAngleRad, spawn);
+        float startRad = emitter.arcStartAngleRad + emitter.salvoAngleAdvanceRad * salvoIndex;
+        EmitArcWithStart(in emitter, emitPosX, emitPosY, emitRotRad, startRad, spawn);
     }
 
     /// <summary>波弹：扇形中心角随逻辑帧正弦摆动。</summary>
@@ -87,6 +87,7 @@ public static class DanmakuEmitterSpawnMath
         float emitPosY,
         float emitRotRad,
         uint logicFrame,
+        int salvoIndex,
         SpawnHandler spawn)
     {
         if (spawn == null)
@@ -94,7 +95,8 @@ public static class DanmakuEmitterSpawnMath
 
         float phase = logicFrame * emitter.waveOmegaRadPerFrame + emitter.wavePhaseOffsetRad;
         float swing = Mathf.Sin(phase) * emitter.waveSwingRad;
-        float dynamicStart = emitter.waveCenterAngleRad + swing - emitter.waveArcHalfSpreadRad;
+        float salvoAdvance = emitter.salvoAngleAdvanceRad * salvoIndex;
+        float dynamicStart = emitter.waveCenterAngleRad + swing - emitter.waveArcHalfSpreadRad + salvoAdvance;
 
         EmitArcWithStart(in emitter, emitPosX, emitPosY, emitRotRad, dynamicStart, spawn);
     }
@@ -220,10 +222,10 @@ public static class DanmakuEmitterSpawnMath
                 EmitLine(in emitter, emitPosX, emitPosY, emitRotRad, Add);
                 break;
             case EmitMode.Arc:
-                EmitArc(in emitter, emitPosX, emitPosY, emitRotRad, Add);
+                EmitArc(in emitter, emitPosX, emitPosY, emitRotRad, salvoIndex, Add);
                 break;
             case EmitMode.Wave:
-                EmitWave(in emitter, emitPosX, emitPosY, emitRotRad, logicFrame, Add);
+                EmitWave(in emitter, emitPosX, emitPosY, emitRotRad, logicFrame, salvoIndex, Add);
                 break;
             case EmitMode.Grain:
                 EmitGrain(in emitter, emitPosX, emitPosY, emitRotRad, salvoIndex, Add);

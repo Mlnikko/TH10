@@ -1,43 +1,26 @@
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 [CustomEditor(typeof(EnemyConfigViewer), true)]
 public class EnemyConfigEditor : Editor
 {
     const string ConfigField = "enemyConfig";
-    const string PrefabIdField = "enemyPrefabId";
-    const string DropIdsField = "dropOnDeathEntries";
-    const string DeathFxField = "deathEffectPrefabId";
 
     public override void OnInspectorGUI()
     {
         var viewer = (EnemyConfigViewer)target;
-        bool inPrefabStage = IsEditingInPrefabStage(viewer.gameObject);
 
         serializedObject.Update();
 
         var previousConfig = viewer.EnemyConfig;
-
         var configRef = serializedObject.FindProperty(ConfigField);
         bool configRefChanged = ConfigViewerEditorUI.DrawConfigReferenceProperty(configRef);
 
-        if (inPrefabStage && viewer.EnemyConfig != null)
-            DrawEnemyPrefabIdFromConfig(viewer);
-        else
-        {
-            var prefabId = serializedObject.FindProperty(PrefabIdField);
-            if (prefabId != null)
-                ResourceIdEditorPicker.DrawEnemyPrefabIdField(prefabId);
-        }
+        DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField);
 
-        DrawPropertiesExcluding(serializedObject, "m_Script", ConfigField, PrefabIdField, DropIdsField, DeathFxField);
-
-        if (inPrefabStage && viewer.EnemyConfig != null)
-            DrawDropAndDeathFromConfig(viewer);
-        else
-            DrawDropAndDeathFromViewer();
+        if (viewer.EnemyConfig != null)
+            DrawEnemyConfigOnAsset(viewer);
 
         serializedObject.ApplyModifiedProperties();
 
@@ -49,16 +32,13 @@ public class EnemyConfigEditor : Editor
             configRefChanged);
 
         serializedObject.Update();
-
         ConfigViewerEditorUI.DrawSeparator();
 
         if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.EnemyConfig, "EnemyConfig"))
             return;
 
         ConfigViewerEditorUI.DrawPrefabSyncHint(
-            inPrefabStage
-                ? "正在预制体编辑模式：掉落/死亡特效直接读写 EnemyConfig 资产。"
-                : "切换配置文件或双击进入预制体编辑后，将自动从 EnemyConfig 同步参数、Sprite 与 Animator。");
+            "表现 / 掉落 / 死亡特效在 EnemyConfig 资产上编辑；下方字段保存到 Config 的 HP / 类型 / 碰撞。");
 
         ConfigViewerEditorUI.DrawSaveButton(
             viewer.EnemyConfig,
@@ -66,73 +46,51 @@ public class EnemyConfigEditor : Editor
             "EnemyConfig");
     }
 
-    static bool IsEditingInPrefabStage(GameObject go)
+    static void DrawEnemyConfigOnAsset(EnemyConfigViewer viewer)
     {
-        if (go == null)
-            return false;
-
-        var stage = PrefabStageUtility.GetCurrentPrefabStage();
-        return stage != null && stage.IsPartOfPrefabContents(go);
+        ConfigViewerEditorUI.DrawDirectConfigEditor(
+            viewer.EnemyConfig,
+            viewer,
+            null,
+            DrawEnemyConfigFields);
     }
 
-    void DrawEnemyPrefabIdFromConfig(EnemyConfigViewer viewer)
+    static void DrawEnemyConfigFields(SerializedObject configSo)
     {
-        var configSo = new SerializedObject(viewer.EnemyConfig);
-        configSo.Update();
+        EditorGUILayout.Space(2);
+        EditorGUILayout.LabelField("表现", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            $"池预制体固定为 {EnemyPrefabArchetypes.Unit}；出池时由 EnemyPresentation 应用。",
+            MessageType.None);
 
-        var prefabId = configSo.FindProperty(PrefabIdField);
-        if (prefabId != null)
-            ResourceIdEditorPicker.DrawEnemyPrefabIdField(prefabId);
-
-        if (configSo.ApplyModifiedProperties())
-        {
-            EditorUtility.SetDirty(viewer.EnemyConfig);
-            viewer.LoadFromConfig();
-            serializedObject.Update();
-        }
-    }
-
-    void DrawDropAndDeathFromConfig(EnemyConfigViewer viewer)
-    {
-        var configSo = new SerializedObject(viewer.EnemyConfig);
-        configSo.Update();
+        DrawProperty(configSo, nameof(EnemyConfig.displaySprite));
+        DrawProperty(configSo, nameof(EnemyConfig.animatorController));
+        DrawProperty(configSo, nameof(EnemyConfig.emitterConfigId), ResourceIdEditorPicker.DrawDanmakuEmitterConfigIdField);
 
         EditorGUILayout.Space(2);
         EditorGUILayout.LabelField("死亡掉落", EditorStyles.boldLabel);
 
-        var dropIds = configSo.FindProperty(DropIdsField);
+        var dropIds = configSo.FindProperty(nameof(EnemyConfig.dropOnDeathEntries));
         if (dropIds != null)
             ResourceIdEditorPicker.DrawDeathDropEntryArray(dropIds, drawSectionHeader: false);
 
-        var deathFx = configSo.FindProperty(DeathFxField);
+        var deathFx = configSo.FindProperty(nameof(EnemyConfig.deathEffectPrefabId));
         if (deathFx != null)
             ResourceIdEditorPicker.DrawPoolPrefabIdField(deathFx, E_PoolCategory.Effect);
-
-        if (configSo.ApplyModifiedProperties())
-        {
-            EditorUtility.SetDirty(viewer.EnemyConfig);
-            viewer.LoadFromConfig();
-            serializedObject.Update();
-        }
 
         EditorGUILayout.Space(2);
     }
 
-    void DrawDropAndDeathFromViewer()
+    static void DrawProperty(SerializedObject configSo, string propertyName, System.Action<SerializedProperty> customDrawer = null)
     {
-        var dropIds = serializedObject.FindProperty(DropIdsField);
-        if (dropIds != null)
-        {
-            EditorGUILayout.Space(2);
-            EditorGUILayout.LabelField("死亡掉落（预制体缓存）", EditorStyles.boldLabel);
-            ResourceIdEditorPicker.DrawDeathDropEntryArray(dropIds, drawSectionHeader: false);
-        }
+        var prop = configSo.FindProperty(propertyName);
+        if (prop == null)
+            return;
 
-        var deathFx = serializedObject.FindProperty(DeathFxField);
-        if (deathFx != null)
-            ResourceIdEditorPicker.DrawPoolPrefabIdField(deathFx, E_PoolCategory.Effect);
-
-        EditorGUILayout.Space(2);
+        if (customDrawer != null)
+            customDrawer(prop);
+        else
+            EditorGUILayout.PropertyField(prop);
     }
 }
 #endif
