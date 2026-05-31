@@ -230,7 +230,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CRotation) != 0) RemoveComponentAtSlot<CRotation>(index);
         if ((mask & ComponentMaskBits.CPosition) != 0) RemoveComponentAtSlot<CPosition>(index);
         if ((mask & ComponentMaskBits.CStageState) != 0) RemoveComponentAtSlot<CStageState>(index);
-        if ((mask & ComponentMaskBits.CDanmakuBezierHoming) != 0) RemoveComponentAtSlot<CDanmakuBezierHoming>(index);
+        if ((mask & ComponentMaskBits.CDanmakuHoming) != 0) RemoveComponentAtSlot<CDanmakuHoming>(index);
         if ((mask & ComponentMaskBits.CMidBossEncounter) != 0) RemoveComponentAtSlot<CMidBossEncounter>(index);
         if ((mask & ComponentMaskBits.CMainBossEncounter) != 0) RemoveComponentAtSlot<CMainBossEncounter>(index);
         if ((mask & ComponentMaskBits.CPlayerRespawnPending) != 0) RemoveComponentAtSlot<CPlayerRespawnPending>(index);

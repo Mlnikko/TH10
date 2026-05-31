@@ -27,6 +27,13 @@ public class CharacterConfigAssetEditor : Editor
                 continue;
             }
 
+            if (prop.name == nameof(CharacterConfig.deathPowerLargeDropConfigId)
+                || prop.name == nameof(CharacterConfig.deathPowerSmallDropConfigId))
+            {
+                ResourceIdEditorPicker.DrawDropItemConfigIdField(prop);
+                continue;
+            }
+
             EditorGUILayout.PropertyField(prop, true);
         }
 

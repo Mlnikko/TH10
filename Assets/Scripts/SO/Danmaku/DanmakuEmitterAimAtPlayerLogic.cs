@@ -49,7 +49,7 @@ public static class DanmakuEmitterAimAtPlayerLogic
             return false;
         }
 
-        int targetIdx = DanmakuBezierHomingLogic.FindNearestTargetIndex(
+        int targetIdx = DanmakuHomingLogic.FindNearestTargetIndex(
             em, emitPosX, emitPosY, (ushort)E_ColliderLayer.Player);
         if (targetIdx < 0)
         {

@@ -11,7 +11,7 @@ public class DanmakuSystem : BaseSystem
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var rotations = EntityManager.GetComponentSpan<CRotation>();
         var velocities = EntityManager.GetComponentSpan<CVelocity>();
-        var homings = EntityManager.GetComponentSpan<CDanmakuBezierHoming>();
+        var homings = EntityManager.GetComponentSpan<CDanmakuHoming>();
 
         for (int i = 0; i < indices.Length; i++)
         {
@@ -21,11 +21,10 @@ public class DanmakuSystem : BaseSystem
             ref var rotation = ref rotations[idx];
             ref var velocity = ref velocities[idx];
 
-            if (EntityManager.HasComponent<CDanmakuBezierHoming>(idx))
+            if (EntityManager.HasComponent<CDanmakuHoming>(idx))
             {
-                ref var homing = ref homings[idx];
-                DanmakuBezierHomingLogic.AdvanceAlongBezier(
-                    EntityManager, idx, ref position, ref velocity, ref rotation, ref homings[idx]);
+                DanmakuHomingLogic.AdvanceHoming(
+                    EntityManager, ref position, ref velocity, ref rotation, ref homings[idx]);
             }
             else
             {

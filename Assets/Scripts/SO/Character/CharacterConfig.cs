@@ -41,10 +41,20 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     [NonSerialized]
     public int postHitInvincibleFrames;
 
-    [Tooltip("死亡时散落的 Power 道具 ConfigId")]
-    public string deathPowerDropConfigId = "drop_rpr_s";
+    [Header("死亡 Power 散落")]
+    [Tooltip("死亡时扣除的 Power 点数（散落数量为当前 Power 减去本值）")]
+    [Min(0)]
+    public int deathPowerDeduction = 8;
+
+    [Tooltip("死亡散落大 Power 道具 ConfigId（默认 50 点）")]
+    public string deathPowerLargeDropConfigId = "drop_rpr_b";
     [NonSerialized]
-    public int deathPowerDropCfgIndex = -1;
+    public int deathPowerLargeDropCfgIndex = -1;
+
+    [Tooltip("死亡散落小 Power 道具 ConfigId（默认 10 点，用于补足余数）")]
+    public string deathPowerSmallDropConfigId = "drop_rpr_s";
+    [NonSerialized]
+    public int deathPowerSmallDropCfgIndex = -1;
 
     [Header("移速配置")]
     [Tooltip("移动速度（世界单位/秒）；烘焙为 moveDistancePerFrame")]
@@ -70,7 +80,8 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     void OnValidate()
     {
         characterPrefabId = characterPrefabId.ToLowerInvariantTrimmed();
-        deathPowerDropConfigId = StringHelper.NormalizeResourceId(deathPowerDropConfigId);
+        deathPowerLargeDropConfigId = StringHelper.NormalizeResourceId(deathPowerLargeDropConfigId);
+        deathPowerSmallDropConfigId = StringHelper.NormalizeResourceId(deathPowerSmallDropConfigId);
         NormalizeWeaponConfigIds();
     }
 
@@ -120,14 +131,25 @@ public class CharacterConfig : GameConfig, IReferenceResolver, ILogicTimingBake
             weaponCfgIndices = Array.Empty<int>();
         }
 
-        string dropId = StringHelper.NormalizeResourceId(deathPowerDropConfigId);
-        deathPowerDropCfgIndex = string.IsNullOrEmpty(dropId) ? -1 : resDb.GetConfigIndex(dropId);
-        if (!string.IsNullOrEmpty(dropId) && deathPowerDropCfgIndex < 0)
+        deathPowerLargeDropCfgIndex = ResolveDropConfigIndex(resDb, deathPowerLargeDropConfigId);
+        deathPowerSmallDropCfgIndex = ResolveDropConfigIndex(resDb, deathPowerSmallDropConfigId);
+    }
+
+    static int ResolveDropConfigIndex(GameResDB resDb, string dropId)
+    {
+        dropId = StringHelper.NormalizeResourceId(dropId);
+        if (string.IsNullOrEmpty(dropId))
+            return -1;
+
+        int index = resDb.GetConfigIndex(dropId);
+        if (index < 0)
         {
             Logger.Warn(
-                $"[CharacterConfig] DropItemConfig not found: '{dropId}' (character: {ConfigId})",
+                $"[CharacterConfig] DropItemConfig not found: '{dropId}'",
                 LogTag.Resource);
         }
+
+        return index;
     }
 
     public void BakeLogicTiming(uint logicFPS)

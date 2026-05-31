@@ -19,7 +19,7 @@ MonoBehaviour:
   emitMode: 1
   launchIntervalSeconds: 1.2
   launchCount: -1
-  launchSpeed: 7
+  launchSpeed: 1
   displaySprite: {fileID: 0}
   displaySelfSpinDegreesPerSecond: 0
   displayScaleMin: 1
@@ -31,6 +31,7 @@ MonoBehaviour:
   danmakuRotOffsetZ: 0
   salvoAngleAdvanceDeg: 0
   emitterCamp: 2
+  aimAtPlayer: 0
   audio_Fire: 0
   lineModeConfig:
     lineDirection: {x: 0, y: -1}

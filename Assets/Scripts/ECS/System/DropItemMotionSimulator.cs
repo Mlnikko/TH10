@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -6,17 +7,26 @@ using UnityEngine;
 public static class DropItemMotionSimulator
 {
     public static CDropItemMotion CreateMotionFromConfig(DropItemConfig cfg, uint logicFps)
+        => CreateMotionFromConfig(cfg, logicFps, 0f, 0f, false);
+
+    public static CDropItemMotion CreateMotionFromConfig(
+        DropItemConfig cfg,
+        uint logicFps,
+        float burstDirX,
+        float burstDirY,
+        bool useBurstDirectionOverride)
     {
         cfg.BakeLogicTiming(logicFps);
         if (cfg.motionMode == E_DropMotionMode.DirectionalBurstThenFall)
         {
+            ResolveBurstDirection(cfg, burstDirX, burstDirY, useBurstDirectionOverride, out float dirX, out float dirY);
             return new CDropItemMotion
             {
                 motionMode = E_DropMotionMode.DirectionalBurstThenFall,
                 motionPhase = 0,
                 burstSpeedPerFrame = cfg.burstInitialPerFrame,
-                burstDirX = cfg.burstDirX,
-                burstDirY = cfg.burstDirY,
+                burstDirX = dirX,
+                burstDirY = dirY,
                 burstDecelPerFrame = cfg.burstDecelPerFrame,
                 fallVyPerFrame = cfg.fallVyAfterBurstPerFrame,
             };
@@ -30,6 +40,30 @@ public static class DropItemMotionSimulator
             maxFallPerFrame = cfg.maxFallPerFrame,
             spinRadPerFrame = cfg.spinRadPerFrame,
         };
+    }
+
+    static void ResolveBurstDirection(
+        DropItemConfig cfg,
+        float burstDirX,
+        float burstDirY,
+        bool useOverride,
+        out float dirX,
+        out float dirY)
+    {
+        if (useOverride)
+        {
+            float lenSq = burstDirX * burstDirX + burstDirY * burstDirY;
+            if (lenSq > 1e-8f)
+            {
+                float invLen = 1f / MathF.Sqrt(lenSq);
+                dirX = burstDirX * invLen;
+                dirY = burstDirY * invLen;
+                return;
+            }
+        }
+
+        dirX = cfg.burstDirX;
+        dirY = cfg.burstDirY;
     }
 
     /// <summary>本帧位移（世界单位），并更新运动状态。</summary>

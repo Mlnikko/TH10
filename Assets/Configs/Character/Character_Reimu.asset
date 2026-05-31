@@ -22,7 +22,9 @@ MonoBehaviour:
   maxHealth: 999
   deathRespawnDelay: 0.5
   postHitInvincibleDuration: 2
-  deathPowerDropConfigId: drop_rpr_s
+  deathPowerDeduction: 8
+  deathPowerLargeDropConfigId: drop_rpr_b
+  deathPowerSmallDropConfigId: drop_rpr_s
   moveSpeed: 2
   moveSlowSpeed: 1
   moveColliderConfig:

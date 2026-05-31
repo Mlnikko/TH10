@@ -111,5 +111,4 @@ MonoBehaviour:
     offset: {x: 0, y: 0}
   damage: 1
   homingTargetLayers: 4
-  homingBezierDurationSeconds: 0.35
-  homingCurveStrength: 0.35
+  homingTurnSpeedDegreesPerSecond: 420

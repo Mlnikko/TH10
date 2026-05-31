@@ -26,7 +26,7 @@ public static class ComponentMaskBits
     public const uint CRotation               = 1u << 18;
     public const uint CPosition               = 1u << 19;
     public const uint CStageState             = 1u << 20;
-    public const uint CDanmakuBezierHoming    = 1u << 21;
+    public const uint CDanmakuHoming          = 1u << 21;
     public const uint CMidBossEncounter       = 1u << 22;
     public const uint CMainBossEncounter      = 1u << 23;
     public const uint CPlayerRespawnPending   = 1u << 24;
@@ -55,7 +55,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CRotation)) return CRotation;
         if (typeof(T) == typeof(CPosition)) return CPosition;
         if (typeof(T) == typeof(CStageState)) return CStageState;
-        if (typeof(T) == typeof(CDanmakuBezierHoming)) return CDanmakuBezierHoming;
+        if (typeof(T) == typeof(CDanmakuHoming)) return CDanmakuHoming;
         if (typeof(T) == typeof(CMidBossEncounter)) return CMidBossEncounter;
         if (typeof(T) == typeof(CMainBossEncounter)) return CMainBossEncounter;
         if (typeof(T) == typeof(CPlayerRespawnPending)) return CPlayerRespawnPending;

@@ -27,8 +27,7 @@ MonoBehaviour:
   damage: 1
   hitEffectPrefabId: effect_reimu_main_dm_red_hit
   homingTargetLayers: 4
-  homingBezierDurationSeconds: 0.35
-  homingCurveStrength: 0.35
+  homingTurnSpeedDegreesPerSecond: 420
   IsAccelerating: 0
   MaxSpeed: 10
   Acceleration: 2

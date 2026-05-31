@@ -380,7 +380,7 @@ public class EntityFactory
 
         if (danmakuCfg.danmakuType == E_DanmakuType.Homing)
         {
-            int targetIndex = DanmakuBezierHomingLogic.FindNearestTargetIndex(
+            int targetIndex = DanmakuHomingLogic.FindNearestTargetIndex(
                 _entityManager, posX, posY, danmakuCfg.homingTargetLayerMask);
 
             float forwardX = velX;
@@ -391,17 +391,25 @@ public class EntityFactory
                 forwardY = MathF.Sin(rotationRad);
             }
 
-            sbyte curveBendSign = DanmakuBezierHomingLogic.ResolveCurveBendSign(
+            float speed = MathF.Sqrt(velX * velX + velY * velY);
+            if (speed < 1e-8f)
+            {
+                speed = MathF.Sqrt(forwardX * forwardX + forwardY * forwardY);
+                if (speed < 1e-8f)
+                    speed = 1f;
+            }
+
+            sbyte curveBendSign = DanmakuHomingLogic.ResolveCurveBendSign(
                 _entityManager, posX, posY, forwardX, forwardY, targetIndex, danmakuCfg.homingTargetLayerMask);
 
-            _entityManager.AddComponent(e_danmaku, new CDanmakuBezierHoming
+            _entityManager.AddComponent(e_danmaku, new CDanmakuHoming
             {
                 targetEnemyIndex = targetIndex,
-                segmentT = 0f,
-                progressPerFrame = danmakuCfg.homingProgressPerFrame,
-                curveStrength = danmakuCfg.homingCurveStrength,
+                speedPerFrame = speed,
+                turnSpeedRadPerFrame = danmakuCfg.homingTurnSpeedRadPerFrame,
                 homingTargetLayerMask = danmakuCfg.homingTargetLayerMask,
                 curveBendSign = curveBendSign,
+                outerArcActive = 1,
             });
         }
 
@@ -454,6 +462,17 @@ public class EntityFactory
     /// 生成掉落物 ECS 实体（竖直运动见 <see cref="CDropItemMotion"/>）；表现层需另行 <see cref="CPoolGetTag"/>。
     /// </summary>
     public Entity CreateDropItem(int dropCfgIndex, float posX, float posY)
+        => CreateDropItem(dropCfgIndex, posX, posY, 0f, 0f, false);
+
+    /// <param name="burstDirX">径向散开方向 X（仅 DirectionalBurstThenFall 生效）。</param>
+    /// <param name="burstDirY">径向散开方向 Y。</param>
+    public Entity CreateDropItem(
+        int dropCfgIndex,
+        float posX,
+        float posY,
+        float burstDirX,
+        float burstDirY,
+        bool useBurstDirectionOverride)
     {
         var cfg = GameResDB.Instance.GetConfig<DropItemConfig>(dropCfgIndex);
         if (cfg == null)
@@ -467,7 +486,10 @@ public class EntityFactory
         _entityManager.AddComponent(e, new CPosition(posX, posY));
         _entityManager.AddComponent(e, new CRotation(0));
         uint logicFps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
-        _entityManager.AddComponent(e, DropItemMotionSimulator.CreateMotionFromConfig(cfg, logicFps));
+        _entityManager.AddComponent(
+            e,
+            DropItemMotionSimulator.CreateMotionFromConfig(
+                cfg, logicFps, burstDirX, burstDirY, useBurstDirectionOverride));
         _entityManager.AddComponent(e, new CCollider
         {
             isActive = true,

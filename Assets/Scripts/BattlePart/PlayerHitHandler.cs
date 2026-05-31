@@ -6,7 +6,8 @@ using UnityEngine;
 /// </summary>
 public static class PlayerHitHandler
 {
-    const int MaxPowerDropCount = 24;
+    static readonly PlayerDeathPowerDropLogic.DropSpawnPlan[] s_deathDropPlanBuffer =
+        new PlayerDeathPowerDropLogic.DropSpawnPlan[PlayerDeathPowerDropLogic.MaxDropCount];
 
     public static void TryApplyHit(
         EntityManager em,
@@ -105,17 +106,17 @@ public static class PlayerHitHandler
         int powerOrbs,
         CharacterConfig characterCfg)
     {
-        if (powerOrbs <= 0 || characterCfg == null || characterCfg.deathPowerDropCfgIndex < 0)
+        if (powerOrbs <= 0 || characterCfg == null)
             return;
 
-        int count = Math.Min(MaxPowerDropCount, (powerOrbs + 9) / 10);
-        for (int i = 0; i < count; i++)
-        {
-            float spread = (i - (count - 1) * 0.5f) * 0.14f;
-            Entity drop = factory.CreateDropItem(characterCfg.deathPowerDropCfgIndex, x + spread, y);
-            if (!drop.IsNull)
-                em.AddComponent(drop, new CPoolGetTag());
-        }
+        int count = PlayerDeathPowerDropLogic.BuildSpawnPlans(
+            characterCfg, powerOrbs, s_deathDropPlanBuffer);
+
+        if (count <= 0)
+            return;
+
+        PlayerDeathPowerDropLogic.SpawnAt(
+            em, factory, x, y, s_deathDropPlanBuffer.AsSpan(0, count));
     }
 
     static void QueueRespawn(

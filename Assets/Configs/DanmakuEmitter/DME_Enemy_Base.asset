@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   emitterPrefabId: dme_tpl_sprite
   danmakuConfigIds:
-  - dm_test
+  - dm_boll
   danmakuSelectMode: 0
   emitMode: 1
   launchIntervalSeconds: 5

@@ -27,8 +27,7 @@ MonoBehaviour:
   damage: 1
   hitEffectPrefabId: 
   homingTargetLayers: 4
-  homingBezierDurationSeconds: 0.35
-  homingCurveStrength: 0.35
+  homingTurnSpeedDegreesPerSecond: 420
   IsAccelerating: 0
   MaxSpeed: 10
   Acceleration: 2

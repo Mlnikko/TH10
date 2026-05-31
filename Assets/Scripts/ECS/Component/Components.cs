@@ -102,18 +102,18 @@ public struct CDanmaku : IComponent
 }
 
 /// <summary>
-/// 沿 cubic Bezier 追踪 <see cref="homingTargetLayerMask"/> 内最近实体（见 <see cref="DanmakuBezierHomingLogic"/>）。
+/// 恒定速度外弧追踪 <see cref="homingTargetLayerMask"/> 内最近实体（见 <see cref="DanmakuHomingLogic"/>）。
 /// </summary>
-public struct CDanmakuBezierHoming : IComponent
+public struct CDanmakuHoming : IComponent
 {
     public int targetEnemyIndex;
-    /// <summary>当前 Bezier 段参数 [0,1]；到达 1 后归零并指向移动中的目标。</summary>
-    public float segmentT;
-    public float progressPerFrame;
-    public float curveStrength;
+    public float speedPerFrame;
+    public float turnSpeedRadPerFrame;
     public ushort homingTargetLayerMask;
-    /// <summary>曲线侧向弯曲符号（+1 / -1）；生成时按目标相对发射器朝向的左右确定。</summary>
+    /// <summary>外弧弯曲侧（+1 / -1）；生成时按目标相对发射器朝向的左右确定。</summary>
     public sbyte curveBendSign;
+    /// <summary>1=外弧阶段（绕外侧弯转），0=最短路径追尾。</summary>
+    public byte outerArcActive;
 }
 
 /// <summary>

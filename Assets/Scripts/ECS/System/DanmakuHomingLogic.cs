@@ -2,13 +2,13 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// 追踪弹幕：每逻辑帧沿当前位置→目标的 cubic Bezier 推进，目标为掩码内最近实体（同距取索引较小）。
-/// 控制点同侧偏移，形成相对弦线的外弧（而非 S 形内弯）。
+/// 追踪弹幕：恒定速度 + 限角速度转向；按生成时确定的弯曲侧走外弧（长路径）再逼近目标。
 /// </summary>
-public static class DanmakuBezierHomingLogic
+public static class DanmakuHomingLogic
 {
-    const float MinChordLength = 0.0001f;
-    const float ArrivalThreshold = 0.05f;
+    const float MinSpeed = 1e-8f;
+    /// <summary>角差小于此值时结束外弧，改用最短路径以确保命中。</summary>
+    const float DirectHomingEnterAngleRad = MathF.PI / 4f;
 
     public static int FindNearestTargetIndex(
         EntityManager em,
@@ -99,7 +99,7 @@ public static class DanmakuBezierHomingLogic
     }
 
     /// <summary>
-    /// 按发射点朝向与目标相对位置确定 Bezier 弯曲侧：目标在朝向左侧为 +1，右侧为 -1。
+    /// 按发射点朝向与目标相对位置确定外弧弯曲侧：目标在朝向左侧为 +1，右侧为 -1。
     /// </summary>
     public static sbyte ResolveCurveBendSign(
         EntityManager em,
@@ -131,74 +131,97 @@ public static class DanmakuBezierHomingLogic
         return cross > 0f ? (sbyte)1 : (sbyte)-1;
     }
 
-    public static void AdvanceAlongBezier(
+    public static void AdvanceHoming(
         EntityManager em,
-        int entityIndex,
         ref CPosition position,
         ref CVelocity velocity,
         ref CRotation rotation,
-        ref CDanmakuBezierHoming homing)
+        ref CDanmakuHoming homing)
     {
         if (!TryResolveTargetIndex(
                 em, homing.targetEnemyIndex, position.x, position.y, homing.homingTargetLayerMask, out int targetIdx))
         {
             homing.targetEnemyIndex = -1;
-            homing.segmentT = 0f;
+            homing.outerArcActive = 0;
             position.x += velocity.vx;
             position.y += velocity.vy;
             rotation.angleRad = MathF.Atan2(velocity.vy, velocity.vx);
             return;
         }
 
+        if (homing.targetEnemyIndex >= 0 && targetIdx != homing.targetEnemyIndex)
+            homing.outerArcActive = 0;
+
         homing.targetEnemyIndex = targetIdx;
 
         ref readonly var targetPos = ref em.GetComponentSpan<CPosition>()[targetIdx];
-        float p0x = position.x;
-        float p0y = position.y;
-        float p3x = targetPos.x;
-        float p3y = targetPos.y;
+        float toX = targetPos.x - position.x;
+        float toY = targetPos.y - position.y;
 
-        float dx = p3x - p0x;
-        float dy = p3y - p0y;
-        float distSq = dx * dx + dy * dy;
-
-        if (distSq < ArrivalThreshold * ArrivalThreshold)
+        float speed = homing.speedPerFrame;
+        if (speed < MinSpeed)
         {
-            velocity.vx = dx;
-            velocity.vy = dy;
-            homing.segmentT = 0f;
-            rotation.angleRad = distSq > MinChordLength * MinChordLength
-                ? MathF.Atan2(dy, dx)
-                : rotation.angleRad;
-            return;
+            speed = MathF.Sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy);
+            if (speed < MinSpeed)
+                return;
+            homing.speedPerFrame = speed;
         }
 
-        float dist = MathF.Sqrt(distSq);
-        float invDist = 1f / dist;
-        float nx = dx * invDist;
-        float ny = dy * invDist;
-        float perpX = -ny;
-        float perpY = nx;
-        float bendSign = homing.curveBendSign == 0 ? 1f : homing.curveBendSign;
-        float bend = homing.curveStrength * dist * 0.25f * bendSign;
+        float heading = MathF.Atan2(velocity.vy, velocity.vx);
+        float targetHeading = MathF.Atan2(toY, toX);
+        float shortDelta = NormalizeAngleRad(targetHeading - heading);
 
-        float p1x = p0x + dx * 0.33f + perpX * bend;
-        float p1y = p0y + dy * 0.33f + perpY * bend;
-        float p2x = p0x + dx * 0.66f + perpX * bend;
-        float p2y = p0y + dy * 0.66f + perpY * bend;
+        if (homing.outerArcActive != 0)
+        {
+            float bend = homing.curveBendSign >= 0 ? 1f : -1f;
+            if (shortDelta * bend >= 0f || MathF.Abs(shortDelta) <= DirectHomingEnterAngleRad)
+                homing.outerArcActive = 0;
+        }
 
-        float nextT = homing.segmentT + homing.progressPerFrame;
-        if (nextT > 1f)
-            nextT = 1f;
+        float turn = homing.outerArcActive != 0
+            ? ResolveOuterArcTurn(shortDelta, homing.curveBendSign, homing.turnSpeedRadPerFrame)
+            : ResolveDirectTurn(shortDelta, homing.turnSpeedRadPerFrame);
+        heading += turn;
 
-        BezierCubic3.Evaluate(nextT, p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, out float newX, out float newY);
+        velocity.vx = MathF.Cos(heading) * speed;
+        velocity.vy = MathF.Sin(heading) * speed;
+        position.x += velocity.vx;
+        position.y += velocity.vy;
+        rotation.angleRad = heading;
+    }
 
-        velocity.vx = newX - p0x;
-        velocity.vy = newY - p0y;
-        position.x = newX;
-        position.y = newY;
-        rotation.angleRad = MathF.Atan2(velocity.vy, velocity.vx);
+    static float NormalizeAngleRad(float angleRad)
+    {
+        const float twoPi = MathF.PI * 2f;
+        while (angleRad > MathF.PI)
+            angleRad -= twoPi;
+        while (angleRad < -MathF.PI)
+            angleRad += twoPi;
+        return angleRad;
+    }
 
-        homing.segmentT = nextT >= 1f ? 0f : nextT;
+    static float ResolveDirectTurn(float shortDelta, float maxTurnRad)
+    {
+        if (MathF.Abs(shortDelta) <= maxTurnRad)
+            return shortDelta;
+        return MathF.Sign(shortDelta) * maxTurnRad;
+    }
+
+    /// <summary>
+    /// 外弧阶段：在 bendSign 侧走长弧；与最短转角同号时仍用短差，否则绕外圈。
+    /// </summary>
+    static float ResolveOuterArcTurn(float shortDelta, sbyte bendSign, float maxTurnRad)
+    {
+        float bend = bendSign >= 0 ? 1f : -1f;
+        float longDelta = shortDelta > 0f
+            ? shortDelta - (2f * MathF.PI)
+            : shortDelta + (2f * MathF.PI);
+        float delta = bend > 0f
+            ? (shortDelta >= 0f ? shortDelta : longDelta)
+            : (shortDelta <= 0f ? shortDelta : longDelta);
+
+        if (MathF.Abs(delta) <= maxTurnRad)
+            return delta;
+        return MathF.Sign(delta) * maxTurnRad;
     }
 }

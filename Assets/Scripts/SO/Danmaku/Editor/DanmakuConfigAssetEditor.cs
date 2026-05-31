@@ -59,7 +59,6 @@ public class DanmakuConfigAssetEditor : Editor
 
     static bool IsHomingOnlyField(string propertyName) =>
         propertyName == nameof(DanmakuConfig.homingTargetLayers)
-        || propertyName == nameof(DanmakuConfig.homingBezierDurationSeconds)
-        || propertyName == nameof(DanmakuConfig.homingCurveStrength);
+        || propertyName == nameof(DanmakuConfig.homingTurnSpeedDegreesPerSecond);
 }
 #endif
