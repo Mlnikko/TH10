@@ -112,6 +112,7 @@ public class CollisionLogicSystem : BaseSystem
         int damage = Math.Max(0, (int)MathF.Round(dmgCfg.damage));
 
         ref var enemy = ref EntityManager.GetComponent<CEnemy>(enemyEntity);
+        int healthBefore = enemy.currentHealth;
         enemy.currentHealth -= damage;
 
         TempBitSets.PlayerDanmakuHitConsumed.Set(bi, true);
@@ -119,10 +120,29 @@ public class CollisionLogicSystem : BaseSystem
 
         if (enemy.currentHealth <= 0)
         {
+            if (healthBefore > 0)
+                TryNotifyBossDefeatedBackgroundShake(enemyEntity);
+
             TrySpawnDeathEffectFromEnemy(enemyEntity);
             TrySpawnDropsFromEnemy(enemyEntity);
             EntityManager.AddComponent(enemyEntity.Index, new CPoolRecycleTag());
         }
+    }
+
+    void TryNotifyBossDefeatedBackgroundShake(Entity enemyEntity)
+    {
+        if (!GameResDB.IsInitialized)
+            return;
+
+        ref readonly var ce = ref EntityManager.GetComponent<CEnemy>(enemyEntity);
+        var enemyCfg = GameResDB.Instance.GetConfig<EnemyConfig>(ce.enemyCfgIndex);
+        if (enemyCfg == null)
+            return;
+
+        if (enemyCfg.enemyType.IsMidBoss())
+            BattleStageBackgroundPresenter.TryShakeMidBossDefeated();
+        else if (enemyCfg.enemyType.IsMainBoss())
+            BattleStageBackgroundPresenter.TryShakeMainBossDefeated();
     }
 
     void TrySpawnDeathEffectFromEnemy(Entity enemyEntity)

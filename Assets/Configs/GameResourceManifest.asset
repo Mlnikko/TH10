@@ -123,16 +123,24 @@ MonoBehaviour:
   - dme_tpl_sprite
   effectPrefabIds:
   - effect_dead_blue
+  - effect_dead_character
   - effect_dead_green
   - effect_dead_red
   - effect_dm_marisa_green_dm_hit
   - effect_dm_marisa_main_dm_hit
   - effect_reimu_main_dm_red_hit
+  stagePrefabIds:
+  - cloud
   dropItemPrefabIds:
   - drop_tpl_pickup
   characterImages:
   - character_marisa
   - character_reimu
+  stageBackgroundTextureIds:
+  - stg1bg
+  - stg1bg2
+  - stg1_cloud
+  - stg1_cloud_2
   atlases:
   - marisa
   - reimu

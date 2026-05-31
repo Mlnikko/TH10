@@ -11,6 +11,7 @@ public enum E_PoolCategory
     Weapon,          // 武器预制体（挂于角色下）
     DanmakuEmitter,  // 弹幕发射器预制体（武器布局/表现）
     Other,           // 其他
+    Stage,           // 关卡表现（背景云雾等）
 }
 
 [Serializable]

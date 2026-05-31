@@ -26,6 +26,7 @@ public class GameResourceManifestEditor : Editor
         { nameof(GameResourceManifest.danmakuPrefabIds),         ("/Prefabs/Danmaku/", typeof(GameObject)) },
         { nameof(GameResourceManifest.danmakuEmitterPrefabIds),  ("/Prefabs/DanmakuEmitter/", typeof(GameObject)) },
         { nameof(GameResourceManifest.effectPrefabIds),          ("/Prefabs/Effect/", typeof(GameObject)) },
+        { nameof(GameResourceManifest.stagePrefabIds),           ("/Prefabs/Stage/", typeof(GameObject)) },
         { nameof(GameResourceManifest.dropItemPrefabIds),        ("/Prefabs/DropItem/", typeof(GameObject)) },
 
         // Atlases
@@ -33,6 +34,7 @@ public class GameResourceManifestEditor : Editor
 
         // Textures
         { nameof(GameResourceManifest.characterImages),          ("/Art/Texture/Character/", typeof(Texture2D)) },
+        { nameof(GameResourceManifest.stageBackgroundTextureIds), ("/Art/Texture/Stage/", typeof(Texture2D)) },
     };
 
 

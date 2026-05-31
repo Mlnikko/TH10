@@ -113,6 +113,7 @@ public static class GlobalBattleData
     public static BattleAreaData AreaData { get; private set; }
     public static PlayerSpawnData SpawnData { get; private set; }
     public static DropItemCollectData DropItemCollectData { get; private set; }
+    public static BattleAreaBackgroundData BackgroundData { get; private set; } = new();
 
     public static bool IsInitialized { get; private set; }
 
@@ -125,6 +126,12 @@ public static class GlobalBattleData
         SpawnData = config.playerSpawnData;
         DropItemCollectData = config.dropItemCollectData;
         IsInitialized = true;
+    }
+
+    /// <summary>开战时由关卡时间轴写入背景配置。</summary>
+    public static void ApplyStageTimeline(StageTimelineConfig timeline)
+    {
+        BackgroundData = timeline?.backgroundData ?? new BattleAreaBackgroundData();
     }
 
     public static void ResetBattleSessionStats()
@@ -145,6 +152,7 @@ public static class GlobalBattleData
         AreaData = default;
         SpawnData = default;
         DropItemCollectData = default;
+        BackgroundData = new BattleAreaBackgroundData();
         IsInitialized = false;
     }
 #endif
@@ -316,6 +324,9 @@ public class BattleManager : SingletonMono<BattleManager>
         PresentationRuntime.Reset();
 
         InputManager.Instance?.ClearAllInputs();
+
+        // 背景云雾等非 ECS 借出的池对象须在 ShutdownBattlePools 之前归还。
+        BattleStageBackgroundPresenter.Release();
 
         if (GameObjectPoolManager.Instance != null)
             GameObjectPoolManager.Instance.ShutdownBattlePools();
@@ -1071,6 +1082,8 @@ public class BattleManager : SingletonMono<BattleManager>
             return;
         }
         _battleWorld.GetSystem<StageTimelineSystem>()?.Begin(cfg);
+        GlobalBattleData.ApplyStageTimeline(cfg);
+        BattleStageBackgroundPresenter.EnsureFromGlobalBattleData();
     }
 
     void PrepareBattleInfrastructure()

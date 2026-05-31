@@ -148,12 +148,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 167eb29edbdbf834d9fbdbbdee02cd1b
-    m_Address: tex_stg1bg3
+    m_Address: tex_stg1_cloud
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1facf56da46e634993580598361d458
-    m_Address: tex_stg1bg4
+    m_Address: tex_stg1_cloud_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1171,6 +1171,21 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f7dc8e8c7366b7d4594703617b0fb9aa
     m_Address: cfg_dme_midboss_wave_lasher
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cb7ad31a35bcc7c45a40116c57f42d6f
+    m_Address: prefab_effect_dead_character
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f29a7877e29b25418c255adf27926ff
+    m_Address: shader_th10_battlebackgroundperspective
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7237a9a5539a24a409b1b2e6e8d2c3b3
+    m_Address: prefab_cloud
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

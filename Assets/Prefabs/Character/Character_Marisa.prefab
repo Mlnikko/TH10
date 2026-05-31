@@ -291,7 +291,7 @@ MonoBehaviour:
   characterConfig: {fileID: 11400000, guid: 8081d63c8f9fdfa41ab47d36b3980340, type: 2}
   characterName: 2
   description: "\u96FE\u96E8\u9B54\u7406\u6C99"
-  maxHealth: 1
+  maxHealth: 999
   speed: 2.2
   slowSpeed: 1.1
   moveColliderConfig:
@@ -451,7 +451,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5304902191044193706
 Transform:
   m_ObjectHideFlags: 0

@@ -1,9 +1,11 @@
 ---
 name: th10-unity-stg-dev
-description: 指导在 TH10 仓库中开发东方风 STG 弹幕与 2–4 人帧同步联机。涵盖自制轻量 ECS（非 DOTS）、表现桥接、Addressables/GameResDB、ScriptableObject 配置、UTP 消息、关卡时间轴、弹幕系统、对象池与 UI。在用户修改 Assets/Scripts、战斗逻辑、网络或资源配置时使用。涉及 GameConfig/ConfigViewer 细节时配合 th10-config-system Skill。
+description: 指导在 TH10 仓库中开发东方风 STG 弹幕与 2–4 人帧同步联机。涵盖自制轻量 ECS（非 DOTS）、表现桥接、Addressables/GameResDB、ScriptableObject 配置、UTP 消息、关卡时间轴、弹幕系统、对象池与 UI。在用户修改 Assets/Scripts、战斗逻辑、网络或资源配置时使用。不确定从哪分析时先读 th10-index；Config 细节配合 th10-config-system。
 ---
 
 # TH10 Unity STG 开发
+
+**Skill 总索引（任务路由 / 症状排查 / 系统顺序）** → [th10-index](../th10-index/SKILL.md)
 
 ## 使用场景
 
@@ -231,6 +233,7 @@ flowchart TB
 
 | Skill | 用途 |
 |-------|------|
+| [th10-index](../th10-index/SKILL.md) | **总索引**：快速选型、症状表、ECS 顺序、archetype |
 | [th10-config-system](../th10-config-system/SKILL.md) | GameConfig / ConfigViewer / Manifest / GameResDB 完整流程 |
 | [th10-config-system/reference.md](../th10-config-system/reference.md) | 全部 Config 类型对照表与代码模板 |
 | [th10-ecs](../th10-ecs/SKILL.md) | 轻量 ECS：Entity、System、LogicTick、表现桥接 |

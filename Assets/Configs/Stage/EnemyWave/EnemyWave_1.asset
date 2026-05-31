@@ -25,7 +25,7 @@ MonoBehaviour:
       moveSpeed: 3.6
       spawnHoldSeconds: 0
       nodes:
-      - positionLocal: {x: -0, y: -1.2}
+      - positionLocal: {x: -0.05000007, y: -1.25}
         holdSeconds: 0
       - positionLocal: {x: -1.6, y: -3.2}
         holdSeconds: 0

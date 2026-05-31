@@ -143,6 +143,7 @@ public class GameResDB : Singleton<GameResDB>
             AppendNormalizedIds(allPrefabIds, manifest.danmakuEmitterPrefabIds);
             AppendNormalizedIds(allPrefabIds, manifest.effectPrefabIds);
             AppendPrefabIdsDistinct(allPrefabIds, manifest.dropItemPrefabIds);
+            AppendPrefabIdsDistinct(allPrefabIds, manifest.stagePrefabIds);
 
             // 预加载（可选）
             await ResManager.Instance.PreloadAsync<GameObject>(E_ResourceCategory.Prefab, allPrefabIds);
@@ -154,6 +155,7 @@ public class GameResDB : Singleton<GameResDB>
         {
             var textureIds = new List<string>();
             AppendNormalizedIds(textureIds, manifest.characterImages);
+            AppendNormalizedIds(textureIds, manifest.stageBackgroundTextureIds);
             var textureAssets = await LoadAssetsAsync<Texture2D>(textureIds, E_ResourceCategory.Texture);
             _textureRegistry.Initialize(textureAssets, textureIds);
         }

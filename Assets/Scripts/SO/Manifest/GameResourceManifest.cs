@@ -23,6 +23,8 @@ public class GameResourceManifest : ScriptableObject
     public string[] danmakuPrefabIds = new string[0];
     public string[] danmakuEmitterPrefabIds = new string[0];
     public string[] effectPrefabIds = new string[0];
+    /// <summary>关卡表现预制体 id（如 cloud）。</summary>
+    public string[] stagePrefabIds = new string[0];
 
     /// <summary>
     /// 掉落物专用预制体 id（小写）。<see cref="DropItemConfig.pickupPrefabId"/> 应使用此处或其它预制体数组中已登记的 id；
@@ -32,6 +34,8 @@ public class GameResourceManifest : ScriptableObject
 
     [Header("贴图 - Textures")]
     public string[] characterImages = new string[0];
+    /// <summary>关卡背景等战斗区贴图（如 stg1bg）。</summary>
+    public string[] stageBackgroundTextureIds = new string[0];
 
     [Header("图集 - Atlases")]
     public string[] atlases = new string[0];

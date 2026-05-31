@@ -171,6 +171,15 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     bool _embeddedEditPendingPreviewRestart;
 
+    BattleStageBackgroundRuntime _backgroundPreviewRuntime;
+    bool _backgroundPreviewBootstrapping;
+    int _backgroundPreviewBootstrapGeneration;
+
+    public bool IsBackgroundPreviewActive =>
+        _backgroundPreviewRuntime != null && _backgroundPreviewRuntime.IsActive;
+
+    public bool IsBackgroundPreviewBootstrapping => _backgroundPreviewBootstrapping;
+
     /// <summary>内嵌子配置（波次/Boss）在 Inspector 中修改后调用：刷新 Scene Gizmo，并标记运行时预览待重启。</summary>
     public void OnEmbeddedConfigChanged()
     {
@@ -216,7 +225,137 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         }
     }
 
-    protected override void StopEditorPreviews() => StopPreviewTimeline();
+    protected override void StopEditorPreviews()
+    {
+        StopBackgroundPreview();
+        StopPreviewTimeline();
+    }
+
+    /// <summary>在 Scene 中播放当前关卡时间轴的背景滚动与云雾（需 Play 模式）。</summary>
+    public void RequestBackgroundPreview()
+    {
+        if (_backgroundPreviewBootstrapping)
+            return;
+
+        if (stageTimelineConfig == null)
+        {
+            Logger.Warn("[StageTimelineTool] 未指定 StageTimelineConfig。", LogTag.Config);
+            return;
+        }
+
+        if (!Application.isPlaying)
+        {
+            Logger.Warn("[StageTimelineTool] 请先进入 Play 模式后再预览背景。", LogTag.Config);
+            return;
+        }
+
+        if (!StageTimelinePreviewRuntime.CanPreview)
+        {
+            Logger.Warn("[StageTimelineTool] 当前不可预览（非 Play 或战斗进行中）。", LogTag.Config);
+            return;
+        }
+
+        var bgData = stageTimelineConfig.backgroundData;
+        if (bgData == null || !bgData.enabled)
+        {
+            Logger.Warn("[StageTimelineTool] 背景未启用（backgroundData.enabled）。", LogTag.Config);
+            return;
+        }
+
+        if (!TryResolveGizmoBattleArea(out _))
+        {
+            Logger.Warn("[StageTimelineTool] 无法解析战斗区，请指定 BattleAreaConfig。", LogTag.Config);
+            return;
+        }
+
+        StopBackgroundPreview();
+        _backgroundPreviewBootstrapping = true;
+        int generation = ++_backgroundPreviewBootstrapGeneration;
+
+        EditorApplication.delayCall += () =>
+        {
+            if (generation != _backgroundPreviewBootstrapGeneration || this == null)
+                return;
+            _ = BeginBackgroundPreviewAsync(generation);
+        };
+    }
+
+    async Task BeginBackgroundPreviewAsync(int generation)
+    {
+        try
+        {
+            await StageTimelinePreviewRuntime.EnsureReadyAsync(battleAreaConfig).ConfigureAwait(true);
+
+            if (generation != _backgroundPreviewBootstrapGeneration || this == null)
+                return;
+
+            _backgroundPreviewBootstrapping = false;
+
+            if (!StageTimelinePreviewRuntime.TryValidateForPreview(battleAreaConfig, out string error))
+            {
+                Logger.Warn($"[StageTimelineTool] {error}", LogTag.Config);
+                return;
+            }
+
+            if (!StageTimelinePreviewRuntime.TryApplyPreviewBattleArea(battleAreaConfig, out string areaError))
+            {
+                Logger.Warn($"[StageTimelineTool] {areaError}", LogTag.Config);
+                return;
+            }
+
+            StartBackgroundPreviewCore();
+        }
+        catch (System.Exception ex)
+        {
+            if (generation != _backgroundPreviewBootstrapGeneration || this == null)
+                return;
+
+            _backgroundPreviewBootstrapping = false;
+            Logger.Warn($"[StageTimelineTool] 背景预览启动失败: {ex.Message}", LogTag.Config);
+        }
+    }
+
+    void StartBackgroundPreviewCore()
+    {
+        if (!TryResolveGizmoBattleArea(out var area))
+            return;
+
+        var bgData = stageTimelineConfig.backgroundData;
+        EnsureBackgroundPreviewRuntime();
+        _backgroundPreviewRuntime.Apply(area, bgData, ResolveBackgroundPreviewSprite);
+
+        if (!_backgroundPreviewRuntime.IsActive)
+            Logger.Warn("[StageTimelineTool] 背景预览构建失败，请检查贴图 id 与对象池预热。", LogTag.Config);
+    }
+
+    /// <summary>停止背景 Scene 预览。</summary>
+    public void StopBackgroundPreview()
+    {
+        _backgroundPreviewBootstrapGeneration++;
+        _backgroundPreviewBootstrapping = false;
+
+        if (_backgroundPreviewRuntime == null)
+            return;
+
+        _backgroundPreviewRuntime.ClearVisuals();
+    }
+
+    void EnsureBackgroundPreviewRuntime()
+    {
+        if (_backgroundPreviewRuntime == null)
+            _backgroundPreviewRuntime = GetComponent<BattleStageBackgroundRuntime>();
+
+        if (_backgroundPreviewRuntime == null)
+            _backgroundPreviewRuntime = gameObject.AddComponent<BattleStageBackgroundRuntime>();
+    }
+
+    Sprite ResolveBackgroundPreviewSprite(string textureId)
+    {
+        if (string.IsNullOrEmpty(textureId) || !GameResDB.IsInitialized)
+            return null;
+
+        return GameResDB.Instance.GetSpriteFromTexture(textureId, 100f);
+    }
 
     protected override void OnEnable()
     {
@@ -239,12 +378,14 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     void HandlePlayModeStateChanged(PlayModeStateChange state)
     {
         if (state == PlayModeStateChange.ExitingPlayMode)
-            StopPreviewTimeline();
+            StopEditorPreviews();
     }
 
     void OnEditorInspectorRefresh()
     {
-        if (_previewBootstrapping || StageTimelinePreviewRuntime.IsLoading)
+        if (_previewBootstrapping
+            || _backgroundPreviewBootstrapping
+            || StageTimelinePreviewRuntime.IsLoading)
             RepaintActiveInspector();
     }
 

@@ -1,10 +1,9 @@
-using System;
 using UnityEngine;
 
 /// <summary>
 /// 玩家出生点数据
 /// </summary>
-[Serializable]
+[System.Serializable]
 public struct PlayerSpawnData
 {
     public Vector2 SpawnRootPos;
@@ -18,9 +17,9 @@ public struct PlayerSpawnData
         if (totalPlayers <= 0) totalPlayers = 1;
         if (totalPlayers > 4) totalPlayers = 4;
         if (playerIndex >= totalPlayers)
-            return SpawnRootPos; // 容错
+            return SpawnRootPos;
 
-        switch(totalPlayers)
+        switch (totalPlayers)
         {
             case 1:
                 return SpawnRootPos;
@@ -35,18 +34,19 @@ public struct PlayerSpawnData
                     _ => SpawnRootPos
                 };
             case 4:
-                {
-                    // 对称四点：-1.5, -0.5, +0.5, +1.5 倍偏移 → 中心仍在 SpawnRootPos
-                    float x = (playerIndex - 1.5f) * HOffsetPerPlayer;
-                    return new Vector2(SpawnRootPos.x + x, SpawnRootPos.y);
-                }
+            {
+                float x = (playerIndex - 1.5f) * HOffsetPerPlayer;
+                return new Vector2(SpawnRootPos.x + x, SpawnRootPos.y);
+            }
             default:
                 return SpawnRootPos;
         }
     }
 }
 
-/// <summary>战斗区 Scene 编辑；不参与运行时逻辑。</summary>
+/// <summary>
+/// 战斗区 Scene 编辑（Gizmo）；背景预览已移至 <see cref="StageTimelineConfigViewer"/>。
+/// </summary>
 public class BattleAreaConfigViewer : GameConfigViewerBase
 {
     protected override bool HasAssignedConfig => battleAreaConfig != null;
@@ -76,6 +76,7 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
             Logger.Error("BattleAreaConfig is not assigned!");
             return;
         }
+
         battleAreaData = battleAreaConfig.battleAreaData;
         playerSpawnData = battleAreaConfig.playerSpawnData;
         dropItemCollectData = battleAreaConfig.dropItemCollectData;
@@ -83,23 +84,21 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
 
     public void SaveBattleAreaData()
     {
-        if (battleAreaConfig != null)
-        {
-            battleAreaConfig.battleAreaData = battleAreaData;   
-            battleAreaConfig.playerSpawnData = playerSpawnData;
-            battleAreaConfig.dropItemCollectData = dropItemCollectData;
-        }
+        if (battleAreaConfig == null)
+            return;
+
+        battleAreaConfig.battleAreaData = battleAreaData;
+        battleAreaConfig.playerSpawnData = playerSpawnData;
+        battleAreaConfig.dropItemCollectData = dropItemCollectData;
     }
 
     void OnDrawGizmosSelected()
     {
         if (battleAreaConfig == null) return;
 
-        // === 战斗区域（绿色）===
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(battleAreaData.Center, new Vector3(battleAreaData.Width, battleAreaData.Height, 0));
 
-        // === 回收边界（红色）===
         Gizmos.color = Color.red;
         Vector3 recycleSize = new Vector3(
             battleAreaData.Width + battleAreaData.GO_RecycleMargin.x * 2f,
@@ -111,7 +110,6 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
         if (drawCollisionGrid)
             DrawCollisionGridGizmo(in battleAreaData);
 
-        // === 道具吸收线（青色）===
         if (battleAreaData.Height > 0f)
         {
             float lineY = dropItemCollectData.GetCollectLineY(in battleAreaData);
@@ -121,15 +119,13 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
             Gizmos.DrawLine(lineLeft, lineRight);
         }
 
-        // === 特殊基准点：SpawnRootPos（黄色，更大）===
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(new Vector3(playerSpawnData.SpawnRootPos.x, playerSpawnData.SpawnRootPos.y, 0), 0.2f);
 
-        // === 玩家出生点预览（蓝色小球，默认按 4 人）===
         Gizmos.color = Color.blue;
         for (byte i = 0; i < 4; i++)
         {
-            Vector2 spawnPos = playerSpawnData.GetPlayerSpawnPos(i, 4); // 明确按 4 人预览
+            Vector2 spawnPos = playerSpawnData.GetPlayerSpawnPos(i, 4);
             Gizmos.DrawSphere(new Vector3(spawnPos.x, spawnPos.y, 0), 0.1f);
         }
     }

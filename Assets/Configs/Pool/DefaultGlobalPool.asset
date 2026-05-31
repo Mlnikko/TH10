@@ -98,3 +98,10 @@ MonoBehaviour:
       maxCapacity: 100
       defaultWarmupCount: 100
       allowForceRecycle: 0
+  - categoryName: "\u5173\u5361"
+    category: 8
+    entries:
+    - prefabId: cloud
+      maxCapacity: 24
+      defaultWarmupCount: 20
+      allowForceRecycle: 1

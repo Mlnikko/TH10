@@ -21,4 +21,35 @@ MonoBehaviour:
   midBossEncounter: {fileID: 11400000, guid: 8083d34594dc92547af15705b91831a3, type: 2}
   mainBossEncounter: {fileID: 11400000, guid: c0d1e2f30415263748596a7b8c9d0e1f, type: 2}
   maxStageDurationSeconds: 240
+  backgroundData:
+    enabled: 1
+    cloudPrefabId: cloud
+    backgroundLayers:
+    - textureId: stg1bg
+      scroll:
+        direction: {x: 0, y: -1}
+        speed: 0.35
+      sortingOrder: -100
+      alpha: 1
+    - textureId: stg1bg2
+      scroll:
+        direction: {x: 0, y: 1}
+        speed: 0.35
+      sortingOrder: -90
+      alpha: 0.8
+    cloudLayers:
+    - textureId: stg1_cloud
+      fallSpeed: 0.55
+      spawnIntervalSeconds: 3
+      scaleRange: {x: 0.8, y: 1.4}
+      alpha: 0.7
+      sortingOrder: -80
+      maxActiveCount: 6
+    - textureId: stg1_cloud_2
+      fallSpeed: 0.85
+      spawnIntervalSeconds: 2
+      scaleRange: {x: 0.8, y: 1.4}
+      alpha: 0.55
+      sortingOrder: -75
+      maxActiveCount: 6
   clearEffectPrefab: 

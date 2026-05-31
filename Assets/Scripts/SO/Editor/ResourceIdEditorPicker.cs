@@ -162,6 +162,24 @@ public static class ResourceIdEditorPicker
     public static void DrawDropItemPrefabIdField(SerializedProperty stringProp) =>
         DrawPoolPrefabIdField(stringProp, E_PoolCategory.Drop);
 
+    public static void DrawStageBackgroundTextureIdField(SerializedProperty stringProp)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectStageBackgroundTextureIds();
+        DrawIdPopup(stringProp, ids, "关卡背景贴图 Id");
+    }
+
+    public static void DrawStageBackgroundTextureIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label)
+    {
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
+            return;
+
+        var ids = CollectStageBackgroundTextureIds();
+        DrawIdPopupAtRect(rect, stringProp, ids, label ?? GUIContent.none);
+    }
+
     public static void DrawPoolPrefabIdAtRect(Rect rect, SerializedProperty stringProp, GUIContent label, E_PoolCategory category)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
@@ -231,6 +249,10 @@ public static class ResourceIdEditorPicker
                 return CollectPrefabIds(
                     nameof(GameResourceManifest.danmakuEmitterPrefabIds),
                     "Prefabs/DanmakuEmitter");
+            case E_PoolCategory.Stage:
+                return CollectPrefabIds(
+                    nameof(GameResourceManifest.stagePrefabIds),
+                    "Prefabs/Stage");
             default:
                 return CollectAllPoolPrefabIds();
         }
@@ -246,6 +268,7 @@ public static class ResourceIdEditorPicker
         AddManifestIds(set, nameof(GameResourceManifest.danmakuEmitterPrefabIds));
         AddManifestIds(set, nameof(GameResourceManifest.dropItemPrefabIds));
         AddManifestIds(set, nameof(GameResourceManifest.effectPrefabIds));
+        AddManifestIds(set, nameof(GameResourceManifest.stagePrefabIds));
         AddPrefabIdsFromFolder(set, "Prefabs/Character");
         AddPrefabIdsFromFolder(set, "Prefabs/Weapon");
         AddPrefabIdsFromFolder(set, "Prefabs/Enemy");
@@ -253,6 +276,7 @@ public static class ResourceIdEditorPicker
         AddPrefabIdsFromFolder(set, "Prefabs/DanmakuEmitter");
         AddPrefabIdsFromFolder(set, "Prefabs/DropItem");
         AddPrefabIdsFromFolder(set, "Prefabs/Effect");
+        AddPrefabIdsFromFolder(set, "Prefabs/Stage");
         return SortIds(set);
     }
 
@@ -878,6 +902,14 @@ public static class ResourceIdEditorPicker
         return SortIds(set);
     }
 
+    static List<string> CollectStageBackgroundTextureIds()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddManifestIds(set, nameof(GameResourceManifest.stageBackgroundTextureIds));
+        AddTextureIdsFromFolder(set, "Art/Texture/Stage");
+        return SortIds(set);
+    }
+
     static List<string> CollectDanmakuEmitterConfigIds(string configIdPrefix = null)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -961,6 +993,24 @@ public static class ResourceIdEditorPicker
             return;
 
         string[] guids = AssetDatabase.FindAssets("t:GameObject", new[] { folder });
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            if (string.IsNullOrEmpty(path))
+                continue;
+            string id = StringHelper.NormalizeResourceId(Path.GetFileNameWithoutExtension(path));
+            if (!string.IsNullOrEmpty(id))
+                set.Add(id);
+        }
+    }
+
+    static void AddTextureIdsFromFolder(HashSet<string> set, string folderUnderAssets)
+    {
+        string folder = $"Assets/{folderUnderAssets.TrimStart('/')}";
+        if (!Directory.Exists(folder))
+            return;
+
+        string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { folder });
         for (int i = 0; i < guids.Length; i++)
         {
             string path = AssetDatabase.GUIDToAssetPath(guids[i]);

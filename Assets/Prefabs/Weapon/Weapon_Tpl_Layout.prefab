@@ -51,7 +51,7 @@ MonoBehaviour:
     description: 
   primaryEmitters:
     normal:
-      danmakuEmitterConfigId: dme_reimu_main
+      danmakuEmitterConfigId: dme_reimu_main_red
       slotOffset: {x: 0, y: 0}
     slowModeDanmakuEmitterConfigId: 
   powerPrimarySlowLayouts:
@@ -92,7 +92,7 @@ MonoBehaviour:
     primarySlotConverge: 0
     secondarySlotConverge: 0.3
     secondarySlotConvergeSpeed: 4
-  previewLayoutMode: 2
+  previewLayoutMode: 0
   previewPowerOrbs: 400
   previewDuration: 5
   previewBulletLifetime: 3

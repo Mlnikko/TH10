@@ -97,7 +97,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d08d1b86bed19a249a8e82c1a819c7c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emitterConfig: {fileID: 11400000, guid: 34f53a9f0a85014418109c1ab821b759, type: 2}
+  emitterConfig: {fileID: 11400000, guid: 35a834f408d757a468c1938fb9a1d7aa, type: 2}
   emitterType: 1
   emitterCamp: 1
   displaySprite: {fileID: 0}
@@ -111,7 +111,7 @@ MonoBehaviour:
   lineModeConfig:
     lineDirection: {x: 0, y: 1}
     lineCount: 2
-    lineSpacing: 0.25
+    lineSpacing: 0.15
   arcModeConfig:
     arcStartAngle: 0
     arcAngle: 0

@@ -141,6 +141,9 @@ public class GameObjectPoolManager : SingletonMono<GameObjectPoolManager>
         return obj;
     }
 
+    /// <summary>对象池是否已初始化且可接受 <see cref="Return"/>。</summary>
+    public bool IsPoolActive => _pools != null;
+
     /// <summary>
     /// 回收对象
     /// </summary>

@@ -28,8 +28,6 @@ public class BattleAreaConfigEditor : Editor
             serializedObject,
             configRefChanged);
 
-        serializedObject.Update();
-
         ConfigViewerEditorUI.DrawSeparator();
 
         if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.battleAreaConfig, "BattleAreaConfig"))

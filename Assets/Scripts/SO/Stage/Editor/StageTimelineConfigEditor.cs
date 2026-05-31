@@ -93,6 +93,9 @@ public class StageTimelineConfigEditor : Editor
             StageTimelineVisualTimelineEditor.Draw(viewer, serializedObject);
 
         ConfigViewerEditorUI.DrawSeparator();
+        DrawStageBackgroundSection(viewer);
+
+        ConfigViewerEditorUI.DrawSeparator();
         DrawPathNodeGridSection(viewer);
 
         ConfigViewerEditorUI.DrawSeparator();
@@ -118,6 +121,49 @@ public class StageTimelineConfigEditor : Editor
         DrawActivePreviewStatus(viewer);
 
         serializedObject.ApplyModifiedProperties();
+    }
+
+    void DrawStageBackgroundSection(StageTimelineConfigViewer viewer)
+    {
+        EditorGUILayout.LabelField("关卡背景", EditorStyles.boldLabel);
+
+        if (viewer.stageTimelineConfig == null)
+        {
+            EditorGUILayout.HelpBox("请先指定关卡时间轴配置。", MessageType.Warning);
+            return;
+        }
+
+        var timelineSo = new SerializedObject(viewer.stageTimelineConfig);
+        timelineSo.Update();
+        var bgProp = timelineSo.FindProperty("backgroundData");
+        EditorGUILayout.PropertyField(bgProp, new GUIContent("背景表现"), true);
+        timelineSo.ApplyModifiedProperties();
+
+        EditorGUILayout.Space(4f);
+
+        bool canPreview = Application.isPlaying && StageTimelinePreviewRuntime.CanPreview;
+        if (!Application.isPlaying)
+        {
+            EditorGUILayout.HelpBox("背景预览需先进入 Play 模式（与运行时预览相同，会加载 GameResDB 并预热对象池）。", MessageType.Info);
+        }
+        else if (!StageTimelinePreviewRuntime.CanPreview)
+        {
+            EditorGUILayout.HelpBox(StageTimelinePreviewRuntime.InBattleBlockedMessage, MessageType.Warning);
+        }
+
+        EditorGUI.BeginDisabledGroup(!canPreview || viewer.IsBackgroundPreviewBootstrapping);
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button(viewer.IsBackgroundPreviewBootstrapping ? "启动中…" : "播放背景预览"))
+            viewer.RequestBackgroundPreview();
+        if (GUILayout.Button("停止背景预览"))
+            viewer.StopBackgroundPreview();
+        EditorGUILayout.EndHorizontal();
+        EditorGUI.EndDisabledGroup();
+
+        string status = viewer.IsBackgroundPreviewBootstrapping
+            ? "启动中"
+            : viewer.IsBackgroundPreviewActive ? "预览中" : "未播放";
+        EditorGUILayout.HelpBox($"Scene 背景预览：{status}。", MessageType.None);
     }
 
     E_StageTimelinePathEditTarget GetPathEditTarget() =>

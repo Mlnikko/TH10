@@ -26,6 +26,8 @@ public static class StageTimelinePreviewRuntime
         BattleManager.Instance != null
         && BattleManager.Instance.CurrentStatus == E_BattleStatus.InBattle;
 
+    public static bool IsBattleBlockingPreview => IsInActiveBattle;
+
     public static Task EnsureReadyAsync(BattleAreaConfig battleAreaConfig)
     {
         if (!Application.isPlaying)
