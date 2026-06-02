@@ -5,6 +5,20 @@ using UnityEngine;
 /// </summary>
 public static class DanmakuEmitterAimAtPlayerLogic
 {
+    static bool _simulatedPlayerActive;
+    static float _simulatedPlayerX;
+    static float _simulatedPlayerY;
+
+    /// <summary>无真实玩家实体时（如关卡时间轴编辑器预览）用该世界坐标作为瞄准目标。</summary>
+    public static void SetSimulatedPlayerTarget(float worldX, float worldY)
+    {
+        _simulatedPlayerActive = true;
+        _simulatedPlayerX = worldX;
+        _simulatedPlayerY = worldY;
+    }
+
+    public static void ClearSimulatedPlayerTarget() => _simulatedPlayerActive = false;
+
     public static float ResolveEmitRotRad(
         in CDanmakuEmitter emitter,
         float emitPosX,
@@ -17,6 +31,12 @@ public static class DanmakuEmitterAimAtPlayerLogic
         float baseRotRad = entityRotRad + emitter.emitterRotOffsetRad;
         if (!emitter.aimAtPlayer)
             return baseRotRad;
+
+        if (!overrideTargetX.HasValue && _simulatedPlayerActive)
+        {
+            overrideTargetX = _simulatedPlayerX;
+            overrideTargetY = _simulatedPlayerY;
+        }
 
         if (!TryResolveTargetPosition(
                 emitPosX, emitPosY, em, overrideTargetX, overrideTargetY, out float targetX, out float targetY))

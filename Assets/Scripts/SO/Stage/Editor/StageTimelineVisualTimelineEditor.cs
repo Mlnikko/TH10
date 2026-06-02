@@ -75,29 +75,69 @@ static class StageTimelineVisualTimelineEditor
         var pxPerSec = viewerSo.FindProperty("timelinePixelsPerSecond");
 
         EditorGUILayout.LabelField("时间轴显示", EditorStyles.miniBoldLabel);
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (viewDur != null)
-            {
-                EditorGUILayout.PropertyField(
-                    viewDur,
-                    new GUIContent("显示总时长 (秒)"),
-                    GUILayout.MinWidth(160f));
-            }
-
-            if (pxPerSec != null)
-                EditorGUILayout.PropertyField(pxPerSec, GUIContent.none, GUILayout.Width(120f));
-        }
 
         var timeline = viewer.stageTimelineConfig;
-        if (timeline != null && viewDur != null && viewDur.floatValue <= 0f)
+        uint fps = LogicFramePreviewClock.GetLogicFps();
+        float contentEnd = timeline != null
+            ? StageTimelineVisualSchedule.GetContentEndSeconds(timeline, fps)
+            : 0f;
+        float suggested = timeline != null
+            ? StageTimelineVisualSchedule.GetSuggestedViewDurationSeconds(timeline, fps)
+            : 30f;
+        float resolved = timeline != null
+            ? StageTimelineVisualSchedule.ResolveTimelineDurationSeconds(
+                timeline,
+                viewDur != null ? viewDur.floatValue : 0f,
+                fps)
+            : 30f;
+
+        if (viewDur != null)
         {
-            float fallback = timeline.maxStageDurationSeconds > 0f
-                ? timeline.maxStageDurationSeconds
-                : StageTimelineVisualSchedule.ResolveTimelineDurationSeconds(
-                    timeline, 0f, LogicFramePreviewClock.GetLogicFps());
-            EditorGUILayout.LabelField($"自动总时长：{fallback:0.#} s（未指定显示时长时）", EditorStyles.miniLabel);
+            bool useAuto = viewDur.floatValue <= 0f;
+            float sliderMax = Mathf.Max(
+                300f,
+                suggested * 1.5f,
+                timeline != null && timeline.maxStageDurationSeconds > 0f
+                    ? timeline.maxStageDurationSeconds
+                    : 0f);
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.PrefixLabel("显示总时长");
+                bool newAuto = EditorGUILayout.ToggleLeft("自动", useAuto, GUILayout.Width(52f));
+                if (newAuto != useAuto)
+                    viewDur.floatValue = newAuto ? 0f : suggested;
+
+                EditorGUI.BeginDisabledGroup(viewDur.floatValue <= 0f);
+                float manual = EditorGUILayout.Slider(
+                    Mathf.Max(10f, viewDur.floatValue),
+                    10f,
+                    sliderMax);
+                EditorGUI.EndDisabledGroup();
+
+                if (viewDur.floatValue > 0f)
+                    viewDur.floatValue = manual;
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("自动", EditorStyles.miniButton))
+                    viewDur.floatValue = 0f;
+                if (GUILayout.Button("匹配内容", EditorStyles.miniButton))
+                    viewDur.floatValue = suggested;
+                if (timeline != null && timeline.maxStageDurationSeconds > 0f
+                    && GUILayout.Button("关卡上限", EditorStyles.miniButton))
+                    viewDur.floatValue = timeline.maxStageDurationSeconds;
+            }
+
+            string hint = useAuto
+                ? $"当前标尺：{resolved:0.#} s（自动；内容至 {contentEnd:0.#} s）"
+                : $"当前标尺：{resolved:0.#} s（内容至 {contentEnd:0.#} s）";
+            EditorGUILayout.LabelField(hint, EditorStyles.miniLabel);
         }
+
+        if (pxPerSec != null)
+            EditorGUILayout.PropertyField(pxPerSec, new GUIContent("横向缩放 (px/秒)"));
 
         viewerSo.ApplyModifiedProperties();
     }

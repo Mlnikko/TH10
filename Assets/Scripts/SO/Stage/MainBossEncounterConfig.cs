@@ -6,7 +6,7 @@ using UnityEngine;
 /// 关底 Boss 单独配置资产（登场时机、符卡阶段列表等）。由 <see cref="StageTimelineConfig"/> 引用。
 /// </summary>
 [CreateAssetMenu(fileName = "MainBossEncounter", menuName = "Configs/Stage/Main Boss Encounter")]
-public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
+public class MainBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceResolver
 {
     [Tooltip("是否启用关底 Boss")]
     public bool enabled = true;
@@ -46,6 +46,18 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
     [Tooltip("BOSS 阶段 / 符卡（独立 BossPhase 资产）")]
     public List<BossPhaseConfig> bossPhases = new();
 
+    public void ResolveReferences(GameResDB resDb)
+    {
+        if (bossPhases == null)
+            return;
+
+        for (int i = 0; i < bossPhases.Count; i++)
+        {
+            if (bossPhases[i] is IReferenceResolver resolver)
+                resolver.ResolveReferences(resDb);
+        }
+    }
+
     public void BakeLogicTiming(uint logicFPS)
     {
         spawnFrameOffset = spawnTimeSeconds <= 0f ? 0 : Mathf.Max(0, Mathf.RoundToInt(spawnTimeSeconds * logicFPS));
@@ -55,9 +67,6 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
 
         entryPathRoute?.BakeMovementTiming(logicFPS);
         loopPathRoute?.BakeMovementTiming(logicFPS);
-        entryDurationFrames = 0;
-        entryPathRouteBakeIndex = -1;
-        loopPathRouteBakeIndex = -1;
 
         if (bossPhases == null)
             return;
@@ -92,6 +101,8 @@ public class MainBossEncounterConfig : GameConfig, ILogicTimingBake
         enemyConfigId = enemyConfigId.ToLowerInvariantTrimmed();
         EnemyEncounterConfigValidation.WarnEnemyTypeMismatch(
             this, enemyConfigId, EnemyType.Boss, "MainBossEncounter");
+        entryPathRoute?.SyncDurationFromPath();
+        loopPathRoute?.SyncDurationFromPath();
     }
 #endif
 }

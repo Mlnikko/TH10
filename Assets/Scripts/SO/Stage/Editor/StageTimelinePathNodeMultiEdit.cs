@@ -178,7 +178,10 @@ static class StageTimelinePathNodeMultiEdit
         }
 
         if (selCount > 0)
+        {
             DrawSelectionOutlines(spawn, nodes);
+            DrawSelectionCoordinateLabels(spawn, nodes, last);
+        }
 
         if (selCount > 0 && Event.current.type == EventType.Repaint)
             DrawSelectionModeHint(selCount, multi);
@@ -190,7 +193,7 @@ static class StageTimelinePathNodeMultiEdit
         var style = new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = new Color(0.85f, 0.95f, 1f) } };
         string hint = multi
             ? $"多选 {selCount} · 拖中心球移动 · Ctrl±选 · Esc 清空"
-            : "拖路径点移动 · Ctrl 多选";
+            : "已选路径点 · 显示局部/世界坐标 · Ctrl 多选";
         if (!string.IsNullOrEmpty(hint))
             GUI.Label(new Rect(8f, 8f, 360f, 20f), hint, style);
         Handles.EndGUI();
@@ -342,6 +345,47 @@ static class StageTimelinePathNodeMultiEdit
         centroid = sum / count;
         return true;
     }
+
+    static void DrawSelectionCoordinateLabels(Vector2 spawn, IReadOnlyList<MovementPathNode> nodes, int lastIndex)
+    {
+        if (s_selected.Count == 0 || Event.current.type != EventType.Repaint)
+            return;
+
+        Handles.color = new Color(0.85f, 0.95f, 1f, 0.95f);
+        foreach (int i in s_selected)
+        {
+            if (i < 0 || i >= nodes.Count)
+                continue;
+
+            MovementPathNode node = nodes[i];
+            Vector2 local = node.positionLocal;
+            Vector3 world = LocalToWorld(spawn, local);
+            float handleSize = HandleUtility.GetHandleSize(world);
+
+            string role = i == lastIndex ? "终" : $"P{i + 1}";
+            string text = $"{role}\n局部 ({local.x:F2}, {local.y:F2})\n世界 ({world.x:F2}, {world.y:F2})";
+            Handles.Label(world + Vector3.up * (handleSize * 0.42f), text, CoordinateLabelStyle);
+        }
+    }
+
+    static GUIStyle CoordinateLabelStyle
+    {
+        get
+        {
+            if (s_coordinateLabelStyle == null)
+            {
+                s_coordinateLabelStyle = new GUIStyle(EditorStyles.miniLabel)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(0.85f, 0.95f, 1f, 0.95f) }
+                };
+            }
+
+            return s_coordinateLabelStyle;
+        }
+    }
+
+    static GUIStyle s_coordinateLabelStyle;
 
     static void DrawSelectionOutlines(Vector2 spawn, IReadOnlyList<MovementPathNode> nodes)
     {

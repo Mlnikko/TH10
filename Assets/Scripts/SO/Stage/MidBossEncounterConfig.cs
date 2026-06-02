@@ -50,9 +50,6 @@ public class MidBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceRe
     [NonSerialized] public int exitPathRouteBakeIndex = -1;
 
     [Header("战斗属性覆盖")]
-    [Tooltip("≤0 时使用 EnemyConfig.maxHealth")]
-    public int maxHealthOverride;
-
     [Tooltip("留空则使用 EnemyConfig.emitterConfigId")]
     public string emitterConfigIdOverride;
 
@@ -79,12 +76,6 @@ public class MidBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceRe
         entryPathRoute?.BakeMovementTiming(logicFPS);
         loopPathRoute?.BakeMovementTiming(logicFPS);
         exitPathRoute?.BakeMovementTiming(logicFPS);
-
-        entryDurationFrames = 0;
-        exitDurationFrames = 0;
-        entryPathRouteBakeIndex = -1;
-        loopPathRouteBakeIndex = -1;
-        exitPathRouteBakeIndex = -1;
     }
 
     /// <summary>将三段路径注册到 <see cref="EnemyPathBakeCache"/>（时间轴 Begin 时调用）。</summary>
@@ -155,12 +146,7 @@ public class MidBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceRe
         }
     }
 
-    public float ResolveHpMultiplier(EnemyConfig enemyCfg)
-    {
-        if (maxHealthOverride <= 0 || enemyCfg == null || enemyCfg.maxHealth <= 0)
-            return 1f;
-        return maxHealthOverride / (float)enemyCfg.maxHealth;
-    }
+    public float ResolveHpMultiplier(EnemyConfig enemyCfg) => 1f;
 
 #if UNITY_EDITOR
     void OnValidate()
@@ -171,6 +157,9 @@ public class MidBossEncounterConfig : GameConfig, ILogicTimingBake, IReferenceRe
         DeathDropBaking.NormalizeEntries(dropOnDeathEntries);
         EnemyEncounterConfigValidation.WarnEnemyTypeMismatch(
             this, enemyConfigId, EnemyType.MidBoss, "MidBossEncounter");
+        entryPathRoute?.SyncDurationFromPath();
+        loopPathRoute?.SyncDurationFromPath();
+        exitPathRoute?.SyncDurationFromPath();
     }
 #endif
 }

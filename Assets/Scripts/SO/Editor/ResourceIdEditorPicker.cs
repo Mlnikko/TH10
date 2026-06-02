@@ -12,6 +12,9 @@ public static class ResourceIdEditorPicker
 {
     const string ManifestAssetPath = "Assets/Configs/GameResourceManifest.asset";
 
+    static string s_waveSpawnQueueBulkEnemyId = string.Empty;
+    static string s_waveSpawnQueueBulkEmitterId = string.Empty;
+
     public static void DrawPrefabIdField(SerializedProperty stringProp, string manifestArrayFieldName, string scanFolderUnderAssets)
     {
         if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
@@ -547,17 +550,30 @@ public static class ResourceIdEditorPicker
 
     public static void DrawWaveSpawnQueueArray(
         SerializedProperty arrayProp,
-        SerializedProperty pathAssignmentProp = null,
         bool drawSectionHeader = true,
         StageTimelineConfigViewer pathEditViewer = null)
     {
         if (arrayProp == null || !arrayProp.isArray)
             return;
 
+        bool drawEntries = true;
         if (drawSectionHeader)
-            EditorGUILayout.LabelField("出怪队列", EditorStyles.boldLabel);
+        {
+            arrayProp.isExpanded = EditorGUILayout.Foldout(
+                arrayProp.isExpanded,
+                $"出怪队列 ({arrayProp.arraySize})",
+                true);
+            drawEntries = arrayProp.isExpanded;
+        }
 
-        var enemyIds = CollectEnemyConfigIds();
+        if (!drawEntries)
+            return;
+
+        var enemyIds = CollectEnemyConfigIds(excludeBossTier: true);
+        var emitterIds = CollectDanmakuEmitterConfigIds();
+        if (arrayProp.arraySize > 0)
+            DrawWaveSpawnQueueBulkRow(arrayProp, enemyIds, emitterIds, pathEditViewer);
+
         const float removeButtonWidth = 24f;
         const float delayFieldWidth = 52f;
         const float slotFieldWidth = 40f;
@@ -570,6 +586,7 @@ public static class ResourceIdEditorPicker
             var enemyProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.enemyConfigId));
             var slotProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.spawnSlotIndex));
             var delayProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.delayAfterPreviousSeconds));
+            var emitterProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.emitterConfigIdOverride));
 
             bool isActivePathEntry = showPathPick && pathEditViewer.PreviewPathEditEntryIndex == i;
             Color prevBg = GUI.backgroundColor;
@@ -580,12 +597,22 @@ public static class ResourceIdEditorPicker
             GUI.backgroundColor = prevBg;
 
             EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
             DrawIdPopup(enemyProp, enemyIds, $"敌人 [{i}]");
+            bool enemyChanged = EditorGUI.EndChangeCheck();
             if (showPathPick)
             {
                 if (GUILayout.Button(isActivePathEntry ? "▶" : "路径", GUILayout.Width(pathPickButtonWidth)))
                 {
                     pathEditViewer.SetPreviewPathEditEntryIndex(i);
+                    if (pathEditViewer.TryGetActiveWaveGizmoContext(out EnemyWaveConfig wave, out _, out _)
+                        && wave.UsesPerQueueEntryPaths)
+                    {
+                        wave.EnsureEntryPathOverrideInitialized(i);
+                        EditorUtility.SetDirty(wave);
+                        pathEditViewer.OnEmbeddedConfigChanged();
+                    }
+
                     StageTimelinePathRouteSceneHandles.KeepViewerSelected(pathEditViewer);
                 }
             }
@@ -599,6 +626,31 @@ public static class ResourceIdEditorPicker
             }
 
             EditorGUILayout.EndHorizontal();
+
+            if (enemyChanged)
+            {
+                arrayProp.serializedObject.ApplyModifiedProperties();
+                if (arrayProp.serializedObject.targetObject is EnemyWaveConfig waveAsset)
+                {
+                    EditorUtility.SetDirty(waveAsset);
+                    pathEditViewer?.OnEmbeddedConfigChanged(waveAsset);
+                }
+            }
+
+            if (emitterProp != null)
+            {
+                EditorGUI.BeginChangeCheck();
+                DrawIdPopup(emitterProp, emitterIds, "发射器");
+                if (EditorGUI.EndChangeCheck())
+                {
+                    arrayProp.serializedObject.ApplyModifiedProperties();
+                    if (arrayProp.serializedObject.targetObject is EnemyWaveConfig waveForEmitter)
+                    {
+                        EditorUtility.SetDirty(waveForEmitter);
+                        pathEditViewer?.OnEmbeddedConfigChanged(waveForEmitter);
+                    }
+                }
+            }
 
             EditorGUILayout.BeginHorizontal();
             if (slotProp != null)
@@ -614,6 +666,7 @@ public static class ResourceIdEditorPicker
             }
 
             EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.EndVertical();
         }
 
@@ -630,6 +683,147 @@ public static class ResourceIdEditorPicker
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(2);
+    }
+
+    static void DrawWaveSpawnQueueBulkRow(
+        SerializedProperty arrayProp,
+        IReadOnlyList<string> enemyIds,
+        IReadOnlyList<string> emitterIds,
+        StageTimelineConfigViewer pathEditViewer)
+    {
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField("批量配置", EditorStyles.miniBoldLabel);
+
+        s_waveSpawnQueueBulkEnemyId = DrawIdStringPopupField(
+            s_waveSpawnQueueBulkEnemyId, enemyIds, "敌人");
+        s_waveSpawnQueueBulkEmitterId = DrawIdStringPopupField(
+            s_waveSpawnQueueBulkEmitterId, emitterIds, "发射器");
+
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button(new GUIContent("从首条读取", "用队列第 1 条填充上方批量字段"), GUILayout.ExpandWidth(true)))
+            TryLoadWaveSpawnQueueBulkFromFirstEntry(arrayProp);
+
+        using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(s_waveSpawnQueueBulkEnemyId)))
+        {
+            if (GUILayout.Button(
+                    new GUIContent("仅应用敌人", "仅覆盖全部条目的敌人 Id，不修改发射器"),
+                    GUILayout.ExpandWidth(true)))
+            {
+                ApplyWaveSpawnQueueBulkEnemyToAll(
+                    arrayProp, s_waveSpawnQueueBulkEnemyId, pathEditViewer);
+            }
+        }
+
+        if (GUILayout.Button(
+                new GUIContent("仅应用发射器", "仅覆盖全部条目的发射器，不修改敌人 Id"),
+                GUILayout.ExpandWidth(true)))
+        {
+            ApplyWaveSpawnQueueBulkEmitterToAll(
+                arrayProp, s_waveSpawnQueueBulkEmitterId, pathEditViewer);
+        }
+
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(4);
+    }
+
+    static void TryLoadWaveSpawnQueueBulkFromFirstEntry(SerializedProperty arrayProp)
+    {
+        if (arrayProp == null || !arrayProp.isArray || arrayProp.arraySize <= 0)
+            return;
+
+        var first = arrayProp.GetArrayElementAtIndex(0);
+        var enemyProp = first.FindPropertyRelative(nameof(WaveSpawnQueueEntry.enemyConfigId));
+        var emitterProp = first.FindPropertyRelative(nameof(WaveSpawnQueueEntry.emitterConfigIdOverride));
+        s_waveSpawnQueueBulkEnemyId = enemyProp != null
+            ? StringHelper.NormalizeResourceId(enemyProp.stringValue)
+            : string.Empty;
+        s_waveSpawnQueueBulkEmitterId = emitterProp != null
+            ? StringHelper.NormalizeResourceId(emitterProp.stringValue)
+            : string.Empty;
+    }
+
+    static void ApplyWaveSpawnQueueBulkEnemyToAll(
+        SerializedProperty arrayProp,
+        string enemyId,
+        StageTimelineConfigViewer pathEditViewer)
+    {
+        enemyId = StringHelper.NormalizeResourceId(enemyId);
+        if (string.IsNullOrEmpty(enemyId))
+            return;
+
+        ApplyWaveSpawnQueueBulkInternal(
+            arrayProp, applyEnemy: true, applyEmitter: false, enemyId, emitterId: null, pathEditViewer);
+    }
+
+    static void ApplyWaveSpawnQueueBulkEmitterToAll(
+        SerializedProperty arrayProp,
+        string emitterId,
+        StageTimelineConfigViewer pathEditViewer)
+    {
+        emitterId = StringHelper.NormalizeResourceId(emitterId);
+        ApplyWaveSpawnQueueBulkInternal(
+            arrayProp, applyEnemy: false, applyEmitter: true, enemyId: null, emitterId, pathEditViewer);
+    }
+
+    static void ApplyWaveSpawnQueueBulkInternal(
+        SerializedProperty arrayProp,
+        bool applyEnemy,
+        bool applyEmitter,
+        string enemyId,
+        string emitterId,
+        StageTimelineConfigViewer pathEditViewer)
+    {
+        if (arrayProp == null || !arrayProp.isArray || arrayProp.arraySize <= 0)
+            return;
+
+        UnityEngine.Object target = arrayProp.serializedObject.targetObject;
+        Undo.RecordObject(target, "Bulk Apply Wave Spawn Queue");
+
+        for (int i = 0; i < arrayProp.arraySize; i++)
+        {
+            var element = arrayProp.GetArrayElementAtIndex(i);
+            if (applyEnemy)
+            {
+                var enemyProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.enemyConfigId));
+                if (enemyProp != null)
+                    enemyProp.stringValue = enemyId;
+            }
+
+            if (applyEmitter)
+            {
+                var emitterProp = element.FindPropertyRelative(nameof(WaveSpawnQueueEntry.emitterConfigIdOverride));
+                if (emitterProp != null)
+                    emitterProp.stringValue = emitterId;
+            }
+        }
+
+        arrayProp.serializedObject.ApplyModifiedProperties();
+        EditorUtility.SetDirty(target);
+        if (target is EnemyWaveConfig wave)
+            pathEditViewer?.OnEmbeddedConfigChanged(wave);
+    }
+
+    static string DrawIdStringPopupField(string current, IReadOnlyList<string> registeredIds, string label)
+    {
+        Rect rect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+        return DrawIdStringPopupAtRect(rect, current, registeredIds, new GUIContent(label));
+    }
+
+    static string DrawIdStringPopupAtRect(
+        Rect rect,
+        string current,
+        IReadOnlyList<string> registeredIds,
+        GUIContent label)
+    {
+        rect = EditorGUI.PrefixLabel(rect, label);
+        BuildPopupOptions(current, registeredIds, out string[] labels, out string[] values);
+        int index = FindSelectedIndex(current, values);
+        EditorGUI.BeginChangeCheck();
+        int picked = EditorGUI.Popup(rect, index, labels);
+        if (EditorGUI.EndChangeCheck() && picked >= 0 && picked < values.Length)
+            return StringHelper.NormalizeResourceId(values[picked]);
+        return StringHelper.NormalizeResourceId(current);
     }
 
     static void DrawDropItemConfigIdArrayRowsGUILayout(SerializedProperty arrayProp, IReadOnlyList<string> ids)
@@ -723,20 +917,16 @@ public static class ResourceIdEditorPicker
 
     static void DrawIdPopup(SerializedProperty stringProp, IReadOnlyList<string> registeredIds, string label)
     {
-        if (stringProp == null)
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
             return;
 
-        string current = stringProp.stringValue ?? string.Empty;
-        BuildPopupOptions(current, registeredIds, out string[] labels, out string[] values);
-
-        int index = FindSelectedIndex(current, values);
-        int picked = EditorGUILayout.Popup(label, index, labels);
-        ApplyPopupSelection(stringProp, current, values, picked);
+        Rect rect = EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight);
+        DrawIdPopupAtRect(rect, stringProp, registeredIds, new GUIContent(label));
     }
 
     static void DrawIdPopupAtRect(Rect rect, SerializedProperty stringProp, IReadOnlyList<string> registeredIds, GUIContent label)
     {
-        if (stringProp == null)
+        if (stringProp == null || stringProp.propertyType != SerializedPropertyType.String)
             return;
 
         rect = EditorGUI.PrefixLabel(rect, label);
@@ -745,8 +935,10 @@ public static class ResourceIdEditorPicker
         BuildPopupOptions(current, registeredIds, out string[] labels, out string[] values);
 
         int index = FindSelectedIndex(current, values);
+        EditorGUI.BeginChangeCheck();
         int picked = EditorGUI.Popup(rect, index, labels);
-        ApplyPopupSelection(stringProp, current, values, picked);
+        if (EditorGUI.EndChangeCheck())
+            ApplyPopupSelection(stringProp, current, values, picked);
     }
 
     static int FindSelectedIndex(string current, string[] values)
@@ -833,15 +1025,15 @@ public static class ResourceIdEditorPicker
         return false;
     }
 
-    static List<string> CollectEnemyConfigIds(EnemyType? enemyTypeFilter = null)
+    static List<string> CollectEnemyConfigIds(EnemyType? enemyTypeFilter = null, bool excludeBossTier = false)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        AddManifestEnemyIds(set, enemyTypeFilter);
-        AddEnemyConfigIdsFromFolder(set, enemyTypeFilter);
+        AddManifestEnemyIds(set, enemyTypeFilter, excludeBossTier);
+        AddEnemyConfigIdsFromFolder(set, enemyTypeFilter, excludeBossTier);
         return SortIds(set);
     }
 
-    static void AddManifestEnemyIds(HashSet<string> set, EnemyType? enemyTypeFilter)
+    static void AddManifestEnemyIds(HashSet<string> set, EnemyType? enemyTypeFilter, bool excludeBossTier = false)
     {
         var manifest = LoadManifest();
         if (manifest == null)
@@ -859,12 +1051,12 @@ public static class ResourceIdEditorPicker
                 continue;
 
             id = StringHelper.NormalizeResourceId(id);
-            if (PassesEnemyTypeFilter(id, enemyTypeFilter))
+            if (PassesEnemyTypeFilter(id, enemyTypeFilter, excludeBossTier))
                 set.Add(id);
         }
     }
 
-    static void AddEnemyConfigIdsFromFolder(HashSet<string> set, EnemyType? enemyTypeFilter)
+    static void AddEnemyConfigIdsFromFolder(HashSet<string> set, EnemyType? enemyTypeFilter, bool excludeBossTier = false)
     {
         const string folder = "Assets/Configs/Enemy";
         if (!AssetDatabase.IsValidFolder(folder))
@@ -878,6 +1070,9 @@ public static class ResourceIdEditorPicker
             if (cfg == null)
                 continue;
 
+            if (excludeBossTier && cfg.enemyType.IsBossTier())
+                continue;
+
             if (enemyTypeFilter.HasValue && cfg.enemyType != enemyTypeFilter.Value)
                 continue;
 
@@ -885,13 +1080,19 @@ public static class ResourceIdEditorPicker
         }
     }
 
-    static bool PassesEnemyTypeFilter(string configId, EnemyType? enemyTypeFilter)
+    static bool PassesEnemyTypeFilter(string configId, EnemyType? enemyTypeFilter, bool excludeBossTier = false)
     {
+        var cfg = ConfigViewerAssetLookup.FindConfig<EnemyConfig>(configId, "Assets/Configs/Enemy");
+        if (cfg == null)
+            return !enemyTypeFilter.HasValue && !excludeBossTier;
+
+        if (excludeBossTier && cfg.enemyType.IsBossTier())
+            return false;
+
         if (!enemyTypeFilter.HasValue)
             return true;
 
-        var cfg = ConfigViewerAssetLookup.FindConfig<EnemyConfig>(configId, "Assets/Configs/Enemy");
-        return cfg != null && cfg.enemyType == enemyTypeFilter.Value;
+        return cfg.enemyType == enemyTypeFilter.Value;
     }
 
     static List<string> CollectDropItemConfigIds()

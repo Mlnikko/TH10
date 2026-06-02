@@ -27,8 +27,7 @@ public class MainBossEncounterConfigAssetEditor : Editor
                 continue;
             }
 
-            if (StageTimelinePathEditScope.ShouldHidePathRoutes(E_StageTimelinePathEditTarget.MainBoss)
-                && IsPathRouteProperty(prop.name))
+            if (IsPathRouteProperty(prop.name))
                 continue;
 
             if (prop.name == nameof(MainBossEncounterConfig.enemyConfigId))
@@ -43,7 +42,57 @@ public class MainBossEncounterConfigAssetEditor : Editor
             EditorGUILayout.PropertyField(prop, true);
         }
 
+        DrawPathRoutes();
+
         serializedObject.ApplyModifiedProperties();
+    }
+
+    void DrawPathRoutes()
+    {
+        if (serializedObject.targetObject is not MainBossEncounterConfig encounter)
+            return;
+
+        bool scopedInTimeline = StageTimelinePathEditScope.IsActive
+                                && StageTimelinePathEditScope.Target == E_StageTimelinePathEditTarget.MainBoss
+                                && StageTimelinePathEditScope.Viewer != null;
+
+        EditorGUILayout.Space(4f);
+
+        if (scopedInTimeline)
+        {
+            int phase = StageTimelinePathEditScope.Viewer.PreviewMainBossPathPhase;
+            StageTimelineBossPathEdit.EnsureMainBossRouteInitialized(encounter, phase);
+            DrawPathRouteProperty(
+                PathRouteNames[Mathf.Clamp(phase, 0, PathRouteNames.Length - 1)],
+                $"运动路径 · {StageTimelineBossPathEdit.GetMainBossPhaseLabel(phase)}");
+            return;
+        }
+
+        for (int i = 0; i < PathRouteNames.Length; i++)
+        {
+            StageTimelineBossPathEdit.EnsureMainBossRouteInitialized(encounter, i);
+            DrawPathRouteProperty(
+                PathRouteNames[i],
+                $"运动路径 · {StageTimelineBossPathEdit.GetMainBossPhaseLabel(i)}");
+        }
+    }
+
+    void DrawPathRouteProperty(string propertyName, string title)
+    {
+        var pathProp = serializedObject.FindProperty(propertyName);
+        if (pathProp == null)
+            return;
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(pathProp, new GUIContent(title), includeChildren: true);
+        if (!EditorGUI.EndChangeCheck())
+            return;
+
+        serializedObject.ApplyModifiedProperties();
+        if (serializedObject.targetObject is MainBossEncounterConfig encounter)
+            EditorUtility.SetDirty(encounter);
+
+        StageTimelinePathEditScope.Viewer?.OnEmbeddedConfigChanged();
     }
 
     static bool IsPathRouteProperty(string name)

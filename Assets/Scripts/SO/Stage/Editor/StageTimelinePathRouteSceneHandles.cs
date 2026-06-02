@@ -64,6 +64,14 @@ static class StageTimelinePathRouteSceneHandles
 
 
 
+        // 仅在本 Scene 视图内处理交互，避免抢走 Inspector 下拉框等控件的事件。
+
+        if (Event.current.type != EventType.Repaint && EditorWindow.mouseOverWindow != view)
+
+            return;
+
+
+
         switch (viewer.PathEditTarget)
 
         {
@@ -119,12 +127,6 @@ static class StageTimelinePathRouteSceneHandles
             return;
 
         area = pathArea;
-
-
-
-        if (wave.UsesPerQueueEntryPaths)
-
-            wave.EnsureEntryPathOverrideInitialized(pathEditEntryIndex);
 
 
 
@@ -455,37 +457,10 @@ static class StageTimelinePathRouteSceneHandles
 
         route?.EnsureSpawnAnchoredFormat();
 
-        if (route == null)
-
+        if (route == null || route.nodes == null || route.nodes.Count < 1)
             return;
 
-
-
-        if (route.nodes == null || route.nodes.Count < 1)
-
-        {
-
-            route.nodes = new System.Collections.Generic.List<MovementPathNode>
-
-            {
-
-                new() { positionLocal = UnityEngine.Vector2.down * 16f }
-
-            };
-
-            route.EnsureLegsMatchNodeCount();
-
-            EditorUtility.SetDirty(undoTarget);
-
-        }
-
-        else
-
-        {
-
-            route.EnsureLegsMatchNodeCount();
-
-        }
+        route.EnsureLegsMatchNodeCount();
 
 
 
@@ -513,6 +488,8 @@ static class StageTimelinePathRouteSceneHandles
 
         StageTimelinePathNodeMultiEdit.DrawNodes(viewer, undoTarget, spawn, area, route, snap, cell, ref changed);
 
+        StageTimelineBezierHandleEdit.DrawHandles(undoTarget, spawn, area, route, snap, cell, ref changed);
+
 
 
         Handles.color = new Color(1f, 1f, 1f, 0.35f);
@@ -527,6 +504,18 @@ static class StageTimelinePathRouteSceneHandles
 
             Vector3 p = new Vector3(spawn.x + n.positionLocal.x, spawn.y + n.positionLocal.y, 0f);
 
+            if (i < route.legs.Count && route.legs[i].curve == E_PathSegmentCurve.Bezier)
+
+            {
+
+                prev = p;
+
+                continue;
+
+            }
+
+
+
             Handles.DrawDottedLine(prev, p, 4f);
 
             prev = p;
@@ -540,10 +529,11 @@ static class StageTimelinePathRouteSceneHandles
         {
 
             route.EnsureLegsMatchNodeCount();
+            route.SyncDurationFromPath();
 
             EditorUtility.SetDirty(undoTarget);
 
-            viewer.OnEmbeddedConfigChanged();
+            viewer.OnEmbeddedConfigChanged(undoTarget);
 
             SceneView.RepaintAll();
 

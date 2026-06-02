@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf7cf63d299ca734894940ad2531302f, type: 3}
-  m_Name: EnemyWave_2
+  m_Name: EnemyWave_4
   m_EditorClassIdentifier: 
   waveTitle: "5\u4E2A\u654C\u4EBA # \u751F\u6210\u9635\u578B\uFF1ALine # 1\u4E2A\u8DEF\u5F84\u70B9
-    # \u8DEF\u5F84\uFF1A\u6B63\u5F26 # \u603B\u65F6\u957F\uFF1A6 s"
-  startTimeSeconds: 5.9208713
-  enemyConfigId: minion_fariy_red
+    # \u8DEF\u5F84\uFF1A\u5706\u5F27 # \u603B\u65F6\u957F\uFF1A5 s"
+  startTimeSeconds: 12.957906
+  enemyConfigId: minion_fariy_green
   count: 5
   pathAssignment: 0
   spawnQueue:
-  - enemyConfigId: minion_fariy_red
+  - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -38,8 +38,8 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: dme_enemy_toplayer
-  - enemyConfigId: minion_fariy_red
+    emitterConfigIdOverride: 
+  - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -58,8 +58,8 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: dme_enemy_toplayer
-  - enemyConfigId: minion_fariy_red
+    emitterConfigIdOverride: 
+  - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -78,8 +78,8 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: dme_enemy_toplayer
-  - enemyConfigId: minion_fariy_red
+    emitterConfigIdOverride: 
+  - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -98,8 +98,8 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: dme_enemy_toplayer
-  - enemyConfigId: minion_fariy_red
+    emitterConfigIdOverride: 
+  - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -118,29 +118,29 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: dme_enemy_toplayer
-  spawnIntervalSeconds: 0.5
+    emitterConfigIdOverride: 
+  spawnIntervalSeconds: 0
   spawnPattern: 0
-  spawnAreaSize: {x: 2.63, y: 0}
-  spawnOffset: {x: 0, y: 0}
+  spawnAreaSize: {x: 1.49, y: 4.19}
+  spawnOffset: {x: -0.45, y: 0.01}
   pathRoute:
-    durationSeconds: 6
+    durationSeconds: 5
     moveSpeed: 1
     spawnHoldSeconds: 0
     nodes:
-    - positionLocal: {x: 0, y: -6.05}
+    - positionLocal: {x: -2.9950001, y: -2.76}
       holdSeconds: 0
     legs:
-    - curve: 3
-      travelSeconds: 6
+    - curve: 1
+      travelSeconds: 5
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
-      arcBulge: 1.2
-      sineAmplitude: 0.5
-      sineHz: 1.5
+      arcBulge: 1
+      sineAmplitude: 0.65
+      sineHz: 1.2
       sinePhaseRad: 0
   useDefaultDescentIfNoMovement: 0
-  defaultDescentSpeed: 1
+  defaultDescentSpeed: 3.6
   waitForClear: 0
   waveDropMode: 0
   waveDropOnDeathEntries: []

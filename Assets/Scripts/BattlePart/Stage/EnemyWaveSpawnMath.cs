@@ -46,11 +46,6 @@ public static class EnemyWaveSpawnMath
 
         switch (wave.spawnPattern)
         {
-            case SpawnPattern.BossCenter:
-                list.Add(new Vector2(area.Center.x + wave.spawnOffset.x, anchor.y + wave.spawnOffset.y));
-                ClampSpawnListToExteriorRecycle(area, list);
-                return list;
-
             case SpawnPattern.Line:
             {
                 int n = Mathf.Max(1, spawnCount);

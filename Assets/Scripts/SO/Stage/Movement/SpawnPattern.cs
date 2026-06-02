@@ -7,5 +7,4 @@ public enum SpawnPattern
     Grid,
     Circle,
     Random,
-    BossCenter
 }

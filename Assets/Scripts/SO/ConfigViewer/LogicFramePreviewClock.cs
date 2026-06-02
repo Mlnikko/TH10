@@ -83,6 +83,17 @@ public struct LogicFramePreviewRunner
     public uint LogicFrame => _logicFrame;
     public float ElapsedRealSeconds => _elapsedRealSeconds;
 
+    public float RemainingRealSeconds =>
+        MaxRealSeconds > 0f ? Mathf.Max(0f, MaxRealSeconds - _elapsedRealSeconds) : -1f;
+
+    public void SetTotalMaxRealSeconds(float totalSeconds)
+    {
+        if (MaxRealSeconds <= 0f)
+            return;
+
+        MaxRealSeconds = Mathf.Max(_elapsedRealSeconds + 0.1f, totalSeconds);
+    }
+
     public void Reset()
     {
         _frameAccumSeconds = 0f;

@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf7cf63d299ca734894940ad2531302f, type: 3}
   m_Name: EnemyWave_3
   m_EditorClassIdentifier: 
-  startTimeSeconds: 7.3333282
+  waveTitle: "5\u4E2A\u654C\u4EBA # \u751F\u6210\u9635\u578B\uFF1ALine # 1\u4E2A\u8DEF\u5F84\u70B9
+    # \u8DEF\u5F84\uFF1A\u5706\u5F27 # \u603B\u65F6\u957F\uFF1A5 s"
+  startTimeSeconds: 12.981483
   enemyConfigId: minion_fariy_green
   count: 5
   pathAssignment: 0
@@ -21,87 +23,124 @@ MonoBehaviour:
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
-      durationSeconds: -1
+      durationSeconds: 8
       moveSpeed: 3.6
       spawnHoldSeconds: 0
       nodes:
       - positionLocal: {x: 0, y: -3}
         holdSeconds: 0
-      legs: []
-      defaultLegDurationSeconds: 1
+      legs:
+      - curve: 0
+        travelSeconds: 8
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+    emitterConfigIdOverride: dme_enemy_toplayer
   - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
-      durationSeconds: -1
+      durationSeconds: 0.8333334
       moveSpeed: 3.6
       spawnHoldSeconds: 0
       nodes:
       - positionLocal: {x: 0, y: -3}
         holdSeconds: 0
-      legs: []
-      defaultLegDurationSeconds: 1
+      legs:
+      - curve: 0
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+    emitterConfigIdOverride: dme_enemy_toplayer
   - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
-      durationSeconds: -1
+      durationSeconds: 0.8333334
       moveSpeed: 3.6
       spawnHoldSeconds: 0
       nodes:
       - positionLocal: {x: 0, y: -3}
         holdSeconds: 0
-      legs: []
-      defaultLegDurationSeconds: 1
+      legs:
+      - curve: 0
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+    emitterConfigIdOverride: dme_enemy_toplayer
   - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
-      durationSeconds: -1
+      durationSeconds: 0.8333334
       moveSpeed: 3.6
       spawnHoldSeconds: 0
       nodes:
       - positionLocal: {x: 0, y: -3}
         holdSeconds: 0
-      legs: []
-      defaultLegDurationSeconds: 1
+      legs:
+      - curve: 0
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+    emitterConfigIdOverride: dme_enemy_toplayer
   - enemyConfigId: minion_fariy_green
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
-      durationSeconds: -1
+      durationSeconds: 0.8333334
       moveSpeed: 3.6
       spawnHoldSeconds: 0
       nodes:
       - positionLocal: {x: 0, y: -3}
         holdSeconds: 0
-      legs: []
-      defaultLegDurationSeconds: 1
-  spawnSequentially: 0
-  spawnIntervalSeconds: 0.35
+      legs:
+      - curve: 0
+        travelSeconds: 0
+        bezierHandle1Local: {x: 0, y: 0}
+        bezierHandle2Local: {x: 0, y: 0}
+        arcBulge: 1.2
+        sineAmplitude: 0.65
+        sineHz: 1.2
+        sinePhaseRad: 0
+    emitterConfigIdOverride: dme_enemy_toplayer
+  spawnIntervalSeconds: 0
   spawnPattern: 0
   spawnAreaSize: {x: 1.49, y: 4.19}
   spawnOffset: {x: 0.45, y: 0.01}
   pathRoute:
-    durationSeconds: -1
-    moveSpeed: 3.5
+    durationSeconds: 5
+    moveSpeed: 1
     spawnHoldSeconds: 0
     nodes:
-    - positionLocal: {x: 3.0050004, y: -2.26}
+    - positionLocal: {x: 2.9950001, y: -2.76}
       holdSeconds: 0
     legs:
-    - curve: 2
-      travelSeconds: 0
-      bezierHandle1Local: {x: 0.5, y: -1}
-      bezierHandle2Local: {x: -0.5, y: 0.5}
-      arcBulge: 0.5
-      sineAmplitude: 1
-      sineHz: 1
+    - curve: 1
+      travelSeconds: 5
+      bezierHandle1Local: {x: 0, y: 0}
+      bezierHandle2Local: {x: 0, y: 0}
+      arcBulge: -1
+      sineAmplitude: 0.65
+      sineHz: 1.2
       sinePhaseRad: 0
-    defaultLegDurationSeconds: 6
   useDefaultDescentIfNoMovement: 0
   defaultDescentSpeed: 3.6
-  hpMultiplier: 1
   waitForClear: 0
   waveDropMode: 0
   waveDropOnDeathEntries: []

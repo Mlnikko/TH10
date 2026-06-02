@@ -15,7 +15,8 @@ static class StageTimelineEmbeddedConfigEditor
         StageTimelineConfigViewer viewer,
         string title,
         bool defaultExpanded = true,
-        System.Action<StageTimelineConfigViewer> onExpanded = null)
+        System.Action<StageTimelineConfigViewer> onExpanded = null,
+        bool useFoldoutHeader = true)
     {
         if (asset == null)
         {
@@ -23,29 +24,42 @@ static class StageTimelineEmbeddedConfigEditor
             return;
         }
 
-        bool expanded = EditorPrefs.GetBool(PrefKey(asset), defaultExpanded);
-        EditorGUI.BeginChangeCheck();
-        expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, title);
-        if (EditorGUI.EndChangeCheck() && expanded)
-            onExpanded?.Invoke(viewer);
-
-        EditorPrefs.SetBool(PrefKey(asset), expanded);
-        if (!expanded)
+        if (useFoldoutHeader)
         {
+            bool expanded = EditorPrefs.GetBool(PrefKey(asset), defaultExpanded);
+            EditorGUI.BeginChangeCheck();
+            expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, title);
+            if (EditorGUI.EndChangeCheck() && expanded)
+                onExpanded?.Invoke(viewer);
+
+            EditorPrefs.SetBool(PrefKey(asset), expanded);
+            if (!expanded)
+            {
+                EditorGUILayout.EndFoldoutHeaderGroup();
+                return;
+            }
+
             EditorGUILayout.EndFoldoutHeaderGroup();
-            return;
+        }
+        else
+        {
+            EditorGUILayout.LabelField(title, EditorStyles.miniBoldLabel);
         }
 
-        EditorGUILayout.EndFoldoutHeaderGroup();
+        DrawNestedInspectorBody(asset, viewer);
+    }
 
+    static void DrawNestedInspectorBody(ScriptableObject asset, StageTimelineConfigViewer viewer)
+    {
         Editor nested = GetOrCreateEditor(asset);
         if (nested == null)
             return;
 
         EditorGUI.BeginChangeCheck();
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        nested.OnInspectorGUI();
-        EditorGUILayout.EndVertical();
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            nested.OnInspectorGUI();
+        }
 
         if (EditorGUI.EndChangeCheck())
         {
@@ -99,6 +113,20 @@ static class StageTimelineEmbeddedConfigEditor
         }
 
         s_editors.Clear();
+    }
+
+    /// <summary>外部直接修改资产字段后，刷新缓存的嵌套 Inspector 快照。</summary>
+    public static void SyncCachedEditor(Object target)
+    {
+        if (target == null)
+            return;
+
+        int id = target.GetInstanceID();
+        if (!s_editors.TryGetValue(id, out Editor editor) || editor == null)
+            return;
+
+        editor.serializedObject.Update();
+        editor.Repaint();
     }
 }
 #endif

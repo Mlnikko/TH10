@@ -27,7 +27,6 @@ public class StageTimelineConfig : GameConfig, ILogicTimingBake, IReferenceResol
     [Tooltip("关卡最长持续时间（秒）；≤0 表示不启用超时；烘焙为 maxStageLogicFrames")]
     public float maxStageDurationSeconds = 240f;
 
-    [Header("关卡背景表现")]
     public BattleAreaBackgroundData backgroundData = new();
 
     [NonSerialized] public int maxStageLogicFrames;
@@ -41,11 +40,15 @@ public class StageTimelineConfig : GameConfig, ILogicTimingBake, IReferenceResol
             for (int i = 0; i < midStageWaves.Count; i++)
             {
                 if (midStageWaves[i] != null)
+                {
                     midStageWaves[i].ResolveDropReferences(resDb);
+                    midStageWaves[i].ResolveSpawnQueueReferences(resDb);
+                }
             }
         }
 
         midBossEncounter?.ResolveReferences(resDb);
+        mainBossEncounter?.ResolveReferences(resDb);
     }
 
     public void BakeLogicTiming(uint logicFPS)

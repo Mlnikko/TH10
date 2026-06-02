@@ -107,7 +107,7 @@ public static class EnemyPathMotionEvaluator
             Vector2 perp = d.sqrMagnitude > 1e-8f
                 ? new Vector2(-d.y, d.x).normalized
                 : Vector2.right;
-            float s = Mathf.Sin(leg.sineOmega * ageInSeg + leg.sinePhase0);
+            float s = Mathf.Sin(leg.sineRadiansPerU * u + leg.sinePhase0);
             x = bx + perp.x * (leg.sineAmp * s);
             y = by + perp.y * (leg.sineAmp * s);
             return;

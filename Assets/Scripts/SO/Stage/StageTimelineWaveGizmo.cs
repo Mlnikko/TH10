@@ -81,16 +81,12 @@ public static class StageTimelineWaveGizmo
         var entry = wave.spawnQueue[entryIndex];
         int slot = entry.spawnSlotIndex >= 0 ? entry.spawnSlotIndex : entryIndex;
 
-        PathRouteMovementData routeForNodes = wave.ResolvePathForEntry(entryIndex);
         PathRouteMovementData routeForBake = wave.ResolveEffectivePathRoute(entryIndex);
-        BakedPathRoute bakedRoute = null;
-        if (routeForBake != null)
-            bakedRoute = EnemyPathMovementBaking.BakeRoute(routeForBake, logicFps);
-        else if (wave.useDefaultDescentIfNoMovement)
-        {
-            routeForNodes = PathRouteMovementData.CreateLinearDown(48f, wave.defaultDescentSpeed);
-            bakedRoute = EnemyPathMovementBaking.BakeRoute(routeForNodes, logicFps);
-        }
+        if (routeForBake == null)
+            return false;
+
+        PathRouteMovementData routeForNodes = wave.ResolvePathForEntry(entryIndex) ?? routeForBake;
+        var bakedRoute = EnemyPathMovementBaking.BakeRoute(routeForBake, logicFps);
 
         bool usesOverride = wave.pathAssignment == E_WavePathAssignment.PerQueueEntry
                             && EnemyWaveConfig.HasUsablePathRoute(entry.pathRouteOverride);

@@ -46,6 +46,13 @@ public static class EnemyMovementBaking
         float originY)
     {
         int bakeIndex = wave.ResolvePathBakeIndex(queueEntryIndex);
+        if (bakeIndex < 0)
+        {
+            uint fps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
+            wave.BakePathRouteIfNeeded(fps);
+            bakeIndex = wave.ResolvePathBakeIndex(queueEntryIndex);
+        }
+
         if (bakeIndex >= 0)
         {
             em.AddComponent(entity, new CEnemyPathMovement

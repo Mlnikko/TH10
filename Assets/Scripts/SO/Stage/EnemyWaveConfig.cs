@@ -24,11 +24,14 @@ public struct WaveSpawnQueueEntry
     public int spawnSlotIndex;
 
     [Min(0f)]
-    [Tooltip("与上一名敌人之间的延迟（秒）；≤0 时用波次 spawnIntervalSeconds")]
+    [Tooltip("与上一名敌人之间的延迟（秒）；≤0 时用波次默认间隔（波次间隔≤0 表示同帧出齐）")]
     public float delayAfterPreviousSeconds;
 
     [Tooltip("独立运动路径（仅 pathAssignment=PerQueueEntry 时生效；为空则使用波次 pathRoute）")]
     public PathRouteMovementData pathRouteOverride;
+
+    [Tooltip("留空则使用 EnemyConfig.emitterConfigId")]
+    public string emitterConfigIdOverride;
 }
 
 public enum E_WaveDropOverrideMode : byte
@@ -44,6 +47,9 @@ public enum E_WaveDropOverrideMode : byte
 [CreateAssetMenu(fileName = "NewEnemyWave", menuName = "Configs/Stage/EnemyWaveConfig")]
 public class EnemyWaveConfig : GameConfig, ILogicTimingBake
 {
+    [Tooltip("时间轴预览用波次名称；留空时显示自动摘要。不参与运行时逻辑")]
+    public string waveTitle;
+
     [Tooltip("相对关卡开始的时刻（秒）；在 ILogicTimingBake.BakeLogicTiming 中烘焙为 startFrameOffset")]
     public float startTimeSeconds;
 
@@ -59,6 +65,9 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
     /// <summary>PerQueueEntry 模式下各队列条目的路径烘焙索引。</summary>
     [NonSerialized] public int[] spawnQueuePathBakeIndices;
 
+    /// <summary>各队列条目发射器覆盖的烘焙索引；-1 表示使用敌人默认。</summary>
+    [NonSerialized] public int[] spawnQueueEmitterBakeIndices;
+
     [SerializeField, HideInInspector] string enemyConfigId;
     [SerializeField, HideInInspector] int count = 1;
 
@@ -71,7 +80,6 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
         spawnIntervalFrames = spawnIntervalSeconds <= 0f
             ? 0
             : Mathf.Max(1, Mathf.RoundToInt(spawnIntervalSeconds * fps));
-        pathRouteBakeIndex = -1;
         pathRoute?.BakeMovementTiming(logicFPS);
     }
 
@@ -146,15 +154,22 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
         return PathRouteMovementData.MergeLegsFromSharedFallback(route, pathRoute);
     }
 
-    /// <summary>Scene / Inspector 编辑：Shared 改波次 pathRoute；PerQueueEntry 改条目 override（无则回退只读解析）。</summary>
+    /// <summary>Scene / Inspector 编辑：Shared 改波次 pathRoute；PerQueueEntry 改条目 override（编辑前确保独立副本）。</summary>
     public PathRouteMovementData ResolveEditablePathRoute(int entryIndex)
     {
         if (pathAssignment == E_WavePathAssignment.PerQueueEntry
             && spawnQueue != null
             && entryIndex >= 0
-            && entryIndex < spawnQueue.Length
-            && HasUsablePathRoute(spawnQueue[entryIndex].pathRouteOverride))
+            && entryIndex < spawnQueue.Length)
+        {
+#if UNITY_EDITOR
+            EnsureEntryPathOverrideInitialized(entryIndex);
             return spawnQueue[entryIndex].pathRouteOverride;
+#else
+            if (HasUsablePathRoute(spawnQueue[entryIndex].pathRouteOverride))
+                return spawnQueue[entryIndex].pathRouteOverride;
+#endif
+        }
 
         return pathRoute;
     }
@@ -178,6 +193,7 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
             ? PathRouteMovementData.Duplicate(pathRoute)
             : PathRouteMovementData.CreateLinearDown(48f, defaultDescentSpeed);
         spawnQueue[entryIndex] = entry;
+        UnityEditor.EditorUtility.SetDirty(this);
     }
 #endif
 
@@ -190,6 +206,16 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
             return spawnQueuePathBakeIndices[entryIndex];
 
         return pathRouteBakeIndex;
+    }
+
+    public int ResolveEmitterBakeIndex(int entryIndex)
+    {
+        if (spawnQueueEmitterBakeIndices != null
+            && entryIndex >= 0
+            && entryIndex < spawnQueueEmitterBakeIndices.Length)
+            return spawnQueueEmitterBakeIndices[entryIndex];
+
+        return -1;
     }
 
     static int RegisterPathRoute(PathRouteMovementData route, uint logicFps)
@@ -206,24 +232,49 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
         return spawnQueue != null ? spawnQueue.Length : 0;
     }
 
+    /// <summary>队列内多于 1 名敌人且 <see cref="spawnIntervalSeconds"/> &gt; 0 时按间隔依次生成。</summary>
     public bool UsesSequentialSpawn =>
-        spawnSequentially && ResolveSpawnCount() > 1;
+        spawnIntervalSeconds > 0f && ResolveSpawnCount() > 1;
+
+    /// <summary>用户自定义波次标题；未填写时返回 null。</summary>
+    public string ResolveWaveTitleOrNull() =>
+        string.IsNullOrWhiteSpace(waveTitle) ? null : waveTitle.Trim();
+
+    /// <summary>时间轴 / 摘要显示：优先自定义标题，否则自动摘要。</summary>
+    public string ResolveDisplayTitle()
+    {
+        string custom = ResolveWaveTitleOrNull();
+        return custom ?? BuildAutoWaveTitle();
+    }
+
+    /// <summary>按队列、阵型、路径与时长生成标准波次名称。</summary>
+    public string BuildAutoWaveTitle() => EnemyWaveTitleFormat.Build(this);
+
+    /// <summary>将 <see cref="waveTitle"/> 设为 <see cref="BuildAutoWaveTitle"/> 结果。</summary>
+    public void ApplyAutoWaveTitle() => waveTitle = BuildAutoWaveTitle();
+
+    /// <summary>时间轴条块 / 预览用标签。</summary>
+    public static string FormatTimelineLabel(EnemyWaveConfig wave, int index)
+    {
+        if (wave == null)
+            return $"波次 {index}";
+
+        string title = wave.ResolveDisplayTitle();
+        return string.IsNullOrEmpty(title) ? $"波次 {index}" : $"波次 {index}: {title}";
+    }
 
     [Header("出怪队列")]
     [Tooltip("本波生成的敌人列表（种类、槽位、顺序延迟）")]
     public WaveSpawnQueueEntry[] spawnQueue = Array.Empty<WaveSpawnQueueEntry>();
 
-    [Tooltip("队列内多于 1 名敌人时，是否按间隔依次生成（否则同帧全部生成）")]
-    public bool spawnSequentially;
-
     [Min(0f)]
-    [Tooltip("依次生成时，相邻两名敌人的默认间隔（秒）；队列条目未写 delay 时用此值")]
-    public float spawnIntervalSeconds = 0.35f;
+    [Tooltip("相邻两名敌人的默认间隔（秒）；0 表示同帧全部生成；队列条目未写 delay 时用此值")]
+    public float spawnIntervalSeconds;
 
     [Tooltip("生成阵型 (Grid, Circle, Line, Random)")]
     public SpawnPattern spawnPattern = SpawnPattern.Line;
     [Tooltip("阵型展开范围（世界单位）；最终点限制在战斗区外、GO 回收边距内")]
-    public Vector2 spawnAreaSize = new(10, 5);
+    public Vector2 spawnAreaSize = Vector2.zero;
     [Tooltip("相对上沿外侧刷怪锚点的偏移（锚点在战斗区顶边与回收顶边之间）")]
     public Vector2 spawnOffset = Vector2.zero;
 
@@ -235,10 +286,7 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
 
     [Min(0f)]
     [Tooltip("默认下落速度（世界单位/秒），仅当未配置 pathRoute 且上一项为真时生效")]
-    public float defaultDescentSpeed = 3.6f;
-
-    [Tooltip("初始血量倍率 (用于难度调整)")]
-    public float hpMultiplier = 1.0f;
+    public float defaultDescentSpeed = 1f;
 
     [Tooltip("是否等待此波次全灭后才继续后续逻辑 (仅用于特定脚本控制，时间线通常自动推进)")]
     public bool waitForClear = false;
@@ -272,6 +320,37 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
 
         waveDropOnDeathBaked = DeathDropBaking.BakeEntries(
             waveDropOnDeathEntries, resDb, $"EnemyWaveConfig {name}");
+    }
+
+    /// <summary>烘焙出怪队列发射器覆盖索引；由 <see cref="StageTimelineConfig.ResolveReferences"/> 调用。</summary>
+    public void ResolveSpawnQueueReferences(GameResDB resDb)
+    {
+        EnsureSpawnQueueMigrated();
+        spawnQueueEmitterBakeIndices = null;
+
+        if (spawnQueue == null || spawnQueue.Length == 0)
+            return;
+
+        spawnQueueEmitterBakeIndices = new int[spawnQueue.Length];
+        for (int i = 0; i < spawnQueue.Length; i++)
+        {
+            string id = spawnQueue[i].emitterConfigIdOverride;
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                spawnQueueEmitterBakeIndices[i] = -1;
+                continue;
+            }
+
+            id = id.ToLowerInvariantTrimmed();
+            int index = resDb.GetConfigIndex(id);
+            spawnQueueEmitterBakeIndices[i] = index;
+            if (index < 0)
+            {
+                Logger.Warn(
+                    $"[EnemyWaveConfig] Emitter config not found: '{id}' ({ConfigId}, queue[{i}])",
+                    LogTag.Config);
+            }
+        }
     }
 
     public void EnsureSpawnQueueMigrated()
@@ -318,14 +397,26 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
     }
 
 #if UNITY_EDITOR
+    void Reset()
+    {
+        pathRoute = null;
+        spawnAreaSize = Vector2.zero;
+        useDefaultDescentIfNoMovement = true;
+        defaultDescentSpeed = 1f;
+    }
+
     void OnValidate()
     {
         EnsureSpawnQueueMigrated();
         pathRoute?.EnsureSpawnAnchoredFormat();
+        pathRoute?.SyncDurationFromPath();
         if (spawnQueue != null)
         {
             for (int i = 0; i < spawnQueue.Length; i++)
+            {
                 spawnQueue[i].pathRouteOverride?.EnsureSpawnAnchoredFormat();
+                spawnQueue[i].pathRouteOverride?.SyncDurationFromPath();
+            }
         }
 
         EnsureWaveDropEntriesMigrated();
@@ -337,6 +428,9 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
             {
                 if (!string.IsNullOrEmpty(spawnQueue[i].enemyConfigId))
                     spawnQueue[i].enemyConfigId = spawnQueue[i].enemyConfigId.ToLowerInvariantTrimmed();
+                if (!string.IsNullOrEmpty(spawnQueue[i].emitterConfigIdOverride))
+                    spawnQueue[i].emitterConfigIdOverride =
+                        spawnQueue[i].emitterConfigIdOverride.ToLowerInvariantTrimmed();
             }
         }
     }

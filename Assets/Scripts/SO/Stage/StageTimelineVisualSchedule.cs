@@ -192,8 +192,12 @@ public static class StageTimelineVisualSchedule
         }
     }
 
-    static float ComputeContentEndSeconds(StageTimelineConfig timeline, uint logicFps)
+    /// <summary>各条块结束时刻的最大值（秒），不含额外留白。</summary>
+    public static float GetContentEndSeconds(StageTimelineConfig timeline, uint logicFps)
     {
+        if (timeline == null)
+            return 0f;
+
         var buffer = new List<Clip>(16);
         CollectClips(timeline, logicFps, buffer);
         float end = 0f;
@@ -201,6 +205,13 @@ public static class StageTimelineVisualSchedule
             end = Mathf.Max(end, buffer[i].EndSeconds);
         return end;
     }
+
+    /// <summary>建议的可视化时间轴总时长（内容结束 + 留白）。</summary>
+    public static float GetSuggestedViewDurationSeconds(StageTimelineConfig timeline, uint logicFps) =>
+        Mathf.Max(30f, GetContentEndSeconds(timeline, logicFps) + AutoFitPaddingSeconds);
+
+    static float ComputeContentEndSeconds(StageTimelineConfig timeline, uint logicFps) =>
+        GetContentEndSeconds(timeline, logicFps);
 
     static float EstimateWaveSpawnSpanSeconds(EnemyWaveConfig wave)
     {
@@ -247,11 +258,7 @@ public static class StageTimelineVisualSchedule
             maxDur = area.Height / descent;
         }
 
-        float hold = 0f;
-        if (wave.pathRoute != null)
-            hold = Mathf.Max(0f, wave.pathRoute.spawnHoldSeconds);
-
-        return maxDur + hold;
+        return maxDur;
     }
 
     static float EstimateMainBossFightSpanSeconds(MainBossEncounterConfig encounter, uint logicFps)
@@ -278,10 +285,6 @@ public static class StageTimelineVisualSchedule
         return span;
     }
 
-    static string BuildWaveLabel(EnemyWaveConfig wave, int index)
-    {
-        if (!string.IsNullOrEmpty(wave.name))
-            return $"波次 {index}: {wave.name}";
-        return $"波次 {index}";
-    }
+    static string BuildWaveLabel(EnemyWaveConfig wave, int index) =>
+        EnemyWaveConfig.FormatTimelineLabel(wave, index);
 }

@@ -28,8 +28,7 @@ public class MidBossEncounterConfigAssetEditor : Editor
                 continue;
             }
 
-            if (StageTimelinePathEditScope.ShouldHidePathRoutes(E_StageTimelinePathEditTarget.MidBoss)
-                && IsPathRouteProperty(prop.name))
+            if (IsPathRouteProperty(prop.name))
                 continue;
 
             if (prop.name == nameof(MidBossEncounterConfig.enemyConfigId))
@@ -47,7 +46,6 @@ public class MidBossEncounterConfigAssetEditor : Editor
             if (prop.name == nameof(MidBossEncounterConfig.dropOnDeathEntries))
             {
                 EditorGUILayout.Space(2);
-                EditorGUILayout.LabelField("击杀掉落", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(
                     serializedObject.FindProperty(nameof(MidBossEncounterConfig.dropOverrideMode)),
                     new GUIContent("覆盖策略"));
@@ -65,7 +63,57 @@ public class MidBossEncounterConfigAssetEditor : Editor
             EditorGUILayout.PropertyField(prop, true);
         }
 
+        DrawPathRoutes();
+
         serializedObject.ApplyModifiedProperties();
+    }
+
+    void DrawPathRoutes()
+    {
+        if (serializedObject.targetObject is not MidBossEncounterConfig encounter)
+            return;
+
+        bool scopedInTimeline = StageTimelinePathEditScope.IsActive
+                                && StageTimelinePathEditScope.Target == E_StageTimelinePathEditTarget.MidBoss
+                                && StageTimelinePathEditScope.Viewer != null;
+
+        EditorGUILayout.Space(4f);
+
+        if (scopedInTimeline)
+        {
+            int phase = StageTimelinePathEditScope.Viewer.PreviewMidBossPathPhase;
+            StageTimelineBossPathEdit.EnsureMidBossRouteInitialized(encounter, phase);
+            DrawPathRouteProperty(
+                PathRouteNames[Mathf.Clamp(phase, 0, PathRouteNames.Length - 1)],
+                $"运动路径 · {StageTimelineBossPathEdit.GetMidBossPhaseLabel(phase)}");
+            return;
+        }
+
+        for (int i = 0; i < PathRouteNames.Length; i++)
+        {
+            StageTimelineBossPathEdit.EnsureMidBossRouteInitialized(encounter, i);
+            DrawPathRouteProperty(
+                PathRouteNames[i],
+                $"运动路径 · {StageTimelineBossPathEdit.GetMidBossPhaseLabel(i)}");
+        }
+    }
+
+    void DrawPathRouteProperty(string propertyName, string title)
+    {
+        var pathProp = serializedObject.FindProperty(propertyName);
+        if (pathProp == null)
+            return;
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(pathProp, new GUIContent(title), includeChildren: true);
+        if (!EditorGUI.EndChangeCheck())
+            return;
+
+        serializedObject.ApplyModifiedProperties();
+        if (serializedObject.targetObject is MidBossEncounterConfig encounter)
+            EditorUtility.SetDirty(encounter);
+
+        StageTimelinePathEditScope.Viewer?.OnEmbeddedConfigChanged();
     }
 
     static bool IsPathRouteProperty(string name)

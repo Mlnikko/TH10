@@ -48,5 +48,8 @@ public struct BakedPathLeg
     /// <summary>相对 spawnFrame 的累计结束帧（不含）。</summary>
     public int endFrame;
     public float p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y;
-    public float sineAmp, sineOmega, sinePhase0;
+    public float sineAmp;
+    /// <summary>沿弦线参数 u∈[0,1] 的角频率（弧度），即 2π×波数；与段时长无关。</summary>
+    public float sineRadiansPerU;
+    public float sinePhase0;
 }

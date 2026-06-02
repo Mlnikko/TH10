@@ -6,24 +6,28 @@ using UnityEngine;
 public class StageTimelineConfigEditor : Editor
 {
     SerializedProperty _previewWaveIndexProp;
-    SerializedProperty _previewPathEntryIndexProp;
     SerializedProperty _pathEditTargetProp;
     SerializedProperty _previewMidBossPathPhaseProp;
     SerializedProperty _previewMainBossPathPhaseProp;
+    SerializedProperty _previewMainBossSpellPhaseIndexProp;
     SerializedProperty _pathNodeSnapToGridProp;
     SerializedProperty _pathNodeSnapCellSizeProp;
     SerializedProperty _drawPathNodeSnapGridProp;
+    SerializedProperty _previewDurationSecondsProp;
+
+    const string PreviewDurationSecondsField = "previewDurationSeconds";
 
     void OnEnable()
     {
         _previewWaveIndexProp = serializedObject.FindProperty("previewMidStageWaveIndex");
-        _previewPathEntryIndexProp = serializedObject.FindProperty("previewPathEditEntryIndex");
         _pathEditTargetProp = serializedObject.FindProperty("pathEditTarget");
         _previewMidBossPathPhaseProp = serializedObject.FindProperty("previewMidBossPathPhase");
         _previewMainBossPathPhaseProp = serializedObject.FindProperty("previewMainBossPathPhase");
+        _previewMainBossSpellPhaseIndexProp = serializedObject.FindProperty("previewMainBossSpellPhaseIndex");
         _pathNodeSnapToGridProp = serializedObject.FindProperty("pathNodeSnapToGrid");
         _pathNodeSnapCellSizeProp = serializedObject.FindProperty("pathNodeSnapCellSize");
         _drawPathNodeSnapGridProp = serializedObject.FindProperty("drawPathNodeSnapGrid");
+        _previewDurationSecondsProp = serializedObject.FindProperty(PreviewDurationSecondsField);
     }
 
     void OnDisable()
@@ -34,6 +38,9 @@ public class StageTimelineConfigEditor : Editor
     const string TimelineConfigField = "stageTimelineConfig";
     const string BattleAreaConfigField = "battleAreaConfig";
     const string PathNodeGridFoldoutPrefKey = "TH10.StageTimeline.PathNodeGridFoldout";
+    const string StageBackgroundFoldoutPrefKey = "TH10.StageTimeline.StageBackgroundFoldout";
+    const string WaveBossEditFoldoutPrefKey = "TH10.StageTimeline.WaveBossEditFoldout";
+    const float StageBackgroundBoxInset = 8f;
 
     public override void OnInspectorGUI()
     {
@@ -58,6 +65,7 @@ public class StageTimelineConfigEditor : Editor
             "m_Script",
             TimelineConfigField,
             BattleAreaConfigField,
+            PreviewDurationSecondsField,
             "previewMidStageWaveIndex",
             "timelineViewDurationSeconds",
             "timelinePixelsPerSecond",
@@ -65,6 +73,7 @@ public class StageTimelineConfigEditor : Editor
             "pathEditTarget",
             "previewMidBossPathPhase",
             "previewMainBossPathPhase",
+            "previewMainBossSpellPhaseIndex",
             "pathNodeSnapToGrid",
             "pathNodeSnapCellSize",
             "drawPathNodeSnapGrid");
@@ -99,11 +108,7 @@ public class StageTimelineConfigEditor : Editor
         DrawPathNodeGridSection(viewer);
 
         ConfigViewerEditorUI.DrawSeparator();
-        DrawPathViewSection(viewer);
-
-        ConfigViewerEditorUI.DrawSeparator();
-        EditorGUILayout.LabelField("配置编辑（就地）", EditorStyles.boldLabel);
-        DrawEmbeddedConfigForPathEditTarget(viewer);
+        DrawWaveAndBossEditSection(viewer);
 
         ConfigViewerEditorUI.DrawSeparator();
         EditorGUILayout.LabelField("运行时预览（需 Play）", EditorStyles.boldLabel);
@@ -116,6 +121,7 @@ public class StageTimelineConfigEditor : Editor
 
         DrawPendingPreviewRestart(viewer);
         DrawPreviewAvailability(viewer);
+        DrawPreviewDurationSettings(viewer);
         DrawScopedPreviewControls(viewer);
         DrawFullTimelinePreview(viewer);
         DrawActivePreviewStatus(viewer);
@@ -125,21 +131,64 @@ public class StageTimelineConfigEditor : Editor
 
     void DrawStageBackgroundSection(StageTimelineConfigViewer viewer)
     {
-        EditorGUILayout.LabelField("关卡背景", EditorStyles.boldLabel);
+        bool expanded = EditorPrefs.GetBool(StageBackgroundFoldoutPrefKey, false);
+        expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, "关卡背景");
+        EditorPrefs.SetBool(StageBackgroundFoldoutPrefKey, expanded);
+        EditorGUILayout.EndFoldoutHeaderGroup();
 
-        if (viewer.stageTimelineConfig == null)
-        {
-            EditorGUILayout.HelpBox("请先指定关卡时间轴配置。", MessageType.Warning);
+        if (!expanded)
             return;
+
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(StageBackgroundBoxInset);
+                using (new EditorGUILayout.VerticalScope())
+                {
+                    if (viewer.stageTimelineConfig == null)
+                    {
+                        EditorGUILayout.HelpBox("请先指定关卡时间轴配置。", MessageType.Warning);
+                        return;
+                    }
+
+                    var timelineSo = new SerializedObject(viewer.stageTimelineConfig);
+                    timelineSo.Update();
+                    var bgProp = timelineSo.FindProperty("backgroundData");
+                    DrawSerializedPropertyChildren(bgProp, indent: true);
+                    timelineSo.ApplyModifiedProperties();
+
+                    EditorGUILayout.Space(4f);
+                    DrawStageBackgroundPreviewControls(viewer);
+                }
+            }
+        }
+    }
+
+    static void DrawSerializedPropertyChildren(SerializedProperty parent, bool indent = false)
+    {
+        if (parent == null)
+            return;
+
+        if (indent)
+            EditorGUI.indentLevel++;
+
+        SerializedProperty iterator = parent.Copy();
+        SerializedProperty end = iterator.GetEndProperty();
+        bool enterChildren = true;
+        while (iterator.NextVisible(enterChildren) && !SerializedProperty.EqualContents(iterator, end))
+        {
+            enterChildren = false;
+            EditorGUILayout.PropertyField(iterator, true);
         }
 
-        var timelineSo = new SerializedObject(viewer.stageTimelineConfig);
-        timelineSo.Update();
-        var bgProp = timelineSo.FindProperty("backgroundData");
-        EditorGUILayout.PropertyField(bgProp, new GUIContent("背景表现"), true);
-        timelineSo.ApplyModifiedProperties();
+        if (indent)
+            EditorGUI.indentLevel--;
+    }
 
-        EditorGUILayout.Space(4f);
+    static void DrawStageBackgroundPreviewControls(StageTimelineConfigViewer viewer)
+    {
+        EditorGUILayout.LabelField("Scene 预览", EditorStyles.miniBoldLabel);
 
         bool canPreview = Application.isPlaying && StageTimelinePreviewRuntime.CanPreview;
         if (!Application.isPlaying)
@@ -152,18 +201,20 @@ public class StageTimelineConfigEditor : Editor
         }
 
         EditorGUI.BeginDisabledGroup(!canPreview || viewer.IsBackgroundPreviewBootstrapping);
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button(viewer.IsBackgroundPreviewBootstrapping ? "启动中…" : "播放背景预览"))
-            viewer.RequestBackgroundPreview();
-        if (GUILayout.Button("停止背景预览"))
-            viewer.StopBackgroundPreview();
-        EditorGUILayout.EndHorizontal();
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button(viewer.IsBackgroundPreviewBootstrapping ? "启动中…" : "播放背景预览"))
+                viewer.RequestBackgroundPreview();
+            if (GUILayout.Button("停止背景预览"))
+                viewer.StopBackgroundPreview();
+        }
+
         EditorGUI.EndDisabledGroup();
 
         string status = viewer.IsBackgroundPreviewBootstrapping
             ? "启动中"
             : viewer.IsBackgroundPreviewActive ? "预览中" : "未播放";
-        EditorGUILayout.HelpBox($"Scene 背景预览：{status}。", MessageType.None);
+        EditorGUILayout.LabelField($"状态：{status}", EditorStyles.miniLabel);
     }
 
     E_StageTimelinePathEditTarget GetPathEditTarget() =>
@@ -171,78 +222,170 @@ public class StageTimelineConfigEditor : Editor
             ? (E_StageTimelinePathEditTarget)_pathEditTargetProp.enumValueIndex
             : E_StageTimelinePathEditTarget.MidStageWave;
 
-    void DrawEmbeddedConfigForPathEditTarget(StageTimelineConfigViewer viewer)
+    void DrawWaveAndBossEditSection(StageTimelineConfigViewer viewer)
     {
-        switch (GetPathEditTarget())
+        bool expanded = EditorPrefs.GetBool(WaveBossEditFoldoutPrefKey, true);
+        expanded = EditorGUILayout.BeginFoldoutHeaderGroup(expanded, "道中 / Boss 配置（Scene）");
+        EditorPrefs.SetBool(WaveBossEditFoldoutPrefKey, expanded);
+        EditorGUILayout.EndFoldoutHeaderGroup();
+
+        if (!expanded)
+            return;
+
+        var timeline = viewer.stageTimelineConfig;
+        bool hasTimeline = timeline != null;
+        bool hasWaves = hasTimeline && timeline.midStageWaves != null && timeline.midStageWaves.Count > 0;
+
+        using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            case E_StageTimelinePathEditTarget.MidBoss:
-                DrawEmbeddedMidBossConfig(viewer);
-                break;
-            case E_StageTimelinePathEditTarget.MainBoss:
-                DrawEmbeddedMainBossConfig(viewer);
-                break;
-            default:
-                DrawEmbeddedWaveConfig(viewer);
-                break;
+            if (!hasTimeline)
+            {
+                EditorGUILayout.HelpBox("请指定 StageTimelineConfig。", MessageType.Warning);
+                return;
+            }
+
+            if (!viewer.TryResolveGizmoBattleArea(out _))
+            {
+                EditorGUILayout.HelpBox(
+                    "请在 Viewer 上指定 Battle Area Config，以便在 Scene 中显示战斗区与路径（无需 Play）。",
+                    MessageType.Warning);
+            }
+
+            DrawPathEditTargetSelector(viewer);
+
+            EditorGUILayout.HelpBox(
+                "路径可在 Scene 拖拽，也可在下方面板编辑。"
+                + " 波次：点生成点或队列「路径」切换条目；Boss：切换路径阶段后编辑对应运动路径。",
+                MessageType.None);
+
+            switch (GetPathEditTarget())
+            {
+                case E_StageTimelinePathEditTarget.MidBoss:
+                    DrawMidBossPathAndConfigBlock(viewer, timeline.midBossEncounter);
+                    break;
+                case E_StageTimelinePathEditTarget.MainBoss:
+                    DrawMainBossPathAndConfigBlock(viewer, timeline.mainBossEncounter);
+                    break;
+                default:
+                    DrawMidStageWavePathAndConfigBlock(viewer, timeline, hasWaves);
+                    break;
+            }
         }
     }
 
-    void DrawEmbeddedWaveConfig(StageTimelineConfigViewer viewer)
+    void DrawPathEditTargetSelector(StageTimelineConfigViewer viewer)
     {
-        var timeline = viewer.stageTimelineConfig;
-        if (timeline?.midStageWaves == null || timeline.midStageWaves.Count == 0)
+        if (_pathEditTargetProp == null)
+            return;
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(
+            _pathEditTargetProp,
+            new GUIContent("编辑对象", "决定 Scene 绘制、路径块与内嵌配置"));
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUILayout.HelpBox("时间轴未配置道中波次。", MessageType.None);
+            serializedObject.ApplyModifiedProperties();
+            StageTimelineEmbeddedConfigEditor.Cleanup();
+            viewer.RepaintPathGizmo();
+            SceneView.RepaintAll();
+        }
+    }
+
+    void DrawMidStageWavePathAndConfigBlock(
+        StageTimelineConfigViewer viewer,
+        StageTimelineConfig timeline,
+        bool hasWaves)
+    {
+        if (!hasWaves)
+        {
+            EditorGUILayout.HelpBox("时间轴未配置 midStageWaves。", MessageType.None);
             return;
         }
 
-        int index = Mathf.Clamp(_previewWaveIndexProp?.intValue ?? 0, 0, timeline.midStageWaves.Count - 1);
+        if (_previewWaveIndexProp == null)
+            return;
+
+        int max = timeline.midStageWaves.Count - 1;
+        EditorGUI.BeginChangeCheck();
+        _previewWaveIndexProp.intValue = EditorGUILayout.IntSlider(
+            new GUIContent("波次索引", "切换查看/编辑 midStageWaves 中的波次"),
+            Mathf.Clamp(_previewWaveIndexProp.intValue, 0, max),
+            0,
+            max);
+        if (EditorGUI.EndChangeCheck())
+        {
+            StageTimelineEmbeddedConfigEditor.Cleanup();
+            viewer.RepaintPathGizmo();
+        }
+
+        int index = _previewWaveIndexProp.intValue;
         var wave = timeline.midStageWaves[index];
+
+        DrawWaveSummary(wave, index);
+
+        EditorGUILayout.Space(6f);
+        DrawEmbeddedWaveConfig(viewer, timeline, index, wave);
+    }
+
+    void DrawMidBossPathAndConfigBlock(StageTimelineConfigViewer viewer, MidBossEncounterConfig encounter)
+    {
+        DrawMidBossPathEditSection(viewer, encounter);
+        if (encounter == null || !encounter.enabled)
+            return;
+
+        EditorGUILayout.Space(6f);
+        DrawEmbeddedMidBossConfig(viewer, encounter);
+    }
+
+    void DrawMainBossPathAndConfigBlock(StageTimelineConfigViewer viewer, MainBossEncounterConfig encounter)
+    {
+        DrawMainBossPathEditSection(viewer, encounter);
+        if (encounter == null || !encounter.enabled)
+            return;
+
+        EditorGUILayout.Space(6f);
+        DrawEmbeddedMainBossConfig(viewer, encounter);
+    }
+
+    void DrawEmbeddedWaveConfig(
+        StageTimelineConfigViewer viewer,
+        StageTimelineConfig timeline,
+        int index,
+        EnemyWaveConfig wave)
+    {
         using (new StageTimelinePathEditScope(viewer, E_StageTimelinePathEditTarget.MidStageWave, index))
         {
             StageTimelineEmbeddedConfigEditor.DrawScriptableObject(
                 wave,
                 viewer,
-                $"道中波次 [{index}] · {wave?.name ?? "（空）"}",
-                defaultExpanded: true);
+                wave != null
+                    ? $"波次参数 · {EnemyWaveConfig.FormatTimelineLabel(wave, index)}"
+                    : $"波次参数 · 波次 {index}（空）",
+                useFoldoutHeader: false);
         }
     }
 
-    void DrawEmbeddedMidBossConfig(StageTimelineConfigViewer viewer)
+    void DrawEmbeddedMidBossConfig(StageTimelineConfigViewer viewer, MidBossEncounterConfig encounter)
     {
-        var encounter = viewer.stageTimelineConfig?.midBossEncounter;
-        if (encounter == null)
-        {
-            EditorGUILayout.HelpBox("未配置 midBossEncounter。", MessageType.Warning);
-            return;
-        }
-
         using (new StageTimelinePathEditScope(viewer, E_StageTimelinePathEditTarget.MidBoss))
         {
             StageTimelineEmbeddedConfigEditor.DrawScriptableObject(
                 encounter,
                 viewer,
-                "中场 Boss Encounter",
-                defaultExpanded: true);
+                "中场 Boss 参数",
+                useFoldoutHeader: false);
         }
     }
 
-    void DrawEmbeddedMainBossConfig(StageTimelineConfigViewer viewer)
+    void DrawEmbeddedMainBossConfig(StageTimelineConfigViewer viewer, MainBossEncounterConfig encounter)
     {
-        var encounter = viewer.stageTimelineConfig?.mainBossEncounter;
-        if (encounter == null)
-        {
-            EditorGUILayout.HelpBox("未配置 mainBossEncounter。", MessageType.Warning);
-            return;
-        }
-
         using (new StageTimelinePathEditScope(viewer, E_StageTimelinePathEditTarget.MainBoss))
         {
             StageTimelineEmbeddedConfigEditor.DrawScriptableObject(
                 encounter,
                 viewer,
-                "关底 Boss Encounter",
-                defaultExpanded: true);
+                "关底 Boss 参数",
+                useFoldoutHeader: false);
         }
     }
 
@@ -289,101 +432,6 @@ public class StageTimelineConfigEditor : Editor
         EditorGUILayout.EndFoldoutHeaderGroup();
     }
 
-    void DrawPathViewSection(StageTimelineConfigViewer viewer)
-    {
-        EditorGUILayout.LabelField("Scene 路径编辑", EditorStyles.boldLabel);
-
-        var timeline = viewer.stageTimelineConfig;
-        bool hasTimeline = timeline != null;
-        bool hasWaves = hasTimeline && timeline.midStageWaves != null && timeline.midStageWaves.Count > 0;
-
-        if (!hasTimeline)
-        {
-            EditorGUILayout.HelpBox("请指定 StageTimelineConfig。", MessageType.Warning);
-            return;
-        }
-
-        if (!viewer.TryResolveGizmoBattleArea(out _))
-        {
-            EditorGUILayout.HelpBox(
-                "请在 Viewer 上指定 Battle Area Config，以便在 Scene 中显示战斗区与路径（无需 Play）。",
-                MessageType.Warning);
-        }
-
-        DrawPathEditTargetSection(viewer, timeline, hasWaves);
-
-        EditorGUILayout.HelpBox(
-            "Scene 与下方「配置编辑」均随「路径编辑对象」切换。"
-            + " 波次：点击 Scene 生成点或队列「路径」；Boss：点击阶段锚点（入场/循环/退场）切换。",
-            MessageType.None);
-    }
-
-    void DrawPathEditTargetSection(StageTimelineConfigViewer viewer, StageTimelineConfig timeline, bool hasWaves)
-    {
-        if (_pathEditTargetProp == null)
-            return;
-
-        EditorGUILayout.Space(4);
-        EditorGUI.BeginChangeCheck();
-        EditorGUILayout.PropertyField(_pathEditTargetProp, new GUIContent("路径编辑对象", "决定 Scene 绘制与编辑的路径类型"));
-        if (EditorGUI.EndChangeCheck())
-        {
-            serializedObject.ApplyModifiedProperties();
-            StageTimelineEmbeddedConfigEditor.Cleanup();
-            viewer.RepaintPathGizmo();
-            SceneView.RepaintAll();
-        }
-
-        var target = GetPathEditTarget();
-
-        switch (target)
-        {
-            case E_StageTimelinePathEditTarget.MidBoss:
-                DrawMidBossPathEditSection(viewer, timeline.midBossEncounter);
-                break;
-            case E_StageTimelinePathEditTarget.MainBoss:
-                DrawMainBossPathEditSection(viewer, timeline.mainBossEncounter);
-                break;
-            default:
-                DrawMidStageWavePathEditSection(viewer, timeline, hasWaves);
-                break;
-        }
-    }
-
-    void DrawMidStageWavePathEditSection(
-        StageTimelineConfigViewer viewer,
-        StageTimelineConfig timeline,
-        bool hasWaves)
-    {
-        if (!hasWaves)
-        {
-            EditorGUILayout.HelpBox("时间轴未配置 midStageWaves。", MessageType.None);
-            return;
-        }
-
-        if (_previewWaveIndexProp == null)
-            return;
-
-        int max = timeline.midStageWaves.Count - 1;
-        EditorGUI.BeginChangeCheck();
-        _previewWaveIndexProp.intValue = EditorGUILayout.IntSlider(
-            new GUIContent("波次索引", "切换查看/编辑 midStageWaves 中的波次"),
-            Mathf.Clamp(_previewWaveIndexProp.intValue, 0, max),
-            0,
-            max);
-        if (EditorGUI.EndChangeCheck())
-        {
-            StageTimelineEmbeddedConfigEditor.Cleanup();
-            viewer.RepaintPathGizmo();
-        }
-
-        var wave = timeline.midStageWaves[_previewWaveIndexProp.intValue];
-        int pathEntry = _previewPathEntryIndexProp?.intValue ?? 0;
-        DrawWaveSummary(wave, _previewWaveIndexProp.intValue);
-        DrawPathEditEntrySlider(viewer, wave);
-        DrawActiveEntryPathRoute(viewer, wave, pathEntry);
-    }
-
     static void DrawMidBossPathEditSection(StageTimelineConfigViewer viewer, MidBossEncounterConfig encounter)
     {
         if (encounter == null || !encounter.enabled)
@@ -399,11 +447,6 @@ public class StageTimelineConfigEditor : Editor
             viewer.SetMidBossPathPhase);
 
         StageTimelineBossPathEdit.EnsureMidBossRouteInitialized(encounter, viewer.PreviewMidBossPathPhase);
-        DrawBossActivePathRoute(
-            viewer,
-            encounter,
-            GetMidBossPathPropertyName(viewer.PreviewMidBossPathPhase),
-            $"运动路径 · 中场 {StageTimelineBossPathEdit.GetMidBossPhaseLabel(viewer.PreviewMidBossPathPhase)}");
     }
 
     static void DrawMainBossPathEditSection(StageTimelineConfigViewer viewer, MainBossEncounterConfig encounter)
@@ -421,11 +464,36 @@ public class StageTimelineConfigEditor : Editor
             viewer.SetMainBossPathPhase);
 
         StageTimelineBossPathEdit.EnsureMainBossRouteInitialized(encounter, viewer.PreviewMainBossPathPhase);
-        DrawBossActivePathRoute(
+
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField("符卡阶段", EditorStyles.boldLabel);
+
+        int spellPhaseIndex = viewer.PreviewMainBossSpellPhaseIndex;
+        StageTimelineBossSpellPhaseEdit.DrawPhaseToolbar(
+            encounter,
+            spellPhaseIndex,
+            viewer.SetMainBossSpellPhaseIndex);
+
+        StageTimelineBossSpellPhaseEdit.DrawSelectedPhaseInspector(viewer, encounter, spellPhaseIndex);
+        StageTimelineBossSpellPhaseEdit.DrawPhaseListControls(
             viewer,
             encounter,
-            GetMainBossPathPropertyName(viewer.PreviewMainBossPathPhase),
-            $"运动路径 · 关底 {StageTimelineBossPathEdit.GetMainBossPhaseLabel(viewer.PreviewMainBossPathPhase)}");
+            spellPhaseIndex,
+            viewer.SetMainBossSpellPhaseIndex);
+
+        bool previewBlocked = !CanStartPreview(viewer);
+        bool canPreviewSpell = StageTimelineBossSpellPhaseEdit.GetPhaseCount(encounter) > 0;
+        EditorGUI.BeginDisabledGroup(previewBlocked || !canPreviewSpell);
+        if (GUILayout.Button(
+                new GUIContent("预览当前符卡阶段", "跳过登场，直接进入 BossFight 并应用所选符卡弹幕"),
+                GUILayout.Height(24)))
+        {
+            viewer.RequestPreviewMainBossSpellPhase(spellPhaseIndex);
+        }
+        EditorGUI.EndDisabledGroup();
+
+        if (!canPreviewSpell)
+            EditorGUILayout.HelpBox("添加至少一个符卡阶段后可预览。", MessageType.None);
     }
 
     static void DrawBossPathPhaseSlider(
@@ -445,44 +513,6 @@ public class StageTimelineConfigEditor : Editor
         int next = GUILayout.Toolbar(Mathf.Clamp(currentPhase, 0, phaseCount - 1), labels);
         if (EditorGUI.EndChangeCheck())
             onPhaseChanged(next);
-    }
-
-    static string GetMidBossPathPropertyName(int phaseIndex) => phaseIndex switch
-    {
-        0 => nameof(MidBossEncounterConfig.entryPathRoute),
-        1 => nameof(MidBossEncounterConfig.loopPathRoute),
-        _ => nameof(MidBossEncounterConfig.exitPathRoute),
-    };
-
-    static string GetMainBossPathPropertyName(int phaseIndex) => phaseIndex switch
-    {
-        0 => nameof(MainBossEncounterConfig.entryPathRoute),
-        _ => nameof(MainBossEncounterConfig.loopPathRoute),
-    };
-
-    static void DrawBossActivePathRoute(
-        StageTimelineConfigViewer viewer,
-        UnityEngine.Object encounter,
-        string pathPropertyName,
-        string title)
-    {
-        if (encounter == null || string.IsNullOrEmpty(pathPropertyName))
-            return;
-
-        var so = new SerializedObject(encounter);
-        so.Update();
-        SerializedProperty pathProp = so.FindProperty(pathPropertyName);
-        if (pathProp == null)
-            return;
-
-        EditorGUILayout.Space(4);
-        EditorGUI.BeginChangeCheck();
-        EditorGUILayout.PropertyField(pathProp, new GUIContent(title), includeChildren: true);
-        if (EditorGUI.EndChangeCheck())
-        {
-            so.ApplyModifiedProperties();
-            viewer.OnEmbeddedConfigChanged();
-        }
     }
 
     void DrawScopedPreviewControls(StageTimelineConfigViewer viewer)
@@ -568,84 +598,65 @@ public class StageTimelineConfigEditor : Editor
         }
 
         wave.EnsureSpawnQueueMigrated();
-        int spawnN = wave.ResolveSpawnCount();
-        string queueHint = wave.UsesSequentialSpawn ? " · 顺序" : "";
-        string enemySummary = spawnN <= 0
-            ? "（队列为空）"
-            : spawnN == 1
-                ? wave.spawnQueue[0].enemyConfigId
-                : $"{spawnN} 名";
         EditorGUILayout.LabelField(
-            $"[{index}] {wave.name} · {enemySummary} · {wave.spawnPattern}{queueHint}",
+            $"[{index}] {wave.ResolveDisplayTitle()}",
             EditorStyles.miniLabel);
     }
 
-    void DrawPathEditEntrySlider(StageTimelineConfigViewer viewer, EnemyWaveConfig wave)
+    void DrawPreviewDurationSettings(StageTimelineConfigViewer viewer)
     {
-        if (wave == null || _previewPathEntryIndexProp == null)
+        if (_previewDurationSecondsProp == null)
             return;
 
-        wave.EnsureSpawnQueueMigrated();
-        int count = wave.ResolveSpawnCount();
-        if (count <= 1)
-            return;
+        EditorGUILayout.Space(2f);
+        EditorGUILayout.LabelField("预览时长", EditorStyles.miniBoldLabel);
 
-        string label = wave.UsesPerQueueEntryPaths
-            ? "当前路径条目"
-            : "路径锚定条目";
-        string tooltip = wave.UsesPerQueueEntryPaths
-            ? "Scene 与下方路径块对应该队列条目；点击 Scene 生成点或队列「路径」切换。"
-            : "全队共用 pathRoute；Scene 按该条目的生成点展示与编辑路径。";
-
-        EditorGUI.BeginChangeCheck();
-        _previewPathEntryIndexProp.intValue = EditorGUILayout.IntSlider(
-            new GUIContent(label, tooltip),
-            Mathf.Clamp(_previewPathEntryIndexProp.intValue, 0, count - 1),
-            0,
-            count - 1);
-        if (EditorGUI.EndChangeCheck())
-            viewer.RepaintPathGizmo();
-    }
-
-    static void DrawActiveEntryPathRoute(StageTimelineConfigViewer viewer, EnemyWaveConfig wave, int entryIndex)
-    {
-        if (wave == null || viewer == null)
-            return;
-
-        entryIndex = wave.ResolvePathDisplayEntryIndex(entryIndex);
-        if (wave.UsesPerQueueEntryPaths)
-            wave.EnsureEntryPathOverrideInitialized(entryIndex);
-
-        var waveSo = new SerializedObject(wave);
-        waveSo.Update();
-
-        SerializedProperty pathProp = wave.UsesPerQueueEntryPaths
-            ? waveSo.FindProperty(nameof(EnemyWaveConfig.spawnQueue))
-                .GetArrayElementAtIndex(entryIndex)
-                .FindPropertyRelative(nameof(WaveSpawnQueueEntry.pathRouteOverride))
-            : waveSo.FindProperty(nameof(EnemyWaveConfig.pathRoute));
-
-        if (pathProp == null)
-            return;
-
-        EditorGUILayout.Space(4);
-        string title = wave.UsesPerQueueEntryPaths
-            ? $"运动路径 · 条目 #{entryIndex + 1}"
-            : countLabel(wave, entryIndex);
-
-        EditorGUI.BeginChangeCheck();
-        EditorGUILayout.PropertyField(pathProp, new GUIContent(title), includeChildren: true);
-        if (EditorGUI.EndChangeCheck())
+        bool useAuto = _previewDurationSecondsProp.floatValue <= 0f;
+        var scope = viewer.IsPreviewingTimeline
+            ? viewer.ActivePreviewScope
+            : E_StageTimelinePreviewScope.FullTimeline;
+        int scopeIndex = scope switch
         {
-            waveSo.ApplyModifiedProperties();
-            viewer.OnEmbeddedConfigChanged();
+            E_StageTimelinePreviewScope.SingleMidStageWave => viewer.PreviewMidStageWaveIndex,
+            E_StageTimelinePreviewScope.MainBossSpellPhase => viewer.PreviewMainBossSpellPhaseIndex,
+            _ => 0,
+        };
+        float resolved = viewer.GetResolvedPreviewDurationSeconds(scope, scopeIndex);
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            EditorGUILayout.PrefixLabel("最长播放");
+            bool newAuto = EditorGUILayout.ToggleLeft("自动", useAuto, GUILayout.Width(52f));
+            if (newAuto != useAuto)
+                _previewDurationSecondsProp.floatValue = newAuto ? 0f : 120f;
+
+            EditorGUI.BeginDisabledGroup(_previewDurationSecondsProp.floatValue <= 0f);
+            float manual = EditorGUILayout.Slider(
+                Mathf.Max(5f, _previewDurationSecondsProp.floatValue),
+                5f,
+                600f);
+            EditorGUI.EndDisabledGroup();
+
+            if (_previewDurationSecondsProp.floatValue > 0f)
+                _previewDurationSecondsProp.floatValue = manual;
         }
 
-        static string countLabel(EnemyWaveConfig w, int idx)
+        if (_previewDurationSecondsProp.floatValue <= 0f)
+            EditorGUILayout.LabelField($"自动估算：约 {resolved:0.#} s（随当前预览片段变化）", EditorStyles.miniLabel);
+        else
+            EditorGUILayout.LabelField($"固定上限：{_previewDurationSecondsProp.floatValue:0.#} s", EditorStyles.miniLabel);
+
+        if (viewer.IsPreviewingTimeline)
         {
-            return w.ResolveSpawnCount() > 1
-                ? $"运动路径 · 全队共享（锚定 #{idx + 1}）"
-                : "运动路径 · 全队共享";
+            float elapsed = viewer.PreviewElapsedSeconds;
+            float total = viewer.ActivePreviewTotalDurationSeconds;
+            float newTotal = EditorGUILayout.Slider(
+                new GUIContent("本次播放总长", "预览进行中可加长，无需重启"),
+                total,
+                Mathf.Max(elapsed + 1f, 5f),
+                600f);
+            if (!Mathf.Approximately(newTotal, total))
+                viewer.SetActivePreviewTotalDurationSeconds(newTotal);
         }
     }
 
@@ -667,10 +678,24 @@ public class StageTimelineConfigEditor : Editor
 
         string scopeName = StageTimelineConfigViewer.GetPreviewScopeDisplayName(viewer.ActivePreviewScope);
         if (viewer.ActivePreviewScope == E_StageTimelinePreviewScope.SingleMidStageWave)
-            scopeName += $" [{viewer.PreviewMidStageWaveIndex}]";
+        {
+            var waves = viewer.stageTimelineConfig?.midStageWaves;
+            int wi = viewer.PreviewMidStageWaveIndex;
+            if (waves != null && wi >= 0 && wi < waves.Count && waves[wi] != null)
+                scopeName = EnemyWaveConfig.FormatTimelineLabel(waves[wi], wi);
+            else
+                scopeName += $" [{wi}]";
+        }
+        if (viewer.ActivePreviewScope == E_StageTimelinePreviewScope.MainBossSpellPhase)
+            scopeName += $" [{viewer.PreviewMainBossSpellPhaseIndex}]";
+
+        float total = viewer.ActivePreviewTotalDurationSeconds;
+        string durationLine = total > 0f
+            ? $"{viewer.PreviewElapsedSeconds:F1} / {total:F1} s"
+            : $"{viewer.PreviewElapsedSeconds:F1} s";
 
         EditorGUILayout.HelpBox(
-            $"正在预览 {scopeName}：逻辑帧 {viewer.PreviewLogicFrame}，已播放 {viewer.PreviewElapsedSeconds:F1}s",
+            $"正在预览 {scopeName}：逻辑帧 {viewer.PreviewLogicFrame}，{durationLine}",
             MessageType.Info);
 
         using (new EditorGUILayout.HorizontalScope())

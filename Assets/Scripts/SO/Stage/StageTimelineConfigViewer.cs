@@ -47,6 +47,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     [Tooltip("关底 Boss 路径阶段：0=登场 1=场内")]
     [SerializeField] int previewMainBossPathPhase;
 
+    [Tooltip("关底 Boss 符卡阶段索引（bossPhases 列表）")]
+    [SerializeField] int previewMainBossSpellPhaseIndex;
+
     [Header("路径编辑（Scene）")]
     [Tooltip("拖拽路径点时吸附到以战斗区中心为原点的世界网格")]
     [SerializeField] bool pathNodeSnapToGrid = true;
@@ -90,11 +93,27 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     public E_StageTimelinePathEditTarget PathEditTarget => pathEditTarget;
     public int PreviewMidBossPathPhase => previewMidBossPathPhase;
     public int PreviewMainBossPathPhase => previewMainBossPathPhase;
+    public int PreviewMainBossSpellPhaseIndex => previewMainBossSpellPhaseIndex;
     public bool PathNodeSnapToGrid => pathNodeSnapToGrid;
     public float PathNodeSnapCellSize => pathNodeSnapCellSize;
     public bool DrawPathNodeSnapGrid => drawPathNodeSnapGrid;
     public float TimelineViewDurationSeconds => timelineViewDurationSeconds;
     public float TimelinePixelsPerSecond => timelinePixelsPerSecond;
+    public float PreviewDurationSeconds => previewDurationSeconds;
+
+    public float GetResolvedPreviewDurationSeconds(
+        E_StageTimelinePreviewScope scope = E_StageTimelinePreviewScope.FullTimeline,
+        int waveIndex = 0)
+        => ResolvePreviewDurationSeconds(scope, waveIndex);
+
+    public void SetActivePreviewTotalDurationSeconds(float totalSeconds)
+    {
+        if (!_previewActive || totalSeconds <= 0f)
+            return;
+
+        _previewClock.SetTotalMaxRealSeconds(totalSeconds);
+        EditorUtility.SetDirty(this);
+    }
 
     public void SetPreviewMidStageWaveIndex(int waveIndex)
     {
@@ -169,6 +188,18 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         RepaintPathGizmo();
     }
 
+    public void SetMainBossSpellPhaseIndex(int phaseIndex)
+    {
+        int max = stageTimelineConfig?.mainBossEncounter?.bossPhases?.Count ?? 0;
+        int clamped = max <= 0 ? 0 : Mathf.Clamp(phaseIndex, 0, max - 1);
+        if (previewMainBossSpellPhaseIndex == clamped)
+            return;
+
+        previewMainBossSpellPhaseIndex = clamped;
+        pathEditTarget = E_StageTimelinePathEditTarget.MainBoss;
+        EditorUtility.SetDirty(this);
+    }
+
     bool _embeddedEditPendingPreviewRestart;
 
     BattleStageBackgroundRuntime _backgroundPreviewRuntime;
@@ -181,10 +212,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     public bool IsBackgroundPreviewBootstrapping => _backgroundPreviewBootstrapping;
 
     /// <summary>内嵌子配置（波次/Boss）在 Inspector 中修改后调用：刷新 Scene Gizmo，并标记运行时预览待重启。</summary>
-    public void OnEmbeddedConfigChanged()
+    public void OnEmbeddedConfigChanged(UnityEngine.Object changedAsset = null)
     {
         if (stageTimelineConfig != null)
             EditorUtility.SetDirty(stageTimelineConfig);
+
+        EmbeddedConfigChangedHook?.Invoke(this, changedAsset);
 
         RepaintPathGizmo();
         SceneView.RepaintAll();
@@ -192,6 +225,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         if (_previewActive)
             _embeddedEditPendingPreviewRestart = true;
     }
+
+    /// <summary>Editor：Scene 外直接改子配置后同步嵌套 Inspector（由 Editor 程序集注册）。</summary>
+    public static System.Action<StageTimelineConfigViewer, UnityEngine.Object> EmbeddedConfigChangedHook;
 
     public bool HasPendingPreviewRestart => _embeddedEditPendingPreviewRestart;
 
@@ -218,6 +254,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                 break;
             case E_StageTimelinePreviewScope.MainBossEncounter:
                 RequestPreviewMainBoss();
+                break;
+            case E_StageTimelinePreviewScope.MainBossSpellPhase:
+                RequestPreviewMainBossSpellPhase(previewMainBossSpellPhaseIndex);
                 break;
             default:
                 RequestPreviewStageTimeline();
@@ -414,6 +453,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     public void RequestPreviewMainBoss()
         => RequestPreview(E_StageTimelinePreviewScope.MainBossEncounter, 0);
 
+    public void RequestPreviewMainBossSpellPhase(int phaseIndex)
+        => RequestPreview(E_StageTimelinePreviewScope.MainBossSpellPhase, phaseIndex);
+
     void RequestPreview(E_StageTimelinePreviewScope scope, int waveIndex)
     {
         if (_previewActive || _previewBootstrapping)
@@ -492,6 +534,27 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                 }
                 return true;
 
+            case E_StageTimelinePreviewScope.MainBossSpellPhase:
+            {
+                var encounter = stageTimelineConfig.mainBossEncounter;
+                if (encounter == null || !encounter.enabled || string.IsNullOrEmpty(encounter.enemyConfigId))
+                {
+                    error = "未配置已启用的关底 Boss（mainBossEncounter）。";
+                    return false;
+                }
+                if (encounter.bossPhases == null || encounter.bossPhases.Count == 0)
+                {
+                    error = "关底 Boss 未配置符卡阶段（bossPhases）。";
+                    return false;
+                }
+                if (waveIndex < 0 || waveIndex >= encounter.bossPhases.Count || encounter.bossPhases[waveIndex] == null)
+                {
+                    error = $"符卡阶段索引 {waveIndex} 无效。";
+                    return false;
+                }
+                return true;
+            }
+
             default:
                 return true;
         }
@@ -553,6 +616,8 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         _activePreviewScope = scope;
         if (scope == E_StageTimelinePreviewScope.SingleMidStageWave)
             previewMidStageWaveIndex = waveIndex;
+        if (scope == E_StageTimelinePreviewScope.MainBossSpellPhase)
+            previewMainBossSpellPhaseIndex = waveIndex;
 
         float duration = ResolvePreviewDurationSeconds(scope, waveIndex);
         uint fps = LogicFramePreviewClock.GetLogicFps();
@@ -560,6 +625,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         _previewClock.Reset();
         _previewLogicFrame = 0;
         _previewActive = true;
+        StageTimelinePreviewRuntime.ApplyTimelinePreviewAimAtPlayerFromFirstSpawn(battleAreaConfig);
 
         EditorApplication.update -= OnEditorPreviewUpdate;
         EditorApplication.update += OnEditorPreviewUpdate;
@@ -581,6 +647,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         _activePreviewScope = E_StageTimelinePreviewScope.FullTimeline;
         _embeddedEditPendingPreviewRestart = false;
         EditorApplication.update -= OnEditorPreviewUpdate;
+        StageTimelinePreviewRuntime.ClearTimelinePreviewAimAtPlayer();
 
         _timelineSystem?.End();
         _timelineSystem = null;
@@ -615,6 +682,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             E_StageTimelinePreviewScope.SingleMidStageWave => 45f,
             E_StageTimelinePreviewScope.MidBossEncounter => 60f,
             E_StageTimelinePreviewScope.MainBossEncounter => 90f,
+            E_StageTimelinePreviewScope.MainBossSpellPhase => 60f,
             _ => 60f,
         };
     }
@@ -675,6 +743,16 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                 return Mathf.Max(45f, total + 10f);
             }
 
+            case E_StageTimelinePreviewScope.MainBossSpellPhase:
+            {
+                var main = stageTimelineConfig.mainBossEncounter;
+                var phase = main.bossPhases[waveIndex];
+                float duration = phase.durationSeconds >= 0f
+                    ? phase.durationSeconds
+                    : 30f;
+                return Mathf.Max(20f, duration + 8f);
+            }
+
             default:
                 return 0f;
         }
@@ -683,19 +761,29 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     static float EstimateMovementDurationSeconds(PathRouteMovementData pathRoute, uint fps) =>
         StageTimelineVisualSchedule.EstimateMovementDurationSeconds(pathRoute, fps);
 
-    static string DescribePreviewScope(E_StageTimelinePreviewScope scope, int waveIndex) => scope switch
+    string DescribePreviewScope(E_StageTimelinePreviewScope scope, int waveIndex) => scope switch
     {
-        E_StageTimelinePreviewScope.SingleMidStageWave => $"道中波次 [{waveIndex}]",
+        E_StageTimelinePreviewScope.SingleMidStageWave => DescribeMidStageWavePreview(waveIndex),
         E_StageTimelinePreviewScope.MidBossEncounter => "中场 Boss",
         E_StageTimelinePreviewScope.MainBossEncounter => "关底 Boss",
+        E_StageTimelinePreviewScope.MainBossSpellPhase => $"关底符卡 [{waveIndex}]",
         _ => "完整关卡时间轴",
     };
+
+    string DescribeMidStageWavePreview(int waveIndex)
+    {
+        var waves = stageTimelineConfig?.midStageWaves;
+        if (waves != null && waveIndex >= 0 && waveIndex < waves.Count && waves[waveIndex] != null)
+            return EnemyWaveConfig.FormatTimelineLabel(waves[waveIndex], waveIndex);
+        return $"道中波次 [{waveIndex}]";
+    }
 
     public static string GetPreviewScopeDisplayName(E_StageTimelinePreviewScope scope) => scope switch
     {
         E_StageTimelinePreviewScope.SingleMidStageWave => "道中波次",
         E_StageTimelinePreviewScope.MidBossEncounter => "中场 Boss",
         E_StageTimelinePreviewScope.MainBossEncounter => "关底 Boss",
+        E_StageTimelinePreviewScope.MainBossSpellPhase => "关底符卡阶段",
         _ => "完整时间轴",
     };
 
@@ -715,6 +803,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                 bake.BakeLogicTiming(fps);
             wave?.BakePathRouteIfNeeded(fps);
             wave?.ResolveDropReferences(GameResDB.Instance);
+            wave?.ResolveSpawnQueueReferences(GameResDB.Instance);
         }
 
         if (stageTimelineConfig.midBossEncounter is ILogicTimingBake midBake)
@@ -724,6 +813,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         if (stageTimelineConfig.mainBossEncounter is ILogicTimingBake mainBake)
             mainBake.BakeLogicTiming(fps);
         stageTimelineConfig.mainBossEncounter?.BakePathRoutesIfNeeded(fps);
+        stageTimelineConfig.mainBossEncounter?.ResolveReferences(GameResDB.Instance);
     }
 
     static World CreatePreviewWorld()
@@ -793,6 +883,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     public uint PreviewLogicFrame => _previewLogicFrame;
     public float PreviewElapsedSeconds => _previewClock.ElapsedRealSeconds;
+
+    public float ActivePreviewTotalDurationSeconds =>
+        _previewActive ? _previewClock.MaxRealSeconds : 0f;
 
     void OnDrawGizmosSelected()
     {
@@ -901,9 +994,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             return false;
 
         pathEditEntryIndex = wave.ResolvePathDisplayEntryIndex(previewPathEditEntryIndex);
-        if (wave.UsesPerQueueEntryPaths)
-            wave.EnsureEntryPathOverrideInitialized(pathEditEntryIndex);
-
         var route = wave.ResolveEditablePathRoute(pathEditEntryIndex);
         return PathRouteMovementData.HasAnyPathContent(route);
     }

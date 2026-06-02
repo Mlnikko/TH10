@@ -166,11 +166,28 @@ public static class StageTimelinePreviewRuntime
         return true;
     }
 
+    public static void ApplyTimelinePreviewAimAtPlayerFromFirstSpawn(BattleAreaConfig battleAreaConfig)
+    {
+        var config = ResolveBattleAreaConfig(battleAreaConfig);
+        if (config == null)
+        {
+            DanmakuEmitterAimAtPlayerLogic.ClearSimulatedPlayerTarget();
+            return;
+        }
+
+        Vector2 spawn = config.playerSpawnData.GetPlayerSpawnPos(0, 1);
+        DanmakuEmitterAimAtPlayerLogic.SetSimulatedPlayerTarget(spawn.x, spawn.y);
+    }
+
+    public static void ClearTimelinePreviewAimAtPlayer() =>
+        DanmakuEmitterAimAtPlayerLogic.ClearSimulatedPlayerTarget();
+
     public static void ResetSession()
     {
         _loading = false;
         _lastError = null;
         _previewOwnedGlobalBattleData = false;
+        ClearTimelinePreviewAimAtPlayer();
     }
 
     [UnityEditor.InitializeOnLoadMethod]

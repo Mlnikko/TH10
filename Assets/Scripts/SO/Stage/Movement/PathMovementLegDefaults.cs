@@ -9,14 +9,12 @@ public static class PathMovementLegDefaults
     /// <summary>与 <see cref="EnemyWaveConfig.defaultDescentSpeed"/>、<see cref="PathRouteMovementData.moveSpeed"/> 一致。</summary>
     public const float MoveSpeedPerSecond = 3.6f;
 
-    /// <summary>未指定 <see cref="MovementPathLeg.travelSeconds"/> 时的默认段时长（秒）。</summary>
-    public const float DefaultLegDurationSeconds = 1.5f;
-
     /// <summary>无弦长信息时的典型首段下移（世界单位）。</summary>
     public static readonly Vector2 FallbackSegmentEnd = new(0f, -2.5f);
 
     public const float ArcBulgeFallback = 1.2f;
     public const float SineAmplitudeFallback = 0.65f;
+    /// <summary>沿弦线的默认波数（非时间 Hz）。</summary>
     public const float SineHzFallback = 1.2f;
 
     /// <summary>将 <paramref name="leg"/> 设为对应曲线类型的推荐初值（可按路段弦长缩放）。</summary>

@@ -43,7 +43,7 @@ public static class EnemyPathMovementBaking
             {
                 bool hasLeg = data.legs != null && i < legConfigCount;
                 MovementPathLeg legCfg = hasLeg ? data.legs[i] : default;
-                int travelFrames = ResolveTravelFrames(hasLeg, legCfg, data, from, pos, fps);
+                int travelFrames = data.ResolveTravelFrames(hasLeg, legCfg, from, pos, fps);
                 cumulative += travelFrames;
                 route.legs.Add(MakeTravelLeg(from, pos, hasLeg, legCfg, cumulative, fps));
             }
@@ -60,20 +60,7 @@ public static class EnemyPathMovementBaking
 
         route.legCount = (byte)Mathf.Min(route.legs.Count, byte.MaxValue);
         route.durationFrames = cumulative > 0 ? cumulative : data.durationFrames;
-        if (data.durationFrames >= 0 && route.durationFrames < 0)
-            route.durationFrames = data.durationFrames;
         return route;
-    }
-
-    static int ResolveTravelFrames(bool hasLeg, MovementPathLeg legCfg, PathRouteMovementData data, Vector2 a, Vector2 b, float fps)
-    {
-        if (hasLeg && legCfg.travelSeconds > 0f)
-            return Mathf.Max(1, Mathf.RoundToInt(legCfg.travelSeconds * fps));
-        if (data.defaultLegDurationSeconds > 0f)
-            return Mathf.Max(1, Mathf.RoundToInt(data.defaultLegDurationSeconds * fps));
-        float dist = Vector2.Distance(a, b);
-        float speed = Mathf.Max(0.01f, data.moveSpeedPerFrame);
-        return Mathf.Max(1, Mathf.CeilToInt(dist / speed));
     }
 
     static BakedPathLeg MakeHoldLeg(Vector2 pos, int endFrame) => new()
@@ -92,9 +79,8 @@ public static class EnemyPathMovementBaking
         E_PathSegmentCurve curve = hasLeg ? cfg.curve : E_PathSegmentCurve.Linear;
         if (curve == E_PathSegmentCurve.Sine)
         {
-            float fps = Mathf.Max(1f, logicFps);
             float amp = hasLeg ? Mathf.Max(0f, cfg.sineAmplitude) : PathMovementLegDefaults.SineAmplitudeFallback;
-            float hz = hasLeg ? Mathf.Max(0f, cfg.sineHz) : PathMovementLegDefaults.SineHzFallback;
+            float cyclesAlongChord = hasLeg ? Mathf.Max(0f, cfg.sineHz) : PathMovementLegDefaults.SineHzFallback;
             float phase = hasLeg ? cfg.sinePhaseRad : 0f;
             return new BakedPathLeg
             {
@@ -103,7 +89,7 @@ public static class EnemyPathMovementBaking
                 p0x = a.x, p0y = a.y,
                 p3x = b.x, p3y = b.y,
                 sineAmp = amp,
-                sineOmega = (Mathf.PI * 2f * hz) / fps,
+                sineRadiansPerU = Mathf.PI * 2f * cyclesAlongChord,
                 sinePhase0 = phase
             };
         }

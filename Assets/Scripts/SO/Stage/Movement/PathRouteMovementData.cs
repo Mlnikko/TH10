@@ -18,7 +18,7 @@ public enum E_PathSegmentCurve : byte
 
     Bezier = 2,
 
-    /// <summary>沿弦线方向匀速前进，同时垂直于弦做正弦摆动。</summary>
+    /// <summary>沿弦线匀速前进，垂直于弦按空间波数摆动（波数与 travelSeconds 无关）。</summary>
 
     Sine = 3
 
@@ -59,9 +59,7 @@ public class MovementPathLeg
 
 
     [Min(0f)]
-
-    [Tooltip("本段行驶时间（秒）；≤0 时用默认段时长或按 moveSpeed 推算")]
-
+    [Tooltip("本段行驶时间（秒）；≤0 时按 moveSpeed 与弦长推算")]
     public float travelSeconds;
 
 
@@ -90,7 +88,7 @@ public class MovementPathLeg
 
 
 
-    [Tooltip("正弦：振荡频率（Hz）")]
+    [Tooltip("正弦：沿本段弦线的完整波数（与 travelSeconds 无关，仅影响轨迹形状）")]
 
     public float sineHz = PathMovementLegDefaults.SineHzFallback;
 
@@ -116,7 +114,7 @@ public class PathRouteMovementData
 
 {
 
-    [Tooltip("整条路径持续（秒）；<0 表示由路段自动合计")]
+    [Tooltip("整条路径时长（秒）；由生成点停留、各路段行驶与路径点停留自动合计")]
 
     public float durationSeconds = -1f;
 
@@ -146,13 +144,7 @@ public class PathRouteMovementData
 
     [Tooltip("路径点（相对生成点）；至少 1 个。不含生成点本身")]
 
-    public List<MovementPathNode> nodes = new()
-
-    {
-
-        new MovementPathNode { positionLocal = PathMovementLegDefaults.FallbackSegmentEnd }
-
-    };
+    public List<MovementPathNode> nodes = new();
 
 
 
@@ -160,35 +152,77 @@ public class PathRouteMovementData
 
     public List<MovementPathLeg> legs = new();
 
-
-
-    [Min(0f)]
-
-    [Tooltip("未单独配置路段行驶时间时的默认段时长（秒）")]
-
-    public float defaultLegDurationSeconds = PathMovementLegDefaults.DefaultLegDurationSeconds;
-
-
-
     public void BakeMovementTiming(uint logicFps)
-
     {
-
         float fps = Mathf.Max(1f, logicFps);
-
         moveSpeedPerFrame = moveSpeed / fps;
-
-        if (durationSeconds < 0f)
-
-            durationFrames = -1;
-
-        else
-
-            durationFrames = Mathf.Max(0, Mathf.RoundToInt(durationSeconds * fps));
-
+        SyncDurationFromPath();
+        durationFrames = durationSeconds > 0f
+            ? Mathf.Max(0, Mathf.RoundToInt(durationSeconds * fps))
+            : 0;
     }
 
+    /// <summary>根据路径配置刷新 <see cref="durationSeconds"/>（Inspector / Scene 编辑后调用）。</summary>
+    public void SyncDurationFromPath()
+    {
+        EnsureSpawnAnchoredFormat();
+#if UNITY_EDITOR
+        EnsureLegsMatchNodeCount();
+#endif
+        durationSeconds = ComputeTotalDurationSeconds();
+    }
 
+    /// <summary>合计生成点停留、各路段行驶、路径点停留（秒）。</summary>
+    public float ComputeTotalDurationSeconds()
+    {
+        EnsureSpawnAnchoredFormat();
+
+        float total = Mathf.Max(0f, spawnHoldSeconds);
+        if (nodes == null || nodes.Count == 0)
+            return total;
+
+        int nodeCount = nodes.Count;
+        int legCount = legs != null ? legs.Count : 0;
+
+        for (int i = 0; i < nodeCount; i++)
+        {
+            MovementPathNode node = nodes[i];
+            Vector2 pos = node.positionLocal;
+            Vector2 from = i == 0 ? Vector2.zero : nodes[i - 1].positionLocal;
+
+            if (Vector2.Distance(from, pos) > 1e-6f)
+            {
+                bool hasLeg = i < legCount;
+                MovementPathLeg legCfg = hasLeg ? legs[i] : default;
+                total += ResolveTravelSeconds(hasLeg, legCfg, from, pos);
+            }
+
+            total += Mathf.Max(0f, node.holdSeconds);
+        }
+
+        return total;
+    }
+
+    public float ResolveTravelSeconds(bool hasLeg, in MovementPathLeg legCfg, Vector2 from, Vector2 to)
+    {
+        if (hasLeg && legCfg.travelSeconds > 0f)
+            return legCfg.travelSeconds;
+
+        float dist = Vector2.Distance(from, to);
+        float speed = Mathf.Max(0.01f, moveSpeed);
+        return dist / speed;
+    }
+
+    public int ResolveTravelFrames(bool hasLeg, in MovementPathLeg legCfg, Vector2 from, Vector2 to, float logicFps)
+    {
+        float fps = Mathf.Max(1f, logicFps);
+        if (hasLeg && legCfg.travelSeconds > 0f)
+            return Mathf.Max(1, Mathf.RoundToInt(legCfg.travelSeconds * fps));
+
+        float dist = Vector2.Distance(from, to);
+        float speedPerFrame = Mathf.Max(0.01f, moveSpeedPerFrame > 0f ? moveSpeedPerFrame : moveSpeed / fps);
+        return Mathf.Max(1, Mathf.CeilToInt(dist / speedPerFrame));
+    }
 
     /// <summary>移除旧版「起点」节点（局部原点），起点由生成点担任。</summary>
 
@@ -292,9 +326,6 @@ public class PathRouteMovementData
             durationSeconds = entry.durationSeconds,
             moveSpeed = entry.moveSpeed,
             spawnHoldSeconds = entry.spawnHoldSeconds,
-            defaultLegDurationSeconds = entry.defaultLegDurationSeconds > 0.01f
-                ? entry.defaultLegDurationSeconds
-                : shared.defaultLegDurationSeconds,
             nodes = CloneNodes(entry.nodes),
             legs = new List<MovementPathLeg>(nodeCount)
         };
@@ -332,8 +363,7 @@ public class PathRouteMovementData
         {
             durationSeconds = source.durationSeconds,
             moveSpeed = source.moveSpeed,
-            spawnHoldSeconds = source.spawnHoldSeconds,
-            defaultLegDurationSeconds = source.defaultLegDurationSeconds
+            spawnHoldSeconds = source.spawnHoldSeconds
         };
 
         if (source.nodes != null && source.nodes.Count > 0)
@@ -500,9 +530,12 @@ public class PathRouteMovementData
 
 
 #if UNITY_EDITOR
-
-    public void OnValidate() => EnsureSpawnAnchoredFormat();
-
+    public void OnValidate()
+    {
+        EnsureSpawnAnchoredFormat();
+        EnsureLegsMatchNodeCount();
+        SyncDurationFromPath();
+    }
 #endif
 
 }

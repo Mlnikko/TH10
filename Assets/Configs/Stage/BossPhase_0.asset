@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d204312f7f97cb4ba26ce22721ef34a, type: 3}
-  m_Name: BossPhaseConfig
+  m_Name: BossPhase_0
   m_EditorClassIdentifier: 
-  phaseName: 
+  phaseName: Phase1
   triggerType: 1
   triggerTimeSeconds: 0
   triggerHpPercent: 0
-  spellCardId: 
+  spellCardId: dme_boss_ring_32_spiral
   durationSeconds: -1
   bgmRef: 

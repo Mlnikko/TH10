@@ -9,6 +9,8 @@ public enum E_StageTimelinePreviewScope
     SingleMidStageWave,
     MidBossEncounter,
     MainBossEncounter,
+    /// <summary>仅预览关底 Boss 指定符卡阶段（跳过登场对话，直接进入 BossFight）。</summary>
+    MainBossSpellPhase,
 }
 
 /// <summary>
@@ -38,6 +40,7 @@ public class StageTimelineSystem : BaseSystem
 
     E_StageTimelinePreviewScope _previewScope = E_StageTimelinePreviewScope.FullTimeline;
     int _previewMidStageWaveIndex;
+    int _previewSpellPhaseIndex;
 
     public bool IsActive => _config != null;
     public E_StageTimelinePreviewScope PreviewScope => _previewScope;
@@ -147,7 +150,7 @@ public class StageTimelineSystem : BaseSystem
     /// <summary>
     /// 开始时间线；<paramref name="previewScope"/> 非 <see cref="E_StageTimelinePreviewScope.FullTimeline"/> 时仅驱动对应片段（编辑器预览）。
     /// </summary>
-    public void Begin(StageTimelineConfig config, E_StageTimelinePreviewScope previewScope, int midStageWaveIndex = 0)
+    public void Begin(StageTimelineConfig config, E_StageTimelinePreviewScope previewScope, int previewIndex = 0)
     {
         EndInternal();
         if (config == null)
@@ -157,23 +160,36 @@ public class StageTimelineSystem : BaseSystem
         }
 
         _previewScope = previewScope;
-        _previewMidStageWaveIndex = midStageWaveIndex;
+        _previewMidStageWaveIndex = previewIndex;
+        _previewSpellPhaseIndex = previewIndex;
         _config = config;
         _sortedWaves.Clear();
 
         if (previewScope == E_StageTimelinePreviewScope.SingleMidStageWave)
         {
             if (config.midStageWaves == null
-                || midStageWaveIndex < 0
-                || midStageWaveIndex >= config.midStageWaves.Count
-                || config.midStageWaves[midStageWaveIndex] == null)
+                || previewIndex < 0
+                || previewIndex >= config.midStageWaves.Count
+                || config.midStageWaves[previewIndex] == null)
             {
-                Logger.Warn($"[StageTimeline] Invalid preview wave index {midStageWaveIndex}.", LogTag.Battle);
+                Logger.Warn($"[StageTimeline] Invalid preview wave index {previewIndex}.", LogTag.Battle);
                 EndInternal();
                 return;
             }
 
-            _sortedWaves.Add(config.midStageWaves[midStageWaveIndex]);
+            _sortedWaves.Add(config.midStageWaves[previewIndex]);
+        }
+        else if (previewScope == E_StageTimelinePreviewScope.MainBossSpellPhase)
+        {
+            var main = config.mainBossEncounter;
+            if (main == null || !main.enabled || string.IsNullOrEmpty(main.enemyConfigId)
+                || main.bossPhases == null || previewIndex < 0 || previewIndex >= main.bossPhases.Count
+                || main.bossPhases[previewIndex] == null)
+            {
+                Logger.Warn($"[StageTimeline] Invalid preview spell phase index {previewIndex}.", LogTag.Battle);
+                EndInternal();
+                return;
+            }
         }
         else if (previewScope == E_StageTimelinePreviewScope.FullTimeline)
         {
@@ -293,7 +309,8 @@ public class StageTimelineSystem : BaseSystem
             TrySpawnMidBoss(elapsed, currentFrame);
 
         if (_previewScope == E_StageTimelinePreviewScope.FullTimeline
-            || _previewScope == E_StageTimelinePreviewScope.MainBossEncounter)
+            || _previewScope == E_StageTimelinePreviewScope.MainBossEncounter
+            || _previewScope == E_StageTimelinePreviewScope.MainBossSpellPhase)
         {
             TrySpawnMainBoss(elapsed, currentFrame);
             UpdateBossIntro(elapsed, currentFrame);
@@ -441,9 +458,11 @@ public class StageTimelineSystem : BaseSystem
         if (!TryResolveSpawnEntry(wave, entryIndex, positions, out EnemyConfig enemyCfg, out Vector2 pos))
             return false;
 
-        var e = EntityFactory.CreateEnemy(enemyCfg, pos.x, pos.y, wave.hpMultiplier);
+        var e = EntityFactory.CreateEnemy(enemyCfg, pos.x, pos.y);
         if (e.IsNull)
             return false;
+
+        EnemyWaveSpawnEmitter.ApplyOverride(EntityManager, e, wave.ResolveEmitterBakeIndex(entryIndex));
 
         EnemyMovementBaking.TryAttachMovementFromWave(EntityManager, e, wave, entryIndex, currentFrame, pos.x, pos.y);
 
@@ -584,10 +603,33 @@ public class StageTimelineSystem : BaseSystem
         _mainBossSpawned = true;
 
         ref var st = ref EntityManager.GetComponent<CStageState>(_stageAuthority);
+        if (_previewScope == E_StageTimelinePreviewScope.MainBossSpellPhase)
+        {
+            EnterBossFightForSpellPhasePreview(ref st, currentFrame, stageElapsed);
+            return;
+        }
+
         st.currentState = E_StageState.BossIntro;
         st.stateEnterFrame = currentFrame;
         st.bossEntity = _mainBossEntity;
         st.currentBossPhaseIndex = -1;
+    }
+
+    void EnterBossFightForSpellPhasePreview(ref CStageState st, uint currentFrame, uint stageElapsed)
+    {
+        var encounter = _config.mainBossEncounter;
+        if (EntityManager.IsValid(_mainBossEntity))
+            MainBossEncounterSystem.EnsureLoopPathForFight(
+                EntityManager, _mainBossEntity, encounter, currentFrame);
+
+        st.currentState = E_StageState.BossFight;
+        st.stateEnterFrame = currentFrame;
+        st.bossEntity = _mainBossEntity;
+        st.currentBossPhaseIndex = _previewSpellPhaseIndex;
+        _bossFightStartElapsed = stageElapsed;
+
+        MainBossEncounterPhaseLogic.ApplySpellPhaseByIndex(
+            EntityManager, _mainBossEntity, encounter, _previewSpellPhaseIndex);
     }
 
     void UpdateBossIntro(uint stageElapsed, uint currentFrame)
@@ -630,19 +672,18 @@ public class StageTimelineSystem : BaseSystem
             return;
 
         uint fightElapsed = stageElapsed - _bossFightStartElapsed;
-        int best = -1;
-        for (int i = 0; i < phases.Count; i++)
+        int best = MainBossEncounterPhaseLogic.ResolveActivePhaseIndex(
+            _config.mainBossEncounter, EntityManager, _mainBossEntity, fightElapsed);
+
+        if (best < 0)
+            return;
+
+        if (best != st.currentBossPhaseIndex)
         {
-            var phase = phases[i];
-            if (phase == null)
-                continue;
-            if (phase.triggerType != BossPhaseConfig.TriggerType.Time)
-                continue;
-            if (fightElapsed >= (uint)phase.triggerFrameOffset)
-                best = i;
-        }
-        if (best >= 0)
             st.currentBossPhaseIndex = best;
+            MainBossEncounterPhaseLogic.ApplySpellPhaseByIndex(
+                EntityManager, _mainBossEntity, _config.mainBossEncounter, best);
+        }
     }
 
     void UpdateBossDefeat()
