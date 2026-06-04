@@ -91,12 +91,16 @@ public class InputManager : SingletonMono<InputManager>
     const uint InvalidFrameSlot = uint.MaxValue;
     const int SyncStatsWindowSize = 300;
     const int MaxReasonableInputDelayFrames = 8;
+    /// <summary>每次发包附带重发的历史帧数，避免客户端追帧后房主仍缺旧帧输入。</summary>
+    const int InputResendHistoryFrames = 8;
+
+    uint _lastStallSampleLogicFrame = uint.MaxValue;
 
     [Header("联机锁步")]
     [SerializeField]
-    [Tooltip("联机锁步输入前瞻帧数。值越高越抗网络抖动，但操作延迟会增加。默认 1 帧。")]
+    [Tooltip("联机锁步输入前瞻帧数。值越高越抗网络抖动，但操作延迟会增加。默认 2 帧。")]
     [Range(0, MaxReasonableInputDelayFrames)]
-    int _multiplayerInputDelayFrames = 1;
+    int _multiplayerInputDelayFrames = 2;
 
     int _logicTickSuccessCount;
     int _logicTickStallCount;
@@ -189,13 +193,18 @@ public class InputManager : SingletonMono<InputManager>
         _syncWindowWriteIndex = 0;
         _syncWindowCount = 0;
         _syncWindowStallCount = 0;
+        _lastStallSampleLogicFrame = uint.MaxValue;
         Array.Clear(_syncStallWindow, 0, _syncStallWindow.Length);
     }
 
     public void NotifyLogicTickStalled(uint logicFrame, bool[] activePlayers, byte eliminatedMask = 0)
     {
         _logicTickStallCount++;
-        RecordSyncSample(stalled: true);
+        if (logicFrame != _lastStallSampleLogicFrame)
+        {
+            _lastStallSampleLogicFrame = logicFrame;
+            RecordSyncSample(stalled: true);
+        }
         _lastStalledLogicFrame = logicFrame;
         _lastStalledPlayerIndex = TryFindFirstMissingPlayer(logicFrame, activePlayers, eliminatedMask);
     }
@@ -203,6 +212,7 @@ public class InputManager : SingletonMono<InputManager>
     public void NotifyLogicTickSucceeded()
     {
         _logicTickSuccessCount++;
+        _lastStallSampleLogicFrame = uint.MaxValue;
         RecordSyncSample(stalled: false);
     }
 
@@ -395,7 +405,7 @@ public class InputManager : SingletonMono<InputManager>
 
     /// <summary>
     /// 重发本地输入窗口，提升 UDP 丢包下的锁步恢复能力。
-    /// 通常在 BattleManager 每次尝试推进时调用，范围为 [等待帧, 前瞻采集帧]。
+    /// 附带 <see cref="InputResendHistoryFrames"/> 帧历史，避免对端滞留在旧逻辑帧时收不到输入。
     /// </summary>
     public void BroadcastInputWindow(byte playerIndex, uint minFrameInclusive, uint maxFrameInclusive)
     {
@@ -409,7 +419,11 @@ public class InputManager : SingletonMono<InputManager>
         if (maxFrameInclusive < minFrameInclusive)
             return;
 
-        uint frame = minFrameInclusive;
+        uint startFrame = minFrameInclusive;
+        if (InputResendHistoryFrames > 0 && minFrameInclusive >= (uint)InputResendHistoryFrames)
+            startFrame = minFrameInclusive - (uint)InputResendHistoryFrames;
+
+        uint frame = startFrame;
         while (true)
         {
             int index = (int)(frame & BUFFER_MASK);
@@ -559,13 +573,13 @@ public class InputManager : SingletonMono<InputManager>
             float stallPct = RecentStallRatio * 100f;
             _debugSb.Append("<color=#ffaa66>锁步(最近")
                 .Append(RecentSampleCount)
-                .Append("样本): 等待 ")
+                .Append("样本): 首次未齐 ")
                 .Append(RecentStallCount)
                 .Append(" / 推进 ")
                 .Append(RecentSuccessCount)
                 .Append(" (")
                 .Append(stallPct.ToString("F0"))
-                .Append("%)")
+                .Append("%，非卡顿占比)")
                 .Append("  延迟缓冲:")
                 .Append(MultiplayerInputDelayFrames)
                 .Append("f</color>\n");

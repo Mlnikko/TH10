@@ -37,6 +37,7 @@ public class StageTimelineSystem : BaseSystem
     Entity _stageAuthority;
 
     uint _bossFightStartElapsed;
+    int _stageEndLogicFrames;
 
     E_StageTimelinePreviewScope _previewScope = E_StageTimelinePreviewScope.FullTimeline;
     int _previewMidStageWaveIndex;
@@ -234,6 +235,7 @@ public class StageTimelineSystem : BaseSystem
         _midBossEntity = Entity.Null;
         _mainBossEntity = Entity.Null;
         _bossFightStartElapsed = 0;
+        _stageEndLogicFrames = 0;
 
         RebuildWavePathBakes();
         EnsureStageAuthority();
@@ -248,6 +250,9 @@ public class StageTimelineSystem : BaseSystem
     {
         EnemyPathBakeCache.Clear();
         uint fps = GameManager.logicFPS > 0 ? (uint)GameManager.logicFPS : 60;
+        _config.BakeLogicTiming(fps);
+        _stageEndLogicFrames = ResolveStageEndLogicFrames(fps);
+
         for (int i = 0; i < _sortedWaves.Count; i++)
         {
             var wave = _sortedWaves[i];
@@ -261,6 +266,73 @@ public class StageTimelineSystem : BaseSystem
         _config.midBossEncounter?.BakePathRoutesIfNeeded(fps);
         _config.mainBossEncounter?.BakeLogicTiming(fps);
         _config.mainBossEncounter?.BakePathRoutesIfNeeded(fps);
+    }
+
+    static int ResolveStageEndLogicFrames(StageTimelineConfig config, uint logicFps)
+    {
+        if (config == null)
+            return 0;
+
+        if (config.maxStageLogicFrames > 0)
+            return config.maxStageLogicFrames;
+
+        float contentEndSeconds = StageTimelineVisualSchedule.GetContentEndSeconds(config, logicFps);
+        if (contentEndSeconds <= 0f)
+            return 0;
+
+        return Mathf.Max(1, Mathf.RoundToInt(contentEndSeconds * logicFps));
+    }
+
+    int ResolveStageEndLogicFrames(uint logicFps) => ResolveStageEndLogicFrames(_config, logicFps);
+
+    bool IsMidStageSpawnScheduleComplete() =>
+        _nextWaveIndex >= _sortedWaves.Count
+        && !_waitingForWaveClear
+        && _pendingSequentialSpawns.Count == 0;
+
+    bool IsMidBossTimelineComplete()
+    {
+        if (!MidBossConfigured)
+            return true;
+        if (!_midBossSpawned)
+            return false;
+
+        if (!EntityManager.IsValid(_midBossEntity))
+            return true;
+
+        if (!EntityManager.HasComponent<CMidBossEncounter>(_midBossEntity))
+            return true;
+
+        ref readonly var mid = ref EntityManager.GetComponent<CMidBossEncounter>(_midBossEntity);
+        return mid.phase == E_MidBossPhase.Done;
+    }
+
+    bool IsTimelineScheduleExhausted() =>
+        IsMidStageSpawnScheduleComplete() && IsMidBossTimelineComplete();
+
+    static bool IsTerminalStageState(E_StageState state) =>
+        state == E_StageState.BossDefeated || state == E_StageState.StageClear;
+
+    void TryNotifyStageClear(ref CStageState st, E_StageState terminalState, uint currentFrame)
+    {
+        if (IsTerminalStageState(st.currentState))
+            return;
+
+        st.currentState = terminalState;
+        st.stateEnterFrame = currentFrame;
+        if (terminalState == E_StageState.BossDefeated)
+            st.bossEntity = Entity.Null;
+
+        BattleManager.Instance?.NotifyStageCleared();
+    }
+
+    void UpdateTimelineScheduleComplete(uint currentFrame)
+    {
+        if (MainBossConfigured || !IsTimelineScheduleExhausted())
+            return;
+
+        ref var st = ref EntityManager.GetComponent<CStageState>(_stageAuthority);
+        TryNotifyStageClear(ref st, E_StageState.StageClear, currentFrame);
     }
 
     /// <summary>
@@ -287,6 +359,7 @@ public class StageTimelineSystem : BaseSystem
         _mainBossSpawned = false;
         _midBossEntity = Entity.Null;
         _mainBossEntity = Entity.Null;
+        _stageEndLogicFrames = 0;
         if (EntityManager.IsValid(_stageAuthority))
             EntityManager.DestroyEntity(_stageAuthority);
         _stageAuthority = Entity.Null;
@@ -337,11 +410,14 @@ public class StageTimelineSystem : BaseSystem
             TrySpawnMainBoss(elapsed, currentFrame);
             UpdateBossIntro(elapsed, currentFrame);
             UpdateBossFightPhases(elapsed);
-            UpdateBossDefeat();
+            UpdateBossDefeat(currentFrame);
         }
 
         if (_previewScope == E_StageTimelinePreviewScope.FullTimeline)
+        {
+            UpdateTimelineScheduleComplete(currentFrame);
             UpdateStageTimeout(elapsed, currentFrame);
+        }
     }
 
     static bool IsScopedPreview(E_StageTimelinePreviewScope scope) =>
@@ -708,7 +784,7 @@ public class StageTimelineSystem : BaseSystem
         }
     }
 
-    void UpdateBossDefeat()
+    void UpdateBossDefeat(uint currentFrame)
     {
         if (!MainBossConfigured)
             return;
@@ -724,25 +800,18 @@ public class StageTimelineSystem : BaseSystem
                 return;
         }
 
-        st.currentState = E_StageState.BossDefeated;
-        st.bossEntity = Entity.Null;
-        BattleManager.Instance?.NotifyStageCleared();
+        TryNotifyStageClear(ref st, E_StageState.BossDefeated, currentFrame);
     }
 
     void UpdateStageTimeout(uint stageElapsed, uint currentFrame)
     {
-        int maxFrames = _config.maxStageLogicFrames;
-        if (maxFrames <= 0)
+        int endFrames = _stageEndLogicFrames;
+        if (endFrames <= 0)
             return;
-        if (stageElapsed < (uint)maxFrames)
+        if (stageElapsed < (uint)endFrames)
             return;
 
         ref var st = ref EntityManager.GetComponent<CStageState>(_stageAuthority);
-        if (st.currentState == E_StageState.StageClear)
-            return;
-
-        st.currentState = E_StageState.StageClear;
-        st.stateEnterFrame = currentFrame;
-        BattleManager.Instance?.NotifyStageCleared();
+        TryNotifyStageClear(ref st, E_StageState.StageClear, currentFrame);
     }
 }
