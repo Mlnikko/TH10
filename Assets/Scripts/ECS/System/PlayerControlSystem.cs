@@ -55,6 +55,7 @@ public class PlayerControlSystem : BaseSystem
             var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
             if (weaponConfig != null)
             {
+                EnsureAndRecordPlayerMotionTrail(playerEntityIdx, weaponConfig, pos.x, pos.y);
                 EntityFactory.SyncPlayerWeaponPowerLayouts(
                     EntityManager.GetEntity(playerEntityIdx),
                     weaponConfig,
@@ -146,12 +147,40 @@ public class PlayerControlSystem : BaseSystem
                 continue;
 
             Vector2 baseSlot = new(ownership.slotOffsetX, ownership.slotOffsetY);
-            Vector2 slotOffset = weaponConfig.ResolveSecondarySlotOffset(baseSlot, converge01);
+            ref readonly var player = ref EntityManager.GetComponentSpan<CPlayer>()[playerEntityIdx];
+            Vector2 slotOffset = weaponConfig.ResolveSecondaryEmitterSlotOffset(
+                baseSlot,
+                converge01,
+                player.isSlowMode);
 
             ref var emitter = ref emitters[emitterIdx];
             emitter.emitterPosOffsetX = ownership.emitterBaseOffsetX + slotOffset.x;
             emitter.emitterPosOffsetY = ownership.emitterBaseOffsetY + slotOffset.y;
         }
+    }
+
+    void EnsureAndRecordPlayerMotionTrail(
+        int playerEntityIdx,
+        WeaponConfig weaponConfig,
+        float x,
+        float y)
+    {
+        if (weaponConfig == null || !weaponConfig.UsesSecondaryTrailFollow())
+            return;
+
+        int capacity = weaponConfig.ResolveSecondaryTrailCapacityFrames();
+        if (!EntityManager.HasComponent<CPlayerMotionTrail>(playerEntityIdx))
+        {
+            EntityManager.AddComponent(
+                playerEntityIdx,
+                CPlayerMotionTrail.Create(capacity, x, y));
+        }
+
+        ref var trail = ref EntityManager.GetComponentSpan<CPlayerMotionTrail>()[playerEntityIdx];
+        if (!trail.IsValid || trail.Capacity < capacity)
+            trail = CPlayerMotionTrail.Create(capacity, x, y);
+
+        trail.Record(x, y);
     }
 
     public static void RebuildOwnedEmitter(
@@ -186,7 +215,10 @@ public class PlayerControlSystem : BaseSystem
 
             emitterCfgIndex = indices[secIndex];
             var baseSlot = new Vector2(ownership.slotOffsetX, ownership.slotOffsetY);
-            slotOffset = weaponConfig.ResolveSecondarySlotOffset(baseSlot, player.secondarySlotConvergeT);
+            slotOffset = weaponConfig.ResolveSecondaryEmitterSlotOffset(
+                baseSlot,
+                player.secondarySlotConvergeT,
+                player.isSlowMode);
         }
 
         if (emitterCfgIndex < 0)
@@ -208,6 +240,7 @@ public class PlayerControlSystem : BaseSystem
 
         ownership.emitterBaseOffsetX = emitterCfg.emitterPosOffset.x;
         ownership.emitterBaseOffsetY = emitterCfg.emitterPosOffset.y;
+        ownership.emitterCfgIndex = emitterCfgIndex;
     }
 
     void SyncOwnedEmitters(
@@ -236,13 +269,46 @@ public class PlayerControlSystem : BaseSystem
             ref var ownerRot = ref rotations[ownerIdx];
 
             ref var emitterPos = ref positions[emitterIdx];
-            emitterPos.x = ownerPos.x;
-            emitterPos.y = ownerPos.y;
+            if (!TrySampleSecondaryTrailAnchor(
+                    ownerIdx,
+                    in player,
+                    in ownership,
+                    out float trailX,
+                    out float trailY))
+            {
+                trailX = ownerPos.x;
+                trailY = ownerPos.y;
+            }
+
+            emitterPos.x = trailX;
+            emitterPos.y = trailY;
 
             rotations[emitterIdx] = ownerRot;
 
             ref var emitter = ref emitters[emitterIdx];
             emitter.isEmitting = player.isShooting;
         }
+    }
+
+    bool TrySampleSecondaryTrailAnchor(
+        int ownerPlayerEntityIndex,
+        in CPlayer player,
+        in CPlayerEmitterOwnership ownership,
+        out float x,
+        out float y)
+    {
+        x = y = 0f;
+        if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+            return false;
+
+        var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
+        if (weaponConfig == null || !weaponConfig.ShouldUseSecondaryTrail(player.isSlowMode))
+            return false;
+        if (!EntityManager.HasComponent<CPlayerMotionTrail>(ownerPlayerEntityIndex))
+            return false;
+
+        ref var trail = ref EntityManager.GetComponentSpan<CPlayerMotionTrail>()[ownerPlayerEntityIndex];
+        int framesAgo = weaponConfig.ResolveSecondaryTrailDelayFrames(ownership.secondarySlotIndex);
+        return trail.TrySampleFramesAgo(framesAgo, out x, out y);
     }
 }

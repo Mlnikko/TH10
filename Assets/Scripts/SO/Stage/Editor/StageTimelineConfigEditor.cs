@@ -7,9 +7,6 @@ public class StageTimelineConfigEditor : Editor
 {
     SerializedProperty _previewWaveIndexProp;
     SerializedProperty _pathEditTargetProp;
-    SerializedProperty _previewMidBossPathPhaseProp;
-    SerializedProperty _previewMainBossPathPhaseProp;
-    SerializedProperty _previewMainBossSpellPhaseIndexProp;
     SerializedProperty _pathNodeSnapToGridProp;
     SerializedProperty _pathNodeSnapCellSizeProp;
     SerializedProperty _drawPathNodeSnapGridProp;
@@ -21,9 +18,6 @@ public class StageTimelineConfigEditor : Editor
     {
         _previewWaveIndexProp = serializedObject.FindProperty("previewMidStageWaveIndex");
         _pathEditTargetProp = serializedObject.FindProperty("pathEditTarget");
-        _previewMidBossPathPhaseProp = serializedObject.FindProperty("previewMidBossPathPhase");
-        _previewMainBossPathPhaseProp = serializedObject.FindProperty("previewMainBossPathPhase");
-        _previewMainBossSpellPhaseIndexProp = serializedObject.FindProperty("previewMainBossSpellPhaseIndex");
         _pathNodeSnapToGridProp = serializedObject.FindProperty("pathNodeSnapToGrid");
         _pathNodeSnapCellSizeProp = serializedObject.FindProperty("pathNodeSnapCellSize");
         _drawPathNodeSnapGridProp = serializedObject.FindProperty("drawPathNodeSnapGrid");
@@ -98,6 +92,9 @@ public class StageTimelineConfigEditor : Editor
         serializedObject.Update();
 
         ConfigViewerEditorUI.DrawSeparator();
+        DrawRuntimePreviewSection(viewer);
+
+        ConfigViewerEditorUI.DrawSeparator();
         if (viewer.stageTimelineConfig != null)
             StageTimelineVisualTimelineEditor.Draw(viewer, serializedObject);
 
@@ -110,14 +107,15 @@ public class StageTimelineConfigEditor : Editor
         ConfigViewerEditorUI.DrawSeparator();
         DrawWaveAndBossEditSection(viewer);
 
-        ConfigViewerEditorUI.DrawSeparator();
+        serializedObject.ApplyModifiedProperties();
+    }
+
+    void DrawRuntimePreviewSection(StageTimelineConfigViewer viewer)
+    {
         EditorGUILayout.LabelField("运行时预览（需 Play）", EditorStyles.boldLabel);
 
         if (ConfigViewerEditorUI.DrawMissingConfigWarning(viewer.stageTimelineConfig, "StageTimelineConfig"))
-        {
-            serializedObject.ApplyModifiedProperties();
             return;
-        }
 
         DrawPendingPreviewRestart(viewer);
         DrawPreviewAvailability(viewer);
@@ -125,8 +123,6 @@ public class StageTimelineConfigEditor : Editor
         DrawScopedPreviewControls(viewer);
         DrawFullTimelinePreview(viewer);
         DrawActivePreviewStatus(viewer);
-
-        serializedObject.ApplyModifiedProperties();
     }
 
     void DrawStageBackgroundSection(StageTimelineConfigViewer viewer)
@@ -434,41 +430,41 @@ public class StageTimelineConfigEditor : Editor
 
     static void DrawMidBossPathEditSection(StageTimelineConfigViewer viewer, MidBossEncounterConfig encounter)
     {
-        if (encounter == null || !encounter.enabled)
-        {
-            EditorGUILayout.HelpBox("未配置或未启用 midBossEncounter。", MessageType.None);
-            return;
-        }
-
-        DrawBossPathPhaseSlider(
+        DrawBossPathEditSection(
+            encounter,
+            boss => boss.enabled,
+            "未配置或未启用 midBossEncounter。",
             viewer.PreviewMidBossPathPhase,
             StageTimelineBossPathEdit.MidBossPhaseCount,
             StageTimelineBossPathEdit.GetMidBossPhaseLabel,
-            viewer.SetMidBossPathPhase);
-
-        StageTimelineBossPathEdit.EnsureMidBossRouteInitialized(encounter, viewer.PreviewMidBossPathPhase);
+            viewer.SetMidBossPathPhase,
+            StageTimelineBossPathEdit.EnsureMidBossRouteInitialized);
     }
 
     static void DrawMainBossPathEditSection(StageTimelineConfigViewer viewer, MainBossEncounterConfig encounter)
     {
-        if (encounter == null || !encounter.enabled)
+        if (!DrawBossPathEditSection(
+                encounter,
+                boss => boss.enabled,
+                "未配置或未启用 mainBossEncounter。",
+                viewer.PreviewMainBossPathPhase,
+                StageTimelineBossPathEdit.MainBossPhaseCount,
+                StageTimelineBossPathEdit.GetMainBossPhaseLabel,
+                viewer.SetMainBossPathPhase,
+                StageTimelineBossPathEdit.EnsureMainBossRouteInitialized))
         {
-            EditorGUILayout.HelpBox("未配置或未启用 mainBossEncounter。", MessageType.None);
             return;
         }
 
-        DrawBossPathPhaseSlider(
-            viewer.PreviewMainBossPathPhase,
-            StageTimelineBossPathEdit.MainBossPhaseCount,
-            StageTimelineBossPathEdit.GetMainBossPhaseLabel,
-            viewer.SetMainBossPathPhase);
+        DrawMainBossSpellPhaseSection(viewer, encounter);
+    }
 
-        StageTimelineBossPathEdit.EnsureMainBossRouteInitialized(encounter, viewer.PreviewMainBossPathPhase);
-
+    static void DrawMainBossSpellPhaseSection(StageTimelineConfigViewer viewer, MainBossEncounterConfig encounter)
+    {
         EditorGUILayout.Space(8);
         EditorGUILayout.LabelField("符卡阶段", EditorStyles.boldLabel);
-
         int spellPhaseIndex = viewer.PreviewMainBossSpellPhaseIndex;
+
         StageTimelineBossSpellPhaseEdit.DrawPhaseToolbar(
             encounter,
             spellPhaseIndex,
@@ -494,6 +490,30 @@ public class StageTimelineConfigEditor : Editor
 
         if (!canPreviewSpell)
             EditorGUILayout.HelpBox("添加至少一个符卡阶段后可预览。", MessageType.None);
+    }
+
+    static bool DrawBossPathEditSection<TEncounter>(
+        TEncounter encounter,
+        System.Func<TEncounter, bool> isEnabled,
+        string unavailableMessage,
+        int currentPhase,
+        int phaseCount,
+        System.Func<int, string> labelForPhase,
+        System.Action<int> onPhaseChanged,
+        System.Action<TEncounter, int> ensureRouteInitialized)
+        where TEncounter : UnityEngine.Object
+    {
+        if (encounter == null || !isEnabled(encounter))
+        {
+            EditorGUILayout.HelpBox(unavailableMessage, MessageType.None);
+            return false;
+        }
+
+        DrawBossPathPhaseSlider(currentPhase, phaseCount, labelForPhase, onPhaseChanged);
+
+        int phase = Mathf.Clamp(currentPhase, 0, phaseCount - 1);
+        ensureRouteInitialized(encounter, phase);
+        return true;
     }
 
     static void DrawBossPathPhaseSlider(

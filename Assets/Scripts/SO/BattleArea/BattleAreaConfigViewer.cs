@@ -6,42 +6,68 @@ using UnityEngine;
 [System.Serializable]
 public struct PlayerSpawnData
 {
-    public Vector2 SpawnRootPos;
-    public float HOffsetPerPlayer;
+    public const int MaxPlayerCount = 4;
+
+    [Tooltip("单机模式出生坐标")]
+    public Vector2 SinglePlayerSpawnPos;
+
+    [Tooltip("玩家 1 出生坐标")]
+    public Vector2 Player1SpawnPos;
+
+    [Tooltip("玩家 2 出生坐标")]
+    public Vector2 Player2SpawnPos;
+
+    [Tooltip("玩家 3 出生坐标")]
+    public Vector2 Player3SpawnPos;
+
+    [Tooltip("玩家 4 出生坐标")]
+    public Vector2 Player4SpawnPos;
 
     /// <summary>
-    /// 获取玩家出生位置，需指定总玩家数以保证对称布局。
+    /// 获取玩家出生位置。单机使用中心点；多人使用玩家索引对应的独立点。
     /// </summary>
     public readonly Vector2 GetPlayerSpawnPos(byte playerIndex, int totalPlayers)
     {
-        if (totalPlayers <= 0) totalPlayers = 1;
-        if (totalPlayers > 4) totalPlayers = 4;
-        if (playerIndex >= totalPlayers)
-            return SpawnRootPos;
+        if (totalPlayers <= 1)
+            return SinglePlayerSpawnPos;
 
-        switch (totalPlayers)
+        if (playerIndex >= MaxPlayerCount)
+            return SinglePlayerSpawnPos;
+
+        return playerIndex switch
         {
-            case 1:
-                return SpawnRootPos;
-            case 2:
-                return SpawnRootPos + (playerIndex == 0 ? Vector2.left : Vector2.right) * HOffsetPerPlayer;
-            case 3:
-                return playerIndex switch
-                {
-                    0 => SpawnRootPos + Vector2.left * HOffsetPerPlayer,
-                    1 => SpawnRootPos,
-                    2 => SpawnRootPos + Vector2.right * HOffsetPerPlayer,
-                    _ => SpawnRootPos
-                };
-            case 4:
-            {
-                float x = (playerIndex - 1.5f) * HOffsetPerPlayer;
-                return new Vector2(SpawnRootPos.x + x, SpawnRootPos.y);
-            }
-            default:
-                return SpawnRootPos;
+            0 => Player1SpawnPos,
+            1 => Player2SpawnPos,
+            2 => Player3SpawnPos,
+            3 => Player4SpawnPos,
+            _ => Player1SpawnPos,
+        };
+    }
+
+    public void SetPlayerSpawnPos(int playerIndex, Vector2 position)
+    {
+        switch (playerIndex)
+        {
+            case 0: Player1SpawnPos = position; break;
+            case 1: Player2SpawnPos = position; break;
+            case 2: Player3SpawnPos = position; break;
+            case 3: Player4SpawnPos = position; break;
         }
     }
+
+    public void SetSinglePlayerSpawnPos(Vector2 position)
+    {
+        SinglePlayerSpawnPos = position;
+    }
+
+    public static PlayerSpawnData Default => new PlayerSpawnData
+    {
+        SinglePlayerSpawnPos = new Vector2(0f, -2f),
+        Player1SpawnPos = new Vector2(-1.5f, -2f),
+        Player2SpawnPos = new Vector2(-0.5f, -2f),
+        Player3SpawnPos = new Vector2(0.5f, -2f),
+        Player4SpawnPos = new Vector2(1.5f, -2f),
+    };
 }
 
 /// <summary>
@@ -66,6 +92,33 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
     [Header("Scene 可视化")]
     [Tooltip("按 GridCellSize 在 GO 回收区内绘制碰撞加速网格（与 DeterministicGrid 一致）")]
     [SerializeField] bool drawCollisionGrid = true;
+
+#if UNITY_EDITOR
+    [Header("BattleAreaTool Scene 编辑")]
+    [SerializeField] bool drawBattleAreaEditGrid = true;
+    [SerializeField] bool battleAreaToolSnapToGrid = true;
+    [Min(0.01f)]
+    [SerializeField] float battleAreaToolSnapCellSize = 0.25f;
+
+    public BattleAreaData EditorBattleAreaData => battleAreaData;
+    public PlayerSpawnData EditorPlayerSpawnData => playerSpawnData;
+    public DropItemCollectData EditorDropItemCollectData => dropItemCollectData;
+    public bool DrawBattleAreaEditGrid => drawBattleAreaEditGrid;
+    public bool BattleAreaToolSnapToGrid => battleAreaToolSnapToGrid;
+    public float BattleAreaToolSnapCellSize => battleAreaToolSnapCellSize;
+
+    public void SetEditorPlayerSpawnData(PlayerSpawnData data)
+    {
+        playerSpawnData = data;
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+
+    public void SetEditorDropItemCollectData(DropItemCollectData data)
+    {
+        dropItemCollectData = data;
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+#endif
 
     public void LoadBattleAreaData() => LoadFromConfig();
 
@@ -119,15 +172,16 @@ public class BattleAreaConfigViewer : GameConfigViewerBase
             Gizmos.DrawLine(lineLeft, lineRight);
         }
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(new Vector3(playerSpawnData.SpawnRootPos.x, playerSpawnData.SpawnRootPos.y, 0), 0.2f);
-
         Gizmos.color = Color.blue;
         for (byte i = 0; i < 4; i++)
         {
             Vector2 spawnPos = playerSpawnData.GetPlayerSpawnPos(i, 4);
             Gizmos.DrawSphere(new Vector3(spawnPos.x, spawnPos.y, 0), 0.1f);
         }
+
+        Vector2 singleSpawnPos = playerSpawnData.GetPlayerSpawnPos(0, 1);
+        Gizmos.color = new Color(1f, 0.75f, 0.2f);
+        Gizmos.DrawWireSphere(new Vector3(singleSpawnPos.x, singleSpawnPos.y, 0), 0.14f);
     }
 
     void DrawCollisionGridGizmo(in BattleAreaData area)

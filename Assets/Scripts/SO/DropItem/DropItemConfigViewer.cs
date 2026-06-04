@@ -22,6 +22,9 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
     [SerializeField] Sprite pickupSprite;
 
+    [Header("拾取范围")]
+    [SerializeField, Min(0)] float pickupRadius = DropItemConfig.DefaultPickupRadius;
+
     [Header("出场运动")]
     [SerializeField] E_DropMotionMode motionMode;
 
@@ -78,6 +81,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         pickupPrefabId = dropItemConfig.pickupPrefabId;
         pickupSprite = dropItemConfig.pickupSprite;
+        pickupRadius = dropItemConfig.pickupRadius;
         motionMode = dropItemConfig.motionMode;
         initialUpSpeed = dropItemConfig.initialUpSpeed;
         fallGravity = dropItemConfig.fallGravity;
@@ -104,6 +108,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         dropItemConfig.pickupPrefabId = pickupPrefabId;
         dropItemConfig.pickupSprite = pickupSprite;
+        dropItemConfig.pickupRadius = pickupRadius;
         dropItemConfig.motionMode = motionMode;
         dropItemConfig.initialUpSpeed = initialUpSpeed;
         dropItemConfig.fallGravity = fallGravity;
@@ -142,8 +147,15 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
 #if UNITY_EDITOR
     public bool IsPreviewingDropMotion => _previewMotionActive;
+    public float EditorPickupRadius => Mathf.Max(pickupRadius, 0f);
 
     protected override void StopEditorPreviews() => StopPreviewDropMotion();
+
+    public void SetEditorPickupRadius(float radius)
+    {
+        pickupRadius = Mathf.Max(radius, 0f);
+        EditorUtility.SetDirty(this);
+    }
 
     void SyncViewerFieldsToConfig()
     {
@@ -152,6 +164,7 @@ public class DropItemConfigViewer : GameConfigViewerBase
 
         dropItemConfig.pickupPrefabId = pickupPrefabId;
         dropItemConfig.pickupSprite = pickupSprite;
+        dropItemConfig.pickupRadius = pickupRadius;
         dropItemConfig.motionMode = motionMode;
         dropItemConfig.initialUpSpeed = initialUpSpeed;
         dropItemConfig.fallGravity = fallGravity;
@@ -295,6 +308,8 @@ public class DropItemConfigViewer : GameConfigViewerBase
         if (dropItemConfig == null)
             return;
 
+        DrawPickupRadiusGizmo();
+
         GizmosDrawer.ColliderDrawer(
             transform.position,
             transform.rotation,
@@ -302,6 +317,20 @@ public class DropItemConfigViewer : GameConfigViewerBase
             colliderConfig,
             Color.cyan,
             Color.green);
+    }
+
+    void DrawPickupRadiusGizmo()
+    {
+        float scale = Mathf.Abs(transform.localScale.x);
+        if (scale <= 0.0001f)
+            scale = 1f;
+
+        float radius = Mathf.Max(pickupRadius, 0f) * scale;
+        if (radius <= 0f)
+            return;
+
+        Gizmos.color = new Color(1f, 0.75f, 0.2f, 0.9f);
+        Gizmos.DrawWireSphere(transform.position, radius);
     }
 
 }

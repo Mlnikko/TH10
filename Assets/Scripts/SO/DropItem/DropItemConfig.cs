@@ -27,6 +27,8 @@ public enum E_DropMotionMode : byte
 [CreateAssetMenu(fileName = "NewDropItemConfig", menuName = "Configs/DropItem/DropItemConfig")]
 public class DropItemConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
+    public const float DefaultPickupRadius = 0.08f;
+
     [Header("表现")]
     [Tooltip("池化预制体 archetype Id（小写）；与 ConfigId 无关。多条 DropItemConfig 可共用，表现见 pickupSprite。见 DropItemPrefabArchetypes。")]
     [PoolPrefabId(E_PoolCategory.Drop)]
@@ -35,6 +37,11 @@ public class DropItemConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 
     [Tooltip("可选：拾取后写入 SpriteRenderer.sprite（预制体需含 SpriteRenderer）")]
     public Sprite pickupSprite;
+
+    [Header("拾取范围")]
+    [Tooltip("磁吸道具飞到玩家附近后判定拾取的半径（世界单位）")]
+    [Min(0)]
+    public float pickupRadius = DefaultPickupRadius;
 
     [Header("出场运动")]
     public E_DropMotionMode motionMode = E_DropMotionMode.VerticalToss;
@@ -118,10 +125,14 @@ public class DropItemConfig : GameConfig, IReferenceResolver, ILogicTimingBake
         burstDirY = dir.y;
     }
 
+    public float ResolvePickupRadius()
+        => pickupRadius > 0f ? pickupRadius : DefaultPickupRadius;
+
 #if UNITY_EDITOR
     void Reset()
     {
         pickupPrefabId = DropItemPrefabArchetypes.Pickup;
+        pickupRadius = DefaultPickupRadius;
         colliderConfig = new ColliderConfig
         {
             shape = E_ColliderShape.Circle,

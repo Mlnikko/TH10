@@ -100,6 +100,7 @@ MonoBehaviour:
   dropItemConfig: {fileID: 11400000, guid: d9a17355cf27ead4396fbcf084f2a0e5, type: 2}
   pickupPrefabId: drop_tpl_pickup
   pickupSprite: {fileID: 334834057, guid: b5e33c0e2da6e20408f899cfbdfbe1ed, type: 3}
+  pickupRadius: 0.08
   motionMode: 0
   initialUpSpeed: 2
   fallGravity: 0.1

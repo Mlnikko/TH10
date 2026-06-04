@@ -5,6 +5,6 @@ using UnityEngine;
 public class BattleAreaConfig : GameConfig
 {
     public BattleAreaData battleAreaData = BattleAreaData.Default;
-    public PlayerSpawnData playerSpawnData;
+    public PlayerSpawnData playerSpawnData = PlayerSpawnData.Default;
     public DropItemCollectData dropItemCollectData = DropItemCollectData.Default;
 }

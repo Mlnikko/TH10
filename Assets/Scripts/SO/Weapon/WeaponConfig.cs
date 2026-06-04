@@ -20,6 +20,12 @@ public enum E_WeaponEmitterSlotRole : byte
     Secondary = 1,
 }
 
+public enum E_WeaponSecondaryFollowMode : byte
+{
+    AttachedToPlayer = 0,
+    TrailInNormalAttachedInSlow = 1,
+}
+
 [Serializable]
 public struct WeaponEmitterSlot
 {
@@ -114,6 +120,24 @@ public class WeaponSlowModeLayoutConfig
     public float secondarySlotConvergeSpeed = 4f;
 }
 
+[Serializable]
+public class WeaponSecondaryFollowConfig
+{
+    [Tooltip("副发射器跟随模式；轨迹模式下常速沿玩家历史轨迹移动，低速回到玩家相对静止布局")]
+    public E_WeaponSecondaryFollowMode mode = E_WeaponSecondaryFollowMode.AttachedToPlayer;
+
+    [Min(1)]
+    [Tooltip("轨迹模式下相邻副炮在玩家历史轨迹中的间隔逻辑帧数")]
+    public int trailSampleSpacingFrames = 8;
+
+    [Min(1)]
+    [Tooltip("轨迹模式下保存的玩家历史轨迹长度（逻辑帧）；会至少扩展到可覆盖最大副炮数量")]
+    public int trailHistoryFrames = 64;
+
+    [Tooltip("轨迹模式常速下是否忽略副炮槽位偏移，让副炮严格落在玩家历史轨迹点上")]
+    public bool ignoreSlotOffsetInNormalTrail = true;
+}
+
 [CreateAssetMenu(fileName = "NewWeaponConfig", menuName = "Configs/WeaponConfig")]
 public class WeaponConfig : GameConfig, IReferenceResolver
 {
@@ -139,6 +163,9 @@ public class WeaponConfig : GameConfig, IReferenceResolver
     [Header("副发射器（按 Power）")]
     [Tooltip("按 minPowerOrbs 分档；拾取 P 后切换到满足 powerOrbs 的最高档（整档替换副炮，非叠加）")]
     public WeaponPowerSecondaryLayout[] powerSecondaryLayouts = Array.Empty<WeaponPowerSecondaryLayout>();
+
+    [Header("副发射器跟随")]
+    public WeaponSecondaryFollowConfig secondaryFollow = new();
 
     [Header("副发射器（旧字段，自动迁移）")]
     [HideInInspector]
@@ -180,6 +207,75 @@ public class WeaponConfig : GameConfig, IReferenceResolver
 
     public Vector2 ResolveSecondarySlotOffset(Vector2 baseOffset, bool slowMode) =>
         ResolveSecondarySlotOffset(baseOffset, slowMode ? 1f : 0f);
+
+    public bool UsesSecondaryTrailFollow() =>
+        secondaryFollow != null &&
+        secondaryFollow.mode == E_WeaponSecondaryFollowMode.TrailInNormalAttachedInSlow;
+
+    public bool ShouldUseSecondaryTrail(bool slowMode) =>
+        UsesSecondaryTrailFollow() && !slowMode;
+
+    public bool ShouldIgnoreSecondarySlotOffsetInNormalTrail(bool slowMode) =>
+        ShouldUseSecondaryTrail(slowMode) &&
+        (secondaryFollow == null || secondaryFollow.ignoreSlotOffsetInNormalTrail);
+
+    public Vector2 ResolveSecondaryEmitterSlotOffset(
+        Vector2 baseOffset,
+        float converge01,
+        bool slowMode)
+    {
+        if (ShouldIgnoreSecondarySlotOffsetInNormalTrail(slowMode))
+            return Vector2.zero;
+
+        return ResolveSecondarySlotOffset(baseOffset, converge01);
+    }
+
+    public int ResolveSecondaryTrailDelayFrames(byte queueIndex)
+    {
+        int spacing = secondaryFollow != null ? secondaryFollow.trailSampleSpacingFrames : 1;
+        spacing = Mathf.Max(1, spacing);
+        return (queueIndex + 1) * spacing;
+    }
+
+    public int ResolveSecondaryTrailCapacityFrames()
+    {
+        int configured = secondaryFollow != null ? secondaryFollow.trailHistoryFrames : 1;
+        int spacing = secondaryFollow != null ? secondaryFollow.trailSampleSpacingFrames : 1;
+        int maxSlots = Mathf.Max(1, ResolveMaxSecondarySlotCount());
+        return Mathf.Max(1, configured, Mathf.Max(1, spacing) * maxSlots + 1);
+    }
+
+    int ResolveMaxSecondarySlotCount()
+    {
+        int max = 0;
+
+        var resolved = powerSecondaryResolved;
+        if (resolved != null)
+        {
+            for (int i = 0; i < resolved.Length; i++)
+            {
+                var slots = resolved[i].slots;
+                if (slots != null && slots.Length > max)
+                    max = slots.Length;
+            }
+        }
+
+        if (max > 0)
+            return max;
+
+        var layouts = powerSecondaryLayouts;
+        if (layouts != null)
+        {
+            for (int i = 0; i < layouts.Length; i++)
+            {
+                var slots = layouts[i]?.slots;
+                if (slots != null && slots.Length > max)
+                    max = slots.Length;
+            }
+        }
+
+        return max;
+    }
 
     /// <summary>根据当前火力选取低速主炮烘焙档。</summary>
     public bool TryResolvePowerPrimarySlow(int powerOrbs, out WeaponPowerPrimarySlowResolved resolved)
@@ -409,6 +505,7 @@ public class WeaponConfig : GameConfig, IReferenceResolver
         MigrateLegacyEmitterIds();
         MigrateLegacySecondaryToPowerLayouts();
         MigrateLegacyPrimarySlowToPowerLayouts();
+        ValidateSecondaryFollowConfig();
         SyncDisplayFromLegacyDescription();
         NormalizeEmitterId(ref primaryEmitters.normal.danmakuEmitterConfigId);
         NormalizeEmitterId(ref primaryEmitters.slowModeDanmakuEmitterConfigId);
@@ -469,6 +566,15 @@ public class WeaponConfig : GameConfig, IReferenceResolver
             return;
 
         primaryEmitters.slowModeDanmakuEmitterConfigId = string.Empty;
+    }
+
+    void ValidateSecondaryFollowConfig()
+    {
+        if (secondaryFollow == null)
+            secondaryFollow = new WeaponSecondaryFollowConfig();
+
+        secondaryFollow.trailSampleSpacingFrames = Mathf.Max(1, secondaryFollow.trailSampleSpacingFrames);
+        secondaryFollow.trailHistoryFrames = Mathf.Max(1, secondaryFollow.trailHistoryFrames);
     }
 
     void ClearLegacySecondaryWhenPowerLayoutsExist()

@@ -18,10 +18,10 @@ public class DropItemMagnetSystem : BaseSystem
         DropItemCollectData collect = GlobalBattleData.DropItemCollectData;
         uint logicFps = GameManager.logicFPS > 0 ? GameManager.logicFPS : 60;
         float speedPerFrame = collect.ResolveMagnetSpeedPerSecond() / logicFps;
-        float pickupRadius = collect.ResolveMagnetPickupRadius();
 
         var positions = EntityManager.GetComponentSpan<CPosition>();
         var rotations = EntityManager.GetComponentSpan<CRotation>();
+        var dropItems = EntityManager.GetComponentSpan<CDropItem>();
 
         for (int i = 0; i < indices.Length; i++)
         {
@@ -44,6 +44,7 @@ public class DropItemMagnetSystem : BaseSystem
 
             ref readonly var targetPos = ref positions[targetIdx];
             ref var dropPos = ref positions[dropIdx];
+            float pickupRadius = ResolvePickupRadius(dropItems[dropIdx].cfgIndex);
 
             DropItemMagnetSimulator.StepTowardTarget(
                 ref dropPos,
@@ -63,5 +64,11 @@ public class DropItemMagnetSystem : BaseSystem
             if (DropItemPickup.TryConsumeDrop(EntityManager, drop))
                 EntityManager.RemoveComponent<CDropItemMagnet>(drop);
         }
+    }
+
+    static float ResolvePickupRadius(int dropCfgIndex)
+    {
+        var cfg = GameResDB.Instance.GetConfig<DropItemConfig>(dropCfgIndex);
+        return cfg != null ? cfg.ResolvePickupRadius() : DropItemConfig.DefaultPickupRadius;
     }
 }

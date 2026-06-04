@@ -320,13 +320,18 @@ MonoBehaviour:
     GridCellSize: 0.25
     GO_RecycleMargin: {x: 0.5, y: 0.5}
   playerSpawnData:
-    SpawnRootPos: {x: 0, y: -2}
-    HOffsetPerPlayer: 1
+    SinglePlayerSpawnPos: {x: 0, y: -2}
+    Player1SpawnPos: {x: -1.25, y: -2}
+    Player2SpawnPos: {x: -0.5, y: -2}
+    Player3SpawnPos: {x: 0.5, y: -2}
+    Player4SpawnPos: {x: 1.25, y: -2}
   dropItemCollectData:
-    collectZoneHeight: 1
+    collectLineY: 1.2
     magnetSpeed: 5
-    magnetPickupRadius: 0.08
-  drawCollisionGrid: 1
+  drawCollisionGrid: 0
+  drawBattleAreaEditGrid: 1
+  battleAreaToolSnapToGrid: 1
+  battleAreaToolSnapCellSize: 0.25
 --- !u!1 &764252995
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,7 +375,6 @@ GameObject:
   m_Component:
   - component: {fileID: 822744648}
   - component: {fileID: 822744649}
-  - component: {fileID: 822744650}
   m_Layer: 0
   m_Name: StageTimelineTool
   m_TagString: Untagged
@@ -408,9 +412,9 @@ MonoBehaviour:
   stageTimelineConfig: {fileID: 11400000, guid: e971af894ed361447a6c40705e97b584, type: 2}
   battleAreaConfig: {fileID: 11400000, guid: aaf3a19affdf5c2408060432e85d27f3, type: 2}
   previewDurationSeconds: 120
-  timelineViewDurationSeconds: 0
+  timelineViewDurationSeconds: 89.69695
   timelinePixelsPerSecond: 9.9
-  previewMidStageWaveIndex: 1
+  previewMidStageWaveIndex: 4
   previewPathEditEntryIndex: 4
   pathEditTarget: 0
   previewMidBossPathPhase: 0
@@ -419,21 +423,6 @@ MonoBehaviour:
   pathNodeSnapToGrid: 1
   pathNodeSnapCellSize: 0.1
   drawPathNodeSnapGrid: 1
---- !u!114 &822744650
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 822744647}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cdea8a964134c40429104f76a5f15a1a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  shakeRoot: {fileID: 0}
-  backgroundRoot: {fileID: 0}
-  cloudsRoot: {fileID: 0}
 --- !u!1 &1220478756
 GameObject:
   m_ObjectHideFlags: 0

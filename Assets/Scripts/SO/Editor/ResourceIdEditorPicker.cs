@@ -500,7 +500,10 @@ public static class ResourceIdEditorPicker
         EditorGUILayout.Space(2);
     }
 
-    public static void DrawDeathDropEntryArray(SerializedProperty arrayProp, bool drawSectionHeader = true)
+    public static void DrawDeathDropEntryArray(
+        SerializedProperty arrayProp,
+        bool drawSectionHeader = true,
+        bool drawAddButton = true)
     {
         if (arrayProp == null || !arrayProp.isArray)
             return;
@@ -533,18 +536,22 @@ public static class ResourceIdEditorPicker
             EditorGUILayout.EndHorizontal();
         }
 
-        EditorGUILayout.BeginHorizontal();
-        GUILayout.FlexibleSpace();
-        if (GUILayout.Button("+ 添加掉落", GUILayout.Width(100)))
+        if (drawAddButton)
         {
-            arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize);
-            var last = arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1);
-            var countProp = last.FindPropertyRelative(nameof(DeathDropEntry.count));
-            if (countProp != null && countProp.intValue < 1)
-                countProp.intValue = 1;
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("+ 添加掉落", GUILayout.Width(100)))
+            {
+                arrayProp.InsertArrayElementAtIndex(arrayProp.arraySize);
+                var last = arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1);
+                var countProp = last.FindPropertyRelative(nameof(DeathDropEntry.count));
+                if (countProp != null && countProp.intValue < 1)
+                    countProp.intValue = 1;
+            }
+
+            EditorGUILayout.EndHorizontal();
         }
 
-        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(2);
     }
 

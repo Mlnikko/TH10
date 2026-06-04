@@ -480,6 +480,66 @@ public struct CPlayer : IComponent
     public int appliedPrimarySlowPowerMinOrbs;
 }
 
+/// <summary>玩家最近若干逻辑帧的位置轨迹，用于需要沿玩家历史路径移动的武器副炮。</summary>
+public struct CPlayerMotionTrail : IComponent
+{
+    public float[] xs;
+    public float[] ys;
+    public int head;
+    public int count;
+
+    public bool IsValid => xs != null && ys != null && xs.Length == ys.Length && xs.Length > 0;
+    public int Capacity => IsValid ? xs.Length : 0;
+
+    public static CPlayerMotionTrail Create(int capacity, float initialX, float initialY)
+    {
+        capacity = Mathf.Max(1, capacity);
+        var trail = new CPlayerMotionTrail
+        {
+            xs = new float[capacity],
+            ys = new float[capacity],
+            head = 0,
+            count = 1,
+        };
+
+        for (int i = 0; i < capacity; i++)
+        {
+            trail.xs[i] = initialX;
+            trail.ys[i] = initialY;
+        }
+
+        return trail;
+    }
+
+    public void Record(float x, float y)
+    {
+        if (!IsValid)
+            return;
+
+        head = (head + 1) % xs.Length;
+        xs[head] = x;
+        ys[head] = y;
+        if (count < xs.Length)
+            count++;
+    }
+
+    public bool TrySampleFramesAgo(int framesAgo, out float x, out float y)
+    {
+        x = y = 0f;
+        if (!IsValid || count <= 0)
+            return false;
+
+        framesAgo = Mathf.Clamp(framesAgo, 0, count - 1);
+        int index = head - framesAgo;
+        if (index < 0)
+            index += xs.Length;
+
+        x = xs[index];
+        y = ys[index];
+        return true;
+    }
+}
+
 /// <summary>受击摧毁后等待复活的会话状态（无表现层）。</summary>
 public struct CPlayerRespawnPending : IComponent
 {
@@ -499,6 +559,7 @@ public struct CPlayerEmitterOwnership : IComponent
     public int ownerPlayerEntityIndex;
     public E_WeaponEmitterSlotRole role;
     public byte secondarySlotIndex;
+    public int emitterCfgIndex;
     public float slotOffsetX;
     public float slotOffsetY;
 

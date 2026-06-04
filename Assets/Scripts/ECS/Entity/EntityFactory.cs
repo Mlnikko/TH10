@@ -101,6 +101,7 @@ public class EntityFactory
             width = characterConfig.hitColliderConfig.boxSize.x,
             height = characterConfig.hitColliderConfig.boxSize.y,
         });
+        EnsurePlayerMotionTrail(e_player, weaponConfig, posX, posY);
 
         int playerEntityIndex = e_player.Index;
         ref var playerComponent = ref _entityManager.GetComponent<CPlayer>(e_player);
@@ -137,11 +138,18 @@ public class EntityFactory
                 weaponConfig.primaryEmitters.normal.slotOffset,
                 E_WeaponEmitterSlotRole.Primary,
                 secondarySlotIndex: 0,
+                slowMode: false,
                 posX,
                 posY);
         }
 
-        SpawnPlayerSecondaryEmitters(ownerPlayerEntityIndex, weaponConfig, powerOrbs, posX, posY);
+        SpawnPlayerSecondaryEmitters(
+            ownerPlayerEntityIndex,
+            weaponConfig,
+            powerOrbs,
+            slowMode: false,
+            posX,
+            posY);
         return primaryEmitterEntityIndex;
     }
 
@@ -171,10 +179,17 @@ public class EntityFactory
             return;
 
         player.appliedSecondaryPowerMinOrbs = tierKey;
+
+        if (weaponConfig.UsesSecondaryTrailFollow())
+        {
+            SyncPlayerTrailSecondaryEmittersInternal(playerEntity, weaponConfig, powerOrbs, ref player);
+            return;
+        }
+
         DestroyPlayerSecondaryEmitters(playerEntity.Index);
 
         ref var pos = ref _entityManager.GetComponent<CPosition>(playerEntity);
-        SpawnPlayerSecondaryEmitters(playerEntity.Index, weaponConfig, powerOrbs, pos.x, pos.y);
+        SpawnPlayerSecondaryEmitters(playerEntity.Index, weaponConfig, powerOrbs, player.isSlowMode, pos.x, pos.y);
     }
 
     void SyncPlayerPrimarySlowPowerInternal(
@@ -229,10 +244,191 @@ public class EntityFactory
             : int.MinValue;
     }
 
+    void EnsurePlayerMotionTrail(Entity playerEntity, WeaponConfig weaponConfig, float posX, float posY)
+    {
+        if (!_entityManager.IsValid(playerEntity) || weaponConfig == null || !weaponConfig.UsesSecondaryTrailFollow())
+            return;
+
+        int capacity = weaponConfig.ResolveSecondaryTrailCapacityFrames();
+        if (!_entityManager.HasComponent<CPlayerMotionTrail>(playerEntity))
+        {
+            _entityManager.AddComponent(playerEntity, CPlayerMotionTrail.Create(capacity, posX, posY));
+            return;
+        }
+
+        ref var trail = ref _entityManager.GetComponent<CPlayerMotionTrail>(playerEntity);
+        if (!trail.IsValid || trail.Capacity < capacity)
+            trail = CPlayerMotionTrail.Create(capacity, posX, posY);
+    }
+
+    bool TryResolveSecondaryTrailAnchor(
+        int playerEntityIndex,
+        WeaponConfig weaponConfig,
+        bool slowMode,
+        byte queueIndex,
+        ref float x,
+        ref float y)
+    {
+        if (weaponConfig == null || !weaponConfig.ShouldUseSecondaryTrail(slowMode))
+            return false;
+        if (!_entityManager.HasComponent<CPlayerMotionTrail>(playerEntityIndex))
+            return false;
+
+        ref var trail = ref _entityManager.GetComponentSpan<CPlayerMotionTrail>()[playerEntityIndex];
+        int framesAgo = weaponConfig.ResolveSecondaryTrailDelayFrames(queueIndex);
+        if (!trail.TrySampleFramesAgo(framesAgo, out float sampleX, out float sampleY))
+            return false;
+
+        x = sampleX;
+        y = sampleY;
+        return true;
+    }
+
+    void SyncPlayerTrailSecondaryEmittersInternal(
+        Entity playerEntity,
+        WeaponConfig weaponConfig,
+        int powerOrbs,
+        ref CPlayer player)
+    {
+        ref var pos = ref _entityManager.GetComponent<CPosition>(playerEntity);
+        EnsurePlayerMotionTrail(playerEntity, weaponConfig, pos.x, pos.y);
+
+        if (!weaponConfig.TryResolvePowerSecondary(powerOrbs, out var tier))
+        {
+            DestroyPlayerSecondaryEmitters(playerEntity.Index);
+            return;
+        }
+
+        var indices = tier.emitterCfgIndices;
+        var slots = tier.slots;
+        int desiredCount = indices != null && slots != null
+            ? Mathf.Min(indices.Length, slots.Length)
+            : 0;
+
+        if (desiredCount <= 0)
+        {
+            DestroyPlayerSecondaryEmitters(playerEntity.Index);
+            return;
+        }
+
+        var ownedSecondaryIndices = new System.Collections.Generic.List<int>(desiredCount);
+        CollectPlayerSecondaryEmitterIndices(playerEntity.Index, ownedSecondaryIndices);
+        ownedSecondaryIndices.Sort(CompareSecondaryEmitterQueueOrder);
+
+        var ownerships = _entityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        var emitters = _entityManager.GetComponentSpan<CDanmakuEmitter>();
+        int keepCount = Mathf.Min(ownedSecondaryIndices.Count, desiredCount);
+
+        for (int i = 0; i < keepCount; i++)
+        {
+            int emitterIdx = ownedSecondaryIndices[i];
+            if (indices[i] < 0)
+                continue;
+
+            ref var ownership = ref ownerships[emitterIdx];
+            bool configChanged = ownership.emitterCfgIndex != indices[i];
+            ownership.secondarySlotIndex = (byte)i;
+            ownership.slotOffsetX = slots[i].slotOffset.x;
+            ownership.slotOffsetY = slots[i].slotOffset.y;
+
+            if (configChanged)
+                PlayerControlSystem.RebuildOwnedEmitter(emitterIdx, ref player, weaponConfig, ownerships, emitters);
+            else
+                ApplyOwnedSecondaryEmitterSlotOffset(emitterIdx, ref player, weaponConfig, ownerships, emitters);
+        }
+
+        for (int i = ownedSecondaryIndices.Count - 1; i >= desiredCount; i--)
+        {
+            Entity emitterEntity = _entityManager.GetEntity(ownedSecondaryIndices[i]);
+            if (!emitterEntity.IsNull)
+                _entityManager.DestroyEntity(emitterEntity);
+        }
+
+        for (int i = ownedSecondaryIndices.Count; i < desiredCount; i++)
+        {
+            if (indices[i] < 0)
+                continue;
+
+            float spawnX = pos.x;
+            float spawnY = pos.y;
+            TryResolveSecondaryTrailAnchor(
+                playerEntity.Index,
+                weaponConfig,
+                player.isSlowMode,
+                (byte)i,
+                ref spawnX,
+                ref spawnY);
+
+            CreateWeaponEmitterEntity(
+                playerEntity.Index,
+                indices[i],
+                slots[i].slotOffset,
+                E_WeaponEmitterSlotRole.Secondary,
+                (byte)i,
+                player.isSlowMode,
+                spawnX,
+                spawnY);
+        }
+    }
+
+    void CollectPlayerSecondaryEmitterIndices(
+        int ownerPlayerEntityIndex,
+        System.Collections.Generic.List<int> outIndices)
+    {
+        outIndices.Clear();
+
+        Span<int> ownedIndices = _entityManager.GetActiveIndices<CPlayerEmitterOwnership>();
+        if (ownedIndices.Length == 0)
+            return;
+
+        var ownerships = _entityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != ownerPlayerEntityIndex)
+                continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+                continue;
+
+            outIndices.Add(emitterIdx);
+        }
+    }
+
+    int CompareSecondaryEmitterQueueOrder(int lhs, int rhs)
+    {
+        var ownerships = _entityManager.GetComponentSpan<CPlayerEmitterOwnership>();
+        int compare = ownerships[lhs].secondarySlotIndex.CompareTo(ownerships[rhs].secondarySlotIndex);
+        return compare != 0 ? compare : lhs.CompareTo(rhs);
+    }
+
+    static void ApplyOwnedSecondaryEmitterSlotOffset(
+        int emitterIdx,
+        ref CPlayer player,
+        WeaponConfig weaponConfig,
+        Span<CPlayerEmitterOwnership> ownerships,
+        Span<CDanmakuEmitter> emitters)
+    {
+        if ((uint)emitterIdx >= (uint)emitters.Length)
+            return;
+
+        ref var ownership = ref ownerships[emitterIdx];
+        Vector2 baseSlot = new(ownership.slotOffsetX, ownership.slotOffsetY);
+        Vector2 slotOffset = weaponConfig.ResolveSecondaryEmitterSlotOffset(
+            baseSlot,
+            player.secondarySlotConvergeT,
+            player.isSlowMode);
+
+        ref var emitter = ref emitters[emitterIdx];
+        emitter.emitterPosOffsetX = ownership.emitterBaseOffsetX + slotOffset.x;
+        emitter.emitterPosOffsetY = ownership.emitterBaseOffsetY + slotOffset.y;
+    }
+
     void SpawnPlayerSecondaryEmitters(
         int ownerPlayerEntityIndex,
         WeaponConfig weaponConfig,
         int powerOrbs,
+        bool slowMode,
         float posX,
         float posY)
     {
@@ -256,6 +452,7 @@ public class EntityFactory
                 slots[i].slotOffset,
                 E_WeaponEmitterSlotRole.Secondary,
                 (byte)i,
+                slowMode,
                 posX,
                 posY);
         }
@@ -315,6 +512,7 @@ public class EntityFactory
         Vector2 slotOffset,
         E_WeaponEmitterSlotRole role,
         byte secondarySlotIndex,
+        bool slowMode,
         float posX,
         float posY)
     {
@@ -330,21 +528,48 @@ public class EntityFactory
         _entityManager.AddComponent(e_emitter, new CRotation(0));
 
         var emitter = new CDanmakuEmitter(emitterCfg);
-        emitter.emitterPosOffsetX += slotOffset.x;
-        emitter.emitterPosOffsetY += slotOffset.y;
+        Vector2 appliedSlotOffset = role == E_WeaponEmitterSlotRole.Secondary
+            ? ResolveWeaponEmitterSlotOffsetForMode(ownerPlayerEntityIndex, slotOffset, slowMode)
+            : slotOffset;
+        emitter.emitterPosOffsetX += appliedSlotOffset.x;
+        emitter.emitterPosOffsetY += appliedSlotOffset.y;
         _entityManager.AddComponent(e_emitter, emitter);
         _entityManager.AddComponent(e_emitter, new CPlayerEmitterOwnership
         {
             ownerPlayerEntityIndex = ownerPlayerEntityIndex,
             role = role,
             secondarySlotIndex = secondarySlotIndex,
+            emitterCfgIndex = emitterCfgIndex,
             slotOffsetX = slotOffset.x,
             slotOffsetY = slotOffset.y,
             emitterBaseOffsetX = emitterCfg.emitterPosOffset.x,
             emitterBaseOffsetY = emitterCfg.emitterPosOffset.y,
         });
 
+        if (PresentationRuntime.SmoothingEnabled)
+        {
+            _entityManager.AddComponent(
+                e_emitter,
+                CPresentationPose.FromPosition(posX, posY, 0f, withRotation: true));
+        }
+
         return e_emitter.Index;
+    }
+
+    Vector2 ResolveWeaponEmitterSlotOffsetForMode(
+        int ownerPlayerEntityIndex,
+        Vector2 baseSlotOffset,
+        bool slowMode)
+    {
+        var ownerEntity = _entityManager.GetEntity(ownerPlayerEntityIndex);
+        if (ownerEntity.IsNull)
+            return baseSlotOffset;
+
+        ref readonly var ownerPlayer = ref _entityManager.GetComponent<CPlayer>(ownerEntity);
+        var ownerWeapon = GameResDB.Instance.GetConfig<WeaponConfig>(ownerPlayer.weaponCfgIndex);
+        return ownerWeapon != null
+            ? ownerWeapon.ResolveSecondaryEmitterSlotOffset(baseSlotOffset, ownerPlayer.secondarySlotConvergeT, slowMode)
+            : baseSlotOffset;
     }
 
     /// <param name="rotationRad">弹幕逻辑旋转（弧度），与 <see cref="CRotation.angleRad"/> 一致。</param>

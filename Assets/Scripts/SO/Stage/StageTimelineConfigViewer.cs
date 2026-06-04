@@ -15,6 +15,10 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     protected override bool HasAssignedConfig => stageTimelineConfig != null;
 
+#if UNITY_EDITOR
+    const string BackgroundPreviewRuntimeName = "StageTimelineBackgroundPreviewRuntime";
+#endif
+
     [Header("配置文件")]
     public StageTimelineConfig stageTimelineConfig;
 
@@ -103,8 +107,8 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
     public float GetResolvedPreviewDurationSeconds(
         E_StageTimelinePreviewScope scope = E_StageTimelinePreviewScope.FullTimeline,
-        int waveIndex = 0)
-        => ResolvePreviewDurationSeconds(scope, waveIndex);
+        int previewIndex = 0)
+        => ResolvePreviewDurationSeconds(scope, previewIndex);
 
     public void SetActivePreviewTotalDurationSeconds(float totalSeconds)
     {
@@ -237,7 +241,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             return;
 
         var scope = _activePreviewScope;
-        int waveIndex = previewMidStageWaveIndex;
+        int previewIndex = previewMidStageWaveIndex;
         _embeddedEditPendingPreviewRestart = false;
         StopPreviewTimeline();
 
@@ -247,7 +251,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         switch (scope)
         {
             case E_StageTimelinePreviewScope.SingleMidStageWave:
-                RequestPreviewMidStageWave(waveIndex);
+                RequestPreviewMidStageWave(previewIndex);
                 break;
             case E_StageTimelinePreviewScope.MidBossEncounter:
                 RequestPreviewMidBoss();
@@ -301,12 +305,6 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             return;
         }
 
-        if (!TryResolveGizmoBattleArea(out _))
-        {
-            Logger.Warn("[StageTimelineTool] 无法解析战斗区，请指定 BattleAreaConfig。", LogTag.Config);
-            return;
-        }
-
         StopBackgroundPreview();
         _backgroundPreviewBootstrapping = true;
         int generation = ++_backgroundPreviewBootstrapGeneration;
@@ -323,25 +321,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     {
         try
         {
-            await StageTimelinePreviewRuntime.EnsureReadyAsync(battleAreaConfig).ConfigureAwait(true);
+            await StageTimelinePreviewRuntime.PrepareForPreviewAsync(battleAreaConfig).ConfigureAwait(true);
 
             if (generation != _backgroundPreviewBootstrapGeneration || this == null)
                 return;
 
             _backgroundPreviewBootstrapping = false;
-
-            if (!StageTimelinePreviewRuntime.TryValidateForPreview(battleAreaConfig, out string error))
-            {
-                Logger.Warn($"[StageTimelineTool] {error}", LogTag.Config);
-                return;
-            }
-
-            if (!StageTimelinePreviewRuntime.TryApplyPreviewBattleArea(battleAreaConfig, out string areaError))
-            {
-                Logger.Warn($"[StageTimelineTool] {areaError}", LogTag.Config);
-                return;
-            }
-
             StartBackgroundPreviewCore();
         }
         catch (System.Exception ex)
@@ -376,16 +361,21 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         if (_backgroundPreviewRuntime == null)
             return;
 
-        _backgroundPreviewRuntime.ClearVisuals();
+        _backgroundPreviewRuntime.DisposeInstance();
+        _backgroundPreviewRuntime = null;
     }
 
     void EnsureBackgroundPreviewRuntime()
     {
-        if (_backgroundPreviewRuntime == null)
-            _backgroundPreviewRuntime = GetComponent<BattleStageBackgroundRuntime>();
+        if (_backgroundPreviewRuntime != null)
+            return;
 
-        if (_backgroundPreviewRuntime == null)
-            _backgroundPreviewRuntime = gameObject.AddComponent<BattleStageBackgroundRuntime>();
+        var go = new GameObject(BackgroundPreviewRuntimeName)
+        {
+            hideFlags = HideFlags.DontSave,
+        };
+        go.transform.SetParent(transform, false);
+        _backgroundPreviewRuntime = go.AddComponent<BattleStageBackgroundRuntime>();
     }
 
     Sprite ResolveBackgroundPreviewSprite(string textureId)
@@ -404,6 +394,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
         EditorApplication.playModeStateChanged += HandlePlayModeStateChanged;
         EditorApplication.update += OnEditorInspectorRefresh;
+        RemoveLegacyAttachedBackgroundRuntime();
     }
 
     protected override void OnDisable()
@@ -418,6 +409,20 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     {
         if (state == PlayModeStateChange.ExitingPlayMode)
             StopEditorPreviews();
+    }
+
+    void RemoveLegacyAttachedBackgroundRuntime()
+    {
+        var legacy = GetComponent<BattleStageBackgroundRuntime>();
+        if (legacy == null)
+            return;
+
+        if (Application.isPlaying)
+            Destroy(legacy);
+        else
+            DestroyImmediate(legacy);
+
+        EditorUtility.SetDirty(gameObject);
     }
 
     void OnEditorInspectorRefresh()
@@ -456,7 +461,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     public void RequestPreviewMainBossSpellPhase(int phaseIndex)
         => RequestPreview(E_StageTimelinePreviewScope.MainBossSpellPhase, phaseIndex);
 
-    void RequestPreview(E_StageTimelinePreviewScope scope, int waveIndex)
+    void RequestPreview(E_StageTimelinePreviewScope scope, int previewIndex)
     {
         if (_previewActive || _previewBootstrapping)
             return;
@@ -467,7 +472,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             return;
         }
 
-        if (!TryValidatePreviewTarget(scope, waveIndex, out string targetError))
+        if (!TryValidatePreviewTarget(scope, previewIndex, out string targetError))
         {
             Logger.Warn($"[StageTimelineConfigViewer] {targetError}", LogTag.Config);
             return;
@@ -483,17 +488,16 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         _previewBootstrapping = true;
         int generation = ++_bootstrapGeneration;
         var previewScope = scope;
-        int previewWave = waveIndex;
 
         EditorApplication.delayCall += () =>
         {
             if (generation != _bootstrapGeneration || this == null)
                 return;
-            _ = BeginPreviewAsync(generation, previewScope, previewWave);
+            _ = BeginPreviewAsync(generation, previewScope, previewIndex);
         };
     }
 
-    bool TryValidatePreviewTarget(E_StageTimelinePreviewScope scope, int waveIndex, out string error)
+    bool TryValidatePreviewTarget(E_StageTimelinePreviewScope scope, int previewIndex, out string error)
     {
         error = null;
         switch (scope)
@@ -504,14 +508,14 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                     error = "时间轴未配置道中波次。";
                     return false;
                 }
-                if (waveIndex < 0 || waveIndex >= stageTimelineConfig.midStageWaves.Count)
+                if (previewIndex < 0 || previewIndex >= stageTimelineConfig.midStageWaves.Count)
                 {
-                    error = $"波次索引 {waveIndex} 超出范围（0–{stageTimelineConfig.midStageWaves.Count - 1}）。";
+                    error = $"波次索引 {previewIndex} 超出范围（0–{stageTimelineConfig.midStageWaves.Count - 1}）。";
                     return false;
                 }
-                if (stageTimelineConfig.midStageWaves[waveIndex] == null)
+                if (stageTimelineConfig.midStageWaves[previewIndex] == null)
                 {
-                    error = $"道中波次 [{waveIndex}] 为空。";
+                    error = $"道中波次 [{previewIndex}] 为空。";
                     return false;
                 }
                 return true;
@@ -547,9 +551,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
                     error = "关底 Boss 未配置符卡阶段（bossPhases）。";
                     return false;
                 }
-                if (waveIndex < 0 || waveIndex >= encounter.bossPhases.Count || encounter.bossPhases[waveIndex] == null)
+                if (previewIndex < 0 || previewIndex >= encounter.bossPhases.Count || encounter.bossPhases[previewIndex] == null)
                 {
-                    error = $"符卡阶段索引 {waveIndex} 无效。";
+                    error = $"符卡阶段索引 {previewIndex} 无效。";
                     return false;
                 }
                 return true;
@@ -560,30 +564,17 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         }
     }
 
-    async Task BeginPreviewAsync(int generation, E_StageTimelinePreviewScope scope, int waveIndex)
+    async Task BeginPreviewAsync(int generation, E_StageTimelinePreviewScope scope, int previewIndex)
     {
         try
         {
-            await StageTimelinePreviewRuntime.EnsureReadyAsync(battleAreaConfig).ConfigureAwait(true);
+            await StageTimelinePreviewRuntime.PrepareForPreviewAsync(battleAreaConfig).ConfigureAwait(true);
 
             if (generation != _bootstrapGeneration || this == null)
                 return;
 
             _previewBootstrapping = false;
-
-            if (!StageTimelinePreviewRuntime.TryValidateForPreview(battleAreaConfig, out string error))
-            {
-                Logger.Warn($"[StageTimelineConfigViewer] {error}", LogTag.Config);
-                return;
-            }
-
-            if (!StageTimelinePreviewRuntime.TryApplyPreviewBattleArea(battleAreaConfig, out string areaError))
-            {
-                Logger.Warn($"[StageTimelineConfigViewer] {areaError}", LogTag.Config);
-                return;
-            }
-
-            StartPreviewTimelineCore(scope, waveIndex);
+            StartPreviewTimelineCore(scope, previewIndex);
         }
         catch (Exception ex)
         {
@@ -595,13 +586,13 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         }
     }
 
-    void StartPreviewTimelineCore(E_StageTimelinePreviewScope scope, int waveIndex)
+    void StartPreviewTimelineCore(E_StageTimelinePreviewScope scope, int previewIndex)
     {
         BakeTimelineForPreview();
 
         _previewWorld = CreatePreviewWorld();
         _timelineSystem = _previewWorld.GetSystem<StageTimelineSystem>();
-        _timelineSystem.Begin(stageTimelineConfig, scope, waveIndex);
+        _timelineSystem.Begin(stageTimelineConfig, scope, previewIndex);
 
         if (!_timelineSystem.IsActive)
         {
@@ -615,11 +606,11 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
 
         _activePreviewScope = scope;
         if (scope == E_StageTimelinePreviewScope.SingleMidStageWave)
-            previewMidStageWaveIndex = waveIndex;
+            previewMidStageWaveIndex = previewIndex;
         if (scope == E_StageTimelinePreviewScope.MainBossSpellPhase)
-            previewMainBossSpellPhaseIndex = waveIndex;
+            previewMainBossSpellPhaseIndex = previewIndex;
 
-        float duration = ResolvePreviewDurationSeconds(scope, waveIndex);
+        float duration = ResolvePreviewDurationSeconds(scope, previewIndex);
         uint fps = LogicFramePreviewClock.GetLogicFps();
         _previewClock = LogicFramePreviewClock.CreateRealTimeSession(duration, fps);
         _previewClock.Reset();
@@ -631,7 +622,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         EditorApplication.update += OnEditorPreviewUpdate;
 
         Logger.Info(
-            $"[StageTimelineConfigViewer] {DescribePreviewScope(scope, waveIndex)} 预览开始（{fps} FPS，约 {duration:F1}s）。",
+            $"[StageTimelineConfigViewer] {DescribePreviewScope(scope, previewIndex)} 预览开始（{fps} FPS，约 {duration:F1}s）。",
             LogTag.Config);
     }
 
@@ -663,12 +654,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         SceneView.RepaintAll();
     }
 
-    float ResolvePreviewDurationSeconds(E_StageTimelinePreviewScope scope, int waveIndex)
+    float ResolvePreviewDurationSeconds(E_StageTimelinePreviewScope scope, int previewIndex)
     {
         if (previewDurationSeconds > 0f)
             return previewDurationSeconds;
 
-        float estimated = EstimateScopedPreviewDurationSeconds(scope, waveIndex);
+        float estimated = EstimateScopedPreviewDurationSeconds(scope, previewIndex);
         if (estimated > 0f)
             return estimated;
 
@@ -687,7 +678,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         };
     }
 
-    float EstimateScopedPreviewDurationSeconds(E_StageTimelinePreviewScope scope, int waveIndex)
+    float EstimateScopedPreviewDurationSeconds(E_StageTimelinePreviewScope scope, int previewIndex)
     {
         if (stageTimelineConfig == null)
             return 0f;
@@ -699,7 +690,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
         {
             case E_StageTimelinePreviewScope.SingleMidStageWave:
             {
-                var wave = stageTimelineConfig.midStageWaves[waveIndex];
+                var wave = stageTimelineConfig.midStageWaves[previewIndex];
                 float motionSec = EstimateMovementDurationSeconds(wave?.pathRoute, fps);
                 if (motionSec <= 0f && wave != null && wave.useDefaultDescentIfNoMovement)
                 {
@@ -724,6 +715,9 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             case E_StageTimelinePreviewScope.MainBossEncounter:
             {
                 var main = stageTimelineConfig.mainBossEncounter;
+                if (main == null)
+                    return 0f;
+
                 float total = FrameToSec(main.bossIntroDurationFrames);
                 if (main.bossPhases != null)
                 {
@@ -746,7 +740,7 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
             case E_StageTimelinePreviewScope.MainBossSpellPhase:
             {
                 var main = stageTimelineConfig.mainBossEncounter;
-                var phase = main.bossPhases[waveIndex];
+                var phase = main.bossPhases[previewIndex];
                 float duration = phase.durationSeconds >= 0f
                     ? phase.durationSeconds
                     : 30f;
@@ -761,12 +755,12 @@ public class StageTimelineConfigViewer : GameConfigViewerBase
     static float EstimateMovementDurationSeconds(PathRouteMovementData pathRoute, uint fps) =>
         StageTimelineVisualSchedule.EstimateMovementDurationSeconds(pathRoute, fps);
 
-    string DescribePreviewScope(E_StageTimelinePreviewScope scope, int waveIndex) => scope switch
+    string DescribePreviewScope(E_StageTimelinePreviewScope scope, int previewIndex) => scope switch
     {
-        E_StageTimelinePreviewScope.SingleMidStageWave => DescribeMidStageWavePreview(waveIndex),
+        E_StageTimelinePreviewScope.SingleMidStageWave => DescribeMidStageWavePreview(previewIndex),
         E_StageTimelinePreviewScope.MidBossEncounter => "中场 Boss",
         E_StageTimelinePreviewScope.MainBossEncounter => "关底 Boss",
-        E_StageTimelinePreviewScope.MainBossSpellPhase => $"关底符卡 [{waveIndex}]",
+        E_StageTimelinePreviewScope.MainBossSpellPhase => $"关底符卡 [{previewIndex}]",
         _ => "完整关卡时间轴",
     };
 

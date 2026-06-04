@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -99,6 +100,32 @@ public static class WeaponEmitLayout
         CollectSecondaries(origin, rotRad, weapon, powerOrbs, slowModePrimary, secondaryConverge01, outPoints);
     }
 
+    /// <summary>战斗时武器表现：主炮按配置，轨迹模式副炮按实际 ECS 发射器位置显示。</summary>
+    public static void CollectBattleWeaponVisualPoints(
+        Vector3 origin,
+        float rotRad,
+        WeaponConfig weapon,
+        int powerOrbs,
+        float secondaryConverge01,
+        bool slowModePrimary,
+        in EntityManager em,
+        Entity ownerEntity,
+        List<EmitPoint> outPoints)
+    {
+        outPoints.Clear();
+        if (weapon == null)
+            return;
+
+        if (slowModePrimary)
+            CollectPrimarySlow(origin, rotRad, weapon, powerOrbs, includeSlowPrimaryEmitter: true, outPoints);
+        else
+            CollectPrimaryNormal(origin, rotRad, weapon, includeSlowPrimaryEmitter: false, outPoints);
+
+        int runtimeSecondaryCount = CollectRuntimeSecondaryEmitters(em, ownerEntity, outPoints);
+        if (runtimeSecondaryCount <= 0)
+            CollectSecondaries(origin, rotRad, weapon, powerOrbs, slowModePrimary, secondaryConverge01, outPoints);
+    }
+
     static void CollectPrimaryNormal(
         Vector3 origin,
         float rotRad,
@@ -177,6 +204,104 @@ public static class WeaponEmitLayout
                 isPrimary: false,
                 isSlowModeLayout: slowMode);
         }
+    }
+
+    static int CollectRuntimeSecondaryEmitters(
+        in EntityManager em,
+        Entity ownerEntity,
+        List<EmitPoint> outPoints)
+    {
+        if (!em.IsValid(ownerEntity))
+            return 0;
+
+        Span<int> ownedIndices = em.GetActiveIndices<CPlayerEmitterOwnership>();
+        if (ownedIndices.Length == 0)
+            return 0;
+
+        var ownerships = em.GetComponentSpan<CPlayerEmitterOwnership>();
+        byte maxSlot = 0;
+        int matchCount = 0;
+
+        for (int i = 0; i < ownedIndices.Length; i++)
+        {
+            int emitterIdx = ownedIndices[i];
+            ref readonly var ownership = ref ownerships[emitterIdx];
+            if (ownership.ownerPlayerEntityIndex != ownerEntity.Index)
+                continue;
+            if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+                continue;
+
+            if (ownership.secondarySlotIndex > maxSlot)
+                maxSlot = ownership.secondarySlotIndex;
+            matchCount++;
+        }
+
+        if (matchCount == 0)
+            return 0;
+
+        int added = 0;
+        for (int slot = 0; slot <= maxSlot; slot++)
+        {
+            for (int i = 0; i < ownedIndices.Length; i++)
+            {
+                int emitterIdx = ownedIndices[i];
+                ref readonly var ownership = ref ownerships[emitterIdx];
+                if (ownership.ownerPlayerEntityIndex != ownerEntity.Index)
+                    continue;
+                if (ownership.role != E_WeaponEmitterSlotRole.Secondary)
+                    continue;
+                if (ownership.secondarySlotIndex != slot)
+                    continue;
+
+                if (TryAddRuntimeEmitterPoint(em, emitterIdx, in ownership, outPoints))
+                    added++;
+            }
+        }
+
+        return added;
+    }
+
+    static bool TryAddRuntimeEmitterPoint(
+        in EntityManager em,
+        int emitterIdx,
+        in CPlayerEmitterOwnership ownership,
+        List<EmitPoint> outPoints)
+    {
+        var emitterEntity = em.GetEntity(emitterIdx);
+        if (emitterEntity.IsNull)
+            return false;
+        var emitters = em.GetComponentSpan<CDanmakuEmitter>();
+        if ((uint)emitterIdx >= (uint)emitters.Length)
+            return false;
+
+        var emitterCfg = GameResDB.Instance != null
+            ? GameResDB.Instance.GetConfig<DanmakuEmitterConfig>(ownership.emitterCfgIndex)
+            : null;
+        if (emitterCfg == null)
+            return false;
+
+        ref readonly var emitter = ref emitters[emitterIdx];
+        if (!PresentationMotion.TrySampleDisplayTransform(em, emitterEntity, out float x, out float y, out float angleRad))
+            return false;
+
+        Vector2 totalOffset = new(emitter.emitterPosOffsetX, emitter.emitterPosOffsetY);
+        Vector2 rotatedOffset = RotateOffset(totalOffset, angleRad);
+
+        int prefabIndex = emitterCfg.emitterPrefabIndex;
+        if (prefabIndex < 0 && GameResDB.Instance != null)
+            prefabIndex = GameResDB.Instance.GetPrefabIndex(emitterCfg.emitterPrefabId);
+
+        outPoints.Add(new EmitPoint
+        {
+            label = $"副炮[{ownership.secondarySlotIndex}]·轨迹",
+            worldPosition = new Vector3(x + rotatedOffset.x, y + rotatedOffset.y, 0f),
+            worldRotZDeg = angleRad * Mathf.Rad2Deg + emitter.emitterRotOffsetRad * Mathf.Rad2Deg,
+            isPrimary = false,
+            isSlowModeLayout = false,
+            emitterCfg = emitterCfg,
+            emitterPrefabIndex = prefabIndex,
+        });
+        return true;
     }
 
     static void TryAddPoint(

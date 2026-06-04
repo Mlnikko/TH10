@@ -52,6 +52,11 @@ MonoBehaviour:
       slotOffset: {x: -0.2, y: -0.45}
     - danmakuEmitterConfigId: dme_marisa_green
       slotOffset: {x: 0.2, y: -0.45}
+  secondaryFollow:
+    mode: 1
+    trailSampleSpacingFrames: 8
+    trailHistoryFrames: 64
+    ignoreSlotOffsetInNormalTrail: 1
   secondaryEmitters:
     slots: []
   slowModeLayout:

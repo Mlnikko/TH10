@@ -46,10 +46,12 @@ public class MidBossEncounterConfigAssetEditor : Editor
             if (prop.name == nameof(MidBossEncounterConfig.dropOnDeathEntries))
             {
                 EditorGUILayout.Space(2);
-                EditorGUILayout.PropertyField(
-                    serializedObject.FindProperty(nameof(MidBossEncounterConfig.dropOverrideMode)),
-                    new GUIContent("覆盖策略"));
-                ResourceIdEditorPicker.DrawDeathDropEntryArray(prop, drawSectionHeader: false);
+                var modeProp = serializedObject.FindProperty(nameof(MidBossEncounterConfig.dropOverrideMode));
+                EditorGUILayout.PropertyField(modeProp, new GUIContent("覆盖策略"));
+                ResourceIdEditorPicker.DrawDeathDropEntryArray(
+                    prop,
+                    drawSectionHeader: false,
+                    drawAddButton: ShouldDrawDropAddButton(modeProp));
                 EditorGUILayout.Space(2);
                 continue;
             }
@@ -67,6 +69,12 @@ public class MidBossEncounterConfigAssetEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
     }
+
+    static bool ShouldDrawDropAddButton(SerializedProperty modeProp) =>
+        modeProp == null
+        || modeProp.propertyType != SerializedPropertyType.Enum
+        || (!modeProp.hasMultipleDifferentValues
+            && modeProp.enumValueIndex != (int)E_WaveDropOverrideMode.UseEnemyConfig);
 
     void DrawPathRoutes()
     {

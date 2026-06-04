@@ -11,6 +11,7 @@ public static class StageTimelinePreviewRuntime
     static bool _loading;
     static string _lastError;
     static bool _previewOwnedGlobalBattleData;
+    static Task _loadTask;
 
     public const string PlayModeRequiredMessage = "请先进入 Play 模式后再预览。";
 
@@ -28,7 +29,7 @@ public static class StageTimelinePreviewRuntime
 
     public static bool IsBattleBlockingPreview => IsInActiveBattle;
 
-    public static Task EnsureReadyAsync(BattleAreaConfig battleAreaConfig)
+    public static Task EnsureReadyAsync()
     {
         if (!Application.isPlaying)
             return Task.FromException(new InvalidOperationException(PlayModeRequiredMessage));
@@ -39,14 +40,28 @@ public static class StageTimelinePreviewRuntime
         if (GameResDB.IsInitialized)
             return Task.CompletedTask;
 
-        return LoadGameResDbAsync();
+        return EnsureGameResDbLoadedAsync();
+    }
+
+    public static async Task PrepareForPreviewAsync(BattleAreaConfig battleAreaConfig)
+    {
+        await EnsureReadyAsync().ConfigureAwait(true);
+
+        if (!TryValidateForPreview(battleAreaConfig, out string error))
+            throw new InvalidOperationException(error);
+
+        if (!TryApplyPreviewBattleArea(battleAreaConfig, out string areaError))
+            throw new InvalidOperationException(areaError);
+    }
+
+    static Task EnsureGameResDbLoadedAsync()
+    {
+        _loadTask ??= LoadGameResDbAsync();
+        return _loadTask;
     }
 
     static async Task LoadGameResDbAsync()
     {
-        if (_loading)
-            return;
-
         _loading = true;
         _lastError = null;
         try
@@ -64,6 +79,7 @@ public static class StageTimelinePreviewRuntime
         finally
         {
             _loading = false;
+            _loadTask = null;
         }
     }
 
@@ -186,6 +202,7 @@ public static class StageTimelinePreviewRuntime
     {
         _loading = false;
         _lastError = null;
+        _loadTask = null;
         _previewOwnedGlobalBattleData = false;
         ClearTimelinePreviewAimAtPlayer();
     }

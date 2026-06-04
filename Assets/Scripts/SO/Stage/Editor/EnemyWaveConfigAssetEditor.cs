@@ -43,10 +43,12 @@ public class EnemyWaveConfigAssetEditor : Editor
             if (prop.name == nameof(EnemyWaveConfig.waveDropOnDeathEntries))
             {
                 EditorGUILayout.Space(2);
-                EditorGUILayout.PropertyField(
-                    serializedObject.FindProperty(nameof(EnemyWaveConfig.waveDropMode)),
-                    new GUIContent("覆盖策略"));
-                ResourceIdEditorPicker.DrawDeathDropEntryArray(prop, drawSectionHeader: false);
+                var modeProp = serializedObject.FindProperty(nameof(EnemyWaveConfig.waveDropMode));
+                EditorGUILayout.PropertyField(modeProp, new GUIContent("覆盖策略"));
+                ResourceIdEditorPicker.DrawDeathDropEntryArray(
+                    prop,
+                    drawSectionHeader: false,
+                    drawAddButton: ShouldDrawWaveDropAddButton(modeProp));
                 EditorGUILayout.Space(2);
                 continue;
             }
@@ -80,6 +82,12 @@ public class EnemyWaveConfigAssetEditor : Editor
 
         serializedObject.ApplyModifiedProperties();
     }
+
+    static bool ShouldDrawWaveDropAddButton(SerializedProperty modeProp) =>
+        modeProp == null
+        || modeProp.propertyType != SerializedPropertyType.Enum
+        || (!modeProp.hasMultipleDifferentValues
+            && modeProp.enumValueIndex != (int)E_WaveDropOverrideMode.UseEnemyConfig);
 
     /// <summary>可编辑波次名称 +「自动填充」按钮（内嵌 Inspector 复用）。</summary>
     public static void DrawWaveTitleField(SerializedObject serializedObject, SerializedProperty waveTitleProp)

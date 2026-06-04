@@ -159,7 +159,9 @@ public class PlayerUpdater : IGameObjectUpdater, IPresentationPooledAttachments
                     weaponConfig,
                     player.powerOrbs,
                     player.secondarySlotConvergeT,
-                    slowMode);
+                    slowMode,
+                    em,
+                    entity);
             }
         }
 

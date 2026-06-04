@@ -1,0 +1,4 @@
+interface:
+  display_name: "TH10 Stage Timeline Editor"
+  short_description: "快速修改 TH10 时间线与编辑器工具"
+  default_prompt: "Use $th10-stage-timeline-editor to adjust TH10 stage timeline configs or editor preview tooling."

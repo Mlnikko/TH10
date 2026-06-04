@@ -128,7 +128,7 @@ MonoBehaviour:
     moveSpeed: 1
     spawnHoldSeconds: 0
     nodes:
-    - positionLocal: {x: 0, y: -6.05}
+    - positionLocal: {x: -0.014999986, y: -6.05}
       holdSeconds: 0
     legs:
     - curve: 3

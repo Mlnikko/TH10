@@ -43,7 +43,9 @@ public sealed class WeaponRuntimeLayoutView
         WeaponConfig weapon,
         int powerOrbs,
         float secondaryConverge01,
-        bool slowModePrimary)
+        bool slowModePrimary,
+        in EntityManager em,
+        Entity ownerEntity)
     {
         if (weaponTransform == null || weapon == null)
         {
@@ -52,14 +54,30 @@ public sealed class WeaponRuntimeLayoutView
         }
 
         float rotRad = weaponTransform.eulerAngles.z * Mathf.Deg2Rad;
-        WeaponEmitLayout.CollectBattleWeaponVisualPoints(
-            weaponTransform.position,
-            rotRad,
-            weapon,
-            powerOrbs,
-            secondaryConverge01,
-            slowModePrimary,
-            _points);
+        if (weapon.ShouldUseSecondaryTrail(slowModePrimary) && em.IsValid(ownerEntity))
+        {
+            WeaponEmitLayout.CollectBattleWeaponVisualPoints(
+                weaponTransform.position,
+                rotRad,
+                weapon,
+                powerOrbs,
+                secondaryConverge01,
+                slowModePrimary,
+                em,
+                ownerEntity,
+                _points);
+        }
+        else
+        {
+            WeaponEmitLayout.CollectBattleWeaponVisualPoints(
+                weaponTransform.position,
+                rotRad,
+                weapon,
+                powerOrbs,
+                secondaryConverge01,
+                slowModePrimary,
+                _points);
+        }
 
         int structureHash = ComputeStructureHash(weapon, powerOrbs, slowModePrimary, _points);
         int poseHash = ComputePoseHash(weaponTransform, secondaryConverge01, _points);

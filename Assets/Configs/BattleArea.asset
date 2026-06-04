@@ -19,9 +19,11 @@ MonoBehaviour:
     GridCellSize: 0.25
     GO_RecycleMargin: {x: 0.5, y: 0.5}
   playerSpawnData:
-    SpawnRootPos: {x: 0, y: -2}
-    HOffsetPerPlayer: 1
+    SinglePlayerSpawnPos: {x: 0, y: -2}
+    Player1SpawnPos: {x: -1.25, y: -2}
+    Player2SpawnPos: {x: -0.5, y: -2}
+    Player3SpawnPos: {x: 0.5, y: -2}
+    Player4SpawnPos: {x: 1.25, y: -2}
   dropItemCollectData:
-    collectZoneHeight: 1
+    collectLineY: 1.2
     magnetSpeed: 5
-    magnetPickupRadius: 0.08

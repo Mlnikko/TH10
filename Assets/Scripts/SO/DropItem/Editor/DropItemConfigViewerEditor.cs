@@ -58,5 +58,27 @@ public class DropItemConfigViewerEditor : GameConfigViewerEditor<DropItemConfigV
         ConfigViewerEditorUI.DrawSeparator();
         DrawSave(Viewer.dropItemConfig, Viewer.SaveDropItemConfig, "DropItemConfig");
     }
+
+    void OnSceneGUI()
+    {
+        if (Viewer == null || Viewer.dropItemConfig == null)
+            return;
+
+        Transform t = Viewer.transform;
+        float scale = Mathf.Abs(t.localScale.x);
+        if (scale <= 0.0001f)
+            scale = 1f;
+
+        Handles.color = new Color(1f, 0.75f, 0.2f, 0.9f);
+        float currentWorldRadius = Viewer.EditorPickupRadius * scale;
+        EditorGUI.BeginChangeCheck();
+        float nextWorldRadius = Handles.RadiusHandle(Quaternion.identity, t.position, currentWorldRadius);
+        if (!EditorGUI.EndChangeCheck())
+            return;
+
+        Undo.RecordObject(Viewer, "Edit Drop Item Pickup Radius");
+        Viewer.SetEditorPickupRadius(nextWorldRadius / scale);
+        SceneView.RepaintAll();
+    }
 }
 #endif

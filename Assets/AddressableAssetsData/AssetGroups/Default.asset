@@ -779,11 +779,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dceb54a82fc506c439a327d3d8a71cf7
-    m_Address: cfg_gamesettingsconfig
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b2dd2ba844c304b4e9d78df42b293a98
     m_Address: cfg_dme_reimu_red
     m_ReadOnly: 0

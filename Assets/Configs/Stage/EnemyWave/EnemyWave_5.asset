@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   waveTitle: "2\u4E2A\u654C\u4EBA # \u751F\u6210\u9635\u578B\uFF1ALine # 1\u4E2A\u8DEF\u5F84\u70B9
     # \u8DEF\u5F84\uFF1A\u8D1D\u585E\u5C14 # \u603B\u65F6\u957F\uFF1A5 s"
-  startTimeSeconds: 20.732325
+  startTimeSeconds: 18.106062
   enemyConfigId: 
   count: 1
   pathAssignment: 1
   spawnQueue:
-  - enemyConfigId: 
+  - enemyConfigId: elite_fariy
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -38,8 +38,8 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: 
-  - enemyConfigId: 
+    emitterConfigIdOverride: dme_enemy_down_triple
+  - enemyConfigId: elite_fariy
     spawnSlotIndex: -1
     delayAfterPreviousSeconds: 0
     pathRouteOverride:
@@ -58,7 +58,7 @@ MonoBehaviour:
         sineAmplitude: 0.65
         sineHz: 1.2
         sinePhaseRad: 0
-    emitterConfigIdOverride: 
+    emitterConfigIdOverride: dme_enemy_down_triple
   spawnIntervalSeconds: 0
   spawnPattern: 0
   spawnAreaSize: {x: 2, y: 0}

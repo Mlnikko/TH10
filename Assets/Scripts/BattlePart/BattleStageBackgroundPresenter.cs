@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 战斗背景表现入口：正式战斗中创建/释放 <see cref="BattleStageBackgroundRuntime"/>。
-/// Scene 预览见 <see cref="BattleAreaConfigViewer"/>。
+/// Scene 预览由 <see cref="StageTimelineConfigViewer"/> 临时创建 Runtime。
 /// </summary>
 public static class BattleStageBackgroundPresenter
 {
