@@ -192,6 +192,12 @@ public sealed class ConfigViewerWeaponFirePreview
                 continue;
             }
 
+            if (state.emitter.launchCountUsed == 0 && state.emitter.initialLaunchDelayFrames > 0
+                && frame < (uint)state.emitter.initialLaunchDelayFrames)
+            {
+                continue;
+            }
+
             uint since = frame - state.lastFireFrame;
             if (state.emitter.launchCooldownFrames > 0 &&
                 since < (uint)state.emitter.launchCooldownFrames)

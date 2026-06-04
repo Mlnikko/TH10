@@ -74,6 +74,19 @@ public readonly struct BossHudSnapshot
     }
 }
 
+/// <summary>关卡时间轴 HUD 只读快照（供 <see cref="BattleUIPanel"/> 轮询）。</summary>
+public readonly struct StageTimelineHudSnapshot
+{
+    public readonly float ElapsedSeconds;
+    public readonly E_StageState StageState;
+
+    public StageTimelineHudSnapshot(float elapsedSeconds, E_StageState stageState)
+    {
+        ElapsedSeconds = elapsedSeconds;
+        StageState = stageState;
+    }
+}
+
 /// <summary>战斗 HUD 只读快照（供 UI 轮询）。</summary>
 public readonly struct BattleHudSnapshot
 {
@@ -685,7 +698,10 @@ public class BattleManager : SingletonMono<BattleManager>
         }
 
         if (UIManager.Instance != null)
+        {
+            await UIManager.Instance.ShowPanelAsync<MenuPanel>();
             await UIManager.Instance.ShowPanelAsync<RoomPanel>();
+        }
     }
 
     public bool IsMultiplayerPrepare =>
@@ -935,6 +951,22 @@ public class BattleManager : SingletonMono<BattleManager>
         if (_battleWorld == null) return false;
         var timeline = _battleWorld.GetSystem<StageTimelineSystem>();
         return timeline != null && timeline.TryGetStageState(out state);
+    }
+
+    /// <summary>关卡时间轴已进行时间（自 StageTimelineSystem.Begin 起算）。</summary>
+    public bool TryGetStageTimelineHudSnapshot(out StageTimelineHudSnapshot snap)
+    {
+        snap = default;
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        var timeline = _battleWorld.GetSystem<StageTimelineSystem>();
+        if (timeline == null || !timeline.IsActive)
+            return false;
+
+        return timeline.TryGetTimelineHudSnapshot(
+            _battleWorld.LogicFrameTimer.CurrentFrame,
+            out snap);
     }
 
     /// <summary>关底 Boss 登场（<see cref="E_StageState.BossIntro"/>）或中场 Boss 在场时返回 true。</summary>
@@ -1195,28 +1227,10 @@ public class BattleManager : SingletonMono<BattleManager>
 
         powerOrbs = Math.Max(0, powerOrbs);
 
-        var em = _battleWorld.EntityManager;
-        Span<int> playerIndices = em.GetActiveIndices<CPlayer>();
-        if (playerIndices.Length == 0)
+        if (!TryFindPlayerEntity(playerIndex, out Entity targetEntity))
             return false;
 
-        var players = em.GetComponentSpan<CPlayer>();
-        Entity targetEntity = Entity.Null;
-
-        for (int i = 0; i < playerIndices.Length; i++)
-        {
-            int entityIdx = playerIndices[i];
-            if (players[entityIdx].playerIndex != playerIndex)
-                continue;
-
-            targetEntity = em.GetEntity(entityIdx);
-            break;
-        }
-
-        if (!em.IsValid(targetEntity))
-            return false;
-
-        ref var player = ref em.GetComponent<CPlayer>(targetEntity);
+        ref var player = ref _battleWorld.EntityManager.GetComponent<CPlayer>(targetEntity);
         player.powerOrbs = powerOrbs;
 
         var weaponConfig = GameResDB.Instance.GetConfig<WeaponConfig>(player.weaponCfgIndex);
@@ -1225,6 +1239,61 @@ public class BattleManager : SingletonMono<BattleManager>
 
         Logger.Info($"[UnitTest] Player {playerIndex} powerOrbs = {powerOrbs}.", LogTag.UnitTest);
         return true;
+    }
+
+    /// <summary>单元测试：设置指定玩家是否无敌（忽略敌弹/擦弹伤害）。</summary>
+    public bool TrySetPlayerInvincible(byte playerIndex, bool invincible)
+    {
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        if (!TryFindPlayerEntity(playerIndex, out Entity targetEntity))
+            return false;
+
+        ref var player = ref _battleWorld.EntityManager.GetComponent<CPlayer>(targetEntity);
+        player.isInvincible = invincible;
+
+        Logger.Info($"[UnitTest] Player {playerIndex} invincible = {invincible}.", LogTag.UnitTest);
+        return true;
+    }
+
+    /// <summary>单元测试：读取指定玩家当前无敌状态。</summary>
+    public bool TryGetPlayerInvincible(byte playerIndex, out bool invincible)
+    {
+        invincible = false;
+        if (_battleWorld == null || CurrentStatus != E_BattleStatus.InBattle)
+            return false;
+
+        if (!TryFindPlayerEntity(playerIndex, out Entity targetEntity))
+            return false;
+
+        invincible = _battleWorld.EntityManager.GetComponent<CPlayer>(targetEntity).isInvincible;
+        return true;
+    }
+
+    bool TryFindPlayerEntity(byte playerIndex, out Entity playerEntity)
+    {
+        playerEntity = Entity.Null;
+        if (_battleWorld == null)
+            return false;
+
+        var em = _battleWorld.EntityManager;
+        Span<int> playerIndices = em.GetActiveIndices<CPlayer>();
+        if (playerIndices.Length == 0)
+            return false;
+
+        var players = em.GetComponentSpan<CPlayer>();
+        for (int i = 0; i < playerIndices.Length; i++)
+        {
+            int entityIdx = playerIndices[i];
+            if (players[entityIdx].playerIndex != playerIndex)
+                continue;
+
+            playerEntity = em.GetEntity(entityIdx);
+            return em.IsValid(playerEntity);
+        }
+
+        return false;
     }
 
     #endregion

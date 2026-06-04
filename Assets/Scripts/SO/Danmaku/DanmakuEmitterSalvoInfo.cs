@@ -5,6 +5,8 @@ using UnityEngine;
 /// </summary>
 public static class DanmakuEmitterSalvoInfo
 {
+    /// <summary>activationFrame 未初始化时的哨兵值。</summary>
+    public const uint ActivationFrameUnset = uint.MaxValue;
     /// <summary>将配置中的 launchCount 烘焙为 ECS 用的 launchCountMax；-1 无限，0 视为误填并当作无限。</summary>
     public static int NormalizeLaunchCountMax(int launchCount) =>
         launchCount == 0 ? -1 : launchCount;

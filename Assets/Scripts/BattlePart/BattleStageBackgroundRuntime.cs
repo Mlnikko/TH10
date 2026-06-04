@@ -228,7 +228,11 @@ public class BattleStageBackgroundRuntime : MonoBehaviour
         if (_data.backgroundLayers == null || _data.backgroundLayers.Length == 0)
             return;
 
-        var shader = Shader.Find(BackgroundShaderName);
+        var shader = GameResDB.IsInitialized
+            ? GameResDB.Instance.BattleBackgroundScrollShader
+            : null;
+        if (shader == null)
+            shader = Shader.Find(BackgroundShaderName);
         if (shader == null)
         {
             Logger.Warn($"[BattleStageBackground] Shader '{BackgroundShaderName}' not found.", LogTag.Battle);

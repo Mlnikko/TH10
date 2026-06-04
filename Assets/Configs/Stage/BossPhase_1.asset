@@ -15,7 +15,9 @@ MonoBehaviour:
   phaseName: Phase2
   triggerType: 1
   triggerTimeSeconds: 0
-  triggerHpPercent: 50
-  spellCardId: dme_boss_grain_storm
+  triggerHpPercent: 0.5
+  spellEmitters:
+  - emitterConfigId: dme_boss_star_pentagon_cluster_rotate
+  spellCardId: dme_boss_star_pentagon_cluster_rotate
   durationSeconds: -1
   bgmRef: 

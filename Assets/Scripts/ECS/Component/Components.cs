@@ -175,8 +175,12 @@ public struct CDanmakuEmitter : IComponent
     // ================= 动态状态 (每帧变化) =================
     public bool isEmitting;
     public uint lastFireFrame;
+    /// <summary>发射器激活逻辑帧；<see cref="DanmakuEmitterActivation.Unset"/> 表示尚未记录。</summary>
+    public uint activationFrame;
     /// <summary>两次发射之间至少间隔的逻辑帧数；0 表示无间隔（由 <see cref="DanmakuEmitterConfig"/> 在加载时烘焙）。</summary>
     public int launchCooldownFrames;
+    /// <summary>首次齐射前需等待的逻辑帧数（来自 <see cref="DanmakuEmitterConfig.initialLaunchDelaySeconds"/>）。</summary>
+    public int initialLaunchDelayFrames;
     /// <summary>最大发射次数；-1 表示无限（来自 <see cref="DanmakuEmitterConfig.launchCount"/>）。</summary>
     public int launchCountMax;
     /// <summary>已完成的发射轮次（一次 Line/Arc 齐射计 1 次）。</summary>
@@ -241,8 +245,10 @@ public struct CDanmakuEmitter : IComponent
     {
         isEmitting = false;
         lastFireFrame = 0;
+        activationFrame = DanmakuEmitterSalvoInfo.ActivationFrameUnset;
 
         launchCooldownFrames = soConfig.launchCooldownFrames;
+        initialLaunchDelayFrames = soConfig.initialLaunchDelayFrames;
         launchCountMax = DanmakuEmitterSalvoInfo.NormalizeLaunchCountMax(soConfig.launchCount);
         launchCountUsed = 0;
 
@@ -551,6 +557,12 @@ public struct CPlayerRespawnPending : IComponent
     public int framesUntilSpawn;
     public float spawnX;
     public float spawnY;
+}
+
+/// <summary>挂在敌人/Boss 弹幕发射子实体上，跟随宿主位姿。</summary>
+public struct CEnemyEmitterOwnership : IComponent
+{
+    public int ownerEnemyEntityIndex;
 }
 
 /// <summary>挂在玩家武器发射子实体上，用于同步位置与射击状态。</summary>

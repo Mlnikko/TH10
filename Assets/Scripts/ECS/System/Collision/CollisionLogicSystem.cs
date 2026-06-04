@@ -125,6 +125,7 @@ public class CollisionLogicSystem : BaseSystem
 
             TrySpawnDeathEffectFromEnemy(enemyEntity);
             TrySpawnDropsFromEnemy(enemyEntity);
+            EnemyOwnedEmitterLogic.ClearOwnedEmitters(EntityManager, enemyEntity.Index);
             EntityManager.AddComponent(enemyEntity.Index, new CPoolRecycleTag());
         }
     }

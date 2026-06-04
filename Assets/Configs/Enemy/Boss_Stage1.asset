@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u5173\u5E95Boss"
   displaySprite: {fileID: 484668414, guid: 96589b45dcb41de4da76a8c1baa402ca, type: 3}
   animatorController: {fileID: 9100000, guid: f914353b3558ee842bba94d07c300a43, type: 2}
-  emitterConfigId: dme_boss_ring_24_rotate
+  emitterConfigId: dme_boss_fan_down_double
   maxHealth: 1000
   colliderConfig:
     isTrigger: 0

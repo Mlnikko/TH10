@@ -10,10 +10,10 @@ public struct ColliderConfig
     [Tooltip("碰撞体形状")]
     public E_ColliderShape shape;
 
-    [Tooltip("碰撞体所在层")]
+    [Tooltip("碰撞体所在层（与 CollisionLayerMatrixConfig 行/列对应）")]
     public E_ColliderLayer layer;
 
-    [Tooltip("碰撞掩码")]
+    [Tooltip("保留字段；运行时碰撞对由 CollisionLayerMatrixConfig 矩阵决定")]
     public E_ColliderLayer mask;
 
     [Tooltip("圆形碰撞半径")] [Min(0f)]

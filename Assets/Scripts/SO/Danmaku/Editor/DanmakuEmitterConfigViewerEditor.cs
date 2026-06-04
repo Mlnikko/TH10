@@ -44,6 +44,7 @@ public class DanmakuEmitterConfigViewerEditor : GameConfigViewerEditor<DanmakuEm
         nameof(DanmakuEmitterConfig.danmakuRotOffsetZ),
         nameof(DanmakuEmitterConfig.salvoAngleAdvanceDeg),
         nameof(DanmakuEmitterConfig.launchIntervalSeconds),
+        nameof(DanmakuEmitterConfig.initialLaunchDelaySeconds),
         nameof(DanmakuEmitterConfig.launchCount),
         nameof(DanmakuEmitterConfig.launchSpeed),
         nameof(DanmakuEmitterConfig.audio_Fire),

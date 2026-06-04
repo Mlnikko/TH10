@@ -31,6 +31,7 @@ public static class ComponentMaskBits
     public const uint CMainBossEncounter      = 1u << 23;
     public const uint CPlayerRespawnPending   = 1u << 24;
     public const uint CPlayerMotionTrail      = 1u << 25;
+    public const uint CEnemyEmitterOwnership  = 1u << 26;
 
     public static uint GetMask<T>() where T : struct, IComponent
     {
@@ -61,6 +62,7 @@ public static class ComponentMaskBits
         if (typeof(T) == typeof(CMainBossEncounter)) return CMainBossEncounter;
         if (typeof(T) == typeof(CPlayerRespawnPending)) return CPlayerRespawnPending;
         if (typeof(T) == typeof(CPlayerMotionTrail)) return CPlayerMotionTrail;
+        if (typeof(T) == typeof(CEnemyEmitterOwnership)) return CEnemyEmitterOwnership;
 
         return 0;
     }

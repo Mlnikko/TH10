@@ -84,12 +84,18 @@ public class GameResDB : Singleton<GameResDB>
     // —————— 内部注册器（不对外暴露） ——————
     readonly ResourceRegistry<GameConfig> _configRegistry = new();
     readonly ResourceRegistry<GameObject> _prefabRegistry = new();
-    readonly ResourceRegistry<Texture2D> _textureRegistry = new();
+    readonly ResourceRegistry<Sprite> _manifestSpriteRegistry = new();
     readonly ResourceRegistry<SpriteAtlas> _atlasRegistry = new();
+
+    Shader _battleBackgroundScrollShader;
+
+    public const string BattleBackgroundScrollShaderId = "th10_battlebackgroundperspective";
+
+    public Shader BattleBackgroundScrollShader => _battleBackgroundScrollShader;
 
     public int GetPrefabIndex(string id) => _prefabRegistry.GetIndexById(id);
     public int GetConfigIndex(string id) => _configRegistry.GetIndexById(id);
-    public int GetTextureIndex(string id) => _textureRegistry.GetIndexById(id);
+    public int GetTextureIndex(string id) => _manifestSpriteRegistry.GetIndexById(id);
     public int GetAtlasIndex(string id) => _atlasRegistry.GetIndexById(id);
 
 
@@ -121,6 +127,10 @@ public class GameResDB : Singleton<GameResDB>
             if (!string.IsNullOrEmpty(battleAreaId))
                 allConfigIds.Add(battleAreaId);
 
+            string collisionMatrixId = StringHelper.NormalizeResourceId(manifest.collisionLayerMatrixConfigId);
+            if (!string.IsNullOrEmpty(collisionMatrixId))
+                allConfigIds.Add(collisionMatrixId);
+
             AppendNormalizedIds(allConfigIds, manifest.stageTimelineConfigIds);
 
             var configAssets = await LoadAssetsAsync<GameConfig>(allConfigIds, E_ResourceCategory.Config);
@@ -151,14 +161,16 @@ public class GameResDB : Singleton<GameResDB>
             _prefabRegistry.Initialize(prefabAssets, allPrefabIds);
         }
 
-        // —————— 加载 Textures ——————
+        // —————— 加载 Manifest 独立贴图（角色立绘、关卡背景等；导入类型多为 Sprite） ——————
         {
-            var textureIds = new List<string>();
-            AppendNormalizedIds(textureIds, manifest.characterImages);
-            AppendNormalizedIds(textureIds, manifest.stageBackgroundTextureIds);
-            var textureAssets = await LoadAssetsAsync<Texture2D>(textureIds, E_ResourceCategory.Texture);
-            _textureRegistry.Initialize(textureAssets, textureIds);
+            var spriteIds = new List<string>();
+            AppendNormalizedIds(spriteIds, manifest.characterImages);
+            AppendNormalizedIds(spriteIds, manifest.stageBackgroundTextureIds);
+            var spriteAssets = await LoadManifestSpritesAsync(spriteIds);
+            _manifestSpriteRegistry.Initialize(spriteAssets, spriteIds);
         }
+
+        await LoadBattlePresentationShaderAsync();
 
         // —————— 加载 Atlases ——————
         {
@@ -221,6 +233,83 @@ public class GameResDB : Singleton<GameResDB>
         return loaded;
     }
 
+    async Task<List<Sprite>> LoadManifestSpritesAsync(IReadOnlyList<string> ids)
+    {
+        if (ids.Count == 0)
+            return new List<Sprite>();
+
+        var loaded = new List<Sprite>(ids.Count);
+        for (int i = 0; i < ids.Count; i++)
+        {
+            loaded.Add(await LoadManifestSpriteAsync(ids[i]));
+        }
+
+        return loaded;
+    }
+
+    static async Task<Sprite> LoadManifestSpriteAsync(string id)
+    {
+        string key = ResHelper.GetAddressableKey(E_ResourceCategory.Texture, id);
+
+        try
+        {
+            var sprite = await ResLoader.LoadAsync<Sprite>(key);
+            if (sprite != null)
+                return sprite;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Load Sprite failed for '{id}', fallback to Texture2D: {ex.Message}", LogTag.Resource);
+        }
+
+        try
+        {
+            var texture = await ResLoader.LoadAsync<Texture2D>(key);
+            if (texture != null)
+            {
+                return Sprite.Create(
+                    texture,
+                    new Rect(0f, 0f, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to load manifest sprite '{id}': {ex.Message}", LogTag.Resource);
+        }
+
+        Logger.Error($"Failed to load manifest sprite: '{id}'", LogTag.Resource);
+        return null;
+    }
+
+    async Task LoadBattlePresentationShaderAsync()
+    {
+        try
+        {
+            _battleBackgroundScrollShader = await ResManager.Instance.LoadAsync<Shader>(
+                E_ResourceCategory.Shader,
+                BattleBackgroundScrollShaderId);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn(
+                $"Load battle background shader '{BattleBackgroundScrollShaderId}' failed: {ex.Message}",
+                LogTag.Resource);
+        }
+
+        if (_battleBackgroundScrollShader == null)
+        {
+            _battleBackgroundScrollShader = Shader.Find("TH10/BattleBackgroundScroll");
+            if (_battleBackgroundScrollShader == null)
+            {
+                Logger.Error(
+                    "[GameResDB] Battle background shader missing. Register Addressable shader_th10_battlebackgroundperspective.",
+                    LogTag.Resource);
+            }
+        }
+    }
+
     /// <summary>
     /// 1. 配置索引编制，把配置中的string类型ID转换为运行时int索引
     /// 2. 秒->帧转换
@@ -235,6 +324,26 @@ public class GameResDB : Singleton<GameResDB>
                 resolver.ResolveReferences(this);
             if (cfg is ILogicTimingBake timingBake)
                 timingBake.BakeLogicTiming(GameManager.logicFPS);
+        }
+
+        ApplyCollisionLayerMatrix();
+    }
+
+    void ApplyCollisionLayerMatrix()
+    {
+        var manifest = ResManager.Instance?.Manifest;
+        CollisionLayerMatrixConfig matrixCfg = null;
+        if (manifest != null && !string.IsNullOrEmpty(manifest.collisionLayerMatrixConfigId))
+            matrixCfg = GetConfig<CollisionLayerMatrixConfig>(manifest.collisionLayerMatrixConfigId);
+
+        if (matrixCfg != null)
+            ColliderLayerMatrix.Apply(matrixCfg);
+        else
+        {
+            Logger.Warn(
+                "[GameResDB] CollisionLayerMatrixConfig not found; using built-in defaults.",
+                LogTag.Collision);
+            ColliderLayerMatrix.ApplyBuiltInDefaults();
         }
     }
 
@@ -270,7 +379,11 @@ public class GameResDB : Singleton<GameResDB>
     #endregion
 
     #region Texture Access
-    public Texture2D GetTexture(int index) => _textureRegistry.GetByIndex(index);
+    public Texture2D GetTexture(int index)
+    {
+        var sprite = _manifestSpriteRegistry.GetByIndex(index);
+        return sprite != null ? sprite.texture : null;
+    }
     #endregion
 
     #region Atlas & Sprite
@@ -298,26 +411,26 @@ public class GameResDB : Singleton<GameResDB>
 
     public Sprite GetSpriteFromTexture(int textureIndex, float pixelsPerUnit = 100f)
     {
-        var texture = _textureRegistry.GetByIndex(textureIndex);
-        if (texture == null)
+        var sprite = _manifestSpriteRegistry.GetByIndex(textureIndex);
+        if (sprite == null)
         {
-            Logger.Error($"Texture at index {textureIndex} not found.", LogTag.Resource);
+            Logger.Error($"Manifest sprite at index {textureIndex} not found.", LogTag.Resource);
             return null;
         }
-        return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f), pixelsPerUnit);
+
+        return sprite;
     }
 
     public Sprite GetSpriteFromTexture(string textureId, float pixelsPerUnit = 100f)
     {
-        var texture = _textureRegistry.GetById(textureId);
-        if (texture == null)
+        var sprite = _manifestSpriteRegistry.GetById(textureId);
+        if (sprite == null)
         {
-            Logger.Error($"Texture with ID '{textureId}' not found.", LogTag.Resource);
+            Logger.Error($"Manifest sprite '{textureId}' not found.", LogTag.Resource);
             return null;
         }
-        return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
-            new Vector2(0.5f, 0.5f), pixelsPerUnit);
+
+        return sprite;
     }
     #endregion
 }

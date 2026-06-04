@@ -84,18 +84,32 @@ public class DeterministicGrid
     }
 
     /// <summary>
-    /// 查询与指定碰撞体可能相交的所有实体（去重、升序）
+    /// 查询与指定碰撞体可能相交的所有实体（去重、升序），并按 layer/mask 过滤不可碰撞对。
     /// </summary>
-    public int Query(float cx, float cy, in CCollider col, Span<int> outputBuffer, BitSet tempSet)
+    public int Query(
+        float cx,
+        float cy,
+        in CCollider col,
+        Span<int> outputBuffer,
+        BitSet tempSet,
+        ReadOnlySpan<CCollider> colliders)
     {
         GetBounds(cx, cy, col, out float minX, out float minY, out float maxX, out float maxY);
-        return QueryAABB(minX, minY, maxX, maxY, outputBuffer, tempSet);
+        return QueryAABB(minX, minY, maxX, maxY, outputBuffer, tempSet, col.layer, colliders);
     }
 
     /// <summary>
-    /// 查询轴对齐包围盒覆盖范围内的格子（用于高速物体扫掠粗测等）。
+    /// 查询轴对齐包围盒覆盖范围内的格子（用于高速物体扫掠粗测等），并按碰撞层矩阵过滤不可碰撞对。
     /// </summary>
-    public int QueryAABB(float minX, float minY, float maxX, float maxY, Span<int> outputBuffer, BitSet tempSet)
+    public int QueryAABB(
+        float minX,
+        float minY,
+        float maxX,
+        float maxY,
+        Span<int> outputBuffer,
+        BitSet tempSet,
+        E_ColliderLayer queryLayer,
+        ReadOnlySpan<CCollider> colliders)
     {
         int minCellX = WorldToCellX(minX);
         int maxCellX = WorldToCellX(maxX);
@@ -112,11 +126,20 @@ public class DeterministicGrid
                 if ((uint)y >= (uint)_gridHeight) continue;
                 int idx = y * _gridWidth + x;
                 foreach (int e in _cells[idx])
+                {
+                    if ((uint)e >= (uint)colliders.Length)
+                        continue;
+
+                    ref readonly var colB = ref colliders[e];
+                    if (!ColliderLayerFilter.CanCollide(queryLayer, colB.layer))
+                        continue;
+
                     tempSet.Set(e, true);
+                }
             }
         }
 
-        return tempSet.GetSetBits(outputBuffer); // 返回升序 Entity ID
+        return tempSet.GetSetBits(outputBuffer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

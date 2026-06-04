@@ -39,6 +39,8 @@ public static class BossDanmakuEmitterPatternFactory
         created.Add(CreateGrainCurtain());
         created.Add(CreateFourWayRotate());
         created.Add(CreateRingDualColor());
+        created.Add(CreateFanDownDouble());
+        created.Add(CreateStarPentagonClusterRotate());
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
@@ -57,6 +59,8 @@ public static class BossDanmakuEmitterPatternFactory
         { "spell_grain_storm", "dme_boss_grain_storm" },
         { "spell_stream_wall", "dme_boss_stream_wall" },
         { "spell_four_way", "dme_boss_four_way_rotate" },
+        { "spell_fan_down_double", "dme_boss_fan_down_double" },
+        { "spell_star_pentagon", "dme_boss_star_pentagon_cluster_rotate" },
     };
 
     static DanmakuEmitterConfig CreateRing24Rotate() =>
@@ -243,6 +247,34 @@ public static class BossDanmakuEmitterPatternFactory
                 arc.arcBulletCount = 20;
                 arc.arcClockwise = true;
             }));
+
+    static DanmakuEmitterConfig CreateFanDownDouble() =>
+        Save(CreateBase("DME_Boss_Fan_Down_Double", BulletBoll, EmitMode.Arc, 0.5f, SpeedNormal,
+            presentationDescription: "向下放射扇形：每 0.5s 一齐射，90° 展开，9 发玉弹。",
+            configureArc: arc =>
+            {
+                arc.arcStartAngle = -135f;
+                arc.arcAngle = 90f;
+                arc.arcRadius = 0f;
+                arc.arcBulletCount = 9;
+                arc.arcClockwise = true;
+            }));
+
+    static DanmakuEmitterConfig CreateStarPentagonClusterRotate()
+    {
+        var cfg = CreateBase("DME_Boss_Star_Pentagon_Cluster_Rotate", BulletStar, EmitMode.Arc, 0.1f, SpeedNormal,
+            presentationDescription: "五角星旋转：每齐射一角 5 发小扇，齐射角递增 73.2°（五角 + 慢转）。",
+            salvoAdvance: 73.2f, configureArc: arc =>
+            {
+                arc.arcStartAngle = -96f;
+                arc.arcAngle = 12f;
+                arc.arcRadius = 0f;
+                arc.arcBulletCount = 5;
+                arc.arcClockwise = true;
+            });
+        cfg.initialLaunchDelaySeconds = 0.3f;
+        return Save(cfg);
+    }
 
     static DanmakuEmitterConfig CreateBase(
         string assetName,

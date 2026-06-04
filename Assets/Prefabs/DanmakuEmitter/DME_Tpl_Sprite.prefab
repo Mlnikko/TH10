@@ -97,8 +97,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d08d1b86bed19a249a8e82c1a819c7c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emitterConfig: {fileID: 11400000, guid: c3682a217d52966479486d2fadee5d0d, type: 2}
-  emitterType: 1
+  emitterConfig: {fileID: 11400000, guid: b2c3d4e5f6478091a2b3c4d5e6f70201, type: 2}
+  emitterType: 2
   emitterCamp: 2
   displaySprite: {fileID: 0}
   displaySelfSpinDegreesPerSecond: 0
@@ -113,11 +113,11 @@ MonoBehaviour:
     lineCount: 1
     lineSpacing: 0
   arcModeConfig:
-    arcStartAngle: 0
-    arcAngle: 0
+    arcStartAngle: -96
+    arcAngle: 12
     arcRadius: 0
-    arcBulletCount: 0
-    arcClockwise: 0
+    arcBulletCount: 5
+    arcClockwise: 1
   waveModeConfig:
     centerAngleDeg: 0
     swingDegrees: 0
@@ -128,16 +128,17 @@ MonoBehaviour:
     arcRadius: 0
     clockwise: 0
   grainModeConfig:
-    bulletCount: 0
+    bulletCount: 1
     baseAngleDeg: 0
     coneHalfAngleDeg: 0
     speedMinScale: 0.85
     speedMaxScale: 1.15
     spawnScatterRadius: 0
   launchAudio: 0
-  launchIntervalSeconds: 1.2
+  launchIntervalSeconds: 0.1
+  initialLaunchDelaySeconds: 0
   launchCount: -1
-  launchSpeed: 7
+  launchSpeed: 5.5
   previewDuration: 999
   previewBulletLifetime: 3
   previewSpinDuration: 5

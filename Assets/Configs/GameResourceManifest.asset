@@ -44,6 +44,7 @@ MonoBehaviour:
   - dm_star
   - dm_test
   danmakuEmitterConfigIds:
+  - dme_boss_fan_down_double
   - dme_boss_fan_omni
   - dme_boss_fan_tight
   - dme_boss_four_way_rotate
@@ -54,6 +55,7 @@ MonoBehaviour:
   - dme_boss_ring_32_spiral
   - dme_boss_ring_dual
   - dme_boss_ring_spread
+  - dme_boss_star_pentagon_cluster_rotate
   - dme_boss_stream
   - dme_boss_stream_wall
   - dme_boss_wave_lasher
@@ -93,6 +95,8 @@ MonoBehaviour:
   - dme_reimu_pink
   - dme_reimu_red
   - dme_test
+  - dme_test_burst_ring_2500
+  - dme_test_burst_grain_2500
   dropItemConfigIds:
   - drop_bpt_b
   - drop_bpt_s
@@ -107,6 +111,7 @@ MonoBehaviour:
   stageTimelineConfigIds:
   - stagetimeline_1
   battleAreaConfigId: battlearea
+  collisionLayerMatrixConfigId: collisionlayermatrix
   characterPrefabIds:
   - character_marisa
   - character_reimu
@@ -137,10 +142,10 @@ MonoBehaviour:
   - character_marisa
   - character_reimu
   stageBackgroundTextureIds:
-  - stg1bg
-  - stg1bg2
   - stg1_cloud
   - stg1_cloud_2
+  - stg1bg
+  - stg1bg2
   atlases:
   - marisa
   - reimu

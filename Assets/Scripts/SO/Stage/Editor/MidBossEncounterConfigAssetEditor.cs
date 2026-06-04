@@ -39,7 +39,7 @@ public class MidBossEncounterConfigAssetEditor : Editor
 
             if (prop.name == nameof(MidBossEncounterConfig.emitterConfigIdOverride))
             {
-                ResourceIdEditorPicker.DrawDanmakuEmitterConfigIdField(prop, "dme_midboss_");
+                ResourceIdEditorPicker.DrawDanmakuEmitterConfigIdField(prop);
                 continue;
             }
 

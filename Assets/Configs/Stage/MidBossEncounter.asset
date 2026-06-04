@@ -19,7 +19,7 @@ MonoBehaviour:
   spawnOffset: {x: 0, y: 0.25}
   yHeightNorm: 0.5
   entryPathRoute:
-    durationSeconds: 0.23611112
+    durationSeconds: 2
     moveSpeed: 3.6
     spawnHoldSeconds: 0
     nodes:
@@ -27,7 +27,7 @@ MonoBehaviour:
       holdSeconds: 0
     legs:
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -35,21 +35,21 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
   loopPathRoute:
-    durationSeconds: 7.2492423
+    durationSeconds: 48
     moveSpeed: 1
     spawnHoldSeconds: 0
     nodes:
     - positionLocal: {x: -0.8, y: 0}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: 0, y: -0.19999993}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: 0.8, y: 0}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: 0, y: 0}
-      holdSeconds: 1
+      holdSeconds: 10
     legs:
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -57,7 +57,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -65,7 +65,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -73,7 +73,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -96,7 +96,7 @@ MonoBehaviour:
       sineAmplitude: 0.65
       sineHz: 1.2
       sinePhaseRad: 0
-  emitterConfigIdOverride: 
+  emitterConfigIdOverride: dme_test_burst_grain_2500
   dropOverrideMode: 0
   dropOnDeathEntries: []
   dropOnDeathConfigIds: []

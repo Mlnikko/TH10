@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MainBossEncounter
   m_EditorClassIdentifier: 
   enabled: 1
-  spawnTimeSeconds: 63.53029
+  spawnTimeSeconds: 72.9579
   enemyConfigId: boss_stage1
   spawnOffset: {x: 0, y: 0.2}
   yHeightNorm: 0.5
@@ -34,23 +34,23 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
   loopPathRoute:
-    durationSeconds: 9.982665
+    durationSeconds: 60
     moveSpeed: 1
     spawnHoldSeconds: 0
     nodes:
     - positionLocal: {x: 1.2, y: -0.30000007}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: 0.4, y: -0.60000014}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: -0.4, y: -0.60000014}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: -1.2, y: -0.30000007}
-      holdSeconds: 1
+      holdSeconds: 10
     - positionLocal: {x: 0, y: 0}
-      holdSeconds: 1
+      holdSeconds: 10
     legs:
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -58,7 +58,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -66,7 +66,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -74,7 +74,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2
@@ -82,7 +82,7 @@ MonoBehaviour:
       sineHz: 1.2
       sinePhaseRad: 0
     - curve: 0
-      travelSeconds: 0
+      travelSeconds: 2
       bezierHandle1Local: {x: 0, y: 0}
       bezierHandle2Local: {x: 0, y: 0}
       arcBulge: 1.2

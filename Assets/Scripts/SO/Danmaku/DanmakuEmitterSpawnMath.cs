@@ -125,10 +125,10 @@ public static class DanmakuEmitterSpawnMath
 
         for (int i = 0; i < emitter.grainBulletCount; i++)
         {
-            float angleT = Deterministic01(seed, salvoIndex, i, 0);
-            float speedT = Deterministic01(seed, salvoIndex, i, 1);
-            float scatterX = Deterministic01(seed, salvoIndex, i, 2) - 0.5f;
-            float scatterY = Deterministic01(seed, salvoIndex, i, 3) - 0.5f;
+            float angleT = DeterministicRandomHash.ToFloat01(seed, salvoIndex, i, 0);
+            float speedT = DeterministicRandomHash.ToFloat01(seed, salvoIndex, i, 1);
+            float scatterX = DeterministicRandomHash.ToFloat01(seed, salvoIndex, i, 2) - 0.5f;
+            float scatterY = DeterministicRandomHash.ToFloat01(seed, salvoIndex, i, 3) - 0.5f;
 
             float angle = emitRotRad + emitter.grainBaseAngleRad
                           + Mathf.Lerp(-emitter.grainConeHalfRad, emitter.grainConeHalfRad, angleT);
@@ -234,17 +234,6 @@ public static class DanmakuEmitterSpawnMath
     }
 
     /// <summary>确定性 [0,1) 伪随机，用于粒弹散布（与帧同步兼容）。</summary>
-    public static float Deterministic01(uint seed, int salvoIndex, int bulletIndex, int salt)
-    {
-        uint x = seed
-                 + (uint)salvoIndex * 3266489917u
-                 + (uint)bulletIndex * 668265263u
-                 + (uint)salt * 374761393u;
-        x ^= x >> 16;
-        x *= 2246822519u;
-        x ^= x >> 13;
-        x *= 3266489917u;
-        x ^= x >> 16;
-        return (x & 0xffffffu) / (float)0x1000000u;
-    }
+    public static float Deterministic01(uint seed, int salvoIndex, int bulletIndex, int salt) =>
+        DeterministicRandomHash.ToFloat01(seed, salvoIndex, bulletIndex, salt);
 }

@@ -107,10 +107,11 @@ public static class EnemyWaveSpawnMath
                 float sx = Mathf.Min(Mathf.Max(bandHeight * 0.5f, wave.spawnAreaSize.x), maxSpanX);
                 float sy = Mathf.Min(Mathf.Max(bandHeight * 0.5f, wave.spawnAreaSize.y), maxSpanY);
                 int n = Mathf.Max(1, spawnCount);
+                uint frameSeed = spawnFrame * 2246822519u;
                 for (int i = 0; i < n; i++)
                 {
-                    float rx = Deterministic01(spawnFrame, waveIndex, i, 0);
-                    float ry = Deterministic01(spawnFrame, waveIndex, i, 1);
+                    float rx = DeterministicRandomHash.ToFloat01(frameSeed, waveIndex, i, 0);
+                    float ry = DeterministicRandomHash.ToFloat01(frameSeed, waveIndex, i, 1);
                     list.Add(new Vector2(
                         anchor.x + (rx - 0.5f) * sx,
                         anchor.y + (ry - 0.5f) * sy));
@@ -174,19 +175,5 @@ public static class EnemyWaveSpawnMath
     {
         float w = area.RecycleRight - area.RecycleLeft;
         return Mathf.Max(0.05f, w - EdgeEpsilon * 4f);
-    }
-
-    static float Deterministic01(uint frame, int waveIndex, int spawnIndex, int salt)
-    {
-        uint x = frame * 2246822519u
-                 + (uint)waveIndex * 3266489917u
-                 + (uint)spawnIndex * 668265263u
-                 + (uint)salt * 374761393u;
-        x ^= x >> 16;
-        x *= 2654435761u;
-        x ^= x >> 13;
-        x *= 3266489917u;
-        x ^= x >> 16;
-        return (x & 0xffffffu) / (float)0xffffffu;
     }
 }

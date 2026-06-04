@@ -416,8 +416,8 @@ MonoBehaviour:
   timelinePixelsPerSecond: 9.9
   previewMidStageWaveIndex: 4
   previewPathEditEntryIndex: 4
-  pathEditTarget: 0
-  previewMidBossPathPhase: 0
+  pathEditTarget: 1
+  previewMidBossPathPhase: 1
   previewMainBossPathPhase: 0
   previewMainBossSpellPhaseIndex: 0
   pathNodeSnapToGrid: 1

@@ -15,7 +15,10 @@ MonoBehaviour:
   phaseName: Phase1
   triggerType: 1
   triggerTimeSeconds: 0
-  triggerHpPercent: 0
-  spellCardId: dme_boss_ring_32_spiral
+  triggerHpPercent: 1
+  spellEmitters:
+  - emitterConfigId: dme_boss_fan_down_double
+  - emitterConfigId: dme_boss_star_pentagon_cluster_rotate
+  spellCardId: dme_boss_fan_down_double
   durationSeconds: -1
   bgmRef: 

@@ -38,8 +38,15 @@ public class RoomPanel : UIPanel
         RemoveEventListeners();
     }
 
+    void OnDestroy()
+    {
+        RemoveEventListeners();
+    }
+
     void SetupEventListeners()
     {
+        RemoveEventListeners();
+
         var rm = RoomManager.Instance;
         if (rm == null)
             return;
@@ -107,7 +114,7 @@ public class RoomPanel : UIPanel
             item.gameObject.SetActive(true);
 
             if (i < playerCount)
-                item.SetOccupied(i, isHost: i == 0);
+                item.SetOccupied(i, isHost: i == 0, isLocal: i == RoomManager.LocalPlayerIndex);
             else
                 item.SetEmpty(i);
         }
@@ -131,7 +138,17 @@ public class RoomPanel : UIPanel
     void OnLeaveRoomClicked()
     {
         RoomManager.Instance.LeaveRoom();
-        UIManager.Instance.GoBack();
+        ReturnToMenuFromRoom();
+    }
+
+    void ReturnToMenuFromRoom()
+    {
+        var ui = UIManager.Instance;
+        if (ui == null)
+            return;
+
+        ui.ClosePanel<RoomPanel>();
+        ui.ShowPanelAsync<MenuPanel>().Forget();
     }
 
     void OnRoomInfoChanged(RoomInfo roomInfo)
@@ -142,7 +159,6 @@ public class RoomPanel : UIPanel
     void OnDisconnectedFromHost(string message)
     {
         Logger.Warn(message, LogTag.Room);
-        UIManager.Instance.ClosePanel<RoomPanel>();
-        UIManager.Instance.GoBack();
+        ReturnToMenuFromRoom();
     }
 }

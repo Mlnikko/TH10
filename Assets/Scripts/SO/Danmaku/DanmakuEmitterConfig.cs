@@ -149,10 +149,15 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
     [Tooltip("发射间隔（秒）；在 ILogicTimingBake.BakeLogicTiming 中烘焙为 launchCooldownFrames")]
     public float launchIntervalSeconds = 0.5f;
 
+    [Min(0f)]
+    [Tooltip("首次齐射前的等待时间（秒）；多发射器组合时可错开各路的起始时刻")]
+    public float initialLaunchDelaySeconds;
+
     [Tooltip("发射次数（齐射轮次）；-1 表示无限。0 在保存时会被纠正为 -1，运行时亦按无限处理")]
     public int launchCount = -1;
 
     [NonSerialized] public int launchCooldownFrames;
+    [NonSerialized] public int initialLaunchDelayFrames;
 
     [Min(0f)]
     [Tooltip("弹幕初速度（世界单位/秒）；在 BakeLogicTiming 中烘焙为 launchSpeedPerFrame")]
@@ -292,6 +297,12 @@ public class DanmakuEmitterConfig : GameConfig, IReferenceResolver, ILogicTiming
             launchCooldownFrames = 0;
         else
             launchCooldownFrames = Mathf.Max(1, Mathf.RoundToInt(launchIntervalSeconds * fps));
+
+        if (initialLaunchDelaySeconds <= 0f)
+            initialLaunchDelayFrames = 0;
+        else
+            initialLaunchDelayFrames = Mathf.Max(0, Mathf.RoundToInt(initialLaunchDelaySeconds * fps));
+
         launchSpeedPerFrame = launchSpeed / fps;
         displaySelfSpinRadPerFrame = displaySelfSpinDegreesPerSecond * Mathf.Deg2Rad / fps;
         displayScalePhaseRadPerFrame = displayScaleCyclesPerSecond * Mathf.PI * 2f / fps;

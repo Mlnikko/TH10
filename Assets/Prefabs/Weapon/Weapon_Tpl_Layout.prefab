@@ -44,8 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 563a4a4460295de41ad0fd9c93b02adf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponConfig: {fileID: 11400000, guid: 4de346eab560c424bb2c0f88ea7da36f, type: 2}
-  weaponID: 11
+  weaponConfig: {fileID: 11400000, guid: d209723abf2f3724189acc6a22b21478, type: 2}
+  weaponID: 10
   display:
     selectionName: 
     description: 
@@ -54,43 +54,39 @@ MonoBehaviour:
       danmakuEmitterConfigId: dme_reimu_main_red
       slotOffset: {x: 0, y: 0}
     slowModeDanmakuEmitterConfigId: 
-  powerPrimarySlowLayouts:
-  - minPowerOrbs: 0
-    slot:
-      danmakuEmitterConfigId: 
-      slotOffset: {x: 0, y: 0}
+  powerPrimarySlowLayouts: []
   powerSecondaryLayouts:
   - minPowerOrbs: 100
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0, y: 0.25}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0, y: -0.25}
   - minPowerOrbs: 200
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0.2, y: 0.2}
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: -0.2, y: 0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: -0.25, y: -0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0.25, y: -0.2}
   - minPowerOrbs: 300
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0.4, y: 0.2}
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: -0.4, y: 0.2}
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0, y: 0.4}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: -0.25, y: -0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0.25, y: -0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0, y: -0.3}
   - minPowerOrbs: 400
     slots:
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0.4, y: 0.2}
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: -0.4, y: 0.2}
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: -0.15, y: 0.4}
-    - danmakuEmitterConfigId: dme_reimu_red
-      slotOffset: {x: 0.15, y: 0.4}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: -0.4, y: -0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0.4, y: -0.2}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: -0.15, y: -0.35}
+    - danmakuEmitterConfigId: dme_reimu_blue
+      slotOffset: {x: 0.15, y: -0.35}
   slowModeLayout:
-    primarySlotConverge: 0
-    secondarySlotConverge: 0.3
+    primarySlotConverge: 0.5
+    secondarySlotConverge: 0.5
     secondarySlotConvergeSpeed: 4
   previewLayoutMode: 0
   previewPowerOrbs: 400

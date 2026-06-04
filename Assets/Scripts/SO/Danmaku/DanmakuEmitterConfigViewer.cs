@@ -56,6 +56,9 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
     [Header("发射间隔（秒）")]
     [SerializeField] float launchIntervalSeconds;
 
+    [Header("首发延迟（秒）")]
+    [SerializeField] float initialLaunchDelaySeconds;
+
     [Header("发射次数")]
     [Tooltip("-1 表示无限次数")]
     [SerializeField] int launchCount = -1;
@@ -136,6 +139,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         waveModeConfig = emitterConfig.waveModeConfig;
         grainModeConfig = emitterConfig.grainModeConfig;
         launchIntervalSeconds = emitterConfig.launchIntervalSeconds;
+        initialLaunchDelaySeconds = emitterConfig.initialLaunchDelaySeconds;
         launchCount = DanmakuEmitterSalvoInfo.NormalizeLaunchCountMax(emitterConfig.launchCount);
         launchSpeed = emitterConfig.launchSpeed;
         launchAudio = emitterConfig.audio_Fire;
@@ -238,6 +242,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         emitterConfig.waveModeConfig = waveModeConfig;
         emitterConfig.grainModeConfig = grainModeConfig;
         emitterConfig.launchIntervalSeconds = launchIntervalSeconds;
+        emitterConfig.initialLaunchDelaySeconds = initialLaunchDelaySeconds;
         launchCount = DanmakuEmitterSalvoInfo.NormalizeLaunchCountMax(launchCount);
         emitterConfig.launchCount = launchCount;
         emitterConfig.launchSpeed = launchSpeed;
@@ -463,6 +468,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
             hash = hash * 31 + emitRotOffsetZ.GetHashCode();
             hash = hash * 31 + danmakuRotOffsetZ.GetHashCode();
             hash = hash * 31 + launchIntervalSeconds.GetHashCode();
+            hash = hash * 31 + initialLaunchDelaySeconds.GetHashCode();
             hash = hash * 31 + launchCount;
             hash = hash * 31 + launchSpeed.GetHashCode();
             hash = hash * 31 + lineModeConfig.GetHashCode();
@@ -545,6 +551,12 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
 
         if (launchCount > 0 && _previewLaunchCountUsed >= launchCount)
             return;
+
+        if (_previewLaunchCountUsed == 0 && _previewEmitter.initialLaunchDelayFrames > 0
+            && _previewClock.LogicFrame < (uint)_previewEmitter.initialLaunchDelayFrames)
+        {
+            return;
+        }
 
         uint framesSinceLastFire = _previewClock.LogicFrame - _previewLastFireFrame;
         if (_previewEmitter.launchCooldownFrames > 0 &&
@@ -740,6 +752,7 @@ public class DanmakuEmitterConfigViewer : GameConfigViewerBase
         temp.waveModeConfig = waveModeConfig;
         temp.grainModeConfig = grainModeConfig;
         temp.launchIntervalSeconds = launchIntervalSeconds;
+        temp.initialLaunchDelaySeconds = initialLaunchDelaySeconds;
         temp.launchCount = launchCount;
         temp.launchSpeed = launchSpeed;
         temp.audio_Fire = launchAudio;

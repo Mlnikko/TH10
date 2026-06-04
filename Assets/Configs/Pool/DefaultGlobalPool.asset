@@ -43,8 +43,8 @@ MonoBehaviour:
       defaultWarmupCount: 500
       allowForceRecycle: 1
     - prefabId: dm_boll
-      maxCapacity: 500
-      defaultWarmupCount: 500
+      maxCapacity: 3000
+      defaultWarmupCount: 3000
       allowForceRecycle: 1
     - prefabId: dm_star
       maxCapacity: 500

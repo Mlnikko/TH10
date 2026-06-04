@@ -235,6 +235,7 @@ public class EntityManager
         if ((mask & ComponentMaskBits.CMainBossEncounter) != 0) RemoveComponentAtSlot<CMainBossEncounter>(index);
         if ((mask & ComponentMaskBits.CPlayerRespawnPending) != 0) RemoveComponentAtSlot<CPlayerRespawnPending>(index);
         if ((mask & ComponentMaskBits.CPlayerMotionTrail) != 0) RemoveComponentAtSlot<CPlayerMotionTrail>(index);
+        if ((mask & ComponentMaskBits.CEnemyEmitterOwnership) != 0) RemoveComponentAtSlot<CEnemyEmitterOwnership>(index);
 
         _componentMasks[index] = 0;
     }

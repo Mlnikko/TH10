@@ -289,6 +289,7 @@ public class UIManager : SingletonMono<UIManager>
             return;
 
         RemovePanelFromStack(panel);
+        panel.OnHide();
 
         if (ShouldDestroyInstanceWhenClosed(name))
         {
@@ -298,7 +299,6 @@ public class UIManager : SingletonMono<UIManager>
         else
         {
             panel.gameObject.SetActive(false);
-            panel.OnHide();
         }
     }
 

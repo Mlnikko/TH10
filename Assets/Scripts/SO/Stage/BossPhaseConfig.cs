@@ -1,6 +1,15 @@
 using UnityEngine;
 using System;
 
+[Serializable]
+public struct BossPhaseSpellEmitterEntry
+{
+    [Tooltip("DanmakuEmitterConfig 的 ConfigId（小写）")]
+    public string emitterConfigId;
+
+    [NonSerialized] public int emitterConfigIndex;
+}
+
 [CreateAssetMenu(fileName = "NewBossPhaseConfig", menuName = "Configs/Stage/Boss Phase Config")]
 public class BossPhaseConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 {
@@ -16,7 +25,10 @@ public class BossPhaseConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 
     public float triggerHpPercent; // 如果是血量触发 (0.0 - 1.0)
 
-    [Tooltip("该阶段使用的弹幕发射器 ConfigId（DanmakuEmitterConfig）")]
+    [Tooltip("该阶段使用的弹幕发射器列表；非空时优先于 spellCardId")]
+    public BossPhaseSpellEmitterEntry[] spellEmitters;
+
+    [Tooltip("（兼容）单发射器 ConfigId；spellEmitters 为空时使用")]
     public string spellCardId;
 
     [NonSerialized] public int spellCardEmitterIndex = -1;
@@ -33,12 +45,30 @@ public class BossPhaseConfig : GameConfig, IReferenceResolver, ILogicTimingBake
 
     public void ResolveReferences(GameResDB resDb)
     {
-        string id = StringHelper.NormalizeResourceId(spellCardId);
-        spellCardEmitterIndex = string.IsNullOrEmpty(id) ? -1 : resDb.GetConfigIndex(id);
-        if (!string.IsNullOrEmpty(id) && spellCardEmitterIndex < 0)
+        if (spellEmitters != null && spellEmitters.Length > 0)
+        {
+            for (int i = 0; i < spellEmitters.Length; i++)
+            {
+                var entry = spellEmitters[i];
+                string id = StringHelper.NormalizeResourceId(entry.emitterConfigId);
+                entry.emitterConfigIndex = string.IsNullOrEmpty(id) ? -1 : resDb.GetConfigIndex(id);
+                if (!string.IsNullOrEmpty(id) && entry.emitterConfigIndex < 0)
+                {
+                    Logger.Warn(
+                        $"[BossPhaseConfig] DanmakuEmitterConfig not found: '{id}' (phase: {ConfigId}, slot {i})",
+                        LogTag.Resource);
+                }
+
+                spellEmitters[i] = entry;
+            }
+        }
+
+        string legacyId = StringHelper.NormalizeResourceId(spellCardId);
+        spellCardEmitterIndex = string.IsNullOrEmpty(legacyId) ? -1 : resDb.GetConfigIndex(legacyId);
+        if (!string.IsNullOrEmpty(legacyId) && spellCardEmitterIndex < 0)
         {
             Logger.Warn(
-                $"[BossPhaseConfig] DanmakuEmitterConfig not found: '{id}' (phase: {ConfigId})",
+                $"[BossPhaseConfig] DanmakuEmitterConfig not found: '{legacyId}' (phase: {ConfigId})",
                 LogTag.Resource);
         }
     }
@@ -56,6 +86,16 @@ public class BossPhaseConfig : GameConfig, IReferenceResolver, ILogicTimingBake
     void OnValidate()
     {
         spellCardId = StringHelper.NormalizeResourceId(spellCardId);
+        if (spellEmitters == null)
+            return;
+
+        for (int i = 0; i < spellEmitters.Length; i++)
+        {
+            var entry = spellEmitters[i];
+            if (!string.IsNullOrEmpty(entry.emitterConfigId))
+                entry.emitterConfigId = StringHelper.NormalizeResourceId(entry.emitterConfigId);
+            spellEmitters[i] = entry;
+        }
     }
 #endif
 }

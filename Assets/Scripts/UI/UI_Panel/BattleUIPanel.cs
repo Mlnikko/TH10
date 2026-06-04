@@ -16,6 +16,10 @@ public class BattleUIPanel : UIPanel
     [Header("HUD")]
     [SerializeField] TMP_Text battleInfoText;
 
+    [Header("关卡时间轴")]
+    [Tooltip("留空则写入 battleInfoText；也可挂独立子物体 StageTimelineTime")]
+    [SerializeField] TMP_Text stageTimelineTimeText;
+
     [Header("运行时数据")]
     [SerializeField] TMP_Text runtimeDataText;
 
@@ -40,6 +44,7 @@ public class BattleUIPanel : UIPanel
 
     const string BattleDisplayChildName = "BattleDisplay";
     const string BattleInfoChildName = "BattleInfo";
+    const string StageTimelineTimeChildName = "StageTimelineTime";
     const string PauseOverlayChildName = "Pause";
     const string RuntimeDataChildName = "RuntimeData";
     const string RestartBtnChildName = "RestartBtn";
@@ -56,6 +61,7 @@ public class BattleUIPanel : UIPanel
         ResolveBattleDisplayViewport();
         ResolvePauseUiReferences();
         ResolveBattleInfoText();
+        ResolveStageTimelineTimeText();
         ResolveRuntimeDataText();
         HideBossHpBar();
         SetPauseOverlayVisible(false);
@@ -134,6 +140,14 @@ public class BattleUIPanel : UIPanel
             return;
 
         battleInfoText = transform.Find(BattleInfoChildName)?.GetComponent<TMP_Text>();
+    }
+
+    void ResolveStageTimelineTimeText()
+    {
+        if (stageTimelineTimeText != null)
+            return;
+
+        stageTimelineTimeText = transform.Find(StageTimelineTimeChildName)?.GetComponent<TMP_Text>();
     }
 
     void ResolveRuntimeDataText()
@@ -536,18 +550,63 @@ public class BattleUIPanel : UIPanel
 
         RefreshBossHpBar(bm);
 
-        if (!bm.TryGetBattleHudSnapshot(out BattleHudSnapshot snap))
-            return;
-
         ResolveBattleInfoText();
+        ResolveStageTimelineTimeText();
+
+        string timelineBlock = null;
+        if (bm.TryGetStageTimelineHudSnapshot(out StageTimelineHudSnapshot timeline))
+        {
+            timelineBlock =
+                $"已进行: {FormatStageElapsedTime(timeline.ElapsedSeconds)}\n" +
+                $"阶段: {FormatStageStateLabel(timeline.StageState)}";
+        }
+
+        if (stageTimelineTimeText != null)
+            stageTimelineTimeText.text = timelineBlock ?? string.Empty;
+
+        if (!bm.TryGetBattleHudSnapshot(out BattleHudSnapshot snap))
+        {
+            if (stageTimelineTimeText == null && battleInfoText != null && timelineBlock != null)
+                battleInfoText.text = timelineBlock;
+            return;
+        }
+
+        string playerBlock =
+            $"分数: {snap.Score}\n" +
+            $"生命: {FormatLifeText(snap.HealthCurrent, snap.HealthMax)}\n" +
+            $"Power: {snap.PowerOrbs}";
+
         if (battleInfoText != null)
         {
-            battleInfoText.text =
-                $"分数: {snap.Score}\n" +
-                $"生命: {FormatLifeText(snap.HealthCurrent, snap.HealthMax)}\n" +
-                $"Power: {snap.PowerOrbs}";
+            battleInfoText.text = stageTimelineTimeText != null || timelineBlock == null
+                ? playerBlock
+                : timelineBlock + "\n" + playerBlock;
         }
     }
+
+    static string FormatStageElapsedTime(float elapsedSeconds)
+    {
+        if (elapsedSeconds < 0f)
+            elapsedSeconds = 0f;
+
+        int totalSeconds = Mathf.FloorToInt(elapsedSeconds);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        if (minutes > 0)
+            return $"{minutes:00}:{seconds:00}";
+
+        return $"{seconds}.{Mathf.FloorToInt((elapsedSeconds - totalSeconds) * 10f):0}s";
+    }
+
+    static string FormatStageStateLabel(E_StageState state) => state switch
+    {
+        E_StageState.MidStage => "道中",
+        E_StageState.BossIntro => "Boss 登场",
+        E_StageState.BossFight => "Boss 战",
+        E_StageState.BossDefeated => "Boss 击破",
+        E_StageState.StageClear => "通关",
+        _ => "—",
+    };
 
     void RefreshBossHpBar(BattleManager bm)
     {

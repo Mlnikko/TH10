@@ -8,9 +8,17 @@ public class PlayerInfoItem : MonoBehaviour
     public Image playerImage;
     public TMP_Text playerNameText;
 
-    public void SetOccupied(int slotIndex, bool isHost = false)
+    public void SetOccupied(int slotIndex, bool isHost = false, bool isLocal = false)
     {
-        playerNameText.text = isHost ? $"玩家 {slotIndex + 1}（房主）" : $"玩家 {slotIndex + 1}";
+        if (isLocal && isHost)
+            playerNameText.text = $"玩家 {slotIndex + 1}（房主）（你）";
+        else if (isLocal)
+            playerNameText.text = $"玩家 {slotIndex + 1}（你）";
+        else if (isHost)
+            playerNameText.text = $"玩家 {slotIndex + 1}（房主）";
+        else
+            playerNameText.text = $"玩家 {slotIndex + 1}";
+
         hostIndicator.gameObject.SetActive(isHost);
     }
 

@@ -113,6 +113,15 @@ public class NetworkManager : SingletonMono<NetworkManager>
         }
     }
 
+    /// <summary>刷新网络驱动发送队列，确保广播在 ShutDown 前发出。</summary>
+    public void FlushOutgoing()
+    {
+        if (!m_Driver.IsCreated)
+            return;
+
+        m_Driver.ScheduleUpdate().Complete();
+    }
+
     void SendInternal<T>(NetworkConnection conn, T message) where T : INetworkMessage
     {
         if (!m_Driver.IsCreated || !conn.IsCreated) return;
@@ -447,6 +456,15 @@ public class NetworkManager : SingletonMono<NetworkManager>
                     var msg = new BattleRestartMSG();
                     msg.Deserialize(ref stream);
                     BattleManager.Instance.ClientApplyBattleRestart(msg.playerDatas);
+                    break;
+                }
+
+            case MessageId.RoomHostLeave:
+                {
+                    var msg = new RoomHostLeaveMSG();
+                    msg.Deserialize(ref stream);
+                    RoomManager.Instance.HandleHostLeftRoom();
+                    Logger.Info("Received RoomHostLeave message.", LogTag.Net);
                     break;
                 }
 

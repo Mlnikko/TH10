@@ -12,6 +12,8 @@ public class DanmakuEmitSystem : BaseSystem
 
     {
 
+        EnemyOwnedEmitterLogic.SyncOwnedEmitters(EntityManager);
+
         Span<int> indices = EntityManager.GetActiveIndices<CDanmakuEmitter>();
 
 
@@ -69,6 +71,16 @@ public class DanmakuEmitSystem : BaseSystem
         {
             emitter.isEmitting = false;
             return;
+        }
+
+        if (emitter.activationFrame == DanmakuEmitterSalvoInfo.ActivationFrameUnset)
+            emitter.activationFrame = currentFrame;
+
+        if (emitter.launchCountUsed == 0 && emitter.initialLaunchDelayFrames > 0)
+        {
+            uint elapsedSinceActivation = currentFrame - emitter.activationFrame;
+            if (elapsedSinceActivation < (uint)emitter.initialLaunchDelayFrames)
+                return;
         }
 
         uint framesSinceLastFire = currentFrame - emitter.lastFireFrame;

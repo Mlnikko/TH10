@@ -24,6 +24,7 @@ public class CollisionSystem : BaseSystem
         var rotations = EntityManager.GetComponentSpan<CRotation>();
         var velocities = EntityManager.GetComponentSpan<CVelocity>();
         var colliders = EntityManager.GetComponentSpan<CCollider>();
+        ReadOnlySpan<CCollider> colliderSpan = colliders;
 
         // Step 1: 收集所有活跃且启用的碰撞体
         int colliderCount = 0;
@@ -69,6 +70,9 @@ public class CollisionSystem : BaseSystem
             int i = activeColliders[iIdx];
             ref readonly var colA = ref colliders[i];
 
+            if (!ColliderLayerFilter.ShouldInitiateBroadphase(in colA))
+                continue;
+
             ref readonly var posA = ref positions[i];
             ref readonly var rotA = ref rotations[i];
 
@@ -86,15 +90,24 @@ public class CollisionSystem : BaseSystem
                     TempBuffers.CollisionSweptAabbMaxX[i],
                     TempBuffers.CollisionSweptAabbMaxY[i],
                     queryResults,
-                    TempBitSets.Collision)
-                : _grid.Query(ax, ay, colA, queryResults, TempBitSets.Collision);
+                    TempBitSets.Collision,
+                    colA.layer,
+                    colliderSpan)
+                : _grid.Query(ax, ay, colA, queryResults, TempBitSets.Collision, colliderSpan);
 
             for (int k = 0; k < queryCount; k++)
             {
                 int j = queryResults[k];
-                if (j <= i) continue;
+                if (j == i) continue;
 
                 ref readonly var colB = ref colliders[j];
+                if (!ColliderLayerFilter.CanCollide(in colA, in colB))
+                    continue;
+
+                // 双方均可发起粗测时只登记一次（较小索引负责）；被动层（如敌弹）仅由对端查询，不可因 j<i 跳过。
+                if (j < i && ColliderLayerFilter.ShouldInitiateBroadphase(in colB))
+                    continue;
+
                 ref readonly var posB = ref positions[j];
                 ref readonly var rotB = ref rotations[j];
 
@@ -104,10 +117,6 @@ public class CollisionSystem : BaseSystem
 
                 float bx = posB.x + (colB.offsetX * cosB - colB.offsetY * sinB);
                 float by = posB.y + (colB.offsetX * sinB + colB.offsetY * cosB);
-
-                // 层级过滤
-                if ((colA.mask & colB.layer) == 0) continue;
-                if ((colB.mask & colA.layer) == 0) continue;
 
                 ref readonly var velA = ref velocities[i];
                 ref readonly var velB = ref velocities[j];

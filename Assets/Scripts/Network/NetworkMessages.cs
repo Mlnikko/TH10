@@ -33,7 +33,10 @@ public enum MessageId : byte
     BattleStageClear,
 
     /// <summary>房主发起联机重新开始本关。</summary>
-    BattleRestart
+    BattleRestart,
+
+    /// <summary>房主离开房间，通知客户端一并退出。</summary>
+    RoomHostLeave
 }
 
 /// <summary>
@@ -377,6 +380,16 @@ public struct BattleRestartMSG : INetworkMessage
         startFrame = reader.ReadUInt();
         randomSeed = reader.ReadUInt();
     }
+}
+
+/// <summary>房主离开房间，客户端收到后自动退出房间界面。</summary>
+public struct RoomHostLeaveMSG : INetworkMessage
+{
+    public MessageId Id => MessageId.RoomHostLeave;
+
+    public void Serialize(ref DataStreamWriter writer) { }
+
+    public void Deserialize(ref DataStreamReader reader) { }
 }
 
 #endregion

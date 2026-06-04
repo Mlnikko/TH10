@@ -57,6 +57,28 @@ public class StageTimelineSystem : BaseSystem
         return true;
     }
 
+    /// <summary>关卡时间轴 HUD：自时间轴 Begin 起经过的逻辑时间。</summary>
+    public bool TryGetTimelineHudSnapshot(uint currentFrame, out StageTimelineHudSnapshot snap)
+    {
+        snap = default;
+        if (_config == null)
+            return false;
+
+        uint elapsedFrames = 0;
+        if (_hasStageAnchor && currentFrame >= _stageStartFrame)
+            elapsedFrames = currentFrame - _stageStartFrame;
+
+        float fps = GameManager.logicFPS > 0 ? GameManager.logicFPS : 60f;
+        float elapsedSeconds = elapsedFrames / fps;
+
+        E_StageState state = E_StageState.None;
+        if (EntityManager.IsValid(_stageAuthority))
+            state = EntityManager.GetComponent<CStageState>(_stageAuthority).currentState;
+
+        snap = new StageTimelineHudSnapshot(elapsedSeconds, state);
+        return true;
+    }
+
     /// <summary>
     /// 关底 Boss（<see cref="E_StageState.BossIntro"/> / <see cref="E_StageState.BossFight"/>）
     /// 或存活中的中场 Boss 血条快照。

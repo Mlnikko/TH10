@@ -14,6 +14,8 @@ public class GameResourceManifest : ScriptableObject
     public string[] poolConfigIds = new string[0];
     public string[] stageTimelineConfigIds = new string[0];
     public string battleAreaConfigId = "battlearea";
+    [Tooltip("碰撞层矩阵 ConfigId（如 collisionlayermatrix）")]
+    public string collisionLayerMatrixConfigId = "collisionlayermatrix";
 
     [Header("预制体 - Prefabs")]
     public string[] characterPrefabIds = new string[0];

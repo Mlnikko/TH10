@@ -143,9 +143,27 @@ public class RoomManager : SingletonMono<RoomManager>
         if (JoinState == RoomJoinState.None)
             return;
 
+        var net = NetworkManager.Instance;
+        if (IsHost && net != null && net.NetworkRole == NetworkRole.Host)
+        {
+            net.Broadcast(new RoomHostLeaveMSG());
+            net.FlushOutgoing();
+        }
+
         ResetSession();
         Logger.Info("Left room", LogTag.Room);
         OnRoomLeft?.Invoke();
+    }
+
+    /// <summary>房主离开房间时，客户端收到广播后自动退出。</summary>
+    public void HandleHostLeftRoom()
+    {
+        if (JoinState == RoomJoinState.None || IsHost)
+            return;
+
+        ResetSession();
+        Logger.Info("Host left room; local session cleared.", LogTag.Room);
+        OnDisconnectedFromHost?.Invoke("房主已离开房间");
     }
 
     public void EnterBattleScene()

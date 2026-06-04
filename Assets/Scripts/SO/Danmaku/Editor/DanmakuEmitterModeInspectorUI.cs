@@ -170,6 +170,13 @@ public static class DanmakuEmitterModeInspectorUI
         summary.Append(" · 每齐射 ").Append(salvo).Append(" 发");
         summary.Append(" · ").Append(DanmakuEmitterSalvoInfo.FormatLaunchCountLabel(config.launchCount));
 
+        if (config.initialLaunchDelaySeconds > 0f)
+        {
+            summary.Append(" · 首发延迟 ")
+                .Append(config.initialLaunchDelaySeconds.ToString("0.###"))
+                .Append(" s");
+        }
+
         if (DanmakuEmitterSalvoInfo.TryGetSalvoIssue(in config, out string issue))
             EditorGUILayout.HelpBox(summary + "\n" + issue, MessageType.Warning);
         else

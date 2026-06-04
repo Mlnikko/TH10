@@ -25,6 +25,21 @@ static class StageTimelineBossSpellPhaseEdit
         if (!string.IsNullOrWhiteSpace(phase.phaseName))
             return phase.phaseName.Trim();
 
+        if (phase.spellEmitters != null && phase.spellEmitters.Length > 0)
+        {
+            int count = 0;
+            for (int i = 0; i < phase.spellEmitters.Length; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(phase.spellEmitters[i].emitterConfigId))
+                    count++;
+            }
+
+            if (count > 0)
+                return count == 1
+                    ? phase.spellEmitters[0].emitterConfigId.Trim()
+                    : $"{count} 发射器";
+        }
+
         if (!string.IsNullOrWhiteSpace(phase.spellCardId))
             return phase.spellCardId.Trim();
 

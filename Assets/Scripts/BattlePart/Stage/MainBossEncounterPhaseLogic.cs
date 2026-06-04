@@ -1,32 +1,13 @@
 using UnityEngine;
 
 /// <summary>
-/// 关底 Boss 符卡阶段：切换弹幕发射器（<see cref="BossPhaseConfig.spellCardEmitterIndex"/>）。
+/// 关底 Boss 符卡阶段：切换弹幕发射器（<see cref="BossPhaseConfig.spellEmitters"/> / 兼容 <see cref="BossPhaseConfig.spellCardId"/>）。
 /// </summary>
 public static class MainBossEncounterPhaseLogic
 {
     public static void ApplySpellPhase(EntityManager em, Entity bossEntity, BossPhaseConfig phase)
     {
-        if (!em.IsValid(bossEntity) || phase == null)
-            return;
-
-        int emitterIndex = phase.spellCardEmitterIndex;
-        if (emitterIndex < 0)
-            return;
-
-        var emitterCfg = GameResDB.Instance.GetConfig<DanmakuEmitterConfig>(emitterIndex);
-        if (emitterCfg == null)
-            return;
-
-        if (em.HasComponent<CDanmakuEmitter>(bossEntity))
-            em.RemoveComponent<CDanmakuEmitter>(bossEntity);
-
-        var emitter = new CDanmakuEmitter(emitterCfg)
-        {
-            isEmitting = true,
-            randomSeed = (uint)((bossEntity.Index + 1) * 3266489917u),
-        };
-        em.AddComponent(bossEntity, emitter);
+        EnemyOwnedEmitterLogic.ApplySpellEmitters(em, bossEntity, phase);
     }
 
     public static void ApplySpellPhaseByIndex(
