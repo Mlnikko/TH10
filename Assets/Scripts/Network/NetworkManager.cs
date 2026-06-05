@@ -135,25 +135,20 @@ public class NetworkManager : SingletonMono<NetworkManager>
         m_Driver.EndSend(writer);
     }
 
-    void Update()
+    /// <summary>刷新网络驱动并处理本帧已到达的消息（可在锁步前再次调用）。</summary>
+    public void PumpNetwork()
     {
-        if (!m_Driver.IsCreated) return;
-        m_Driver.ScheduleUpdate().Complete();
-
-        // 检查连接超时（仅客户端模式且正在连接中）
-        if (m_netRole == NetworkRole.Client &&
-            ClientState == ConnectionState.Connecting &&
-            Time.time - m_ConnectionStartTime > CONNECTION_TIMEOUT)
-        {
-            OnConnectionFailed?.Invoke("Connection timeout");
-            Logger.Error("Connection timeout", LogTag.Net);
-            ShutDown();
+        if (!m_Driver.IsCreated)
             return;
-        }
 
+        m_Driver.ScheduleUpdate().Complete();
+        ProcessPendingConnectionsAndMessages();
+    }
+
+    void ProcessPendingConnectionsAndMessages()
+    {
         if (m_netRole == NetworkRole.Host)
         {
-            // Accept new connections
             NetworkConnection c;
             while ((c = m_Driver.Accept()) != default)
             {
@@ -177,7 +172,6 @@ public class NetworkManager : SingletonMono<NetworkManager>
                 }
             }
 
-            // Clean dead connections
             for (int i = 0; i < m_Connections.Length; i++)
             {
                 if (!m_Connections[i].IsCreated)
@@ -187,16 +181,28 @@ public class NetworkManager : SingletonMono<NetworkManager>
                 }
             }
 
-            // Process messages from all clients
             for (int i = 0; i < m_Connections.Length; i++)
-            {
                 ProcessIncoming(m_Connections[i]);
-            }
         }
-        else
+        else if (m_netRole == NetworkRole.Client)
         {
-            // 客户端：只处理一个连接
             ProcessIncoming(m_ClientConnection);
+        }
+    }
+
+    void Update()
+    {
+        if (!m_Driver.IsCreated) return;
+
+        PumpNetwork();
+        if (m_netRole == NetworkRole.Client &&
+            ClientState == ConnectionState.Connecting &&
+            Time.time - m_ConnectionStartTime > CONNECTION_TIMEOUT)
+        {
+            OnConnectionFailed?.Invoke("Connection timeout");
+            Logger.Error("Connection timeout", LogTag.Net);
+            ShutDown();
+            return;
         }
 
         PingTest();

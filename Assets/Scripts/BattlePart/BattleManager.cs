@@ -899,6 +899,8 @@ public class BattleManager : SingletonMono<BattleManager>
             InputManager.Instance.ClearAllInputs();
         BootstrapBattleSession(logicStartFrame);
         InputManager.Instance?.PrepareLockstepInputBuffer(logicStartFrame, singlePlayer, _activePlayers);
+        if (!singlePlayer)
+            SendLockstepInputsForFrame(logicStartFrame);
     }
 
     void RebuildActivePlayerMask()
@@ -1302,62 +1304,26 @@ public class BattleManager : SingletonMono<BattleManager>
     {
         if (_battleWorld == null) return;
         if (CurrentStatus != E_BattleStatus.InBattle) return;
-
         if (IsBattlePaused) return;
 
         _battleWorld.LogicFrameTimer.AccumulateDeltaTime(Time.unscaledDeltaTime);
 
-        int maxCatchUpSteps = isSinglePlayerMode ? 8 : 8;
-        int steps = 0;
-        bool logicStalledThisRenderFrame = false;
-        while (steps < maxCatchUpSteps && _battleWorld.LogicFrameTimer.CanAdvance())
+        if (isSinglePlayerMode)
         {
-            uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
-            uint captureFrame = InputManager.Instance.ResolveCaptureFrame(frameToProcess, isSinglePlayerMode);
+            RunLockstepLoop(maxCatchUpSteps: 8, out _, out int steps);
+            BattleRuntimeMetrics.RecordLogicTicks(steps);
+        }
+        else
+        {
+            RunLockstepLoop(maxCatchUpSteps: 1, out bool logicStalled, out int steps);
+            PresentationRuntime.Sync(_battleWorld.LogicFrameTimer, logicStalled);
+            BattleRuntimeMetrics.RecordLogicTicks(steps);
 
-            byte localIndex = RoomManager.LocalPlayerIndex;
-            byte eliminatedMask = _eliminatedPlayerMask;
-
-            if (!isSinglePlayerMode)
-                InputManager.Instance.FillNeutralInputsForEliminated(frameToProcess, _activePlayers, eliminatedMask);
-
-            if (IsLocalSpectating)
-            {
-                InputManager.Instance.WriteNeutralInputForPlayer(localIndex, captureFrame);
-            }
-            else
-            {
-                InputManager.Instance.RecordLocalInput(localIndex, captureFrame);
-            }
-
-            if (!isSinglePlayerMode)
-                InputManager.Instance.BroadcastInputWindow(localIndex, frameToProcess, captureFrame);
-
-            if (isSinglePlayerMode
-                || InputManager.Instance.AreAllInputsReady(frameToProcess, _activePlayers, eliminatedMask))
-            {
-                _battleWorld.LogicTick(frameToProcess);
-                _battleWorld.LogicFrameTimer.AdvanceFrame();
-                _battleWorld.LogicFrameTimer.ConsumeFrameTime();
-                InputManager.Instance.NotifyLogicTickSucceeded();
-                steps++;
-            }
-            else
-            {
-                logicStalledThisRenderFrame = true;
-                InputManager.Instance.NotifyLogicTickStalled(frameToProcess, _activePlayers, eliminatedMask);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Logger.Debug(
-                    $"[Frame {frameToProcess}] Time ready but inputs not ready (missing P{InputManager.Instance.LastStalledPlayerIndex}).",
-                    LogTag.Battle);
-#endif
-                break;
-            }
+            // 本帧已推进时，CurrentFrame 已前进，补发新一帧输入供对端下帧收包。
+            if (steps > 0 && _battleWorld.LogicFrameTimer.CanAdvance())
+                SendLockstepInputsForFrame(_battleWorld.LogicFrameTimer.CurrentFrame);
         }
 
-        if (!isSinglePlayerMode)
-            PresentationRuntime.Sync(_battleWorld.LogicFrameTimer, logicStalledThisRenderFrame);
-        BattleRuntimeMetrics.RecordLogicTicks(steps);
         _battleWorld.Update(Time.deltaTime);
     }
 
@@ -1368,5 +1334,58 @@ public class BattleManager : SingletonMono<BattleManager>
         if (IsBattlePaused) return;
 
         _battleWorld.LateUpdate(Time.deltaTime);
+    }
+
+    void SendLockstepInputsForFrame(uint frameToProcess)
+    {
+        uint captureFrame = InputManager.Instance.ResolveCaptureFrame(frameToProcess, isSinglePlayerMode);
+        byte localIndex = RoomManager.LocalPlayerIndex;
+        byte eliminatedMask = _eliminatedPlayerMask;
+
+        InputManager.Instance.FillNeutralInputsForEliminated(frameToProcess, _activePlayers, eliminatedMask);
+
+        if (IsLocalSpectating)
+            InputManager.Instance.WriteNeutralInputForPlayer(localIndex, captureFrame);
+        else
+            InputManager.Instance.RecordLocalInput(localIndex, captureFrame);
+
+        InputManager.Instance.BroadcastInputWindow(localIndex, frameToProcess, captureFrame);
+        NetworkManager.Instance?.FlushOutgoing();
+    }
+
+    void RunLockstepLoop(int maxCatchUpSteps, out bool logicStalledThisRenderFrame, out int steps)
+    {
+        logicStalledThisRenderFrame = false;
+        steps = 0;
+
+        while (steps < maxCatchUpSteps && _battleWorld.LogicFrameTimer.CanAdvance())
+        {
+            uint frameToProcess = _battleWorld.LogicFrameTimer.CurrentFrame;
+
+            SendLockstepInputsForFrame(frameToProcess);
+
+            if (isSinglePlayerMode
+                || InputManager.Instance.AreAllInputsReady(
+                    frameToProcess, _activePlayers, _eliminatedPlayerMask))
+            {
+                _battleWorld.LogicTick(frameToProcess);
+                _battleWorld.LogicFrameTimer.AdvanceFrame();
+                _battleWorld.LogicFrameTimer.ConsumeFrameTime();
+                InputManager.Instance.NotifyLogicTickSucceeded();
+                steps++;
+            }
+            else
+            {
+                logicStalledThisRenderFrame = true;
+                InputManager.Instance.NotifyLogicTickStalled(
+                    frameToProcess, _activePlayers, _eliminatedPlayerMask);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Logger.Debug(
+                    $"[Frame {frameToProcess}] Time ready but inputs not ready (missing P{InputManager.Instance.LastStalledPlayerIndex}).",
+                    LogTag.Battle);
+#endif
+                break;
+            }
+        }
     }
 }
