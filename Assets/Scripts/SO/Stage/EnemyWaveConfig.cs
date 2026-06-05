@@ -288,9 +288,6 @@ public class EnemyWaveConfig : GameConfig, ILogicTimingBake
     [Tooltip("默认下落速度（世界单位/秒），仅当未配置 pathRoute 且上一项为真时生效")]
     public float defaultDescentSpeed = 1f;
 
-    [Tooltip("是否等待此波次全灭后才继续后续逻辑 (仅用于特定脚本控制，时间线通常自动推进)")]
-    public bool waitForClear = false;
-
     [Header("击杀掉落（时间轴）")]
     [Tooltip("相对敌人默认掉落的覆盖策略；由关卡时间轴 ResolveReferences 烘焙 waveDropOnDeathBaked")]
     public E_WaveDropOverrideMode waveDropMode = E_WaveDropOverrideMode.UseEnemyConfig;

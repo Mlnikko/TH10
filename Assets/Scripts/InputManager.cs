@@ -96,7 +96,7 @@ public class InputManager : SingletonMono<InputManager>
     [SerializeField]
     [Tooltip("联机锁步输入前瞻帧数。值越高越抗网络抖动，但操作延迟会增加。默认 1 帧。")]
     [Range(0, MaxReasonableInputDelayFrames)]
-    int _multiplayerInputDelayFrames = 1;
+    int _multiplayerInputDelayFrames = 2;
 
     int _logicTickSuccessCount;
     int _logicTickStallCount;

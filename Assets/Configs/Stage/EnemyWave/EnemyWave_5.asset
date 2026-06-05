@@ -81,7 +81,6 @@ MonoBehaviour:
       sinePhaseRad: 0
   useDefaultDescentIfNoMovement: 1
   defaultDescentSpeed: 1
-  waitForClear: 0
   waveDropMode: 0
   waveDropOnDeathEntries: []
   waveDropOnDeathConfigIds: []

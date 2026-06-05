@@ -23,8 +23,6 @@ public class StageTimelineSystem : BaseSystem
     StageTimelineConfig _config;
     readonly List<EnemyWaveConfig> _sortedWaves = new();
     int _nextWaveIndex;
-    bool _waitingForWaveClear;
-    readonly List<Entity> _clearWatchEntities = new();
     readonly List<PendingSequentialSpawn> _pendingSequentialSpawns = new();
 
     bool _hasStageAnchor;
@@ -224,8 +222,6 @@ public class StageTimelineSystem : BaseSystem
         }
 
         _nextWaveIndex = 0;
-        _waitingForWaveClear = false;
-        _clearWatchEntities.Clear();
         _pendingSequentialSpawns.Clear();
         EnemyPathBakeCache.Clear();
         _hasStageAnchor = false;
@@ -278,8 +274,6 @@ public class StageTimelineSystem : BaseSystem
         _previewMidStageWaveIndex = 0;
         _sortedWaves.Clear();
         _nextWaveIndex = 0;
-        _waitingForWaveClear = false;
-        _clearWatchEntities.Clear();
         _pendingSequentialSpawns.Clear();
         EnemyPathBakeCache.Clear();
         _hasStageAnchor = false;
@@ -319,7 +313,6 @@ public class StageTimelineSystem : BaseSystem
 
         uint elapsed = currentFrame - _stageStartFrame;
 
-        UpdateClearWatch();
         ProcessPendingSequentialSpawns(currentFrame);
 
         if (_previewScope == E_StageTimelinePreviewScope.FullTimeline
@@ -347,28 +340,13 @@ public class StageTimelineSystem : BaseSystem
     static bool IsScopedPreview(E_StageTimelinePreviewScope scope) =>
         scope != E_StageTimelinePreviewScope.FullTimeline;
 
-    void UpdateClearWatch()
-    {
-        if (!_waitingForWaveClear)
-            return;
-
-        for (int i = _clearWatchEntities.Count - 1; i >= 0; i--)
-        {
-            if (!EntityManager.IsValid(_clearWatchEntities[i]))
-                _clearWatchEntities.RemoveAt(i);
-        }
-
-        if (_clearWatchEntities.Count == 0)
-            _waitingForWaveClear = false;
-    }
-
     void TrySpawnMidWaves(uint stageElapsed, uint currentFrame)
     {
         ref var st = ref EntityManager.GetComponent<CStageState>(_stageAuthority);
         if (st.currentState != E_StageState.MidStage)
             return;
 
-        while (_nextWaveIndex < _sortedWaves.Count && !_waitingForWaveClear)
+        while (_nextWaveIndex < _sortedWaves.Count)
         {
             var wave = _sortedWaves[_nextWaveIndex];
             if (!IsScopedPreview(_previewScope) && stageElapsed < (uint)wave.startFrameOffset)
@@ -422,8 +400,6 @@ public class StageTimelineSystem : BaseSystem
                 TrySpawnWaveEntry(wave, waveIndexInSorted, currentFrame, positions, i);
         }
 
-        if (wave.waitForClear && _clearWatchEntities.Count > 0)
-            _waitingForWaveClear = true;
     }
 
     void ProcessPendingSequentialSpawns(uint currentFrame)
@@ -498,8 +474,6 @@ public class StageTimelineSystem : BaseSystem
         }
 
         EntityManager.AddComponent(e, new CPoolGetTag());
-        if (wave.waitForClear)
-            _clearWatchEntities.Add(e);
         return true;
     }
 

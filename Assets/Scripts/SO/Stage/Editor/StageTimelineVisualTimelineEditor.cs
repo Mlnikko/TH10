@@ -60,8 +60,7 @@ static class StageTimelineVisualTimelineEditor
             }
 
             EditorGUILayout.HelpBox(
-                "条块长度由各自内部配置（路径、在场时间、符卡阶段等）决定；水平拖拽条块可调整开始时刻。"
-                + "「等待清场」波次在条块末尾显示标记。",
+                "条块长度由各自内部配置（路径、在场时间、符卡阶段等）决定；水平拖拽条块可调整开始时刻。",
                 MessageType.None);
         }
 
@@ -262,8 +261,6 @@ static class StageTimelineVisualTimelineEditor
         Handles.DrawWireCube(barRect.center, barRect.size);
 
         var label = $"{clip.StartSeconds:0.#}s · {clip.DurationSeconds:0.#}s";
-        if (clip.WaitForClear)
-            label += " · 清场";
 
         var style = new GUIStyle(EditorStyles.miniLabel)
         {
@@ -273,12 +270,6 @@ static class StageTimelineVisualTimelineEditor
         };
         if (barRect.width > 40f)
             GUI.Label(barRect, label, style);
-
-        if (clip.WaitForClear && barRect.width > 18f)
-        {
-            var mark = new Rect(barRect.xMax - 14f, barRect.y + 2f, 12f, barRect.height - 4f);
-            EditorGUI.DrawRect(mark, new Color(1f, 0.85f, 0.2f, 0.9f));
-        }
     }
 
     static void HandleDrag(
@@ -316,7 +307,6 @@ static class StageTimelineVisualTimelineEditor
                     clip.Label,
                     newStart,
                     clip.DurationSeconds,
-                    clip.WaitForClear,
                     clip.UndoTarget);
             }
 

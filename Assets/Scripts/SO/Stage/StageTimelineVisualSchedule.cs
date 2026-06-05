@@ -22,7 +22,6 @@ public static class StageTimelineVisualSchedule
             string label,
             float startSeconds,
             float durationSeconds,
-            bool waitForClear,
             UnityEngine.Object undoTarget)
         {
             Kind = kind;
@@ -30,7 +29,6 @@ public static class StageTimelineVisualSchedule
             Label = label;
             StartSeconds = startSeconds;
             DurationSeconds = durationSeconds;
-            WaitForClear = waitForClear;
             UndoTarget = undoTarget;
         }
 
@@ -39,7 +37,6 @@ public static class StageTimelineVisualSchedule
         public string Label { get; }
         public float StartSeconds { get; }
         public float DurationSeconds { get; }
-        public bool WaitForClear { get; }
         public UnityEngine.Object UndoTarget { get; }
 
         public float EndSeconds => StartSeconds + DurationSeconds;
@@ -83,7 +80,6 @@ public static class StageTimelineVisualSchedule
                     BuildWaveLabel(wave, i),
                     Mathf.Max(0f, wave.startTimeSeconds),
                     EstimateWaveDurationSeconds(wave, logicFps),
-                    wave.waitForClear,
                     wave));
             }
         }
@@ -97,7 +93,6 @@ public static class StageTimelineVisualSchedule
                 string.IsNullOrEmpty(mid.name) ? "中场 Boss" : mid.name,
                 Mathf.Max(0f, mid.spawnTimeSeconds),
                 EstimateMidBossDurationSeconds(mid, logicFps),
-                false,
                 mid));
         }
 
@@ -110,7 +105,6 @@ public static class StageTimelineVisualSchedule
                 string.IsNullOrEmpty(main.name) ? "关底 Boss" : main.name,
                 Mathf.Max(0f, main.spawnTimeSeconds),
                 EstimateMainBossDurationSeconds(main, logicFps),
-                false,
                 main));
         }
     }
