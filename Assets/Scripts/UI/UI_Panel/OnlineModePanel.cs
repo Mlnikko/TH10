@@ -10,6 +10,9 @@ public class OnlineModePanel : UIPanel
     public override void OnShow(object data = null)
     {
         base.OnShow(data);
+        createRoomBtn.onClick.RemoveListener(OnCreateRoomClicked);
+        joinRoomBtn.onClick.RemoveListener(OnJoinRoomClicked);
+        cancelButton.onClick.RemoveListener(OnCancelClicked);
         createRoomBtn.onClick.AddListener(OnCreateRoomClicked);
         joinRoomBtn.onClick.AddListener(OnJoinRoomClicked);
         cancelButton.onClick.AddListener(OnCancelClicked);

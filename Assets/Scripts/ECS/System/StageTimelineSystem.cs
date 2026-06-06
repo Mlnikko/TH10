@@ -283,7 +283,6 @@ public class StageTimelineSystem : BaseSystem
 
     bool IsMidStageSpawnScheduleComplete() =>
         _nextWaveIndex >= _sortedWaves.Count
-        && !_waitingForWaveClear
         && _pendingSequentialSpawns.Count == 0;
 
     bool IsMidBossTimelineComplete()

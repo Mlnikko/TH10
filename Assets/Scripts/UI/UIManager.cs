@@ -144,13 +144,20 @@ public class UIManager : SingletonMono<UIManager>
         lock (_panelOpenSync)
         {
             // 1. 已缓存（含仅隐藏）：直接显示，避免重复 Addressables 加载
-            if (activePanels.TryGetValue(panelKey, out var cached) && cached != null)
+            if (activePanels.TryGetValue(panelKey, out var cached))
             {
-                cached.gameObject.SetActive(true);
-                cached.OnShow(data);
-                PushToStack(cached);
-                ApplyPresentationPolicy(cached, panelKey);
-                return (T)cached;
+                if (cached == null)
+                {
+                    activePanels.Remove(panelKey);
+                }
+                else
+                {
+                    cached.gameObject.SetActive(true);
+                    cached.OnShow(data);
+                    PushToStack(cached);
+                    ApplyPresentationPolicy(cached, panelKey);
+                    return (T)cached;
+                }
             }
         }
 
@@ -338,66 +345,47 @@ public class UIManager : SingletonMono<UIManager>
 
 
     #region 调试面板
-    const string UnitTestPanelPrefabName = "UnitTestPanel";
-    UIPanel _unitTestPanel;
-    GameObject _unitTestPanelObj;
-    /// <summary>
-    /// 切换调试面板显示/隐藏
-    /// </summary>
-    public async Task ToggleDebugPanelAsync()
-    {
-        if (_unitTestPanelObj == null)
-        {
-            GameObject prefab = await ResManager.Instance.LoadAsync<GameObject>(E_ResourceCategory.Prefab, UnitTestPanelPrefabName);
 
-            if (prefab == null)
+    Task _debugPanelToggleTask;
+
+    /// <summary>
+    /// 切换单元测试面板。走标准面板加载/缓存，但不入导航栈；每次显示时置于 Canvas 最前。
+    /// </summary>
+    public Task ToggleDebugPanelAsync()
+    {
+        if (_debugPanelToggleTask != null && !_debugPanelToggleTask.IsCompleted)
+            return _debugPanelToggleTask;
+
+        _debugPanelToggleTask = ToggleDebugPanelCoreAsync();
+        return _debugPanelToggleTask;
+    }
+
+    async Task ToggleDebugPanelCoreAsync()
+    {
+        string panelKey = typeof(UnitTestPanel).Name;
+
+        if (activePanels.TryGetValue(panelKey, out var existing))
+        {
+            if (existing == null)
             {
-                Debug.LogError("[UIManager] UnitTestPanel prefab not found!");
+                activePanels.Remove(panelKey);
+            }
+            else if (existing.gameObject.activeSelf)
+            {
+                existing.gameObject.SetActive(false);
+                existing.OnHide();
+                RemovePanelFromStack(existing);
                 return;
             }
-
-            // 2. 实例化
-            _unitTestPanelObj = Instantiate(prefab, Canvas.transform);
-            _unitTestPanelObj.name = "UnitTestPanel_Instance";
-
-            // 3. 获取组件并初始化
-            _unitTestPanel = _unitTestPanelObj.GetComponent<UIPanel>();
-            if (_unitTestPanel == null)
-            {
-                _unitTestPanel = _unitTestPanelObj.AddComponent<UnitTestPanel>(); // 确保有脚本
-            }
-
-            // 4. 设置层级最高
-            _unitTestPanelObj.transform.SetAsLastSibling();
-
-            // 5. 初始化 (不传入 stack，不加入 activePanels 字典)
-            _unitTestPanel.Initialize();
-            _unitTestPanel.OnShow(null);
-            _unitTestPanelObj.SetActive(false); // 默认隐藏，等待切换显示
         }
 
-        // 6. 切换显示状态
-        bool isActive = _unitTestPanelObj.activeSelf;
-        _unitTestPanelObj.SetActive(!isActive);
+        var panel = await ShowPanelAsync<UnitTestPanel>();
+        if (panel == null)
+            return;
 
-        if (!isActive)
-        {
-            _unitTestPanel.OnShow(null); // 重新显示时刷新数据
-        }
-        else
-        {
-            _unitTestPanel.OnHide();
-        }
+        RemovePanelFromStack(panel);
+        panel.transform.SetAsLastSibling();
     }
 
-    public void DestroyDebugPanel()
-    {
-        if (_unitTestPanelObj != null)
-        {
-            Destroy(_unitTestPanelObj);
-            _unitTestPanelObj = null;
-            _unitTestPanel = null;
-        }
-    }
     #endregion
 }

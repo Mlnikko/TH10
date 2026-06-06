@@ -26,6 +26,14 @@ public class JoinRoomInputPanel : UIPanel
     {
         base.OnShow(data);
 
+        UnbindRoomEvents();
+        joinButton.onClick.RemoveListener(OnJoinClicked);
+        cancelButton.onClick.RemoveListener(OnCancelClicked);
+        if (ipInput != null)
+            ipInput.onEndEdit.RemoveListener(OnInputEndEdit);
+        if (portInput != null)
+            portInput.onEndEdit.RemoveListener(OnInputEndEdit);
+
         joinButton.onClick.AddListener(OnJoinClicked);
         cancelButton.onClick.AddListener(OnCancelClicked);
         if (ipInput != null)

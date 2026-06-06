@@ -12,6 +12,11 @@ public class MenuPanel : UIPanel
     public override void OnShow(object data = null)
     {
         base.OnShow(data);
+        localModeBtn.onClick.RemoveListener(OnLocalModeClicked);
+        onlineModeBtn.onClick.RemoveListener(OnOnlineModeClicked);
+        settingBtn.onClick.RemoveListener(OnSettingClicked);
+        replayBtn.onClick.RemoveListener(OnReplayClicked);
+        quitGameBtn.onClick.RemoveListener(OnQuitGameClicked);
         localModeBtn.onClick.AddListener(OnLocalModeClicked);
         onlineModeBtn.onClick.AddListener(OnOnlineModeClicked);
         settingBtn.onClick.AddListener(OnSettingClicked);
