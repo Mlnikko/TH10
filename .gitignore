@@ -33,6 +33,13 @@
 
 # Visual Studio cache directory
 .vs/
+.vsconfig
+
+# VS Code workspace settings
+.vscode/
+
+# AI editor tooling (local only)
+.codex/
 
 # Gradle cache directory
 .gradle/
